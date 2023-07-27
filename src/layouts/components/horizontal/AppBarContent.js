@@ -11,6 +11,7 @@ import ShortcutsDropdown from 'src/@core/layouts/components/shared-components/Sh
 
 // ** Hook Import
 import { useAuth } from 'src/hooks/useAuth'
+import UserLanguageDropdown from '../UserLanguageDropdown'
 
 const notifications = [
   {
@@ -118,7 +119,7 @@ const AppBarContent = props => {
   return (
     <Box sx={{ display: 'flex', alignItems: 'center' }}>
       {auth.user && <Autocomplete hidden={hidden} settings={settings} />}
-      <LanguageDropdown settings={settings} saveSettings={saveSettings} />
+      <UserLanguageDropdown settings={settings} saveSettings={saveSettings} />
       <ModeToggler settings={settings} saveSettings={saveSettings} />
       {auth.user && (
         <>

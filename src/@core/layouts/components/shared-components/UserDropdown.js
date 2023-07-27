@@ -19,6 +19,7 @@ import Icon from 'src/@core/components/icon'
 
 // ** Context
 import { useAuth } from 'src/hooks/useAuth'
+import { useSelector } from 'react-redux'
 
 // ** Styled Components
 const BadgeContentSpan = styled('span')(({ theme }) => ({
@@ -41,6 +42,7 @@ const UserDropdown = props => {
 
   // ** States
   const [anchorEl, setAnchorEl] = useState(null)
+  const userData = useSelector(state => state.user.data)
 
   // ** Hooks
   const router = useRouter()
@@ -120,8 +122,12 @@ const UserDropdown = props => {
               <Avatar alt='John Doe' src='/images/avatars/1.png' sx={{ width: '2.5rem', height: '2.5rem' }} />
             </Badge>
             <Box sx={{ display: 'flex', ml: 2.5, alignItems: 'flex-start', flexDirection: 'column' }}>
-              <Typography sx={{ fontWeight: 500 }}>John Doe</Typography>
-              <Typography variant='body2'>Admin</Typography>
+              <Typography sx={{ fontWeight: 500 }}>
+                {userData.firstName} {userData.lastName}
+              </Typography>
+              <Typography variant='body2'>
+                {userData.role.toUpperCase().charAt(0) + userData.role.substr(1).toLowerCase()}
+              </Typography>
             </Box>
           </Box>
         </Box>
@@ -129,26 +135,26 @@ const UserDropdown = props => {
         <MenuItemStyled sx={{ p: 0 }} onClick={() => handleDropdownClose('/pages/user-profile/profile')}>
           <Box sx={styles}>
             <Icon icon='tabler:user-check' />
-            My Profile
+            Profilul Meu
           </Box>
         </MenuItemStyled>
         <MenuItemStyled sx={{ p: 0 }} onClick={() => handleDropdownClose('/pages/account-settings/account')}>
           <Box sx={styles}>
             <Icon icon='tabler:settings' />
-            Settings
+            Setări
           </Box>
         </MenuItemStyled>
         <MenuItemStyled sx={{ p: 0 }} onClick={() => handleDropdownClose('/pages/account-settings/billing')}>
           <Box sx={styles}>
             <Icon icon='tabler:credit-card' />
-            Billing
+            Plăți
           </Box>
         </MenuItemStyled>
         <Divider sx={{ my: theme => `${theme.spacing(2)} !important` }} />
         <MenuItemStyled sx={{ p: 0 }} onClick={() => handleDropdownClose('/pages/help-center')}>
           <Box sx={styles}>
             <Icon icon='tabler:lifebuoy' />
-            Help
+            Ajutor
           </Box>
         </MenuItemStyled>
         <MenuItemStyled sx={{ p: 0 }} onClick={() => handleDropdownClose('/pages/faq')}>
@@ -160,7 +166,7 @@ const UserDropdown = props => {
         <MenuItemStyled sx={{ p: 0 }} onClick={() => handleDropdownClose('/pages/pricing')}>
           <Box sx={styles}>
             <Icon icon='tabler:currency-dollar' />
-            Pricing
+            Prețuri
           </Box>
         </MenuItemStyled>
         <Divider sx={{ my: theme => `${theme.spacing(2)} !important` }} />

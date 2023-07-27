@@ -60,8 +60,6 @@ const AuthProvider = ({ children }) => {
       .post(authConfig.loginEndpoint, params)
       .then(async response => {
         window.localStorage.setItem(authConfig.storageTokenKeyName, response.data.accessToken)
-
-        // response.data.userData.role = 'admin'
         window.localStorage.setItem('userData', JSON.stringify(response.data.userData))
         setUser({ ...response.data.userData })
         dispatch(addUser(response.data.userData)) // dispatch addUser action with user data

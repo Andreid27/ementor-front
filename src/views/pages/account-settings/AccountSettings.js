@@ -113,7 +113,7 @@ const AccountSettings = ({ tab, apiPricingPlanData }) => {
                     </Box>
                   }
                 />
-                <Tab
+                {/* <Tab
                   value='billing'
                   label={
                     <Box sx={{ display: 'flex', alignItems: 'center', ...(!hideText && { '& svg': { mr: 2 } }) }}>
@@ -121,7 +121,8 @@ const AccountSettings = ({ tab, apiPricingPlanData }) => {
                       {!hideText && 'Billing'}
                     </Box>
                   }
-                />
+                /> */}
+                {/* TODO add when is needed */}
                 <Tab
                   value='notifications'
                   label={

@@ -29,21 +29,7 @@ import { useForm, Controller } from 'react-hook-form'
 
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
-
-const initialData = {
-  state: '',
-  number: '',
-  address: '',
-  zipCode: '',
-  lastName: 'Doe',
-  currency: 'usd',
-  firstName: 'John',
-  language: 'arabic',
-  timezone: 'gmt-12',
-  country: 'australia',
-  organization: 'Pixinvent',
-  email: 'john.doe@example.com'
-}
+import { useSelector } from 'react-redux'
 
 const ImgStyled = styled('img')(({ theme }) => ({
   width: 100,
@@ -72,9 +58,10 @@ const ResetButtonStyled = styled(Button)(({ theme }) => ({
 const TabAccount = () => {
   // ** State
   const [open, setOpen] = useState(false)
+  const userData = useSelector(state => state.user.data)
   const [inputValue, setInputValue] = useState('')
   const [userInput, setUserInput] = useState('yes')
-  const [formData, setFormData] = useState(initialData)
+  const [formData, setFormData] = useState(userData)
   const [imgSrc, setImgSrc] = useState('/images/avatars/15.png')
   const [secondDialogOpen, setSecondDialogOpen] = useState(false)
 
@@ -150,8 +137,7 @@ const TabAccount = () => {
                 <Grid item xs={12} sm={6}>
                   <CustomTextField
                     fullWidth
-                    label='First Name'
-                    placeholder='John'
+                    label='Prenume'
                     value={formData.firstName}
                     onChange={e => handleFormChange('firstName', e.target.value)}
                   />
@@ -159,8 +145,7 @@ const TabAccount = () => {
                 <Grid item xs={12} sm={6}>
                   <CustomTextField
                     fullWidth
-                    label='Last Name'
-                    placeholder='Doe'
+                    label='Nume'
                     value={formData.lastName}
                     onChange={e => handleFormChange('lastName', e.target.value)}
                   />
@@ -171,56 +156,27 @@ const TabAccount = () => {
                     type='email'
                     label='Email'
                     value={formData.email}
-                    placeholder='john.doe@example.com'
                     onChange={e => handleFormChange('email', e.target.value)}
                   />
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <CustomTextField
                     fullWidth
-                    label='Organization'
-                    placeholder='Pixinvent'
-                    value={formData.organization}
-                    onChange={e => handleFormChange('organization', e.target.value)}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <CustomTextField
-                    fullWidth
                     type='number'
-                    label='Phone Number'
+                    label='Număr de telefon'
                     value={formData.number}
-                    placeholder='202 555 0111'
+                    placeholder='700 123 123'
                     onChange={e => handleFormChange('number', e.target.value)}
-                    InputProps={{ startAdornment: <InputAdornment position='start'>US (+1)</InputAdornment> }}
+                    InputProps={{ startAdornment: <InputAdornment position='start'>RO (+40)</InputAdornment> }}
                   />
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <CustomTextField
                     fullWidth
-                    label='Address'
-                    placeholder='Address'
+                    label='Adresă'
+                    placeholder='Adresă'
                     value={formData.address}
                     onChange={e => handleFormChange('address', e.target.value)}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <CustomTextField
-                    fullWidth
-                    label='State'
-                    placeholder='California'
-                    value={formData.state}
-                    onChange={e => handleFormChange('state', e.target.value)}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <CustomTextField
-                    fullWidth
-                    type='number'
-                    label='Zip Code'
-                    placeholder='231465'
-                    value={formData.zipCode}
-                    onChange={e => handleFormChange('zipCode', e.target.value)}
                   />
                 </Grid>
                 <Grid item xs={12} sm={6}>
@@ -228,7 +184,7 @@ const TabAccount = () => {
                     select
                     fullWidth
                     defaultValue=''
-                    label='Country'
+                    label='Județ'
                     SelectProps={{
                       value: formData.country,
                       onChange: e => handleFormChange('country', e.target.value)
@@ -239,79 +195,24 @@ const TabAccount = () => {
                     <MenuItem value='france'>France</MenuItem>
                     <MenuItem value='united-kingdom'>United Kingdom</MenuItem>
                     <MenuItem value='united-states'>United States</MenuItem>
+                    {/* TODO de adaugat judet din baza de date */}
                   </CustomTextField>
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <CustomTextField
-                    select
                     fullWidth
-                    defaultValue=''
-                    label='Language'
-                    SelectProps={{
-                      value: formData.language,
-                      onChange: e => handleFormChange('language', e.target.value)
-                    }}
-                  >
-                    <MenuItem value='arabic'>Arabic</MenuItem>
-                    <MenuItem value='english'>English</MenuItem>
-                    <MenuItem value='french'>French</MenuItem>
-                    <MenuItem value='german'>German</MenuItem>
-                    <MenuItem value='portuguese'>Portuguese</MenuItem>
-                  </CustomTextField>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <CustomTextField
-                    select
-                    fullWidth
-                    defaultValue=''
-                    label='Timezone'
-                    SelectProps={{
-                      value: formData.timezone,
-                      onChange: e => handleFormChange('timezone', e.target.value)
-                    }}
-                  >
-                    <MenuItem value='gmt-12'>(GMT-12:00) International Date Line West</MenuItem>
-                    <MenuItem value='gmt-11'>(GMT-11:00) Midway Island, Samoa</MenuItem>
-                    <MenuItem value='gmt-10'>(GMT-10:00) Hawaii</MenuItem>
-                    <MenuItem value='gmt-09'>(GMT-09:00) Alaska</MenuItem>
-                    <MenuItem value='gmt-08'>(GMT-08:00) Pacific Time (US & Canada)</MenuItem>
-                    <MenuItem value='gmt-08-baja'>(GMT-08:00) Tijuana, Baja California</MenuItem>
-                    <MenuItem value='gmt-07'>(GMT-07:00) Chihuahua, La Paz, Mazatlan</MenuItem>
-                    <MenuItem value='gmt-07-mt'>(GMT-07:00) Mountain Time (US & Canada)</MenuItem>
-                    <MenuItem value='gmt-06'>(GMT-06:00) Central America</MenuItem>
-                    <MenuItem value='gmt-06-ct'>(GMT-06:00) Central Time (US & Canada)</MenuItem>
-                    <MenuItem value='gmt-06-mc'>(GMT-06:00) Guadalajara, Mexico City, Monterrey</MenuItem>
-                    <MenuItem value='gmt-06-sk'>(GMT-06:00) Saskatchewan</MenuItem>
-                    <MenuItem value='gmt-05'>(GMT-05:00) Bogota, Lima, Quito, Rio Branco</MenuItem>
-                    <MenuItem value='gmt-05-et'>(GMT-05:00) Eastern Time (US & Canada)</MenuItem>
-                    <MenuItem value='gmt-05-ind'>(GMT-05:00) Indiana (East)</MenuItem>
-                    <MenuItem value='gmt-04'>(GMT-04:00) Atlantic Time (Canada)</MenuItem>
-                    <MenuItem value='gmt-04-clp'>(GMT-04:00) Caracas, La Paz</MenuItem>
-                  </CustomTextField>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <CustomTextField
-                    select
-                    fullWidth
-                    defaultValue=''
-                    label='Currency'
-                    SelectProps={{
-                      value: formData.currency,
-                      onChange: e => handleFormChange('currency', e.target.value)
-                    }}
-                  >
-                    <MenuItem value='usd'>USD</MenuItem>
-                    <MenuItem value='eur'>EUR</MenuItem>
-                    <MenuItem value='pound'>Pound</MenuItem>
-                    <MenuItem value='bitcoin'>Bitcoin</MenuItem>
-                  </CustomTextField>
+                    label='Țară de proveniență'
+                    placeholder='România'
+                    value={formData.state}
+                    onChange={e => handleFormChange('state', e.target.value)}
+                  />
                 </Grid>
 
                 <Grid item xs={12} sx={{ pt: theme => `${theme.spacing(6.5)} !important` }}>
                   <Button variant='contained' sx={{ mr: 4 }}>
                     Save Changes
                   </Button>
-                  <Button type='reset' variant='tonal' color='secondary' onClick={() => setFormData(initialData)}>
+                  <Button type='reset' variant='tonal' color='secondary' onClick={() => setFormData(userData)}>
                     Reset
                   </Button>
                 </Grid>
