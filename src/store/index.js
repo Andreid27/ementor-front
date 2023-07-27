@@ -1,5 +1,7 @@
 // ** Toolkit imports
-import { configureStore } from '@reduxjs/toolkit'
+import { combineReducers, configureStore } from '@reduxjs/toolkit'
+import { persistReducer, persistStore } from 'redux-persist' // Import persistReducer and persistStore
+import storage from 'redux-persist/lib/storage' // defaults to localStorage for web
 
 // ** Reducers
 import chat from 'src/store/apps/chat'
@@ -9,17 +11,40 @@ import invoice from 'src/store/apps/invoice'
 import calendar from 'src/store/apps/calendar'
 import permissions from 'src/store/apps/permissions'
 
-export const store = configureStore({
-  reducer: {
+// ** Logger import
+import { createLogger } from 'redux-logger'
+
+const persistConfig = {
+  key: 'root',
+  version: 1,
+  storage
+}
+
+// ** Logger instance
+const logger = createLogger({
+  stateTransformer: state => state
+})
+
+// Wrap the root reducer with persistReducer
+const persistedReducer = persistReducer(
+  persistConfig,
+  combineReducers({
     user,
     chat,
     email,
     invoice,
     calendar,
     permissions
-  },
+  })
+)
+
+export const store = configureStore({
+  reducer: persistedReducer, // Use the persistedReducer as the root reducer
   middleware: getDefaultMiddleware =>
     getDefaultMiddleware({
       serializableCheck: false
-    })
+    }).concat(logger) // ** Logger middleware
 })
+
+// Export the persistor, so you can use it in the 'PersistGate'
+export const persistor = persistStore(store)

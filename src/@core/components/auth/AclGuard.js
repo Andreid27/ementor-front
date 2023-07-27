@@ -28,6 +28,7 @@ const AclGuard = props => {
   // ** Hooks
   const auth = useAuth()
   const router = useRouter()
+  debugger
 
   // ** Vars
   let ability

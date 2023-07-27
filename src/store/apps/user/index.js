@@ -13,13 +13,8 @@ export const fetchData = createAsyncThunk('appUsers/fetchData', async params => 
 })
 
 // ** Add User
-export const addUser = createAsyncThunk('appUsers/addUser', async (data, { getState, dispatch }) => {
-  const response = await axios.post('/apps/users/add-user', {
-    data
-  })
-  dispatch(fetchData(getState().user.params))
-
-  return response.data
+export const addUser = createAsyncThunk('appUsers/addUser', async data => {
+  return data
 })
 
 // ** Delete User
@@ -35,19 +30,23 @@ export const deleteUser = createAsyncThunk('appUsers/deleteUser', async (id, { g
 export const appUsersSlice = createSlice({
   name: 'appUsers',
   initialState: {
-    data: [],
+    data: {},
     total: 1,
     params: {},
     allData: []
   },
   reducers: {},
   extraReducers: builder => {
-    builder.addCase(fetchData.fulfilled, (state, action) => {
-      state.data = action.payload.users
-      state.total = action.payload.total
-      state.params = action.payload.params
-      state.allData = action.payload.allData
-    })
+    builder
+      .addCase(fetchData.fulfilled, (state, action) => {
+        state.data = action.payload.users
+        state.total = action.payload.total
+        state.params = action.payload.params
+        state.allData = action.payload.allData
+      })
+      .addCase(addUser.fulfilled, (state, action) => {
+        state.data = action.payload
+      })
   }
 })
 

@@ -65,4 +65,9 @@ const AnalyticsDashboard = () => {
   )
 }
 
+AnalyticsDashboard.acl = {
+  action: 'read',
+  subject: 'home-page'
+}
+
 export default AnalyticsDashboard
