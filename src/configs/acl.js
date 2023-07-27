@@ -9,6 +9,8 @@ export const AppAbility = Ability
  */
 const defineRulesFor = (role, subject) => {
   const { can, rules } = new AbilityBuilder(AppAbility)
+  can('read', 'common-view')
+
   if (role === 'ADMIN') {
     can('manage', 'all')
   } else if (role === 'PROFESSOR') {

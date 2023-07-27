@@ -3,6 +3,7 @@
  */
 const getHomeRoute = role => {
   if (role === 'STUDENT') return '/dashboards/analytics'
+  else if (role === 'PROFESSOR') return '/acl'
   else return '/dashboards/crm'
 }
 
