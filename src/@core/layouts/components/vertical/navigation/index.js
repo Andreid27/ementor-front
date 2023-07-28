@@ -145,7 +145,7 @@ const Navigation = props => {
             {userNavMenuContent ? (
               userNavMenuContent(navMenuContentProps)
             ) : (
-              <List className='nav-items' sx={{ pt: 0, '& > :first-child': { mt: '0' } }}>
+              <List className='nav-items' sx={{ pt: 0, '& > :first-first-of-type': { mt: '0' } }}>
                 <VerticalNavItems
                   navHover={navHover}
                   groupActive={groupActive}
