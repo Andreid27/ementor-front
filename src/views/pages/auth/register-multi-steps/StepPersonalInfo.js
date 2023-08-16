@@ -47,7 +47,7 @@ const StepPersonalDetails = ({ handleNext, handlePrev }) => {
             <CardHeader title={'Upload your image here'} />
             <CardContent sx={{ position: 'relative', '& pre': { m: '0 !important', maxHeight: 300 } }}>
               <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-                <FileUploaderSingle />
+                <FileUploaderSingle uploadFile={apiSpec.PROFILE_SERVICE + '-image/upload'} />
               </Box>
             </CardContent>
           </Card>

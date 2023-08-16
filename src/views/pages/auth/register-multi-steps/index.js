@@ -98,7 +98,10 @@ const RegisterMultiSteps = () => {
   const { direction } = settings
 
   // Handle Stepper
-  const handleNext = () => {
+  const handleNext = props => {
+    if (activeStep === 0) {
+      console.log(props)
+    }
     setActiveStep(activeStep + 1)
   }
 
@@ -107,6 +110,8 @@ const RegisterMultiSteps = () => {
       setActiveStep(activeStep - 1)
     }
   }
+
+  // const createProfile = ()
 
   const getStepContent = step => {
     switch (step) {
