@@ -32,14 +32,14 @@ import StepperWrapper from 'src/@core/styles/mui/stepper'
 
 const steps = [
   {
-    title: 'Account',
+    title: 'Cont',
     icon: 'tabler:smart-home',
-    subtitle: 'Account Details'
+    subtitle: 'Detalii cont'
   },
   {
     title: 'Personal',
     icon: 'tabler:users',
-    subtitle: 'Enter Information'
+    subtitle: 'Detalii personale'
   },
   {
     title: 'Billing',

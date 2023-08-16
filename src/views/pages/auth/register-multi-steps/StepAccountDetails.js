@@ -35,26 +35,41 @@ const StepAccountDetails = ({ handleNext }) => {
     <>
       <Box sx={{ mb: 6 }}>
         <Typography variant='h3' sx={{ mb: 1.5 }}>
-          Account Information
+          Informații cont
         </Typography>
-        <Typography sx={{ color: 'text.secondary' }}>Enter Your Account Details</Typography>
+        <Typography sx={{ color: 'text.secondary' }}>Introduceți mai jos Informațiile contului:</Typography>
       </Box>
 
       <Grid container spacing={5}>
         <Grid item xs={12} sm={6}>
           <FormControl fullWidth>
-            <CustomTextField fullWidth label='Username' placeholder='johndoe' />
+            <CustomTextField fullWidth label='Nume' placeholder='Maria' />
           </FormControl>
         </Grid>
         <Grid item xs={12} sm={6}>
           <FormControl fullWidth>
-            <CustomTextField fullWidth type='email' label='Email' placeholder='john.doe@email.com' />
+            <CustomTextField fullWidth label='Prenume' placeholder='Popescu' />
+          </FormControl>
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <FormControl fullWidth>
+            <CustomTextField fullWidth type='email' label='Email' placeholder='student@email.com' />
           </FormControl>
         </Grid>
         <Grid item xs={12} sm={6}>
           <CustomTextField
             fullWidth
-            label='Password'
+            label='Telefon'
+            placeholder='740 123 456'
+            InputProps={{
+              startAdornment: <InputAdornment position='start'>RO (+40)</InputAdornment>
+            }}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <CustomTextField
+            fullWidth
+            label='Parolă'
             id='input-password'
             placeholder='············'
             type={values.showPassword ? 'text' : 'password'}
@@ -72,7 +87,7 @@ const StepAccountDetails = ({ handleNext }) => {
         <Grid item xs={12} sm={6}>
           <CustomTextField
             fullWidth
-            label='Confirm Password'
+            label='Confirmare parolă'
             id='input-confirm-password'
             type={values.showConfirmPassword ? 'text' : 'password'}
             InputProps={{
@@ -85,9 +100,6 @@ const StepAccountDetails = ({ handleNext }) => {
               )
             }}
           />
-        </Grid>
-        <Grid item xs={12}>
-          <CustomTextField fullWidth label='Profile Link' placeholder='johndoe/profile' />
         </Grid>
         <Grid item xs={12} sx={{ pt: theme => `${theme.spacing(6)} !important` }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>

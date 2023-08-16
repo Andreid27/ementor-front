@@ -6,14 +6,32 @@ import MenuItem from '@mui/material/MenuItem'
 import Typography from '@mui/material/Typography'
 import FormControl from '@mui/material/FormControl'
 import InputAdornment from '@mui/material/InputAdornment'
+import * as apiSpec from '../../../../apiSpec'
+import * as source from 'src/views/forms/form-elements/file-uploader/FileUploaderSourceCode'
 
 // ** Custom Component Import
 import CustomTextField from 'src/@core/components/mui/text-field'
 
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
+import axios from 'axios'
+import { useEffect, useState } from 'react'
+import FileUploaderRestrictions from 'src/views/forms/form-elements/file-uploader/FileUploaderRestrictions'
+import CardSnippet from 'src/@core/components/card-snippet'
+import FileUploaderSingle from 'src/views/forms/form-elements/file-uploader/FileUploaderSingle'
+import { Card, CardContent, CardHeader } from '@mui/material'
 
 const StepPersonalDetails = ({ handleNext, handlePrev }) => {
+  const [initPrerequire, setInitPrerequire] = useState()
+  useEffect(() => {
+    console.log(apiSpec)
+    axios.get(apiSpec.PROFILE_SERVICE + '/profile-prerequire').then(response => {
+      setInitPrerequire(response.data)
+    })
+  }, [])
+
+  console.log(initPrerequire)
+
   return (
     <>
       <Box sx={{ mb: 6 }}>
@@ -25,25 +43,16 @@ const StepPersonalDetails = ({ handleNext, handlePrev }) => {
 
       <Grid container spacing={5}>
         <Grid item xs={12} sm={6}>
-          <CustomTextField fullWidth placeholder='john' label='First Name' />
+          <Card className={'bro'} sx={{ width: 300, height: 300, '& .MuiCardHeader-action': { lineHeight: 0.8 } }}>
+            <CardHeader title={'Upload your image here'} />
+            <CardContent sx={{ position: 'relative', '& pre': { m: '0 !important', maxHeight: 300 } }}>
+              <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                <FileUploaderSingle />
+              </Box>
+            </CardContent>
+          </Card>
         </Grid>
 
-        <Grid item xs={12} sm={6}>
-          <CustomTextField fullWidth label='Last Name' placeholder='Doe' />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <CustomTextField
-            fullWidth
-            label='Mobile'
-            placeholder='202 555 0111'
-            InputProps={{
-              startAdornment: <InputAdornment position='start'>US (+1)</InputAdornment>
-            }}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <CustomTextField fullWidth type='number' label='Pincode' placeholder='689421' />
-        </Grid>
         <Grid item xs={12}>
           <FormControl fullWidth>
             <CustomTextField fullWidth label='Address' placeholder='7777, Mendez Plains, Florida' />
