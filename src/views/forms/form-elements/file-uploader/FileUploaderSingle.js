@@ -1,23 +1,34 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
-import Icon from 'src/@core/components/icon'
 import { useDropzone } from 'react-dropzone'
 import CircularProgress from '@mui/material/CircularProgress'
-import axios from 'axios' // Import axios
+import axios from 'axios'
 import { useSelector } from 'react-redux'
 import { selectTokens } from 'src/store/apps/user'
-import { color } from '@mui/system'
+import LinearProgress from '@mui/material/LinearProgress'
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import { Icon } from '@mui/material'
 
 const FileUploaderSingle = props => {
   const [files, setFiles] = useState([])
-  let tokens = useSelector(selectTokens)
+  const tokens = useSelector(selectTokens)
   const [uploadProgress, setUploadProgress] = useState(0)
-  const [error, setError] = useState()
+  const [loading, setLoading] = useState(false)
+  const [uploadSuccess, setUploadSuccess] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (uploadProgress === 100) {
+      setTimeout(() => {
+        setUploadSuccess(true)
+      }, 500) // Add a small delay before showing the success animation
+    }
+  }, [uploadProgress])
 
   const uploadFile = async file => {
     if (!tokens.accessToken) {
-      setError(<h2 style={{ color: 'red' }}>No user found</h2>)
+      setError('No user found')
 
       return
     }
@@ -50,6 +61,13 @@ const FileUploaderSingle = props => {
     onDrop: async acceptedFiles => {
       setFiles(acceptedFiles.map(file => Object.assign(file)))
       setUploadProgress(0)
+      setLoading(true)
+      setUploadSuccess(false)
+
+      // Simulate the upload delay
+      await new Promise(resolve => setTimeout(resolve, 200))
+
+      setLoading(false)
 
       await uploadFile(acceptedFiles[0])
 
@@ -70,11 +88,11 @@ const FileUploaderSingle = props => {
         position: 'relative'
       }}
     >
-      {error}
+      {error && <div style={{ color: 'red' }}>{error}</div>}
 
-      {uploadProgress > 0 && (
-        <div
-          style={{
+      {loading && (
+        <Box
+          sx={{
             position: 'absolute',
             top: 0,
             left: 0,
@@ -86,10 +104,30 @@ const FileUploaderSingle = props => {
             justifyContent: 'center'
           }}
         >
-          <CircularProgress variant='determinate' value={uploadProgress} />
-        </div>
+          <CircularProgress />
+        </Box>
       )}
-      <input {...getInputProps()} />
+
+      {uploadSuccess && (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(255, 255, 255, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+        >
+          <CheckCircleIcon fontSize='large' sx={{ color: 'green', animation: 'pop 0.5s' }} />
+        </Box>
+      )}
+
+      <LinearProgress variant='determinate' value={uploadProgress} sx={{ width: '100%' }} />
+
       {files.length ? (
         files.map(file => (
           <img
