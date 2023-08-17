@@ -8,21 +8,34 @@ import FormControl from '@mui/material/FormControl'
 import InputAdornment from '@mui/material/InputAdornment'
 import Icon from 'src/@core/components/icon'
 import CustomTextField from 'src/@core/components/mui/text-field'
-import { Card, CardContent, CardHeader, CircularProgress } from '@mui/material'
+import { Card, CardContent, CardHeader, CircularProgress, MenuItem } from '@mui/material'
 import { Controller, useForm } from 'react-hook-form'
 import { toast } from 'react-hot-toast'
 import axios from 'axios'
 import * as apiSpec from '../../../../apiSpec'
+import Select from 'src/@core/theme/overrides/select'
+import countryCodesJson from './countryCodes.json' // Adjust the path accordingly
 
 const defaultValues = {
-  email: '',
+  firstName: '',
   lastName: '',
+  email: '',
+  phone: '',
   password: '',
-  firstName: ''
+  confirmPassword: '',
+  showPassword: false,
+  showConfirmPassword: false
 }
 
 const StepAccountDetails = ({ handleNext }) => {
   const [loading, setLoading] = useState(false)
+
+  const countryCodes = countryCodesJson.map(country => ({
+    value: country.code,
+    label: `${country.code} ${country.emoji} ${country.dial_code}`
+  }))
+
+  const [selectedCountryCode, setSelectedCountryCode] = useState('+40')
 
   const [values, setValues] = useState({
     firstName: '',
@@ -52,7 +65,6 @@ const StepAccountDetails = ({ handleNext }) => {
 
     try {
       const response = await axios.get(`${apiSpec.USER_SERVICE}/check-availability/${value}`)
-
       if (response.data === false || response.data === undefined) {
         return 'Acestă adresă de email a fost deja folosită.'
       }
@@ -87,7 +99,7 @@ const StepAccountDetails = ({ handleNext }) => {
           <Controller
             name='firstName'
             control={control}
-            rules={{ required: true }}
+            rules={{ required: true, minLength: 3, maxLength: 100 }}
             render={({ field: { value, onChange } }) => (
               <CustomTextField
                 fullWidth
@@ -97,7 +109,7 @@ const StepAccountDetails = ({ handleNext }) => {
                 placeholder='First Name'
                 error={Boolean(errors.firstName)}
                 aria-describedby='validation-async-first-name'
-                {...(errors.firstName && { helperText: 'This field is required' })}
+                {...(errors.firstName && { helperText: 'Acest câmp este obligatoriu.' })}
               />
             )}
           />
@@ -107,7 +119,7 @@ const StepAccountDetails = ({ handleNext }) => {
           <Controller
             name='lastName'
             control={control}
-            rules={{ required: true }}
+            rules={{ required: true, minLength: 3, maxLength: 100 }}
             render={({ field: { value, onChange } }) => (
               <CustomTextField
                 fullWidth
@@ -117,7 +129,7 @@ const StepAccountDetails = ({ handleNext }) => {
                 placeholder='Last Name'
                 error={Boolean(errors.lastName)}
                 aria-describedby='validation-async-last-name'
-                {...(errors.lastName && { helperText: 'This field is required' })}
+                {...(errors.lastName && { helperText: 'Acest câmp este obligatoriu.' })}
               />
             )}
           />
@@ -126,24 +138,26 @@ const StepAccountDetails = ({ handleNext }) => {
           <Controller
             name='email'
             control={control}
-            rules={{ validate: validateEmail }}
-            render={({ field: { value, onChange } }) => {
-              console.log(errors.email) // Add this line
-
-              return (
-                <CustomTextField
-                  fullWidth
-                  type='email'
-                  value={value}
-                  label='Email'
-                  onChange={onChange}
-                  error={Boolean(errors.email)}
-                  placeholder='Email'
-                  aria-describedby='validation-async-email'
-                  {...(errors.email && { helperText: errors.email.message })}
-                />
-              )
+            rules={{
+              pattern: {
+                value: /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
+                message: 'Adresa de email nu este validă. Introduceți o adresă de email validă.'
+              },
+              validate: validateEmail
             }}
+            render={({ field: { value, onChange } }) => (
+              <CustomTextField
+                fullWidth
+                type='email'
+                value={value}
+                label='Email'
+                onChange={onChange}
+                error={Boolean(errors.email)}
+                placeholder='Email'
+                aria-describedby='validation-async-email'
+                {...(errors.email && { helperText: errors.email.message })}
+              />
+            )}
           />
         </Grid>
 
@@ -164,7 +178,25 @@ const StepAccountDetails = ({ handleNext }) => {
                 value={value}
                 label='Phone'
                 onChange={onChange}
-                placeholder='123456789'
+                placeholder='740 123 123'
+                InputProps={{
+                  startAdornment: (
+                    // TODO continue here debugging.
+                    <InputAdornment position='start'>
+                      <Select
+                        value={selectedCountryCode}
+                        onChange={event => setSelectedCountryCode(event.value)}
+                        name='phone'
+                      >
+                        {countryCodes.map(country => (
+                          <MenuItem key={country.value} value={country.value}>
+                            {country.label}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </InputAdornment>
+                  )
+                }}
                 error={Boolean(errors.phone)}
                 aria-describedby='validation-async-phone'
                 {...(errors.phone && { helperText: errors.phone.message })}
