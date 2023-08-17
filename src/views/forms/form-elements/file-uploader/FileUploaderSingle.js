@@ -1,34 +1,28 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
+import LinearProgress from '@mui/material/LinearProgress'
+import Icon from 'src/@core/components/icon'
 import { useDropzone } from 'react-dropzone'
 import CircularProgress from '@mui/material/CircularProgress'
-import axios from 'axios'
+import axios from 'axios' // Import axios
 import { useSelector } from 'react-redux'
 import { selectTokens } from 'src/store/apps/user'
-import LinearProgress from '@mui/material/LinearProgress'
-import CheckCircleIcon from '@mui/icons-material/CheckCircle'
-import { Icon } from '@mui/material'
 
 const FileUploaderSingle = props => {
   const [files, setFiles] = useState([])
-  const tokens = useSelector(selectTokens)
+  let tokens = useSelector(selectTokens)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [loading, setLoading] = useState(false)
-  const [uploadSuccess, setUploadSuccess] = useState(false)
   const [error, setError] = useState('')
-
-  useEffect(() => {
-    if (uploadProgress === 100) {
-      setTimeout(() => {
-        setUploadSuccess(true)
-      }, 500) // Add a small delay before showing the success animation
-    }
-  }, [uploadProgress])
+  const [uploadSuccess, setUploadSuccess] = useState(false)
 
   const uploadFile = async file => {
+    setLoading(true)
+
     if (!tokens.accessToken) {
       setError('No user found')
+      setLoading(false)
 
       return
     }
@@ -48,8 +42,13 @@ const FileUploaderSingle = props => {
       })
 
       console.log('File uploaded successfully', response)
+      setUploadSuccess(true)
+      setError('') // Clear any previous errors
+      setLoading(false)
     } catch (error) {
       console.error('Error uploading file', error)
+      setError('Upload failed') // Set an error message if upload fails
+      setLoading(false)
     }
   }
 
@@ -61,18 +60,9 @@ const FileUploaderSingle = props => {
     onDrop: async acceptedFiles => {
       setFiles(acceptedFiles.map(file => Object.assign(file)))
       setUploadProgress(0)
-      setLoading(true)
       setUploadSuccess(false)
 
-      // Simulate the upload delay
-      await new Promise(resolve => setTimeout(resolve, 200))
-
-      setLoading(false)
-
       await uploadFile(acceptedFiles[0])
-
-      // After upload is completed, set uploadProgress back to 0
-      setUploadProgress(0)
     }
   })
 
@@ -88,45 +78,67 @@ const FileUploaderSingle = props => {
         position: 'relative'
       }}
     >
-      {error && <div style={{ color: 'red' }}>{error}</div>}
-
-      {loading && (
-        <Box
-          sx={{
+      {error && (
+        <div
+          style={{
             position: 'absolute',
             top: 0,
             left: 0,
             width: '100%',
             height: '100%',
-            backgroundColor: 'rgba(255, 255, 255, 0.5)',
+            backgroundColor: 'rgba(255, 0, 0, 0.5)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'
           }}
         >
-          <CircularProgress />
-        </Box>
+          <Typography variant='body1' sx={{ color: 'white', textAlign: 'center' }}>
+            {error}
+          </Typography>
+        </div>
+      )}
+
+      {loading && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+        >
+          <CircularProgress color='inherit' />
+        </div>
       )}
 
       {uploadSuccess && (
-        <Box
-          sx={{
+        <div
+          style={{
             position: 'absolute',
             top: 0,
             left: 0,
             width: '100%',
             height: '100%',
-            backgroundColor: 'rgba(255, 255, 255, 0.5)',
+            backgroundColor: 'rgba(0, 255, 0, 0.5)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'
           }}
         >
-          <CheckCircleIcon fontSize='large' sx={{ color: 'green', animation: 'pop 0.5s' }} />
-        </Box>
+          <Icon fontSize='4rem' icon='tabler:check' style={{ color: 'white' }} />
+        </div>
       )}
 
-      <LinearProgress variant='determinate' value={uploadProgress} sx={{ width: '100%' }} />
+      <LinearProgress
+        variant='determinate'
+        value={uploadProgress}
+        sx={{ width: '100%', visibility: loading || uploadSuccess ? 'visible' : 'hidden' }}
+      />
 
       {files.length ? (
         files.map(file => (
