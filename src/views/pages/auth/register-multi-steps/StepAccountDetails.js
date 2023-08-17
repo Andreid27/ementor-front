@@ -13,13 +13,16 @@ import { Controller, useForm } from 'react-hook-form'
 import { toast } from 'react-hot-toast'
 import axios from 'axios'
 import * as apiSpec from '../../../../apiSpec'
-import Select from 'src/@core/theme/overrides/select'
-import countryCodesJson from './countryCodes.json' // Adjust the path accordingly
+import authConfig from '../../../../../src/configs/auth'
+import countryCodes from './countryCodes.json' // Adjust the path accordingly
+import { addUser, updateTokens } from 'src/store/apps/user'
+import { useDispatch } from 'react-redux'
 
 const defaultValues = {
   firstName: '',
   lastName: '',
   email: '',
+  prefix: '+40',
   phone: '',
   password: '',
   confirmPassword: '',
@@ -28,19 +31,14 @@ const defaultValues = {
 }
 
 const StepAccountDetails = ({ handleNext }) => {
+  const dispatch = useDispatch()
   const [loading, setLoading] = useState(false)
-
-  const countryCodes = countryCodesJson.map(country => ({
-    value: country.code,
-    label: `${country.code} ${country.emoji} ${country.dial_code}`
-  }))
-
-  const [selectedCountryCode, setSelectedCountryCode] = useState('+40')
 
   const [values, setValues] = useState({
     firstName: '',
     lastName: '',
     email: '',
+    prefix: '+40',
     phone: '',
     password: '',
     confirmPassword: '',
@@ -75,18 +73,38 @@ const StepAccountDetails = ({ handleNext }) => {
     }
   }
 
+  const validateConfirmPassoword = value => {
+    if (!value) {
+      return 'Acest camp este obligatoriu. Confirmați parola.'
+    }
+
+    const { password } = getValues()
+    if (!(value === password)) {
+      return 'Parolele trebuie să fie indentice.'
+    }
+
+    return true
+  }
+
   const {
     control,
     handleSubmit,
-    formState: { errors }
+    formState: { errors },
+    getValues
   } = useForm({ defaultValues })
 
   const onSubmit = async data => {
     setLoading(true)
-
-    //TODO make phone number pattern and form validation and then,
-    //TODO call create user API
-    await sleep(2000)
+    data.phone = data.prefix + data.phone
+    axios
+      .post(authConfig.registerEndpoint, data)
+      .then(async response => {
+        dispatch(addUser(response.data.userData))
+        dispatch(updateTokens({ accessToken: response.data.accessToken, refreshToken: response.data.refreshToken }))
+      })
+      .catch(err => {
+        console.log(err)
+      })
     setLoading(false)
     toast.success('Form Submitted')
     handleNext(data)
@@ -161,7 +179,23 @@ const StepAccountDetails = ({ handleNext }) => {
           />
         </Grid>
 
-        <Grid item xs={12} sm={6}>
+        <Grid item xs={3} sm={2} style={{ marginRight: '20px' }}>
+          <Controller
+            name='prefix'
+            control={control}
+            render={({ field: { value, onChange } }) => (
+              <CustomTextField select onChange={onChange} value={value} name='prefix' label='State'>
+                {countryCodes.map(country => (
+                  <MenuItem key={country.code} value={country.dial_code}>
+                    {country.emoji + country.dial_code}
+                  </MenuItem>
+                ))}
+              </CustomTextField>
+            )}
+          />
+        </Grid>
+
+        <Grid item xs={7} sm={3}>
           <Controller
             name='phone'
             control={control}
@@ -169,7 +203,7 @@ const StepAccountDetails = ({ handleNext }) => {
               required: true,
               pattern: {
                 value: /^[0-9]{9}$/, // You can adjust the regex pattern for your specific phone number format
-                message: 'Invalid phone number'
+                message: 'Acest număr de telefonu este valid.'
               }
             }}
             render={({ field: { value, onChange } }) => (
@@ -178,25 +212,7 @@ const StepAccountDetails = ({ handleNext }) => {
                 value={value}
                 label='Phone'
                 onChange={onChange}
-                placeholder='740 123 123'
-                InputProps={{
-                  startAdornment: (
-                    // TODO continue here debugging.
-                    <InputAdornment position='start'>
-                      <Select
-                        value={selectedCountryCode}
-                        onChange={event => setSelectedCountryCode(event.value)}
-                        name='phone'
-                      >
-                        {countryCodes.map(country => (
-                          <MenuItem key={country.value} value={country.value}>
-                            {country.label}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </InputAdornment>
-                  )
-                }}
+                placeholder='740123123'
                 error={Boolean(errors.phone)}
                 aria-describedby='validation-async-phone'
                 {...(errors.phone && { helperText: errors.phone.message })}
@@ -209,7 +225,14 @@ const StepAccountDetails = ({ handleNext }) => {
           <Controller
             name='password'
             control={control}
-            rules={{ required: true }}
+            rules={{
+              required: true,
+              pattern: {
+                value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/, // You can adjust the regex pattern for your specific phone number format
+                message:
+                  'Parola trebuie sa conțină: Minim opt caractere, cel puțin o literă mare, o literă mică și un număr.'
+              }
+            }}
             render={({ field: { value, onChange } }) => (
               <CustomTextField
                 fullWidth
@@ -219,7 +242,7 @@ const StepAccountDetails = ({ handleNext }) => {
                 id='validation-async-password'
                 error={Boolean(errors.password)}
                 type={values.showPassword ? 'text' : 'password'}
-                {...(errors.password && { helperText: 'This field is required' })}
+                {...(errors.password && { helperText: errors.password.message })}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position='end'>
@@ -242,7 +265,7 @@ const StepAccountDetails = ({ handleNext }) => {
           <Controller
             name='confirmPassword'
             control={control}
-            rules={{ required: true }}
+            rules={{ validate: validateConfirmPassoword }}
             render={({ field: { value, onChange } }) => (
               <CustomTextField
                 fullWidth
@@ -252,7 +275,7 @@ const StepAccountDetails = ({ handleNext }) => {
                 id='validation-async-confirm-password'
                 error={Boolean(errors.confirmPassword)}
                 type={values.showConfirmPassword ? 'text' : 'password'}
-                {...(errors.confirmPassword && { helperText: 'This field is required' })}
+                {...(errors.confirmPassword && { helperText: errors.confirmPassword.message })}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position='end'>

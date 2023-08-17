@@ -5,17 +5,31 @@ import Icon from 'src/@core/components/icon'
 import { useDropzone } from 'react-dropzone'
 import CircularProgress from '@mui/material/CircularProgress'
 import axios from 'axios' // Import axios
+import { useSelector } from 'react-redux'
+import { selectTokens } from 'src/store/apps/user'
+import { color } from '@mui/system'
 
 const FileUploaderSingle = props => {
   const [files, setFiles] = useState([])
+  let tokens = useSelector(selectTokens)
   const [uploadProgress, setUploadProgress] = useState(0)
+  const [error, setError] = useState()
 
   const uploadFile = async file => {
+    if (!tokens.accessToken) {
+      setError(<h2 style={{ color: 'red' }}>No user found</h2>)
+
+      return
+    }
+
     const formData = new FormData()
     formData.append('file', file)
 
     try {
       const response = await axios.post(props.uploadFile, formData, {
+        headers: {
+          Authorization: `Bearer ${tokens.accessToken}`
+        },
         onUploadProgress: progressEvent => {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
           setUploadProgress(percentCompleted)
@@ -56,6 +70,8 @@ const FileUploaderSingle = props => {
         position: 'relative'
       }}
     >
+      {error}
+
       {uploadProgress > 0 && (
         <div
           style={{

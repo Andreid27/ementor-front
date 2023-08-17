@@ -17,6 +17,10 @@ export const addUser = createAsyncThunk('appUsers/addUser', async data => {
   return data
 })
 
+export const updateTokens = createAsyncThunk('appUsers/updateTokens', async data => {
+  return data
+})
+
 // ** Delete User
 export const deleteUser = createAsyncThunk('appUsers/deleteUser', async (id, { getState, dispatch }) => {
   const response = await axios.delete('/apps/users/delete', {
@@ -27,12 +31,20 @@ export const deleteUser = createAsyncThunk('appUsers/deleteUser', async (id, { g
   return response.data
 })
 
+// ** Delete Tokens
+export const deleteTokens = createAsyncThunk('appUsers/deleteTokens', () => {
+  return null
+})
+
+export const selectTokens = state => state.user.tokens
+
 export const appUsersSlice = createSlice({
   name: 'appUsers',
   initialState: {
     data: {},
     total: 1,
     params: {},
+    tokens: {},
     allData: []
   },
   reducers: {},
@@ -46,6 +58,12 @@ export const appUsersSlice = createSlice({
       })
       .addCase(addUser.fulfilled, (state, action) => {
         state.data = action.payload
+      })
+      .addCase(updateTokens.fulfilled, (state, action) => {
+        state.tokens = action.payload
+      })
+      .addCase(deleteTokens.fulfilled, (state, action) => {
+        state.tokens = action.payload
       })
   }
 })

@@ -13,7 +13,7 @@ import authConfig from 'src/configs/auth'
 
 // ** Redux Imports
 import { useDispatch, useSelector } from 'react-redux'
-import { addUser, deleteUser } from '../store/apps/user/index' // import addUser and deleteUser actions
+import { addUser, deleteTokens, deleteUser } from '../store/apps/user/index' // import addUser and deleteUser actions
 
 // ** Defaults
 const defaultProvider = {
@@ -74,6 +74,7 @@ const AuthProvider = ({ children }) => {
 
   const handleLogout = () => {
     dispatch(deleteUser()) // dispatch deleteUser action with no payload
+    dispatch(deleteTokens()) // dispatch deleteUser action with no payload
     setUser(null)
     window.localStorage.removeItem('userData')
     window.localStorage.removeItem(authConfig.storageTokenKeyName)

@@ -20,9 +20,13 @@ import FileUploaderRestrictions from 'src/views/forms/form-elements/file-uploade
 import CardSnippet from 'src/@core/components/card-snippet'
 import FileUploaderSingle from 'src/views/forms/form-elements/file-uploader/FileUploaderSingle'
 import { Card, CardContent, CardHeader } from '@mui/material'
+import { useSelector } from 'react-redux'
+import { selectAccessToken, selectTokens } from 'src/store/apps/user'
 
 const StepPersonalDetails = ({ handleNext, handlePrev }) => {
   const [initPrerequire, setInitPrerequire] = useState()
+  let accessToken = useSelector(selectTokens)
+
   useEffect(() => {
     console.log(apiSpec)
     axios.get(apiSpec.PROFILE_SERVICE + '/profile-prerequire').then(response => {
