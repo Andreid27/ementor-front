@@ -19,13 +19,18 @@ import { useEffect, useState } from 'react'
 import FileUploaderRestrictions from 'src/views/forms/form-elements/file-uploader/FileUploaderRestrictions'
 import CardSnippet from 'src/@core/components/card-snippet'
 import FileUploaderSingle from 'src/views/forms/form-elements/file-uploader/FileUploaderSingle'
-import { Card, CardContent, CardHeader } from '@mui/material'
+import { Card, CardContent, CardHeader, Fade, Modal } from '@mui/material'
 import { useSelector } from 'react-redux'
 import { selectAccessToken, selectTokens } from 'src/store/apps/user'
+import FileUploaderImageCrop from 'src/views/forms/form-elements/file-uploader/FileUploaderImageCrop/FileUploaderImageCrop'
+import CropEasy from 'src/views/forms/form-elements/file-uploader/FileUploaderImageCrop/CropComponent/CropEasy'
 
 const StepPersonalDetails = ({ handleNext, handlePrev }) => {
   const [initPrerequire, setInitPrerequire] = useState()
   let accessToken = useSelector(selectTokens)
+  const [file, setFile] = useState()
+  const [openCrop, setOpenCrop] = useState(false)
+  const [photoURL, setPhotoURL] = useState()
 
   useEffect(() => {
     console.log(apiSpec)
@@ -34,10 +39,53 @@ const StepPersonalDetails = ({ handleNext, handlePrev }) => {
     })
   }, [])
 
-  console.log(initPrerequire)
+  useEffect(() => {
+    console.log(photoURL)
+  }, [photoURL])
 
   return (
     <>
+      <Modal
+        open={openCrop}
+        onClose={() => setOpenCrop(false)}
+        closeAfterTransition
+        style={{
+          overlay: {
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.6)'
+          },
+          content: {
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            width: '40%',
+            height: 'auto',
+            transform: 'translate(-50%, -50%)',
+            padding: '20px',
+            border: '1px solid #ccc',
+            background: '#fff'
+          }
+        }}
+      >
+        <Fade in={openCrop}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '100%',
+              height: '100%'
+            }}
+          >
+            <CropEasy {...{ photoURL, setOpenCrop, setPhotoURL, setFile }} />
+          </div>
+        </Fade>
+      </Modal>
+
       <Box sx={{ mb: 6 }}>
         <Typography variant='h3' sx={{ mb: 1.5 }}>
           Personal Information
@@ -51,7 +99,12 @@ const StepPersonalDetails = ({ handleNext, handlePrev }) => {
             <CardHeader title={'Upload your image here'} />
             <CardContent sx={{ position: 'relative', '& pre': { m: '0 !important', maxHeight: 300 } }}>
               <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-                <FileUploaderSingle uploadFile={apiSpec.PROFILE_SERVICE + '-image/upload'} />
+                <FileUploaderImageCrop
+                  uploadFile={apiSpec.PROFILE_SERVICE + '-image/upload'}
+                  setFile={setFile}
+                  setOpenCrop={setOpenCrop}
+                  setPhotoURL={setPhotoURL}
+                />
               </Box>
             </CardContent>
           </Card>

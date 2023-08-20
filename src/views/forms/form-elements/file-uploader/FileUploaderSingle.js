@@ -1,176 +1,63 @@
-import React, { useState } from 'react'
+// ** React Imports
+import { useState } from 'react'
+
+// ** MUI Imports
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
-import LinearProgress from '@mui/material/LinearProgress'
+
+// ** Icon Imports
 import Icon from 'src/@core/components/icon'
+
+// ** Third Party Imports
 import { useDropzone } from 'react-dropzone'
-import CircularProgress from '@mui/material/CircularProgress'
-import axios from 'axios' // Import axios
-import { useSelector } from 'react-redux'
-import { selectTokens } from 'src/store/apps/user'
 
-const FileUploaderSingle = props => {
+const FileUploaderSingle = () => {
+  // ** State
   const [files, setFiles] = useState([])
-  let tokens = useSelector(selectTokens)
-  const [uploadProgress, setUploadProgress] = useState(0)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [uploadSuccess, setUploadSuccess] = useState(false)
 
-  const uploadFile = async file => {
-    setLoading(true)
-
-    if (!tokens.accessToken) {
-      setError('No user found')
-      setLoading(false)
-
-      return
-    }
-
-    const formData = new FormData()
-    formData.append('file', file)
-
-    try {
-      const response = await axios.post(props.uploadFile, formData, {
-        headers: {
-          Authorization: `Bearer ${tokens.accessToken}`
-        },
-        onUploadProgress: progressEvent => {
-          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
-          setUploadProgress(percentCompleted)
-        }
-      })
-
-      console.log('File uploaded successfully', response)
-      setUploadSuccess(true)
-      setError('') // Clear any previous errors
-      setLoading(false)
-    } catch (error) {
-      console.error('Error uploading file', error)
-      setError('Upload failed') // Set an error message if upload fails
-      setLoading(false)
-    }
-  }
-
+  // ** Hooks
   const { getRootProps, getInputProps } = useDropzone({
     multiple: false,
     accept: {
       'image/*': ['.png', '.jpg', '.jpeg', '.gif']
     },
-    onDrop: async acceptedFiles => {
+    onDrop: acceptedFiles => {
       setFiles(acceptedFiles.map(file => Object.assign(file)))
-      setUploadProgress(0)
-      setUploadSuccess(false)
-
-      await uploadFile(acceptedFiles[0])
     }
   })
 
+  const img = files.map(file => (
+    <img key={file.name} alt={file.name} className='single-file-image' src={URL.createObjectURL(file)} />
+  ))
+
   return (
-    <Box
-      {...getRootProps({ className: 'dropzone' })}
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexDirection: 'column',
-        height: '100%',
-        position: 'relative'
-      }}
-    >
-      {error && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            backgroundColor: 'rgba(255, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-        >
-          <Typography variant='body1' sx={{ color: 'white', textAlign: 'center' }}>
-            {error}
-          </Typography>
-        </div>
-      )}
-
-      {loading && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-        >
-          <CircularProgress color='inherit' />
-        </div>
-      )}
-
-      {uploadSuccess && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            backgroundColor: 'rgba(0, 255, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-        >
-          <Icon fontSize='4rem' icon='tabler:check' style={{ color: 'white' }} />
-        </div>
-      )}
-
-      <LinearProgress
-        variant='determinate'
-        value={uploadProgress}
-        sx={{ width: '100%', visibility: loading || uploadSuccess ? 'visible' : 'hidden' }}
-      />
-
+    <Box {...getRootProps({ className: 'dropzone' })} sx={files.length ? { height: 450 } : {}}>
+      <input {...getInputProps()} />
       {files.length ? (
-        files.map(file => (
-          <img
-            key={file.name}
-            alt={file.name}
-            className='single-file-image'
-            src={URL.createObjectURL(file)}
-            style={{ objectFit: 'contain', width: '100%', height: '100%' }}
-          />
-        ))
+        img
       ) : (
-        <Box
-          sx={{
-            width: 200,
-            p: 3,
-            borderRadius: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: theme => `rgba(${theme.palette.customColors.main}, 0.08)`
-          }}
-        >
-          <Icon icon='tabler:upload' fontSize='1.75rem' />
-        </Box>
-      )}
-      {files.length ? null : (
-        <>
-          <Typography variant='h5' sx={{ pt: 8 }}>
-            Trage fișierul aici sau click pentru upload.
+        <Box sx={{ display: 'flex', textAlign: 'center', alignItems: 'center', flexDirection: 'column' }}>
+          <Box
+            sx={{
+              mb: 8.75,
+              width: 48,
+              height: 48,
+              display: 'flex',
+              borderRadius: 1,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: theme => `rgba(${theme.palette.customColors.main}, 0.08)`
+            }}
+          >
+            <Icon icon='tabler:upload' fontSize='1.75rem' />
+          </Box>
+          <Typography variant='h4' sx={{ mb: 2.5 }}>
+            Drop files here or click to upload.
           </Typography>
-        </>
+          <Typography sx={{ color: 'text.secondary' }}>
+            (This is just a demo drop zone. Selected files are not actually uploaded.)
+          </Typography>
+        </Box>
       )}
     </Box>
   )
