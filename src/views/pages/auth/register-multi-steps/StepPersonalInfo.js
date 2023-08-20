@@ -82,8 +82,13 @@ const StepPersonalDetails = ({ handleNext, handlePrev }) => {
   } = useForm({ defaultValues })
 
   const onSubmit = async data => {
+    if (validateProfilePicture(values)) {
+      setImageValidationError(true)
+
+      return
+    }
+
     setLoading(true)
-    validateProfilePicture()
 
     setLoading(false)
     handleNext(data)
@@ -103,17 +108,14 @@ const StepPersonalDetails = ({ handleNext, handlePrev }) => {
     }
   }, [universityId])
 
-  const validateProfilePicture = () => {
-    const currentValues = getValues() // Get the current form values
+  const validateProfilePicture = currentValues => {
     const profilePictureLength = currentValues.profilePicture.trim().length
     if (profilePictureLength < 32) {
-      setImageValidationError(true)
+      return true
     } else {
-      setImageValidationError(false)
+      return false
     }
   }
-
-  console.log(imageValidationError)
 
   return (
     <>
@@ -188,7 +190,7 @@ const StepPersonalDetails = ({ handleNext, handlePrev }) => {
             </Card>
             {imageValidationError && (
               <Typography variant='caption' color='error'>
-                The profile picture must have a minimum length of 32 characters.
+                Fotografia de profil este obligatorie.
               </Typography>
             )}
           </Grid>
