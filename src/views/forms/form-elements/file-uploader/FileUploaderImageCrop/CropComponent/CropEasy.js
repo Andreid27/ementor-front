@@ -32,11 +32,16 @@ const CropEasy = ({ photoURL, setOpenCrop, setPhotoURL, setFile, fileName }) => 
 
   return (
     <>
-      <Box>
+      <Box
+        sx={{
+          background: '#fff',
+          padding: '1.5rem'
+        }}
+      >
         <DialogContent
           dividers
           sx={{
-            background: '#333',
+            background: '#C0C0C0',
             position: 'relative',
             height: 400,
             width: 'auto',
@@ -67,16 +72,6 @@ const CropEasy = ({ photoURL, setOpenCrop, setPhotoURL, setFile, fileName }) => 
                 step={0.1}
                 value={zoom}
                 onChange={(e, zoom) => setZoom(zoom)}
-              />
-            </Box>
-            <Box>
-              <Typography>Rotation: {rotation + '°'}</Typography>
-              <Slider
-                valueLabelDisplay='auto'
-                min={0}
-                max={360}
-                value={rotation}
-                onChange={(e, rotation) => setRotation(rotation)}
               />
             </Box>
           </Box>

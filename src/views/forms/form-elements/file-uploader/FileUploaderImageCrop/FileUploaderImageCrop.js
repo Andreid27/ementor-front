@@ -42,6 +42,10 @@ const FileUploaderImageCrop = props => {
       })
 
       console.log('File uploaded successfully with id:', response.data)
+      props.setValues(prevValues => ({
+        ...prevValues,
+        profilePicture: response.data
+      }))
       setUploadSuccess(true)
       setError('') // Clear any previous errors
       setLoading(false)

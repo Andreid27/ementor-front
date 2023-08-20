@@ -115,26 +115,6 @@ const StepAccountDetails = ({ handleNext }) => {
       <Grid container spacing={5}>
         <Grid item xs={12} sm={6}>
           <Controller
-            name='firstName'
-            control={control}
-            rules={{ required: true, minLength: 3, maxLength: 100 }}
-            render={({ field: { value, onChange } }) => (
-              <CustomTextField
-                fullWidth
-                value={value}
-                label='First Name'
-                onChange={onChange}
-                placeholder='First Name'
-                error={Boolean(errors.firstName)}
-                aria-describedby='validation-async-first-name'
-                {...(errors.firstName && { helperText: 'Acest câmp este obligatoriu.' })}
-              />
-            )}
-          />
-        </Grid>
-        {/* ... Other fields */}
-        <Grid item xs={12} sm={6}>
-          <Controller
             name='lastName'
             control={control}
             rules={{ required: true, minLength: 3, maxLength: 100 }}
@@ -142,9 +122,9 @@ const StepAccountDetails = ({ handleNext }) => {
               <CustomTextField
                 fullWidth
                 value={value}
-                label='Last Name'
+                label='Nume'
                 onChange={onChange}
-                placeholder='Last Name'
+                placeholder='Popescu'
                 error={Boolean(errors.lastName)}
                 aria-describedby='validation-async-last-name'
                 {...(errors.lastName && { helperText: 'Acest câmp este obligatoriu.' })}
@@ -152,6 +132,26 @@ const StepAccountDetails = ({ handleNext }) => {
             )}
           />
         </Grid>
+        <Grid item xs={12} sm={6}>
+          <Controller
+            name='firstName'
+            control={control}
+            rules={{ required: true, minLength: 3, maxLength: 100 }}
+            render={({ field: { value, onChange } }) => (
+              <CustomTextField
+                fullWidth
+                value={value}
+                label='Prenume'
+                onChange={onChange}
+                placeholder='Maria'
+                error={Boolean(errors.firstName)}
+                aria-describedby='validation-async-first-name'
+                {...(errors.firstName && { helperText: 'Acest câmp este obligatoriu.' })}
+              />
+            )}
+          />
+        </Grid>
+
         <Grid item xs={12} sm={6}>
           <Controller
             name='email'
@@ -184,7 +184,7 @@ const StepAccountDetails = ({ handleNext }) => {
             name='prefix'
             control={control}
             render={({ field: { value, onChange } }) => (
-              <CustomTextField select onChange={onChange} value={value} name='prefix' label='State'>
+              <CustomTextField select onChange={onChange} value={value} name='prefix' label='Țară'>
                 {countryCodes.map(country => (
                   <MenuItem key={country.code} value={country.dial_code}>
                     {country.emoji + country.dial_code}
@@ -210,7 +210,7 @@ const StepAccountDetails = ({ handleNext }) => {
               <CustomTextField
                 fullWidth
                 value={value}
-                label='Phone'
+                label='Număr de telefon'
                 onChange={onChange}
                 placeholder='740123123'
                 error={Boolean(errors.phone)}
@@ -237,7 +237,7 @@ const StepAccountDetails = ({ handleNext }) => {
               <CustomTextField
                 fullWidth
                 value={value}
-                label='Password'
+                label='Parolă'
                 onChange={onChange}
                 id='validation-async-password'
                 error={Boolean(errors.password)}
@@ -270,7 +270,7 @@ const StepAccountDetails = ({ handleNext }) => {
               <CustomTextField
                 fullWidth
                 value={value}
-                label='Confirm Password'
+                label='Confirmare parolă'
                 onChange={onChange}
                 id='validation-async-confirm-password'
                 error={Boolean(errors.confirmPassword)}
