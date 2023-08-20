@@ -74,8 +74,9 @@ export default async function getCroppedImg(
 
   // As a blob
   return new Promise((resolve, reject) => {
-    canvas.toBlob(file => {
-      file.name = 'cropped.jpeg'
+    canvas.toBlob(blob => {
+      // Create a File object from the blob and give it a name
+      const file = new File([blob], 'cropped.jpeg', { type: 'image/jpeg' })
       resolve({ file: file, url: URL.createObjectURL(file) })
     }, 'image/jpeg')
   })

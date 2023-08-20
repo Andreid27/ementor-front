@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import LinearProgress from '@mui/material/LinearProgress'
@@ -63,12 +63,29 @@ const FileUploaderImageCrop = props => {
       props.setOpenCrop(true)
       props.setFile(acceptedFiles[0])
       props.setPhotoURL(URL.createObjectURL(acceptedFiles[0]))
-      setUploadProgress(0)
-      setUploadSuccess(false)
-
-      await uploadFile(acceptedFiles[0])
+      console.log(acceptedFiles)
+      console.log(acceptedFiles[0])
     }
   })
+
+  useEffect(() => {
+    // Declare the callback function as async
+    const uploadFileAsync = async photoURL => {
+      if (props.openCrop == false) {
+        setFiles([Object.assign(props.file)])
+        console.log(files)
+        console.log(props.file)
+        setUploadProgress(0)
+        setUploadSuccess(false)
+
+        // Use the await keyword to wait for the uploadFile function to finish
+        await uploadFile(props.file)
+      }
+    }
+
+    // Call the async function
+    uploadFileAsync()
+  }, [props.photoURL])
 
   return (
     <Box

@@ -104,6 +104,9 @@ const StepPersonalDetails = ({ handleNext, handlePrev }) => {
                   setFile={setFile}
                   setOpenCrop={setOpenCrop}
                   setPhotoURL={setPhotoURL}
+                  file={file}
+                  openCrop={openCrop}
+                  photoURL={photoURL}
                 />
               </Box>
             </CardContent>
