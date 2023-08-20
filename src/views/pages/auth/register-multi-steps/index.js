@@ -99,7 +99,7 @@ const RegisterMultiSteps = () => {
 
   // Handle Stepper
   const handleNext = props => {
-    if (activeStep === 0) {
+    if (activeStep === 1) {
       console.log(props)
     }
     setActiveStep(activeStep + 1)

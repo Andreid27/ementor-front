@@ -87,9 +87,8 @@ const StepPersonalDetails = ({ handleNext, handlePrev }) => {
 
       return
     }
-
     setLoading(true)
-
+    data.profilePicture = values.profilePicture
     setLoading(false)
     handleNext(data)
   }
