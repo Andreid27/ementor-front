@@ -5,7 +5,7 @@ import React, { useState } from 'react'
 import Cropper from 'react-easy-crop'
 import getCroppedImg from './utils/cropImage'
 
-const CropEasy = ({ photoURL, setOpenCrop, setPhotoURL, setFile }) => {
+const CropEasy = ({ photoURL, setOpenCrop, setPhotoURL, setFile, fileName }) => {
   const [crop, setCrop] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
   const [rotation, setRotation] = useState(0)
@@ -19,18 +19,11 @@ const CropEasy = ({ photoURL, setOpenCrop, setPhotoURL, setFile }) => {
   const cropImage = async () => {
     setLoading(true)
     try {
-      const { file, url } = await getCroppedImg(photoURL, croppedAreaPixels, rotation)
+      const { file, url } = await getCroppedImg(photoURL, fileName, croppedAreaPixels, rotation)
       setPhotoURL(url)
       setFile(file)
       setOpenCrop(false)
     } catch (error) {
-      setAlert({
-        isAlert: true,
-        severity: 'error',
-        message: error.message,
-        timeout: 5000,
-        location: 'modal'
-      })
       console.log(error)
     }
 
@@ -94,7 +87,14 @@ const CropEasy = ({ photoURL, setOpenCrop, setPhotoURL, setFile }) => {
               flexWrap: 'wrap'
             }}
           >
-            <Button variant='outlined' startIcon={<Cancel />} onClick={() => setOpenCrop(false)}>
+            <Button
+              variant='outlined'
+              startIcon={<Cancel />}
+              onClick={() => {
+                setOpenCrop(false)
+                setFile(null)
+              }}
+            >
               Cancel
             </Button>
             {/* Change button text based on loading state */}

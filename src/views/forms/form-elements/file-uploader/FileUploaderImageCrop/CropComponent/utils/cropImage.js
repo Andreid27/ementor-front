@@ -28,6 +28,7 @@ export function rotateSize(width, height, rotation) {
  */
 export default async function getCroppedImg(
   imageSrc,
+  fileName,
   pixelCrop,
   rotation = 0,
   flip = { horizontal: false, vertical: false }
@@ -76,7 +77,7 @@ export default async function getCroppedImg(
   return new Promise((resolve, reject) => {
     canvas.toBlob(blob => {
       // Create a File object from the blob and give it a name
-      const file = new File([blob], 'cropped.jpeg', { type: 'image/jpeg' })
+      const file = new File([blob], `${fileName}.jpeg`, { type: 'image/jpeg' })
       resolve({ file: file, url: URL.createObjectURL(file) })
     }, 'image/jpeg')
   })

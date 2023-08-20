@@ -27,7 +27,6 @@ const FileUploaderImageCrop = props => {
 
       return
     }
-
     const formData = new FormData()
     formData.append('file', file)
 
@@ -42,7 +41,7 @@ const FileUploaderImageCrop = props => {
         }
       })
 
-      console.log('File uploaded successfully', response)
+      console.log('File uploaded successfully with id:', response.data)
       setUploadSuccess(true)
       setError('') // Clear any previous errors
       setLoading(false)
@@ -56,36 +55,41 @@ const FileUploaderImageCrop = props => {
   const { getRootProps, getInputProps } = useDropzone({
     multiple: false,
     accept: {
-      'image/*': ['.png', '.jpg', '.jpeg', '.gif']
+      'image/*': ['.png', '.jpg', '.jpeg']
     },
     onDrop: async acceptedFiles => {
       setFiles(acceptedFiles.map(file => Object.assign(file)))
       props.setOpenCrop(true)
       props.setFile(acceptedFiles[0])
+      const path = require('path')
+      props.setFileName(path.parse(acceptedFiles[0].name).name)
       props.setPhotoURL(URL.createObjectURL(acceptedFiles[0]))
-      console.log(acceptedFiles)
-      console.log(acceptedFiles[0])
     }
   })
 
   useEffect(() => {
     // Declare the callback function as async
-    const uploadFileAsync = async photoURL => {
-      if (props.openCrop == false) {
-        setFiles([Object.assign(props.file)])
-        console.log(files)
-        console.log(props.file)
+    const uploadFileAsync = async () => {
+      if (props.openCrop == false && props.file) {
         setUploadProgress(0)
         setUploadSuccess(false)
-
-        // Use the await keyword to wait for the uploadFile function to finish
+        URL.revokeObjectURL(files[0])
+        URL.revokeObjectURL(props.file)
+        setFiles([Object.assign(props.file)])
         await uploadFile(props.file)
       }
     }
-
-    // Call the async function
     uploadFileAsync()
   }, [props.photoURL])
+
+  useEffect(() => {
+    if (props.file === null) {
+      setFiles([])
+      setUploadSuccess(false)
+      setError(false)
+      setUploadProgress(0)
+    }
+  }, [props.file])
 
   return (
     <Box

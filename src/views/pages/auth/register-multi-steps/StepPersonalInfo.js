@@ -29,19 +29,15 @@ const StepPersonalDetails = ({ handleNext, handlePrev }) => {
   const [initPrerequire, setInitPrerequire] = useState()
   let accessToken = useSelector(selectTokens)
   const [file, setFile] = useState()
+  const [fileName, setFileName] = useState('')
   const [openCrop, setOpenCrop] = useState(false)
   const [photoURL, setPhotoURL] = useState()
 
   useEffect(() => {
-    console.log(apiSpec)
     axios.get(apiSpec.PROFILE_SERVICE + '/profile-prerequire').then(response => {
       setInitPrerequire(response.data)
     })
   }, [])
-
-  useEffect(() => {
-    console.log(photoURL)
-  }, [photoURL])
 
   return (
     <>
@@ -81,7 +77,7 @@ const StepPersonalDetails = ({ handleNext, handlePrev }) => {
               height: '100%'
             }}
           >
-            <CropEasy {...{ photoURL, setOpenCrop, setPhotoURL, setFile }} />
+            <CropEasy {...{ photoURL, setOpenCrop, setPhotoURL, setFile, fileName }} />
           </div>
         </Fade>
       </Modal>
@@ -104,9 +100,11 @@ const StepPersonalDetails = ({ handleNext, handlePrev }) => {
                   setFile={setFile}
                   setOpenCrop={setOpenCrop}
                   setPhotoURL={setPhotoURL}
+                  setFileName={setFileName}
                   file={file}
                   openCrop={openCrop}
                   photoURL={photoURL}
+                  fileName={fileName}
                 />
               </Box>
             </CardContent>
