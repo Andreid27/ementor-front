@@ -54,8 +54,6 @@ const StepAccountDetails = ({ handleNext }) => {
     setValues({ ...values, showConfirmPassword: !values.showConfirmPassword })
   }
 
-  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
-
   const validateEmail = async value => {
     if (!value) {
       return 'Acest camp este obligatoriu.'
@@ -106,7 +104,7 @@ const StepAccountDetails = ({ handleNext }) => {
         console.log(err)
       })
     setLoading(false)
-    toast.success('Form Submitted')
+    toast.success('Cont creat cu succes!')
     handleNext(data)
   }
 

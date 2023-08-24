@@ -33,18 +33,7 @@ import PickersMonthYearDropdowns from 'src/views/forms/form-elements/pickers/Pic
 import { LocalizationProvider } from '@mui/x-date-pickers'
 import dayjs from 'dayjs'
 
-const defaultValues = {
-  school: '',
-  schoolGrade: '',
-  university: 'choose',
-  speciality: 'choose',
-  date: dayjs(),
-  profilePicture: ''
-}
-
-const StepPersonalDetails = ({ handleNext, handlePrev }) => {
-  const [initPrerequire, setInitPrerequire] = useState({ universities: [], counties: [] })
-
+const StepPersonalDetails = ({ handleNext, initPrerequire, setInitPrerequire, setCounties, profile, setProfile }) => {
   let accessToken = useSelector(selectTokens)
   const [file, setFile] = useState()
   const [fileName, setFileName] = useState('')
@@ -63,37 +52,32 @@ const StepPersonalDetails = ({ handleNext, handlePrev }) => {
       console.log(response.data)
       setInitPrerequire(response.data)
     })
+    setUniversityId(profile.university)
   }, [])
-
-  const [values, setValues] = useState({
-    school: '',
-    schoolGrade: '',
-    university: '',
-    speciality: '',
-    date: '',
-    profilePicture: ''
-  })
 
   const {
     control,
     handleSubmit,
     formState: { errors },
     getValues
-  } = useForm({ defaultValues })
+  } = useForm({ defaultValues: profile })
 
   const onSubmit = async data => {
-    if (validateProfilePicture(values)) {
+    if (validateProfilePicture(profile)) {
       setImageValidationError(true)
 
       return
     }
     setLoading(true)
-    data.profilePicture = values.profilePicture
+    data.profilePicture = profile.profilePicture
     setLoading(false)
     handleNext(data)
   }
 
   useEffect(() => {
+    console.log(universityId)
+    console.log(initPrerequire.universities)
+
     if (
       initPrerequire.universities.length > 0 &&
       universityId != 'choose' &&
@@ -161,9 +145,11 @@ const StepPersonalDetails = ({ handleNext, handlePrev }) => {
       <form onSubmit={handleSubmit(onSubmit)}>
         <Box sx={{ mb: 6 }}>
           <Typography variant='h3' sx={{ mb: 1.5 }}>
-            Personal Information
+            Informații personale
           </Typography>
-          <Typography sx={{ color: 'text.secondary' }}>Enter Your Personal Information</Typography>
+          <Typography sx={{ color: 'text.secondary' }}>
+            Intrduceți detalii personale în formularul de mai jos
+          </Typography>
         </Box>
 
         <Grid container spacing={5}>
@@ -182,7 +168,7 @@ const StepPersonalDetails = ({ handleNext, handlePrev }) => {
                     openCrop={openCrop}
                     photoURL={photoURL}
                     fileName={fileName}
-                    setValues={setValues}
+                    setValues={setProfile}
                   />
                 </Box>
               </CardContent>
@@ -335,11 +321,7 @@ const StepPersonalDetails = ({ handleNext, handlePrev }) => {
             />
           </Grid>
           <Grid item xs={12} sx={{ pt: theme => `${theme.spacing(6)} !important` }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Button color='secondary' variant='tonal' onClick={handlePrev} sx={{ '& svg': { mr: 2 } }}>
-                <Icon fontSize='1.125rem' icon='tabler:arrow-left' />
-                Previous
-              </Button>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
               <Button type='submit' variant='contained'>
                 {loading ? (
                   <CircularProgress

@@ -29,11 +29,13 @@ import { hexToRGBA } from 'src/@core/utils/hex-to-rgba'
 
 // ** Styled Components
 import StepperWrapper from 'src/@core/styles/mui/stepper'
+import { toast } from 'react-hot-toast'
+import dayjs from 'dayjs'
 
 const steps = [
   {
     title: 'Cont',
-    icon: 'tabler:smart-home',
+    icon: 'tabler:at',
     subtitle: 'Detalii cont'
   },
   {
@@ -42,9 +44,9 @@ const steps = [
     subtitle: 'Detalii personale'
   },
   {
-    title: 'Billing',
-    icon: 'tabler:file-text',
-    subtitle: 'Payment Details'
+    title: 'Adresa',
+    icon: 'tabler:smart-home',
+    subtitle: 'Adresa de domiciliu'
   }
 ]
 
@@ -91,6 +93,27 @@ const Step = styled(MuiStep)(({ theme }) => ({
 const RegisterMultiSteps = () => {
   // ** States
   const [activeStep, setActiveStep] = useState(0)
+  const [initPrerequire, setInitPrerequire] = useState({ universities: [], counties: [] })
+  const [submitLoading, setSubmitLoading] = useState(false)
+
+  const [address, setAddress] = useState({
+    county: 'choose',
+    city: '',
+    street: '',
+    number: '',
+    block: '',
+    staircase: '',
+    apartment: ''
+  })
+
+  const [profile, setProfile] = useState({
+    school: '',
+    schoolGrade: '',
+    university: 'choose',
+    speciality: 'choose',
+    date: dayjs(),
+    profilePicture: ''
+  })
 
   // ** Hooks & Var
   const { settings } = useSettings()
@@ -100,7 +123,7 @@ const RegisterMultiSteps = () => {
   // Handle Stepper
   const handleNext = props => {
     if (activeStep === 1) {
-      console.log(props)
+      setProfile(props)
     }
     setActiveStep(activeStep + 1)
   }
@@ -111,16 +134,41 @@ const RegisterMultiSteps = () => {
     }
   }
 
-  // const createProfile = ()
+  const handleSubmitProfile = () => {
+    setSubmitLoading(true)
+
+    console.log('profile submitted')
+    console.log(address)
+    setSubmitLoading(false)
+    toast.success('Profil creat cu succes')
+  }
 
   const getStepContent = step => {
     switch (step) {
       case 0:
         return <StepAccountDetails handleNext={handleNext} />
       case 1:
-        return <StepPersonalInfo handleNext={handleNext} handlePrev={handlePrev} />
+        return (
+          <StepPersonalInfo
+            handleNext={handleNext}
+            handlePrev={handlePrev}
+            initPrerequire={initPrerequire}
+            setInitPrerequire={setInitPrerequire}
+            profile={profile}
+            setProfile={setProfile}
+          />
+        )
       case 2:
-        return <StepBillingDetails handlePrev={handlePrev} />
+        return (
+          <StepBillingDetails
+            address={address}
+            setAddress={setAddress}
+            handlePrev={handlePrev}
+            counties={initPrerequire.counties}
+            handleSubmitProfile={handleSubmitProfile}
+            submitLoading={submitLoading}
+          />
+        )
       default:
         return null
     }
@@ -144,7 +192,7 @@ const RegisterMultiSteps = () => {
             const RenderAvatar = activeStep >= index ? CustomAvatar : Avatar
 
             return (
-              <Step key={index} onClick={() => setActiveStep(index)}>
+              <Step key={index}>
                 <StepLabel>
                   <div className='step-label'>
                     <RenderAvatar

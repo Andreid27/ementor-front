@@ -1,5 +1,5 @@
 // ** React Imports
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 // ** MUI Components
 import Box from '@mui/material/Box'
@@ -25,215 +25,231 @@ import { formatCVC, formatExpirationDate, formatCreditCardNumber } from 'src/@co
 
 // ** Styles Import
 import 'react-credit-cards/es/styles-compiled.css'
+import { CircularProgress, IconButton, MenuItem } from '@mui/material'
+import { Controller, useForm } from 'react-hook-form'
+import { useDispatch } from 'react-redux'
+import { toast } from 'react-hot-toast'
 
-const data = [
-  {
-    value: 'basic',
-    title: (
-      <Typography variant='h4' sx={{ mb: 1 }}>
-        Basic
-      </Typography>
-    ),
-    content: (
-      <Box sx={{ my: 'auto', display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
-        <Typography sx={{ textAlign: 'center', color: 'text.secondary' }}>
-          A simple start for start ups & Students
-        </Typography>
-        <Box sx={{ mt: 1, display: 'flex' }}>
-          <Typography component='sup' sx={{ mt: 1.5, color: 'primary.main', alignSelf: 'flex-start' }}>
-            $
-          </Typography>
-          <Typography variant='h2' sx={{ color: 'primary.main' }}>
-            0
-          </Typography>
-          <Typography component='sub' sx={{ mb: 1.5, alignSelf: 'flex-end', color: 'text.disabled' }}>
-            /month
-          </Typography>
-        </Box>
-      </Box>
-    )
-  },
-  {
-    isSelected: true,
-    value: 'standard',
-    title: (
-      <Typography variant='h4' sx={{ mb: 1 }}>
-        Standard
-      </Typography>
-    ),
-    content: (
-      <Box sx={{ my: 'auto', display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
-        <Typography sx={{ textAlign: 'center', color: 'text.secondary' }}>For small to medium businesses</Typography>
-        <Box sx={{ mt: 1, display: 'flex' }}>
-          <Typography component='sup' sx={{ mt: 1.5, color: 'primary.main', alignSelf: 'flex-start' }}>
-            $
-          </Typography>
-          <Typography variant='h2' sx={{ color: 'primary.main' }}>
-            99
-          </Typography>
-          <Typography component='sub' sx={{ mb: 1.5, alignSelf: 'flex-end', color: 'text.disabled' }}>
-            /month
-          </Typography>
-        </Box>
-      </Box>
-    )
-  },
-  {
-    value: 'enterprise',
-    title: (
-      <Typography variant='h4' sx={{ mb: 1 }}>
-        Enterprise
-      </Typography>
-    ),
-    content: (
-      <Box sx={{ my: 'auto', display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
-        <Typography sx={{ textAlign: 'center', color: 'text.secondary' }}>
-          Solution for enterprise & organizations
-        </Typography>
-        <Box sx={{ mt: 1, display: 'flex' }}>
-          <Typography component='sup' sx={{ mt: 1.5, color: 'primary.main', alignSelf: 'flex-start' }}>
-            $
-          </Typography>
-          <Typography variant='h2' sx={{ color: 'primary.main' }}>
-            499
-          </Typography>
-          <Typography component='sub' sx={{ mb: 1.5, alignSelf: 'flex-end', color: 'text.disabled' }}>
-            /month
-          </Typography>
-        </Box>
-      </Box>
-    )
-  }
-]
+const StepBillingDetails = ({ address, setAddress, counties, handlePrev, handleSubmitProfile, submitLoading }) => {
+  const dispatch = useDispatch()
 
-const StepBillingDetails = ({ handlePrev }) => {
-  const initialSelected = data.filter(item => item.isSelected)[data.filter(item => item.isSelected).length - 1].value
+  const [values, setValues] = useState(address)
 
-  // ** State
-  const [cvc, setCvc] = useState('')
-  const [name, setName] = useState('')
-  const [expiry, setExpiry] = useState('')
-  const [cardNumber, setCardNumber] = useState('')
-  const [selectedRadio, setSelectedRadio] = useState(initialSelected)
+  useEffect(() => {
+    console.log(address)
+    setValues(address)
+  }, [])
 
-  const handleInputChange = ({ target }) => {
-    if (target.name === 'cardNumber') {
-      target.value = formatCreditCardNumber(target.value, Payment)
-      setCardNumber(target.value)
-    } else if (target.name === 'expiry') {
-      target.value = formatExpirationDate(target.value)
-      setExpiry(target.value)
-    } else if (target.name === 'cvc') {
-      target.value = formatCVC(target.value, cardNumber, Payment)
-      setCvc(target.value)
-    }
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    getValues
+  } = useForm({ defaultValues: address })
+
+  const onSubmit = async data => {
+    setAddress(getValues())
+    handleSubmitProfile()
   }
 
-  const handleRadioChange = prop => {
-    if (typeof prop === 'string') {
-      setSelectedRadio(prop)
-    } else {
-      setSelectedRadio(prop.target.value)
+  const goPreviousStep = () => {
+    const newValues = getValues()
+
+    for (let key in newValues) {
+      if (newValues[key] !== undefined) {
+        values[key] = newValues[key]
+      }
     }
+
+    setAddress(values)
+    handlePrev()
   }
 
   return (
-    <>
-      <Box sx={{ mb: 6 }}>
-        <Typography variant='h3' sx={{ mb: 1.5 }}>
-          Select Plan
-        </Typography>
-        <Typography sx={{ color: 'text.secondary' }}>Select plan as per your requirement</Typography>
-      </Box>
-
+    <form onSubmit={handleSubmit(onSubmit)}>
       <Grid container spacing={5}>
-        {data.map((item, index) => (
-          <CustomRadioIcons
-            key={index}
-            data={data[index]}
-            selected={selectedRadio}
-            name='custom-radios-plan'
-            gridProps={{ sm: 4, xs: 12 }}
-            handleChange={handleRadioChange}
-          />
-        ))}
-
-        <Grid item xs={12} sx={{ pt: theme => `${theme.spacing(6)} !important` }}>
-          <Typography variant='h3' sx={{ mb: 1.5 }}>
-            Payment Information
-          </Typography>
-          <Typography sx={{ color: 'text.secondary' }}>Enter your card information</Typography>
-        </Grid>
-        <Grid item xs={12} sx={{ pt: theme => `${theme.spacing(6)} !important` }}>
-          <FormControl fullWidth>
-            <CustomTextField
-              fullWidth
-              name='cardNumber'
-              value={cardNumber}
-              autoComplete='off'
-              label='Card Number'
-              onChange={handleInputChange}
-              placeholder='0000 0000 0000 0000'
-            />
-          </FormControl>
-        </Grid>
         <Grid item xs={12} sm={6}>
-          <CustomTextField
-            fullWidth
-            name='name'
-            value={name}
-            autoComplete='off'
-            label='Name on Card'
-            placeholder='John Doe'
-            onChange={e => setName(e.target.value)}
+          <Controller
+            name='county'
+            control={control}
+            rules={{ required: true, minLength: 32, maxLength: 40 }}
+            defaultValue={'choose'}
+            render={({ field: { value, onChange } }) => (
+              <CustomTextField
+                select
+                fullWidth
+                onChange={onChange}
+                value={value}
+                name='county'
+                label='Județ'
+                error={Boolean(errors.county)}
+                aria-describedby='validation-async-last-name'
+                {...(errors.county && { helperText: 'Acest câmp este obligatoriu.' })}
+              >
+                <MenuItem key={'choose'} value={'choose'}>
+                  {'Alege'}
+                </MenuItem>
+                {counties &&
+                  counties.map(county => (
+                    <MenuItem key={county.id} value={county.id}>
+                      {county.name}
+                    </MenuItem>
+                  ))}
+              </CustomTextField>
+            )}
           />
         </Grid>
-        <Grid item xs={6} sm={3}>
-          <CustomTextField
-            fullWidth
-            name='expiry'
-            label='Expiry'
-            value={expiry}
-            placeholder='MM/YY'
-            onChange={handleInputChange}
-            inputProps={{ maxLength: '5' }}
+
+        <Grid item xs={12} sm={6}>
+          <Controller
+            name='city'
+            control={control}
+            rules={{ required: true, minLength: 3, maxLength: 100 }}
+            render={({ field: { value, onChange } }) => (
+              <CustomTextField
+                fullWidth
+                value={value}
+                label='Oraș'
+                onChange={onChange}
+                placeholder='București'
+                error={Boolean(errors.city)}
+                aria-describedby='validation-async-first-name'
+                {...(errors.city && { helperText: 'Acest câmp este obligatoriu.' })}
+              />
+            )}
           />
         </Grid>
-        <Grid item xs={6} sm={3}>
-          <CustomTextField
-            fullWidth
-            name='cvc'
-            label='CVC'
-            value={cvc}
-            placeholder='234'
-            autoComplete='off'
-            onChange={handleInputChange}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position='start' sx={{ '& svg': { cursor: 'pointer' } }}>
-                  <Tooltip title='Card Verification Value'>
-                    <Box sx={{ display: 'flex' }}>
-                      <Icon fontSize='1.25rem' icon='tabler:question-circle' />
-                    </Box>
-                  </Tooltip>
-                </InputAdornment>
-              )
-            }}
+
+        <Grid item xs={12} sm={6}>
+          <Controller
+            name='street'
+            control={control}
+            rules={{ required: true, minLength: 3, maxLength: 200 }}
+            render={({ field: { value, onChange } }) => (
+              <CustomTextField
+                fullWidth
+                value={value}
+                label='Stada'
+                onChange={onChange}
+                error={Boolean(errors.street)}
+                placeholder='Bulevardul Unirii'
+                aria-describedby='validation-async-email'
+                {...(errors.street && { helperText: 'Acest câmp este obligatoriu.' })}
+              />
+            )}
           />
         </Grid>
+
+        <Grid item xs={12} sm={6}>
+          <Controller
+            name='number'
+            control={control}
+            rules={{ required: true, maxLength: 10 }}
+            render={({ field: { value, onChange } }) => (
+              <CustomTextField
+                fullWidth
+                value={value}
+                label='Număr'
+                onChange={onChange}
+                error={Boolean(errors.number)}
+                placeholder='124'
+                aria-describedby='validation-async-email'
+                {...(errors.number && { helperText: 'Acest câmp este obligatoriu.' })}
+              />
+            )}
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6}>
+          <Controller
+            name='block'
+            control={control}
+            rules={{ maxLength: 50 }}
+            render={({ field: { value, onChange } }) => (
+              <CustomTextField
+                fullWidth
+                value={value}
+                label='Bloc'
+                onChange={onChange}
+                placeholder=''
+                error={Boolean(errors.block)}
+                aria-describedby='validation-async-phone'
+                {...(errors.block && { helperText: 'Acest câmp este obligatoriu.' })}
+              />
+            )}
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={3}>
+          <Controller
+            name='staircase'
+            control={control}
+            rules={{ maxLength: 5 }}
+            render={({ field: { value, onChange } }) => (
+              <CustomTextField
+                fullWidth
+                value={value}
+                label='Scară'
+                onChange={onChange}
+                error={Boolean(errors.staircase)}
+                placeholder=''
+                aria-describedby='validation-async-email'
+                {...(errors.staircase && { helperText: 'Acest câmp este obligatoriu.' })}
+              />
+            )}
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={3}>
+          <Controller
+            name='apartment'
+            control={control}
+            rules={{ required: true, maxLength: 50 }}
+            render={({ field: { value, onChange } }) => (
+              <CustomTextField
+                fullWidth
+                type='number'
+                value={value}
+                label='Apartment'
+                onChange={onChange}
+                placeholder=''
+                error={Boolean(errors.apartment)}
+                aria-describedby='validation-async-phone'
+                {...(errors.apartment && { helperText: 'Acest câmp este obligatoriu.' })}
+              />
+            )}
+          />
+        </Grid>
+
         <Grid item xs={12} sx={{ pt: theme => `${theme.spacing(6)} !important` }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-            <Button color='secondary' variant='tonal' onClick={handlePrev} sx={{ '& svg': { mr: 2 } }}>
+            <Button
+              color='secondary'
+              variant='tonal'
+              type='submit'
+              onClick={goPreviousStep}
+              sx={{ '& svg': { mr: 2 } }}
+            >
               <Icon fontSize='1.125rem' icon='tabler:arrow-left' />
               Previous
             </Button>
-            <Button color='success' variant='contained' onClick={() => alert('Submitted..!!')}>
-              Submit
+            <Button type='submit' variant='contained'>
+              {submitLoading ? (
+                <CircularProgress
+                  sx={{
+                    color: 'common.white',
+                    width: '20px !important',
+                    height: '20px !important',
+                    mr: theme => theme.spacing(2)
+                  }}
+                />
+              ) : null}
+              Finalizare cont
             </Button>
           </Box>
         </Grid>
       </Grid>
-    </>
+    </form>
   )
 }
 
