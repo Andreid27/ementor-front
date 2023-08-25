@@ -49,6 +49,8 @@ const StepBillingDetails = ({ address, setAddress, counties, handlePrev, handleS
 
   const onSubmit = async data => {
     setAddress(getValues())
+
+    //TODO debug here
     handleSubmitProfile()
   }
 
@@ -70,7 +72,7 @@ const StepBillingDetails = ({ address, setAddress, counties, handlePrev, handleS
       <Grid container spacing={5}>
         <Grid item xs={12} sm={6}>
           <Controller
-            name='county'
+            name='countyId'
             control={control}
             rules={{ required: true, minLength: 32, maxLength: 40 }}
             defaultValue={'choose'}
@@ -80,11 +82,11 @@ const StepBillingDetails = ({ address, setAddress, counties, handlePrev, handleS
                 fullWidth
                 onChange={onChange}
                 value={value}
-                name='county'
+                name='countyId'
                 label='Județ'
-                error={Boolean(errors.county)}
+                error={Boolean(errors.countyId)}
                 aria-describedby='validation-async-last-name'
-                {...(errors.county && { helperText: 'Acest câmp este obligatoriu.' })}
+                {...(errors.countyId && { helperText: 'Acest câmp este obligatoriu.' })}
               >
                 <MenuItem key={'choose'} value={'choose'}>
                   {'Alege'}
@@ -204,7 +206,6 @@ const StepBillingDetails = ({ address, setAddress, counties, handlePrev, handleS
           <Controller
             name='apartment'
             control={control}
-            rules={{ required: true, maxLength: 50 }}
             render={({ field: { value, onChange } }) => (
               <CustomTextField
                 fullWidth

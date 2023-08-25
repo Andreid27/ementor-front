@@ -32,6 +32,7 @@ import { useTheme } from '@emotion/react'
 import PickersMonthYearDropdowns from 'src/views/forms/form-elements/pickers/PickersMonthYearDropdowns'
 import { LocalizationProvider } from '@mui/x-date-pickers'
 import dayjs from 'dayjs'
+import { useRouter } from 'next/router'
 
 const StepPersonalDetails = ({ handleNext, initPrerequire, setInitPrerequire, setCounties, profile, setProfile }) => {
   let accessToken = useSelector(selectTokens)
@@ -49,7 +50,6 @@ const StepPersonalDetails = ({ handleNext, initPrerequire, setInitPrerequire, se
 
   useEffect(() => {
     axios.get(apiSpec.PROFILE_SERVICE + '/profile-prerequire').then(response => {
-      console.log(response.data)
       setInitPrerequire(response.data)
     })
     setUniversityId(profile.university)
@@ -75,9 +75,6 @@ const StepPersonalDetails = ({ handleNext, initPrerequire, setInitPrerequire, se
   }
 
   useEffect(() => {
-    console.log(universityId)
-    console.log(initPrerequire.universities)
-
     if (
       initPrerequire.universities.length > 0 &&
       universityId != 'choose' &&
@@ -245,7 +242,7 @@ const StepPersonalDetails = ({ handleNext, initPrerequire, setInitPrerequire, se
                       </MenuItem>
                       {specialities &&
                         specialities.map(speciality => (
-                          <MenuItem key={speciality.id} value={speciality.id}>
+                          <MenuItem key={speciality.specialityId} value={speciality.specialityId}>
                             {speciality.name}
                           </MenuItem>
                         ))}

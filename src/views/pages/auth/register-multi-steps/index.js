@@ -9,6 +9,9 @@ import Typography from '@mui/material/Typography'
 import { styled } from '@mui/material/styles'
 import useMediaQuery from '@mui/material/useMediaQuery'
 import MuiStep from '@mui/material/Step'
+import * as apiSpec from '../../../../apiSpec'
+import jwt_decode from 'jwt-decode'
+import authConfig from 'src/configs/auth'
 
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
@@ -31,6 +34,10 @@ import { hexToRGBA } from 'src/@core/utils/hex-to-rgba'
 import StepperWrapper from 'src/@core/styles/mui/stepper'
 import { toast } from 'react-hot-toast'
 import dayjs from 'dayjs'
+import { useSelector } from 'react-redux'
+import { selectTokens, selectUser } from 'src/store/apps/user'
+import axios from 'axios'
+import { useRouter } from 'next/router'
 
 const steps = [
   {
@@ -95,9 +102,13 @@ const RegisterMultiSteps = () => {
   const [activeStep, setActiveStep] = useState(0)
   const [initPrerequire, setInitPrerequire] = useState({ universities: [], counties: [] })
   const [submitLoading, setSubmitLoading] = useState(false)
+  let tokens = useSelector(selectTokens)
+  let user = useSelector(selectUser)
+
+  const router = useRouter()
 
   const [address, setAddress] = useState({
-    county: 'choose',
+    countyId: 'choose',
     city: '',
     street: '',
     number: '',
@@ -134,13 +145,34 @@ const RegisterMultiSteps = () => {
     }
   }
 
-  const handleSubmitProfile = () => {
+  const handleSubmitProfile = async () => {
     setSubmitLoading(true)
 
-    console.log('profile submitted')
-    console.log(address)
+    let requestBody = {
+      pictureId: profile.profilePicture,
+      universityId: profile.university,
+      specialityId: profile.speciality,
+      desiredExamDate: profile.date.toISOString(),
+      school: profile.school,
+      schoolGrade: profile.schoolGrade,
+      about: profile.about,
+      address: address
+    }
+
+    const response = await axios.post(apiSpec.PROFILE_SERVICE + '/create', requestBody, {
+      headers: {
+        Authorization: `Bearer ${tokens.accessToken}`
+      }
+    })
+
     setSubmitLoading(false)
     toast.success('Profil creat cu succes')
+
+    window.localStorage.setItem(authConfig.storageTokenKeyName, tokens.accessToken)
+    window.localStorage.setItem('userData', JSON.stringify(user))
+    const returnUrl = router.query.returnUrl
+    const redirectURL = returnUrl && returnUrl !== '/' ? returnUrl : '/'
+    router.replace(redirectURL)
   }
 
   const getStepContent = step => {

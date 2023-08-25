@@ -38,6 +38,8 @@ export const deleteTokens = createAsyncThunk('appUsers/deleteTokens', () => {
 
 export const selectTokens = state => state.user.tokens
 
+export const selectUser = state => state.user.data
+
 export const appUsersSlice = createSlice({
   name: 'appUsers',
   initialState: {
