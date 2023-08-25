@@ -38,6 +38,7 @@ import { useSelector } from 'react-redux'
 import { selectTokens, selectUser } from 'src/store/apps/user'
 import axios from 'axios'
 import { useRouter } from 'next/router'
+import { useAuth } from 'src/hooks/useAuth'
 
 const steps = [
   {
@@ -103,6 +104,7 @@ const RegisterMultiSteps = () => {
   const [initPrerequire, setInitPrerequire] = useState({ universities: [], counties: [] })
   const [submitLoading, setSubmitLoading] = useState(false)
   let tokens = useSelector(selectTokens)
+  const auth = useAuth()
   let user = useSelector(selectUser)
 
   const router = useRouter()
@@ -170,6 +172,9 @@ const RegisterMultiSteps = () => {
 
     window.localStorage.setItem(authConfig.storageTokenKeyName, tokens.accessToken)
     window.localStorage.setItem('userData', JSON.stringify(user))
+
+    auth.setUser({ ...user })
+
     const returnUrl = router.query.returnUrl
     const redirectURL = returnUrl && returnUrl !== '/' ? returnUrl : '/'
     router.replace(redirectURL)

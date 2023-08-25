@@ -49,8 +49,6 @@ const StepBillingDetails = ({ address, setAddress, counties, handlePrev, handleS
 
   const onSubmit = async data => {
     setAddress(getValues())
-
-    //TODO debug here
     handleSubmitProfile()
   }
 
@@ -234,7 +232,7 @@ const StepBillingDetails = ({ address, setAddress, counties, handlePrev, handleS
               <Icon fontSize='1.125rem' icon='tabler:arrow-left' />
               Previous
             </Button>
-            <Button type='submit' variant='contained'>
+            <Button variant='contained' onClick={onSubmit}>
               {submitLoading ? (
                 <CircularProgress
                   sx={{
