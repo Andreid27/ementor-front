@@ -31,6 +31,8 @@ import CustomInput from '../../../forms/form-elements/pickers/PickersCustomInput
 import { useTheme } from '@emotion/react'
 import PickersMonthYearDropdowns from 'src/views/forms/form-elements/pickers/PickersMonthYearDropdowns'
 import { LocalizationProvider } from '@mui/x-date-pickers'
+import schoolSpecialities from './schoolSpecialities.json'
+import schoolDomains from './schoolDomains.json'
 import dayjs from 'dayjs'
 import { useRouter } from 'next/router'
 
@@ -273,6 +275,73 @@ const StepPersonalDetails = ({ handleNext, initPrerequire, setInitPrerequire, se
             </Grid>
           </Grid>
 
+          <Grid item xs={12} sm={6}>
+            <Controller
+              name='schoolDomain'
+              control={control}
+              rules={{ required: true, minLength: 4, maxLength: 50 }}
+              defaultValue={'ch'} // This sets the default value
+              render={({ field: { value, onChange } }) => (
+                <CustomTextField
+                  select
+                  fullWidth
+                  onChange={e => {
+                    onChange(e)
+                  }}
+                  value={value}
+                  name='schoolDomain'
+                  label='Domeniu de studiu'
+                  error={Boolean(errors.schoolDomain)}
+                  aria-describedby='validation-async-last-name'
+                  {...(errors.schoolDomain && { helperText: 'Acest câmp este obligatoriu.' })}
+                >
+                  <MenuItem key={'ch'} value={'ch'}>
+                    {'Alege'}
+                  </MenuItem>
+                  {schoolDomains &&
+                    Object.entries(schoolDomains).map(([key, value]) => (
+                      <MenuItem key={key} value={key}>
+                        {value}
+                      </MenuItem>
+                    ))}
+                </CustomTextField>
+              )}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <Controller
+              name='schoolSpeciality'
+              control={control}
+              rules={{ required: true, minLength: 4, maxLength: 50 }}
+              defaultValue={'ch'} // This sets the default value
+              render={({ field: { value, onChange } }) => (
+                <CustomTextField
+                  select
+                  fullWidth
+                  onChange={e => {
+                    onChange(e)
+                  }}
+                  value={value}
+                  name='schoolSpeciality'
+                  label='Specializarea'
+                  error={Boolean(errors.schoolSpeciality)}
+                  aria-describedby='validation-async-last-name'
+                  {...(errors.schoolSpeciality && { helperText: 'Acest câmp este obligatoriu.' })}
+                >
+                  <MenuItem key={'ch'} value={'ch'}>
+                    {'Alege'}
+                  </MenuItem>
+                  {schoolSpecialities &&
+                    Object.entries(schoolSpecialities).map(([key, value]) => (
+                      <MenuItem key={key} value={key}>
+                        {value}
+                      </MenuItem>
+                    ))}
+                </CustomTextField>
+              )}
+            />
+          </Grid>
+
           <Grid item xs={12} sm={8}>
             <Controller
               name='school'
@@ -317,6 +386,7 @@ const StepPersonalDetails = ({ handleNext, initPrerequire, setInitPrerequire, se
               )}
             />
           </Grid>
+
           <Grid item xs={12} sx={{ pt: theme => `${theme.spacing(6)} !important` }}>
             <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
               <Button type='submit' variant='contained'>

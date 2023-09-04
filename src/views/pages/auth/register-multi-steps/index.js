@@ -125,7 +125,9 @@ const RegisterMultiSteps = () => {
     university: 'choose',
     speciality: 'choose',
     date: dayjs(),
-    profilePicture: ''
+    profilePicture: '',
+    schoolDomain: 'ch',
+    schoolSpeciality: 'ch'
   })
 
   // ** Hooks & Var
@@ -147,7 +149,7 @@ const RegisterMultiSteps = () => {
     }
   }
 
-  const handleSubmitProfile = async () => {
+  const handleSubmitProfile = async data => {
     setSubmitLoading(true)
 
     let requestBody = {
@@ -158,7 +160,9 @@ const RegisterMultiSteps = () => {
       school: profile.school,
       schoolGrade: profile.schoolGrade,
       about: profile.about,
-      address: address
+      schoolDomain: profile.schoolDomain,
+      schoolSpeciality: profile.schoolSpeciality,
+      address: data
     }
 
     const response = await axios.post(apiSpec.PROFILE_SERVICE + '/create', requestBody, {

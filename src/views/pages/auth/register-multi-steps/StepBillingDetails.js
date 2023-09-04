@@ -48,8 +48,13 @@ const StepBillingDetails = ({ address, setAddress, counties, handlePrev, handleS
   } = useForm({ defaultValues: address })
 
   const onSubmit = async data => {
-    setAddress(getValues())
-    handleSubmitProfile()
+    let newValues = getValues()
+    setAddress(newValues)
+
+    console.log(newValues)
+    console.log(address)
+
+    handleSubmitProfile(newValues)
   }
 
   const goPreviousStep = () => {
