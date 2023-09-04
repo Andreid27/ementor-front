@@ -48,3 +48,5 @@ export const store = configureStore({
 
 // Export the persistor, so you can use it in the 'PersistGate'
 export const persistor = persistStore(store)
+
+export default store

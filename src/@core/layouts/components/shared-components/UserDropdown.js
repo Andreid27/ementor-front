@@ -1,5 +1,5 @@
 // ** React Imports
-import { useState, Fragment } from 'react'
+import { useState, Fragment, useEffect } from 'react'
 
 // ** Next Import
 import { useRouter } from 'next/router'
@@ -19,7 +19,10 @@ import Icon from 'src/@core/components/icon'
 
 // ** Context
 import { useAuth } from 'src/hooks/useAuth'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
+import * as apiSpec from '../../../../apiSpec'
+import apiClient from 'src/@core/axios/axiosEmentor'
+import { addThumbnail } from 'src/store/apps/user'
 
 // ** Styled Components
 const BadgeContentSpan = styled('span')(({ theme }) => ({
@@ -47,9 +50,34 @@ const UserDropdown = props => {
   // ** Hooks
   const router = useRouter()
   const { logout } = useAuth()
+  const dispach = useDispatch()
 
   // ** Vars
   const { direction } = settings
+
+  const [imageUrl, setImageUrl] = useState(null)
+
+  useEffect(() => {
+    apiClient
+      .get('/service1//profile-data/download/user-thumbnail', {
+        responseType: 'blob' // Set the responseType to 'blob'
+      })
+      .then(response => {
+        // Handle the response as a Blob
+        const imageBlob = response.data
+
+        // Use the Blob as needed, for example, creating an object URL for displaying it
+        const newImageUrl = URL.createObjectURL(imageBlob)
+
+        // Update state with the new image URL
+        setImageUrl(newImageUrl)
+        dispach(addThumbnail(newImageUrl))
+      })
+      .catch(error => {
+        // Handle errors here
+        console.error('Error:', error)
+      })
+  }, []) // The empty dependency array ensures that this effect runs once when the component mounts
 
   const handleDropdownOpen = event => {
     setAnchorEl(event.currentTarget)
@@ -94,12 +122,7 @@ const UserDropdown = props => {
           horizontal: 'right'
         }}
       >
-        <Avatar
-          alt='John Doe'
-          src='/images/avatars/1.png'
-          onClick={handleDropdownOpen}
-          sx={{ width: 38, height: 38 }}
-        />
+        <Avatar alt='John Doe' src={imageUrl} onClick={handleDropdownOpen} sx={{ width: 38, height: 38 }} />
       </Badge>
       <Menu
         anchorEl={anchorEl}
@@ -119,7 +142,7 @@ const UserDropdown = props => {
                 horizontal: 'right'
               }}
             >
-              <Avatar alt='John Doe' src='/images/avatars/1.png' sx={{ width: '2.5rem', height: '2.5rem' }} />
+              <Avatar alt='John Doe' src={imageUrl} sx={{ width: '2.5rem', height: '2.5rem' }} />
             </Badge>
             <Box sx={{ display: 'flex', ml: 2.5, alignItems: 'flex-start', flexDirection: 'column' }}>
               <Typography sx={{ fontWeight: 500 }}>

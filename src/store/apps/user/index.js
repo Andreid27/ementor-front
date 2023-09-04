@@ -17,6 +17,11 @@ export const addUser = createAsyncThunk('appUsers/addUser', async data => {
   return data
 })
 
+// ** Add User
+export const addThumbnail = createAsyncThunk('appUsers/addThumbnail', async data => {
+  return data
+})
+
 export const updateTokens = createAsyncThunk('appUsers/updateTokens', async data => {
   return data
 })
@@ -40,6 +45,8 @@ export const selectTokens = state => state.user.tokens
 
 export const selectUser = state => state.user.data
 
+export const selectThumbnail = state => state.user.tokens
+
 export const appUsersSlice = createSlice({
   name: 'appUsers',
   initialState: {
@@ -47,6 +54,7 @@ export const appUsersSlice = createSlice({
     total: 1,
     params: {},
     tokens: {},
+    thumbnailUrl: '',
     allData: []
   },
   reducers: {},
@@ -63,6 +71,9 @@ export const appUsersSlice = createSlice({
       })
       .addCase(updateTokens.fulfilled, (state, action) => {
         state.tokens = action.payload
+      })
+      .addCase(addThumbnail.fulfilled, (state, action) => {
+        state.thumbnailUrl = action.payload
       })
       .addCase(deleteTokens.fulfilled, (state, action) => {
         state.tokens = action.payload

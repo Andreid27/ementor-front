@@ -13,7 +13,7 @@ import authConfig from 'src/configs/auth'
 
 // ** Redux Imports
 import { useDispatch, useSelector } from 'react-redux'
-import { addUser, deleteTokens, deleteUser } from '../store/apps/user/index' // import addUser and deleteUser actions
+import { addUser, deleteTokens, deleteUser, updateTokens } from '../store/apps/user/index' // import addUser and deleteUser actions
 
 // ** Defaults
 const defaultProvider = {
@@ -62,6 +62,7 @@ const AuthProvider = ({ children }) => {
         window.localStorage.setItem(authConfig.storageTokenKeyName, response.data.accessToken)
         window.localStorage.setItem('userData', JSON.stringify(response.data.userData))
         setUser({ ...response.data.userData })
+        dispatch(updateTokens({ accessToken: response.data.accessToken, refreshToken: response.data.refreshToken }))
         dispatch(addUser(response.data.userData)) // dispatch addUser action with user data
         const returnUrl = router.query.returnUrl
         const redirectURL = returnUrl && returnUrl !== '/' ? returnUrl : '/'
