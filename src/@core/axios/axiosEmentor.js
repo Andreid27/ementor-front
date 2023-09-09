@@ -1,5 +1,6 @@
 import axios from 'axios'
 import store from '../../store/index'
+import * as apiSpec from '../../apiSpec'
 
 // Function to get token from your state
 function getCurrentToken() {
@@ -13,7 +14,7 @@ function getCurrentToken() {
 
 // Create an instance of axios
 const apiClient = axios.create({
-  baseURL: 'https://api.e-mentor.ro',
+  baseURL: apiSpec.PROD_HOST,
   timeout: 3000,
   headers: {
     'Content-Type': 'application/json'

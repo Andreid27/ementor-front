@@ -60,7 +60,7 @@ const StepAccountDetails = ({ handleNext }) => {
     }
 
     try {
-      const response = await axios.get(`${apiSpec.USER_SERVICE}/check-availability/${value}`)
+      const response = await axios.get(`${apiSpec.PROD_HOST + apiSpec.USER_SERVICE}/check-availability/${value}`)
       if (response.data === false || response.data === undefined) {
         return 'Acestă adresă de email a fost deja folosită.'
       }

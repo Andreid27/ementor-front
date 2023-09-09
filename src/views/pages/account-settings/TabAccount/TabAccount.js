@@ -21,6 +21,7 @@ import InputAdornment from '@mui/material/InputAdornment'
 import Button from '@mui/material/Button'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import ModalFileUploaderImageCrop from '../../../forms/form-elements/file-uploader/ModalFileUploaderImageCrop'
+import * as apiSpec from '../../../../apiSpec'
 
 // ** Custom Component Import
 import CustomTextField from 'src/@core/components/mui/text-field'
@@ -34,6 +35,8 @@ import { useDispatch, useSelector } from 'react-redux'
 import AccountDetailsCard from './Cards/AccountDetailsCards'
 import { addThumbnail, selectThumbnail } from 'src/store/apps/user'
 import { handleProfileImageUrl } from 'src/@core/layouts/components/shared-components/UserDropdown'
+import apiClient from 'src/@core/axios/axiosEmentor'
+import { CircularProgress } from '@mui/material'
 
 const ImgStyled = styled('img')(({ theme }) => ({
   width: 100,
@@ -70,7 +73,6 @@ const TabAccount = () => {
   const [openFileUpload, setOpenFileUpload] = useState(false)
   const [profilePictureId, setProfilePictureId] = useState({})
   const dispatch = useDispatch()
-  console.log(profilePictureId)
 
   const [fullProfile, setFullProfile] = useState({
     id: '',
@@ -108,12 +110,33 @@ const TabAccount = () => {
     }
   })
 
+  const [loading, setLoading] = useState(true)
+
+  // Define an async function to fetch the data
+  const fetchData = async () => {
+    try {
+      const response = await apiClient.get(apiSpec.PROFILE_SERVICE + '/get-full')
+      setFullProfile(response.data) // Update state with fetched data
+    } catch (error) {
+      // Handle errors here
+      console.error('Error:', error)
+    } finally {
+      // Set loading to false when the request is completed (success or error)
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    // Fetch data when the component mounts
+    fetchData()
+  }, [])
+
+  // Render loading indicator while data is being fetched
+
   useEffect(() => {
     //TODO continue here updating the small profile picture component on this dispatch
     dispatch(addThumbnail(imgSrc))
   }, [imgSrc])
-
-  console.log(imgSrc)
 
   // ** Hooks
   const {
@@ -131,30 +154,21 @@ const TabAccount = () => {
     setSecondDialogOpen(true)
   }
 
-  const handleInputImageChange = file => {
-    const reader = new FileReader()
-    const { files } = file.target
-    if (files && files.length !== 0) {
-      reader.onload = () => setImgSrc(reader.result)
-      reader.readAsDataURL(files[0])
-      if (reader.result !== null) {
-        setInputValue(reader.result)
-      }
-    }
-  }
-
-  const handleInputImageReset = () => {
-    setInputValue(userData.thumbnailUrl)
-    setImgSrc('/images/avatars/15.png')
-  }
-
   const handleFormChange = (field, value) => {
     setFormData({ ...formData, [field]: value })
   }
+  if (loading) {
+    return (
+      <div>
+        <CircularProgress /> {/* You can customize the loading indicator */}
+      </div>
+    )
+  }
+  console.log(fullProfile)
 
   return (
     <Grid container spacing={6}>
-      {/* Account Details Card */}
+      {/* Account Details Card  - TODO BUG - cand dai hard reload ramane cu referinta la poza veche*/}
 
       <ModalFileUploaderImageCrop
         openFileUpload={openFileUpload}
@@ -166,124 +180,49 @@ const TabAccount = () => {
       <Grid item xs={12}>
         <Card>
           <CardHeader title='Profile Details' />
-          <form>
-            <CardContent sx={{ pt: 0 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <ImgStyled src={imgSrc} alt='Profile Pic' />
-                <div>
-                  <ButtonStyled
-                    component='label'
-                    variant='contained'
-                    htmlFor='account-settings-upload-image'
-                    onClick={() => {
-                      setOpenFileUpload(true)
-                      console.log(openFileUpload)
-                    }}
-                  >
-                    Upload New Photo
-                  </ButtonStyled>
+          <CardContent sx={{ pt: 0 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <ImgStyled src={imgSrc} alt='Profile Pic' />
+              <div>
+                <ButtonStyled
+                  component='label'
+                  variant='contained'
+                  htmlFor='account-settings-upload-image'
+                  onClick={() => {
+                    setOpenFileUpload(true)
+                    console.log(openFileUpload)
+                  }}
+                >
+                  Actulizează poza de profil
+                </ButtonStyled>
 
-                  <Typography sx={{ mt: 4, color: 'text.disabled' }}>Allowed PNG or JPEG. Max size of 800K.</Typography>
-                </div>
-              </Box>
-            </CardContent>
-            <Divider />
-            <CardContent>
-              <Grid container spacing={5}>
-                <Grid item xs={12} sm={6}>
-                  <CustomTextField
-                    fullWidth
-                    label='Prenume'
-                    value={formData.firstName}
-                    onChange={e => handleFormChange('firstName', e.target.value)}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <CustomTextField
-                    fullWidth
-                    label='Nume'
-                    value={formData.lastName}
-                    onChange={e => handleFormChange('lastName', e.target.value)}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <CustomTextField
-                    fullWidth
-                    type='email'
-                    label='Email'
-                    value={formData.email}
-                    onChange={e => handleFormChange('email', e.target.value)}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <CustomTextField
-                    fullWidth
-                    type='number'
-                    label='Număr de telefon'
-                    value={formData.number}
-                    placeholder='700 123 123'
-                    onChange={e => handleFormChange('number', e.target.value)}
-                    InputProps={{ startAdornment: <InputAdornment position='start'>RO (+40)</InputAdornment> }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <CustomTextField
-                    fullWidth
-                    label='Adresă'
-                    placeholder='Adresă'
-                    value={formData.address}
-                    onChange={e => handleFormChange('address', e.target.value)}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <CustomTextField
-                    select
-                    fullWidth
-                    defaultValue=''
-                    label='Județ'
-                    SelectProps={{
-                      value: formData.country,
-                      onChange: e => handleFormChange('country', e.target.value)
-                    }}
-                  >
-                    <MenuItem value='australia'>Australia</MenuItem>
-                    <MenuItem value='canada'>Canada</MenuItem>
-                    <MenuItem value='france'>France</MenuItem>
-                    <MenuItem value='united-kingdom'>United Kingdom</MenuItem>
-                    <MenuItem value='united-states'>United States</MenuItem>
-                    {/* TODO de adaugat judet din baza de date */}
-                  </CustomTextField>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <CustomTextField
-                    fullWidth
-                    label='Țară de proveniență'
-                    placeholder='România'
-                    value={formData.state}
-                    onChange={e => handleFormChange('state', e.target.value)}
-                  />
-                </Grid>
-
-                <Grid item xs={12} sx={{ pt: theme => `${theme.spacing(6.5)} !important` }}>
-                  <Button variant='contained' sx={{ mr: 4 }}>
-                    Save Changes
-                  </Button>
-                  <Button type='reset' variant='tonal' color='secondary' onClick={() => setFormData(userData)}>
-                    Reset
-                  </Button>
-                </Grid>
-              </Grid>
-            </CardContent>
-          </form>
-        </Card>
-      </Grid>
-
-      {/* Account Details */}
-
-      <Grid item xs={12}>
-        <Card>
+                <Typography sx={{ mt: 4, color: 'text.disabled' }}>Allowed PNG or JPEG. Max size of 800K.</Typography>
+              </div>
+            </Box>
+          </CardContent>
+          <Divider />
           <CardContent>
-            <AccountDetailsCard />
+            <Grid container spacing={5}>
+              <Grid item xs={12}>
+                <AccountDetailsCard fullProfile={fullProfile} setFullProfile={setFullProfile} />
+              </Grid>
+            </Grid>
+          </CardContent>
+          <Divider />
+          <CardContent>
+            <Grid container spacing={5}>
+              <Grid item xs={12}>
+                <AccountDetailsCard fullProfile={fullProfile} setFullProfile={setFullProfile} />
+              </Grid>
+              <Grid item xs={12} sx={{ pt: theme => `${theme.spacing(6.5)} !important` }}>
+                <Button variant='contained' sx={{ mr: 4 }}>
+                  Save Changes
+                </Button>
+                <Button type='reset' variant='tonal' color='secondary' onClick={() => setFormData(userData)}>
+                  Reset
+                </Button>
+              </Grid>
+            </Grid>
           </CardContent>
         </Card>
       </Grid>

@@ -165,7 +165,7 @@ const RegisterMultiSteps = () => {
       address: data
     }
 
-    const response = await axios.post(apiSpec.PROFILE_SERVICE + '/create', requestBody, {
+    const response = await axios.post(apiSpec.PROD_HOST + apiSpec.PROFILE_SERVICE + '/create', requestBody, {
       headers: {
         Authorization: `Bearer ${tokens.accessToken}`
       }

@@ -51,7 +51,7 @@ const StepPersonalDetails = ({ handleNext, initPrerequire, setInitPrerequire, se
   const { direction } = theme
 
   useEffect(() => {
-    axios.get(apiSpec.PROFILE_SERVICE + '/profile-prerequire').then(response => {
+    axios.get(apiSpec.PROD_HOST + apiSpec.PROFILE_SERVICE + '/profile-prerequire').then(response => {
       setInitPrerequire(response.data)
     })
     setUniversityId(profile.university)
@@ -158,7 +158,7 @@ const StepPersonalDetails = ({ handleNext, initPrerequire, setInitPrerequire, se
               <CardContent sx={{ position: 'relative', '& pre': { m: '0 !important', maxHeight: 300 } }}>
                 <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
                   <FileUploaderImageCrop
-                    uploadFile={apiSpec.PROFILE_SERVICE + '-image/upload'}
+                    uploadFile={apiSpec.PROD_HOST + apiSpec.PROFILE_SERVICE + '-image/upload'}
                     setFile={setFile}
                     setOpenCrop={setOpenCrop}
                     setPhotoURL={setPhotoURL}
