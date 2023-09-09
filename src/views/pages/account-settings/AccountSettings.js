@@ -20,7 +20,7 @@ import CircularProgress from '@mui/material/CircularProgress'
 import Icon from 'src/@core/components/icon'
 
 // ** Demo Tabs Imports
-import TabAccount from 'src/views/pages/account-settings/TabAccount'
+import TabAccount from 'src/views/pages/account-settings/TabAccount/TabAccount'
 import TabBilling from 'src/views/pages/account-settings/TabBilling'
 import TabSecurity from 'src/views/pages/account-settings/TabSecurity'
 import TabConnections from 'src/views/pages/account-settings/TabConnections'

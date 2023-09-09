@@ -1,5 +1,5 @@
 // ** React Imports
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 // ** MUI Imports
 import Box from '@mui/material/Box'
@@ -20,6 +20,7 @@ import FormHelperText from '@mui/material/FormHelperText'
 import InputAdornment from '@mui/material/InputAdornment'
 import Button from '@mui/material/Button'
 import FormControlLabel from '@mui/material/FormControlLabel'
+import ModalFileUploaderImageCrop from '../../../forms/form-elements/file-uploader/ModalFileUploaderImageCrop'
 
 // ** Custom Component Import
 import CustomTextField from 'src/@core/components/mui/text-field'
@@ -29,7 +30,10 @@ import { useForm, Controller } from 'react-hook-form'
 
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
+import AccountDetailsCard from './Cards/AccountDetailsCards'
+import { addThumbnail, selectThumbnail } from 'src/store/apps/user'
+import { handleProfileImageUrl } from 'src/@core/layouts/components/shared-components/UserDropdown'
 
 const ImgStyled = styled('img')(({ theme }) => ({
   width: 100,
@@ -58,12 +62,58 @@ const ResetButtonStyled = styled(Button)(({ theme }) => ({
 const TabAccount = () => {
   // ** State
   const [open, setOpen] = useState(false)
-  const userData = useSelector(state => state.user.data)
-  const [inputValue, setInputValue] = useState('')
+  const userData = useSelector(state => state.user)
   const [userInput, setUserInput] = useState('yes')
-  const [formData, setFormData] = useState(userData)
-  const [imgSrc, setImgSrc] = useState('/images/avatars/15.png')
+  const [formData, setFormData] = useState(userData.data)
+  const [imgSrc, setImgSrc] = useState(userData.thumbnailUrl)
   const [secondDialogOpen, setSecondDialogOpen] = useState(false)
+  const [openFileUpload, setOpenFileUpload] = useState(false)
+  const [profilePictureId, setProfilePictureId] = useState({})
+  const dispatch = useDispatch()
+  console.log(profilePictureId)
+
+  const [fullProfile, setFullProfile] = useState({
+    id: '',
+    userId: '',
+    user: {
+      userId: null,
+      email: '',
+      firstName: '',
+      lastName: '',
+      phone: '',
+      role: '',
+      active: false,
+      disabled: false,
+      hasProfile: false
+    },
+    pictureId: '',
+    universityId: '',
+    specialityId: '',
+    desiredExamDate: '2025-11-04T20:25:51.566Z',
+    school: '',
+    schoolDomain: '',
+    schoolSpeciality: '',
+    schoolGrade: 10,
+    about: '',
+    address: {
+      id: '',
+      countyId: '',
+      countyValue: '',
+      city: '',
+      street: '',
+      number: '',
+      block: '',
+      staircase: '',
+      apartment: 0
+    }
+  })
+
+  useEffect(() => {
+    //TODO continue here updating the small profile picture component on this dispatch
+    dispatch(addThumbnail(imgSrc))
+  }, [imgSrc])
+
+  console.log(imgSrc)
 
   // ** Hooks
   const {
@@ -94,7 +144,7 @@ const TabAccount = () => {
   }
 
   const handleInputImageReset = () => {
-    setInputValue('')
+    setInputValue(userData.thumbnailUrl)
     setImgSrc('/images/avatars/15.png')
   }
 
@@ -105,6 +155,14 @@ const TabAccount = () => {
   return (
     <Grid container spacing={6}>
       {/* Account Details Card */}
+
+      <ModalFileUploaderImageCrop
+        openFileUpload={openFileUpload}
+        setOpenFileUpload={setOpenFileUpload}
+        profilePictureId={profilePictureId}
+        setProfilePictureId={setProfilePictureId}
+        setImgSrc={setImgSrc}
+      />
       <Grid item xs={12}>
         <Card>
           <CardHeader title='Profile Details' />
@@ -113,20 +171,18 @@ const TabAccount = () => {
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <ImgStyled src={imgSrc} alt='Profile Pic' />
                 <div>
-                  <ButtonStyled component='label' variant='contained' htmlFor='account-settings-upload-image'>
+                  <ButtonStyled
+                    component='label'
+                    variant='contained'
+                    htmlFor='account-settings-upload-image'
+                    onClick={() => {
+                      setOpenFileUpload(true)
+                      console.log(openFileUpload)
+                    }}
+                  >
                     Upload New Photo
-                    <input
-                      hidden
-                      type='file'
-                      value={inputValue}
-                      accept='image/png, image/jpeg'
-                      onChange={handleInputImageChange}
-                      id='account-settings-upload-image'
-                    />
                   </ButtonStyled>
-                  <ResetButtonStyled color='secondary' variant='tonal' onClick={handleInputImageReset}>
-                    Reset
-                  </ResetButtonStyled>
+
                   <Typography sx={{ mt: 4, color: 'text.disabled' }}>Allowed PNG or JPEG. Max size of 800K.</Typography>
                 </div>
               </Box>
@@ -219,6 +275,16 @@ const TabAccount = () => {
               </Grid>
             </CardContent>
           </form>
+        </Card>
+      </Grid>
+
+      {/* Account Details */}
+
+      <Grid item xs={12}>
+        <Card>
+          <CardContent>
+            <AccountDetailsCard />
+          </CardContent>
         </Card>
       </Grid>
 
