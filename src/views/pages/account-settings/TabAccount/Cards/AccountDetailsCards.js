@@ -14,7 +14,7 @@ import { toast } from 'react-hot-toast'
 import axios from 'axios'
 import * as apiSpec from '../../../../../apiSpec'
 import authConfig from '../../../../../../src/configs/auth'
-import countryCodes from '../../../auth/register-multi-steps/countryCodes.json' // Adjust the path accordingly
+import countryCodes from '../../../auth/register-multi-steps/countryCodes.json'
 import { addUser, updateTokens } from 'src/store/apps/user'
 import { useDispatch } from 'react-redux'
 
@@ -56,6 +56,12 @@ const AccountDetailsCard = ({ fullProfile, setFullProfile }) => {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
+      <Box sx={{ mb: 6 }}>
+        <Typography variant='h3' sx={{ mb: 1.5 }}>
+          Informații cont
+        </Typography>
+      </Box>
+
       <Grid container spacing={5}>
         <Grid item xs={12} sm={6}>
           <Controller

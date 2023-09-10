@@ -37,6 +37,7 @@ import { addThumbnail, selectThumbnail } from 'src/store/apps/user'
 import { handleProfileImageUrl } from 'src/@core/layouts/components/shared-components/UserDropdown'
 import apiClient from 'src/@core/axios/axiosEmentor'
 import { CircularProgress } from '@mui/material'
+import PersonalInfoCard from './Cards/PersonalInfoCard'
 
 const ImgStyled = styled('img')(({ theme }) => ({
   width: 100,
@@ -196,7 +197,9 @@ const TabAccount = () => {
                   Actulizează poza de profil
                 </ButtonStyled>
 
-                <Typography sx={{ mt: 4, color: 'text.disabled' }}>Allowed PNG or JPEG. Max size of 800K.</Typography>
+                <Typography sx={{ mt: 4, color: 'text.disabled' }}>
+                  Permise sunt doar PNG sau JPEG. Dimensiune maximă 20MB.
+                </Typography>
               </div>
             </Box>
           </CardContent>
@@ -212,7 +215,7 @@ const TabAccount = () => {
           <CardContent>
             <Grid container spacing={5}>
               <Grid item xs={12}>
-                <AccountDetailsCard fullProfile={fullProfile} setFullProfile={setFullProfile} />
+                <PersonalInfoCard fullProfile={fullProfile} setFullProfile={setFullProfile} />
               </Grid>
               <Grid item xs={12} sx={{ pt: theme => `${theme.spacing(6.5)} !important` }}>
                 <Button variant='contained' sx={{ mr: 4 }}>
