@@ -1,5 +1,5 @@
 // ** React Imports
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 // ** MUI Imports
 import Box from '@mui/material/Box'
@@ -33,11 +33,15 @@ import { useForm, Controller } from 'react-hook-form'
 import Icon from 'src/@core/components/icon'
 import { useDispatch, useSelector } from 'react-redux'
 import AccountDetailsCard from './Cards/AccountDetailsCards'
-import { addThumbnail, selectThumbnail } from 'src/store/apps/user'
+import { addThumbnail, addUser, selectThumbnail } from 'src/store/apps/user'
 import { handleProfileImageUrl } from 'src/@core/layouts/components/shared-components/UserDropdown'
 import apiClient from 'src/@core/axios/axiosEmentor'
 import { CircularProgress } from '@mui/material'
 import PersonalInfoCard from './Cards/PersonalInfoCard'
+import axios from 'axios'
+import AddressInfoCard from './Cards/AddressInfoCard'
+import { toast } from 'react-hot-toast'
+import { useAuth } from 'src/hooks/useAuth'
 
 const ImgStyled = styled('img')(({ theme }) => ({
   width: 100,
@@ -64,6 +68,8 @@ const ResetButtonStyled = styled(Button)(({ theme }) => ({
 }))
 
 const TabAccount = () => {
+  const { logout } = useAuth()
+
   // ** State
   const [open, setOpen] = useState(false)
   const userData = useSelector(state => state.user)
@@ -73,7 +79,12 @@ const TabAccount = () => {
   const [secondDialogOpen, setSecondDialogOpen] = useState(false)
   const [openFileUpload, setOpenFileUpload] = useState(false)
   const [profilePictureId, setProfilePictureId] = useState({})
+  const [initPrerequire, setInitPrerequire] = useState({ universities: [], counties: [] })
   const dispatch = useDispatch()
+
+  const accountDetailsRef = useRef()
+  const personalInfoRef = useRef()
+  const addressInfoRef = useRef()
 
   const [fullProfile, setFullProfile] = useState({
     id: '',
@@ -116,13 +127,19 @@ const TabAccount = () => {
   // Define an async function to fetch the data
   const fetchData = async () => {
     try {
-      const response = await apiClient.get(apiSpec.PROFILE_SERVICE + '/get-full')
-      setFullProfile(response.data) // Update state with fetched data
+      const prerequireResponse = await axios.get(apiSpec.PROD_HOST + apiSpec.PROFILE_SERVICE + '/profile-prerequire')
+      setInitPrerequire(prerequireResponse.data)
+
+      const fullProfileResponse = await apiClient.get(apiSpec.PROFILE_SERVICE + '/get-full')
+      setFullProfile(fullProfileResponse.data)
+
+      // Set loading to false when the requests are completed successfully
+      setLoading(false)
     } catch (error) {
       // Handle errors here
       console.error('Error:', error)
-    } finally {
-      // Set loading to false when the request is completed (success or error)
+
+      // Set loading to false when there's an error
       setLoading(false)
     }
   }
@@ -146,11 +163,27 @@ const TabAccount = () => {
     formState: { errors }
   } = useForm({ defaultValues: { checkbox: false } })
   const handleClose = () => setOpen(false)
-  const handleSecondDialogClose = () => setSecondDialogOpen(false)
+
+  const handleSecondDialogClose = () => {
+    setSecondDialogOpen(false)
+  }
   const onSubmit = () => setOpen(true)
 
   const handleConfirmation = value => {
     handleClose()
+    if (value === 'yes') {
+      apiClient
+        .delete(apiSpec.USER_SERVICE + '/delete')
+        .then(async response => {
+          logout()
+          dispatch(updateTokens({ accessToken: '', refreshToken: '' }))
+          toast.success('Cont dezactivat cu succes!')
+        })
+        .catch(err => {
+          toast.error('Eroare la dezactivarea contului! Încercați mai târziu. Err:' + err)
+          console.log(err)
+        })
+    }
     setUserInput(value)
     setSecondDialogOpen(true)
   }
@@ -165,7 +198,31 @@ const TabAccount = () => {
       </div>
     )
   }
-  console.log(fullProfile)
+
+  const buildRequestBody = () => {
+    let accountDetailsData = accountDetailsRef.current.getValues()
+    let personalInfoData = personalInfoRef.current.getValues()
+    let addressInfoData = addressInfoRef.current.getValues()
+    accountDetailsData.phone = accountDetailsData.prefix + accountDetailsData.phone
+
+    personalInfoData.user = accountDetailsData
+    personalInfoData.address = addressInfoData
+
+    return personalInfoData
+  }
+
+  const sendUpdateRequest = () => {
+    const requestBody = buildRequestBody()
+    apiClient
+      .put(apiSpec.PROFILE_SERVICE + '/update', requestBody)
+      .then(async response => {
+        toast.success('Cont actualizat cu succes!')
+      })
+      .catch(err => {
+        toast.error('Eroare la actualizarea contului! Încercați mai târziu. Err:' + err)
+        console.log(err)
+      })
+  }
 
   return (
     <Grid container spacing={6}>
@@ -207,7 +264,7 @@ const TabAccount = () => {
           <CardContent>
             <Grid container spacing={5}>
               <Grid item xs={12}>
-                <AccountDetailsCard fullProfile={fullProfile} setFullProfile={setFullProfile} />
+                <AccountDetailsCard fullProfile={fullProfile} setFullProfile={setFullProfile} ref={accountDetailsRef} />
               </Grid>
             </Grid>
           </CardContent>
@@ -215,16 +272,34 @@ const TabAccount = () => {
           <CardContent>
             <Grid container spacing={5}>
               <Grid item xs={12}>
-                <PersonalInfoCard fullProfile={fullProfile} setFullProfile={setFullProfile} />
+                <PersonalInfoCard fullProfile={fullProfile} initPrerequire={initPrerequire} ref={personalInfoRef} />
               </Grid>
-              <Grid item xs={12} sx={{ pt: theme => `${theme.spacing(6.5)} !important` }}>
-                <Button variant='contained' sx={{ mr: 4 }}>
-                  Save Changes
-                </Button>
-                <Button type='reset' variant='tonal' color='secondary' onClick={() => setFormData(userData)}>
-                  Reset
-                </Button>
+            </Grid>
+          </CardContent>
+          <Divider />
+          <CardContent>
+            <Grid container spacing={5}>
+              <Grid item xs={12}>
+                <AddressInfoCard
+                  address={fullProfile.address}
+                  counties={initPrerequire.counties}
+                  ref={addressInfoRef}
+                />
               </Grid>
+            </Grid>
+            <Grid item xs={12} sx={{ pt: theme => `${theme.spacing(6.5)} !important` }}>
+              <Button
+                variant='contained'
+                sx={{ mr: 4 }}
+                onClick={() => {
+                  sendUpdateRequest()
+                }}
+              >
+                Save Changes
+              </Button>
+              <Button type='reset' variant='tonal' color='secondary' onClick={() => setFormData(userData)}>
+                Reset
+              </Button>
             </Grid>
           </CardContent>
         </Card>

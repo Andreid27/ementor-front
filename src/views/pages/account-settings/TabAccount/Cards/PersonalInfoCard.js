@@ -15,7 +15,7 @@ import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import dayjs from 'dayjs'
 import axios from 'axios'
-import { useEffect, useState } from 'react'
+import { forwardRef, useImperativeHandle, useEffect, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { useSelector } from 'react-redux'
 import CustomTextField from 'src/@core/components/mui/text-field'
@@ -24,18 +24,14 @@ import schoolDomains from '../../../auth/register-multi-steps/schoolDomains.json
 import schoolSpecialities from '../../../auth/register-multi-steps/schoolSpecialities.json'
 import * as apiSpec from '../../../../../apiSpec'
 
-const PersonalInfoCard = ({ fullProfile, setFullProfile }) => {
-  let accessToken = useSelector(selectTokens)
+const PersonalInfoCard = ({ fullProfile, initPrerequire }, ref) => {
   const [universityId, setUniversityId] = useState(fullProfile.universityId)
   const [specialities, setSpecialities] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [initPrerequire, setInitPrerequire] = useState({ universities: [], specialities: [] })
 
-  useEffect(() => {
-    axios.get(apiSpec.PROD_HOST + apiSpec.PROFILE_SERVICE + '/profile-prerequire').then(response => {
-      setInitPrerequire(response.data)
-    })
-  }, [])
+  // Expose the getData function through the ref
+  useImperativeHandle(ref, () => ({
+    getValues
+  }))
 
   const {
     control,
@@ -44,13 +40,7 @@ const PersonalInfoCard = ({ fullProfile, setFullProfile }) => {
     getValues
   } = useForm({ defaultValues: fullProfile })
 
-  const onSubmit = async data => {
-    if (validateProfilePicture(profile)) {
-      setImageValidationError(true)
-
-      return
-    }
-  }
+  const onSubmit = async data => {}
 
   useEffect(() => {
     setSpecialitiesByUniversityId()
@@ -284,4 +274,4 @@ const PersonalInfoCard = ({ fullProfile, setFullProfile }) => {
   )
 }
 
-export default PersonalInfoCard
+export default forwardRef(PersonalInfoCard)

@@ -1,5 +1,11 @@
 [
   {
+    "name": "Romania",
+    "dial_code": "+40",
+    "emoji": "🇷🇴",
+    "code": "RO"
+  },
+  {
     "name": "Afghanistan",
     "dial_code": "+93",
     "emoji": "🇦🇫",
@@ -1054,12 +1060,6 @@
     "dial_code": "+974",
     "emoji": "🇶🇦",
     "code": "QA"
-  },
-  {
-    "name": "Romania",
-    "dial_code": "+40",
-    "emoji": "🇷🇴",
-    "code": "RO"
   },
   {
     "name": "Russia",

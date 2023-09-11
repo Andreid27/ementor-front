@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { forwardRef, useImperativeHandle, useState } from 'react'
 import Box from '@mui/material/Box'
 import Grid from '@mui/material/Grid'
 import Button from '@mui/material/Button'
@@ -18,7 +18,7 @@ import countryCodes from '../../../auth/register-multi-steps/countryCodes.json'
 import { addUser, updateTokens } from 'src/store/apps/user'
 import { useDispatch } from 'react-redux'
 
-const AccountDetailsCard = ({ fullProfile, setFullProfile }) => {
+const AccountDetailsCard = ({ fullProfile, setFullProfile }, ref) => {
   const dispatch = useDispatch()
   const [loading, setLoading] = useState(false)
   const phoneNumber = fullProfile.user.phone.substring(fullProfile.user.phone.length - 9)
@@ -29,6 +29,13 @@ const AccountDetailsCard = ({ fullProfile, setFullProfile }) => {
     phone: phoneNumber,
     prefix: prefix
   })
+
+  // Expose the getData function through the ref
+  useImperativeHandle(ref, () => ({
+    getValues
+  }))
+
+  console.log(loadedUser)
 
   const {
     control,
@@ -175,4 +182,4 @@ const AccountDetailsCard = ({ fullProfile, setFullProfile }) => {
   )
 }
 
-export default AccountDetailsCard
+export default forwardRef(AccountDetailsCard)

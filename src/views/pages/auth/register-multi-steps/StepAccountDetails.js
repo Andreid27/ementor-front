@@ -99,12 +99,12 @@ const StepAccountDetails = ({ handleNext }) => {
       .then(async response => {
         dispatch(addUser(response.data.userData))
         dispatch(updateTokens({ accessToken: response.data.accessToken, refreshToken: response.data.refreshToken }))
+        toast.success('Cont creat cu succes!')
       })
       .catch(err => {
         console.log(err)
       })
     setLoading(false)
-    toast.success('Cont creat cu succes!')
     handleNext(data)
   }
 
