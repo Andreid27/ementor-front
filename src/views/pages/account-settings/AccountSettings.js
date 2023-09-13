@@ -123,7 +123,7 @@ const AccountSettings = ({ tab, apiPricingPlanData }) => {
                   }
                 /> */}
                 {/* TODO add when is needed */}
-                <Tab
+                {/* <Tab
                   value='notifications'
                   label={
                     <Box sx={{ display: 'flex', alignItems: 'center', ...(!hideText && { '& svg': { mr: 2 } }) }}>
@@ -140,7 +140,7 @@ const AccountSettings = ({ tab, apiPricingPlanData }) => {
                       {!hideText && 'Connections'}
                     </Box>
                   }
-                />
+                /> */}
               </TabList>
             </Grid>
             <Grid item xs={12}>

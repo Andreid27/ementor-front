@@ -35,8 +35,6 @@ const AccountDetailsCard = ({ fullProfile, setFullProfile }, ref) => {
     getValues
   }))
 
-  console.log(loadedUser)
-
   const {
     control,
     handleSubmit,

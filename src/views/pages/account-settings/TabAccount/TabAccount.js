@@ -33,15 +33,18 @@ import { useForm, Controller } from 'react-hook-form'
 import Icon from 'src/@core/components/icon'
 import { useDispatch, useSelector } from 'react-redux'
 import AccountDetailsCard from './Cards/AccountDetailsCards'
-import { addThumbnail, addUser, selectThumbnail } from 'src/store/apps/user'
+import { addThumbnail, addUser, selectThumbnail, selectTokens, updateUserHasProfile } from 'src/store/apps/user'
 import { handleProfileImageUrl } from 'src/@core/layouts/components/shared-components/UserDropdown'
 import apiClient from 'src/@core/axios/axiosEmentor'
-import { CircularProgress } from '@mui/material'
+import { Avatar, CircularProgress } from '@mui/material'
 import PersonalInfoCard from './Cards/PersonalInfoCard'
 import axios from 'axios'
 import AddressInfoCard from './Cards/AddressInfoCard'
 import { toast } from 'react-hot-toast'
 import { useAuth } from 'src/hooks/useAuth'
+import { Stack } from 'immutable'
+import jwtDecode from 'jwt-decode'
+import { Router, useRouter } from 'next/router'
 
 const ImgStyled = styled('img')(({ theme }) => ({
   width: 100,
@@ -69,6 +72,7 @@ const ResetButtonStyled = styled(Button)(({ theme }) => ({
 
 const TabAccount = () => {
   const { logout } = useAuth()
+  const router = useRouter()
 
   // ** State
   const [open, setOpen] = useState(false)
@@ -87,7 +91,7 @@ const TabAccount = () => {
   const addressInfoRef = useRef()
 
   const [fullProfile, setFullProfile] = useState({
-    id: '',
+    id: null,
     userId: '',
     user: {
       userId: null,
@@ -95,23 +99,24 @@ const TabAccount = () => {
       firstName: '',
       lastName: '',
       phone: '',
-      role: '',
+      prefix: '+40',
+      role: null,
       active: false,
       disabled: false,
       hasProfile: false
     },
-    pictureId: '',
-    universityId: '',
-    specialityId: '',
+    pictureId: null,
+    universityId: 'choose',
+    specialityId: 'choose',
     desiredExamDate: '2025-11-04T20:25:51.566Z',
     school: '',
-    schoolDomain: '',
-    schoolSpeciality: '',
+    schoolDomain: 'ch',
+    schoolSpeciality: 'ch',
     schoolGrade: 10,
     about: '',
     address: {
-      id: '',
-      countyId: '',
+      id: null,
+      countyId: 'choose',
       countyValue: '',
       city: '',
       street: '',
@@ -208,20 +213,66 @@ const TabAccount = () => {
     personalInfoData.user = accountDetailsData
     personalInfoData.address = addressInfoData
 
+    if (userData.data.hasProfile === false) {
+      const userId = jwtDecode(userData.tokens.accessToken).userId
+      personalInfoData.user.email = userData.data.email
+      personalInfoData.userId = userId
+      personalInfoData.user.userId = userId
+      if (profilePictureId.profilePicture == undefined || profilePictureId.profilePicture == null) {
+        toast.error('Vă rugăm să reîncărcați poza de profil')
+
+        return
+      }
+      personalInfoData.pictureId = profilePictureId.profilePicture
+    }
+
     return personalInfoData
   }
 
   const sendUpdateRequest = () => {
     const requestBody = buildRequestBody()
-    apiClient
-      .put(apiSpec.PROFILE_SERVICE + '/update', requestBody)
-      .then(async response => {
-        toast.success('Cont actualizat cu succes!')
-      })
-      .catch(err => {
-        toast.error('Eroare la actualizarea contului! Încercați mai târziu. Err:' + err)
-        console.log(err)
-      })
+    if (userData.data.hasProfile === false) {
+      apiClient
+        .post(apiSpec.PROFILE_SERVICE + '/create', requestBody)
+        .then(async response => {
+          toast.success('Profil creat cu succes!')
+          dispatch(updateUserHasProfile(true))
+          updateHasProfileInLocalStorage(true)
+          logout()
+
+          router.replace('/')
+        })
+        .catch(err => {
+          toast.error('Eroare la actualizarea contului! Încercați mai târziu. Err:' + err)
+          console.log(err)
+        })
+    } else {
+      apiClient
+        .put(apiSpec.PROFILE_SERVICE + '/update', requestBody)
+        .then(async response => {
+          toast.success('Cont actualizat cu succes!')
+        })
+        .catch(err => {
+          toast.error('Eroare la actualizarea contului! Încercați mai târziu. Err:' + err)
+          console.log(err)
+        })
+    }
+  }
+
+  function updateHasProfileInLocalStorage(hasProfile) {
+    // Retrieve userData from localStorage
+    const userData = JSON.parse(localStorage.getItem('userData'))
+
+    // Check if userData exists
+    if (userData) {
+      // Update the hasProfile property based on the provided boolean value
+      userData.hasProfile = hasProfile
+
+      // Save the updated userData back to localStorage
+      localStorage.setItem('userData', JSON.stringify(userData))
+    } else {
+      console.log('userData not found in localStorage')
+    }
   }
 
   return (
@@ -240,7 +291,9 @@ const TabAccount = () => {
           <CardHeader title='Profile Details' />
           <CardContent sx={{ pt: 0 }}>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <ImgStyled src={imgSrc} alt='Profile Pic' />
+              <Box padding={5}>
+                <Avatar alt={fullProfile.firstName} src={imgSrc} variant='rounded' sx={{ width: 100, height: 100 }} />
+              </Box>
               <div>
                 <ButtonStyled
                   component='label'
@@ -295,10 +348,7 @@ const TabAccount = () => {
                   sendUpdateRequest()
                 }}
               >
-                Save Changes
-              </Button>
-              <Button type='reset' variant='tonal' color='secondary' onClick={() => setFormData(userData)}>
-                Reset
+                Salvează
               </Button>
             </Grid>
           </CardContent>
@@ -308,7 +358,7 @@ const TabAccount = () => {
       {/* Delete Account Card */}
       <Grid item xs={12}>
         <Card>
-          <CardHeader title='Delete Account' />
+          <CardHeader title='Dezactivare cont' />
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)}>
               <Box sx={{ mb: 4 }}>
@@ -319,7 +369,7 @@ const TabAccount = () => {
                     rules={{ required: true }}
                     render={({ field }) => (
                       <FormControlLabel
-                        label='I confirm my account deactivation'
+                        label='Confirm dezactivarea contului meu'
                         sx={{ '& .MuiTypography-root': { color: errors.checkbox ? 'error.main' : 'text.secondary' } }}
                         control={
                           <Checkbox
@@ -337,13 +387,13 @@ const TabAccount = () => {
                       id='validation-basic-checkbox'
                       sx={{ mx: 0, color: 'error.main', fontSize: theme => theme.typography.body2.fontSize }}
                     >
-                      Please confirm you want to delete account
+                      Sunteți sigur ca doriți dezactivarea contului?
                     </FormHelperText>
                   )}
                 </FormControl>
               </Box>
               <Button variant='contained' color='error' type='submit' disabled={errors.checkbox !== undefined}>
-                Deactivate Account
+                Dezactivează contul
               </Button>
             </form>
           </CardContent>
@@ -370,7 +420,7 @@ const TabAccount = () => {
             }}
           >
             <Icon icon='tabler:alert-circle' fontSize='5.5rem' />
-            <Typography>Are you sure you would like to cancel your subscription?</Typography>
+            <Typography>Sunteți sigur ca doriți dezactivarea contului?</Typography>
           </Box>
         </DialogContent>
         <DialogActions
@@ -381,10 +431,10 @@ const TabAccount = () => {
           }}
         >
           <Button variant='contained' sx={{ mr: 2 }} onClick={() => handleConfirmation('yes')}>
-            Yes
+            Da
           </Button>
           <Button variant='tonal' color='secondary' onClick={() => handleConfirmation('cancel')}>
-            Cancel
+            Anulează
           </Button>
         </DialogActions>
       </Dialog>
@@ -409,10 +459,10 @@ const TabAccount = () => {
           >
             <Icon fontSize='5.5rem' icon={userInput === 'yes' ? 'tabler:circle-check' : 'tabler:circle-x'} />
             <Typography variant='h4' sx={{ mb: 5 }}>
-              {userInput === 'yes' ? 'Deleted!' : 'Cancelled'}
+              {userInput === 'yes' ? 'Dezactivat!' : 'Anulat'}
             </Typography>
             <Typography>
-              {userInput === 'yes' ? 'Your subscription cancelled successfully.' : 'Unsubscription Cancelled!!'}
+              {userInput === 'yes' ? 'Contul a fost dezactivat cu succes.' : 'Dezactivarea contului a fost anulată!'}
             </Typography>
           </Box>
         </DialogContent>

@@ -22,7 +22,7 @@ import { useAuth } from 'src/hooks/useAuth'
 import { useDispatch, useSelector } from 'react-redux'
 import * as apiSpec from '../../../../apiSpec'
 import apiClient from 'src/@core/axios/axiosEmentor'
-import { addThumbnail } from 'src/store/apps/user'
+import user, { addThumbnail } from 'src/store/apps/user'
 
 // ** Styled Components
 const BadgeContentSpan = styled('span')(({ theme }) => ({
@@ -148,9 +148,11 @@ const UserDropdown = props => {
               <Typography sx={{ fontWeight: 500 }}>
                 {userData.firstName} {userData.lastName}
               </Typography>
-              <Typography variant='body2'>
-                {userData.role.toUpperCase().charAt(0) + userData.role.substr(1).toLowerCase()}
-              </Typography>
+              {userData && userData.role != null && userData.role != '' && (
+                <Typography variant='body2'>
+                  {userData.role.charAt(0).toUpperCase() + userData.role.slice(1).toLowerCase()}
+                </Typography>
+              )}
             </Box>
           </Box>
         </Box>

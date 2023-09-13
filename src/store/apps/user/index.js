@@ -22,6 +22,10 @@ export const addThumbnail = createAsyncThunk('appUsers/addThumbnail', async data
   return data
 })
 
+export const updateUserHasProfile = createAsyncThunk('appUsers/updateUserHasProfile', async data => {
+  return data
+})
+
 export const updateTokens = createAsyncThunk('appUsers/updateTokens', async data => {
   return data
 })
@@ -77,6 +81,9 @@ export const appUsersSlice = createSlice({
       })
       .addCase(deleteTokens.fulfilled, (state, action) => {
         state.tokens = action.payload
+      })
+      .addCase(updateUserHasProfile.fulfilled, (state, action) => {
+        state.data.hasProfile = action.payload
       })
   }
 })
