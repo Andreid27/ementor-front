@@ -143,6 +143,8 @@ const FormLayoutsCollapsible = () => {
         </AccordionDetails>
       </Accordion>
 
+      {/* HERE get the component for the tests. */}
+
       <Accordion expanded={expanded === 'panel2'} onChange={handleChange('panel2')}>
         <AccordionSummary
           expandIcon={<Icon icon='tabler:chevron-down' />}

@@ -1,27 +1,22 @@
 const navigation = () => {
   return [
     {
-      title: 'Dashboards',
       icon: 'tabler:smart-home',
       badgeContent: 'new',
       badgeColor: 'error',
-      children: [
-        {
-          title: 'Analytics',
-          subject: 'home-page',
-          title: 'Home page',
-          action: 'read',
-          path: '/dashboards/analytics'
-        },
-        {
-          title: 'CRM',
-          path: '/dashboards/crm'
-        },
-        {
-          title: 'eCommerce',
-          path: '/dashboards/ecommerce'
-        }
-      ]
+      title: 'Analytics',
+      subject: 'home-page',
+      title: 'Home page',
+      action: 'read',
+      path: '/dashboards/analytics'
+    },
+    {
+      icon: 'tabler:certificate',
+      title: 'Quizzes',
+      subject: 'home-page',
+      title: 'Teste',
+      action: 'read',
+      path: '/quizzes'
     },
     {
       sectionTitle: 'Apps & Pages'
