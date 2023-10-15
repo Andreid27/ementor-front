@@ -16,7 +16,7 @@ const defineRulesFor = (role, subject) => {
   } else if (role === 'PROFESSOR') {
     can(['read'], 'acl-page')
   } else if (role === 'STUDENT') {
-    can(['read'], 'home-page')
+    can(['read'], 'student-pages')
   } else {
     can(['read', 'create', 'update', 'delete'], subject)
   }

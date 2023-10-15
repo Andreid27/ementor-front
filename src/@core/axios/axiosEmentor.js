@@ -1,6 +1,7 @@
 import axios from 'axios'
 import store from '../../store/index'
 import * as apiSpec from '../../apiSpec'
+import { verifyToken } from './token-validator'
 
 // Function to get token from your state
 function getCurrentToken() {
@@ -25,8 +26,10 @@ const apiClient = axios.create({
 apiClient.interceptors.request.use(
   config => {
     const token = getCurrentToken()
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`
+    const verifiedToken = verifyToken(token)
+
+    if (verifiedToken) {
+      config.headers['Authorization'] = `Bearer ${verifiedToken}`
     }
 
     // If the data is a file, set the Content-Type to multipart/form-data

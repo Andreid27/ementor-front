@@ -59,7 +59,7 @@ const UserDropdown = props => {
 
   useEffect(() => {
     apiClient
-      .get('/service1//profile-data/download/user-thumbnail', {
+      .get('/service1/profile-data/download/user-thumbnail', {
         responseType: 'blob' // Set the responseType to 'blob'
       })
       .then(response => {

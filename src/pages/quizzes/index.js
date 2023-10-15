@@ -1,17 +1,29 @@
 // ** React Imports
 import { Card, CardHeader } from '@mui/material'
 import { useState } from 'react'
-import TableStickyHeader from 'src/pages/quizzes/componets/table'
+import StudentsTestsTable from 'src/pages/quizzes/componets/table'
+import QuizPreview from './componets/quiz-preview'
 
-const QuizzesTable = () => {
+const QuizzesPage = () => {
+  const [preview, setPreview] = useState()
+
+
   return (
     <>
       <Card>
-        <CardHeader title='Sticky Header' />
-        <TableStickyHeader />
+        {preview ? (
+          <QuizPreview preview={preview} setPreview={setPreview} />
+        ) : (
+          <StudentsTestsTable preview={preview} setPreview={setPreview} />
+        )}
       </Card>
     </>
   )
 }
 
-export default QuizzesTable
+QuizzesPage.acl = {
+  action: 'read',
+  subject: 'student-pages'
+}
+
+export default QuizzesPage

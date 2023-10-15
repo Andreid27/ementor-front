@@ -1,11 +1,14 @@
-// ** Toolkit imports
+import { enableMapSet } from 'immer'
 import { combineReducers, configureStore } from '@reduxjs/toolkit'
 import { persistReducer, persistStore } from 'redux-persist' // Import persistReducer and persistStore
 import storage from 'redux-persist/lib/storage' // defaults to localStorage for web
 
+enableMapSet() // Enable Immer MapSet plugin
+
 // ** Reducers
 import chat from 'src/store/apps/chat'
 import user from 'src/store/apps/user'
+import quiz from 'src/store/apps/quiz'
 import email from 'src/store/apps/email'
 import invoice from 'src/store/apps/invoice'
 import calendar from 'src/store/apps/calendar'
@@ -30,6 +33,7 @@ const persistedReducer = persistReducer(
   persistConfig,
   combineReducers({
     user,
+    quiz,
     chat,
     email,
     invoice,

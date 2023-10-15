@@ -5,7 +5,7 @@ const navigation = () => {
       badgeContent: 'new',
       badgeColor: 'error',
       title: 'Analytics',
-      subject: 'home-page',
+      subject: 'student-pages',
       title: 'Home page',
       action: 'read',
       path: '/dashboards/analytics'
@@ -13,7 +13,7 @@ const navigation = () => {
     {
       icon: 'tabler:certificate',
       title: 'Quizzes',
-      subject: 'home-page',
+      subject: 'student-pages',
       title: 'Teste',
       action: 'read',
       path: '/quizzes'

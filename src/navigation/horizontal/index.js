@@ -7,7 +7,7 @@ const navigation = () => {
         {
           icon: 'tabler:chart-pie-2',
           title: 'Analytics',
-          subject: 'home-page',
+          subject: 'studen-pages',
           title: 'Home page',
           action: 'read',
           path: '/dashboards/analytics'
