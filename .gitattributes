@@ -48,8 +48,6 @@
 *.tsx             text
 *.xml             text
 *.xhtml           text diff=html
-# Docker
-Dockerfile        text
 # Documentation
 *.ipynb           text eol=lf
 *.markdown        text diff=markdown

@@ -24,6 +24,7 @@ import RadioComponent from './components/Radio/RedioComponent'
 import { useDispatch } from 'react-redux'
 import { addQuiz } from 'src/store/apps/quiz'
 import SubmitComponent from './components/SubmitComponent'
+import toast from 'react-hot-toast'
 
 const StyledBox = styled(Box)(({ theme }) => ({
   [theme.breakpoints.up('sm')]: {
@@ -68,6 +69,7 @@ const QuizAttempt = props => {
   }
 
   useEffect(() => {
+    console.log(completed)
     if (completed) {
       setLoadingButton(true)
 
@@ -76,6 +78,13 @@ const QuizAttempt = props => {
         submitedQuestionAnswers: getSubmitedQuestionAnswers()
       }
       console.log(body)
+
+      if (body.submitedQuestionAnswers.length < quiz.questions.length) {
+        setLoadingButton(false)
+        toast.error('Nu ai raspuns la toate intrebarile')
+
+        return
+      }
 
       apiClient.post(apiSpec.QUIZ_SERVICE + `/submit`, body).then(response => {
         console.log(response)
@@ -88,12 +97,16 @@ const QuizAttempt = props => {
   }, [completed])
 
   const getSubmitedQuestionAnswers = () => {
+    console.log
     let submitedQuestionAnswers = []
     if (answersMap.size <= 0) {
       return []
     }
 
     answersMap.forEach((value, key) => {
+      if (!value) {
+        return
+      }
       submitedQuestionAnswers.push({
         questionId: key,
         answer: value.split('')[6]
