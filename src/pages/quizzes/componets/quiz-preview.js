@@ -8,6 +8,7 @@ import apiClient from 'src/@core/axios/axiosEmentor'
 import * as apiSpec from '../../../apiSpec'
 import { useRouter } from 'next/router'
 import PreviousAttempt from './previous-attempt'
+import quiz from 'src/store/apps/quiz'
 
 const StyledBox = styled(Box)(({ theme }) => ({
   [theme.breakpoints.up('sm')]: {
@@ -158,9 +159,17 @@ const QuizPreview = props => {
                           name='read-only'
                         />
                       </Box>
+
+                      <Typography sx={{ color: 'secondary.main', marginRight: '0.3em' }}>
+                        Încercări rămase: {preview ? preview.remainedAttempts : null}
+                      </Typography>
                     </Typography>
                     <Button onClick={() => props.setPreview()}>Inapoi</Button>
-                    <Button variant='contained' onClick={() => handleStartTest()}>
+                    <Button
+                      variant='contained'
+                      onClick={() => handleStartTest()}
+                      disabled={preview ? preview.remainedAttempts <= 0 : true}
+                    >
                       Start test
                     </Button>
                   </div>
