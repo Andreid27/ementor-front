@@ -192,69 +192,82 @@ const EnhancedTable = props => {
       ) : (
         <>
           <EnhancedTableToolbar numSelected={selected.length} />
-          <TableContainer component={Paper}>
-            <Table sx={{ minWidth: 750 }} aria-labelledby='tableTitle'>
-              <EnhancedTableHead
-                order={order}
-                orderBy={orderBy}
-                rowCount={totalCount}
-                numSelected={selected.length}
-                onRequestSort={handleRequestSort}
-              />
-              <TableBody>
-                {/* if you don't need to support IE11, you can replace the `stableSort` call with: rows.slice().sort(getComparator(order, orderBy)) */}
-                {/* {stableSort(rows, getComparator(order, orderBy)) */}
-                {quizzes.map((row, index) => {
-                  const isItemSelected = isSelected(row.id)
-                  const labelId = `enhanced-table-checkbox-${index}`
+          {totalCount === 0 ? (
+            <>
+              <Box sx={{ padding: '1.5rem' }}>
+                <Typography sx={{ mb: 2, color: 'text.primary' }}>Nu ai niciun test asignat</Typography>
+                <Typography sx={{ mb: 2, color: 'text.secondary' }}>
+                  Contactează-ți profesorul pentru a începe testele.
+                </Typography>
+              </Box>
+            </>
+          ) : (
+            <>
+              <TableContainer component={Paper}>
+                <Table sx={{ minWidth: 750 }} aria-labelledby='tableTitle'>
+                  <EnhancedTableHead
+                    order={order}
+                    orderBy={orderBy}
+                    rowCount={totalCount}
+                    numSelected={selected.length}
+                    onRequestSort={handleRequestSort}
+                  />
+                  <TableBody>
+                    {/* if you don't need to support IE11, you can replace the `stableSort` call with: rows.slice().sort(getComparator(order, orderBy)) */}
+                    {/* {stableSort(rows, getComparator(order, orderBy)) */}
+                    {quizzes.map((row, index) => {
+                      const isItemSelected = isSelected(row.id)
+                      const labelId = `enhanced-table-checkbox-${index}`
 
-                  return (
-                    <TableRow
-                      hover
-                      tabIndex={-1}
-                      key={row.id}
-                      selected={isItemSelected}
-                      aria-checked={isItemSelected}
-                      onClick={event => handleClick(event, row)}
-                    >
-                      <TableCell component='th' id={labelId} scope='row' padding='none'>
-                        {row.title}
-                      </TableCell>
-                      <TableCell align='left'>{row.chapterTitles}</TableCell>
-                      <TableCell align='right'>{row.maxTime}</TableCell>
-                      <TableCell align='right'>
-                        <Rating
-                          readOnly
-                          defaultValue={row.difficultyLevel}
-                          max={3}
-                          precision={row.difficultyLevel}
-                          name='read-only'
-                        />
-                      </TableCell>
-                    </TableRow>
-                  )
-                })}
-                {emptyRows > 0 && (
-                  <TableRow
-                    sx={{
-                      height: 53 * emptyRows
-                    }}
-                  >
-                    <TableCell colSpan={6} />
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          <TablePagination
-            page={page}
-            component='div'
-            count={totalCount}
-            rowsPerPage={rowsPerPage}
-            onPageChange={handleChangePage}
-            rowsPerPageOptions={[5, 10, 25]}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-          />
+                      return (
+                        <TableRow
+                          hover
+                          tabIndex={-1}
+                          key={row.id}
+                          selected={isItemSelected}
+                          aria-checked={isItemSelected}
+                          onClick={event => handleClick(event, row)}
+                        >
+                          <TableCell component='th' id={labelId} scope='row' padding='none'>
+                            {row.title}
+                          </TableCell>
+                          <TableCell align='left'>{row.chapterTitles}</TableCell>
+                          <TableCell align='right'>{row.maxTime}</TableCell>
+                          <TableCell align='right'>
+                            <Rating
+                              readOnly
+                              defaultValue={row.difficultyLevel}
+                              max={3}
+                              precision={row.difficultyLevel}
+                              name='read-only'
+                            />
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
+                    {emptyRows > 0 && (
+                      <TableRow
+                        sx={{
+                          height: 53 * emptyRows
+                        }}
+                      >
+                        <TableCell colSpan={6} />
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              <TablePagination
+                page={page}
+                component='div'
+                count={totalCount}
+                rowsPerPage={rowsPerPage}
+                onPageChange={handleChangePage}
+                rowsPerPageOptions={[5, 10, 25]}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+              />
+            </>
+          )}
         </>
       )}
     </>

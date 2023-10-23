@@ -3,16 +3,25 @@ import { useState } from 'react'
 import store from '../../store/index'
 import axios from 'axios'
 import * as apiSpec from '../../apiSpec'
-import { updateTokens } from 'src/store/apps/user'
-import { logout as handleLogout } from 'src/context/AuthContext'
+import { deleteTokens, deleteUser, updateTokens } from 'src/store/apps/user'
+import { AuthProvider, logout as handleLogout } from 'src/context/AuthContext'
 import authConfig from 'src/configs/auth'
 import { useDispatch } from 'react-redux'
 import { AuthContext } from 'src/context/AuthContext'
+import { useRouter } from 'next/router'
 
 export const verifyToken = token => {
   let decodedToken = jwt_decode(token)
   console.log('Decoded Token', decodedToken)
   let currentDate = new Date()
+
+  const handleLogoutHere = () => {
+    store.dispatch(deleteUser()) // dispatch deleteUser action with no payload
+    store.dispatch(deleteTokens()) // dispatch deleteUser action with no payload
+    window.localStorage.removeItem('userData')
+    window.localStorage.removeItem(authConfig.storageTokenKeyName)
+    window.location.replace('/login')
+  }
 
   if (decodedToken.exp * 1000 < currentDate.getTime() + 60) {
     async function refreshToken() {
@@ -30,7 +39,7 @@ export const verifyToken = token => {
         )
       } catch (error) {
         console.error(error)
-        AuthContext.logout()
+        handleLogoutHere()
       }
     }
     refreshToken()

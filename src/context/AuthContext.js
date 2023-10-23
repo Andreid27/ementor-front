@@ -14,6 +14,7 @@ import authConfig from 'src/configs/auth'
 // ** Redux Imports
 import { useDispatch, useSelector } from 'react-redux'
 import { addUser, deleteTokens, deleteUser, updateTokens } from '../store/apps/user/index' // import addUser and deleteUser actions
+import { fetchData } from 'src/store/apps/dashboard'
 
 // ** Defaults
 const defaultProvider = {
@@ -67,6 +68,7 @@ const AuthProvider = ({ children }) => {
         const returnUrl = router.query.returnUrl
         const redirectURL = returnUrl && returnUrl !== '/' ? returnUrl : '/'
         router.replace(redirectURL)
+        dispatch(fetchData())
       })
       .catch(err => {
         if (errorCallback) errorCallback(err)

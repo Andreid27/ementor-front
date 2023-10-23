@@ -25,6 +25,7 @@ import { useDispatch } from 'react-redux'
 import { addQuiz } from 'src/store/apps/quiz'
 import SubmitComponent from './components/SubmitComponent'
 import toast from 'react-hot-toast'
+import { fetchData } from 'src/store/apps/dashboard'
 
 const StyledBox = styled(Box)(({ theme }) => ({
   [theme.breakpoints.up('sm')]: {
@@ -92,6 +93,7 @@ const QuizAttempt = props => {
 
         setResultSet(response.data)
         setViewResults(true)
+        dispatch(fetchData())
       })
     }
   }, [completed])
