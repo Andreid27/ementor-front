@@ -32,7 +32,7 @@ const FooterContent = () => {
       <Typography sx={{ mr: 2, display: 'flex', color: 'text.secondary' }}>
         {`© ${new Date().getFullYear()}, Toate drepturile rezervate `}
         {`de`}
-        <Typography sx={{ ml: 1 }} target='_blank' href='https://pixinvent.com' component={StyledCompanyName}>
+        <Typography sx={{ ml: 1 }} target='_blank' href='https://e-mentor.ro' component={StyledCompanyName}>
           E-mentor.ro
         </Typography>
       </Typography>

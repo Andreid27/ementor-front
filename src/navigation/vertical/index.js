@@ -2,8 +2,6 @@ const navigation = () => {
   return [
     {
       icon: 'tabler:smart-home',
-      badgeContent: 'new',
-      badgeColor: 'error',
       title: 'Analytics',
       subject: 'student-pages',
       title: 'Home page',
@@ -13,6 +11,8 @@ const navigation = () => {
     {
       icon: 'tabler:certificate',
       title: 'Quizzes',
+      badgeContent: 'new',
+      badgeColor: 'error',
       subject: 'student-pages',
       title: 'Teste',
       action: 'read',

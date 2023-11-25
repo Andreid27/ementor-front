@@ -2,6 +2,9 @@ import axios from 'axios'
 import store from '../../store/index'
 import * as apiSpec from '../../apiSpec'
 import { verifyToken } from './token-validator'
+import toast from 'react-hot-toast'
+import { deleteTokens, deleteUser, updateTokens } from 'src/store/apps/user'
+import authConfig from 'src/configs/auth'
 
 // Function to get token from your state
 function getCurrentToken() {
@@ -55,13 +58,21 @@ apiClient.interceptors.response.use(
 
       // Case 1: If the response is 403, call verifyToken
       if (status === 403) {
-        const token = getCurrentToken()
-        await verifyToken(token)
+        store.dispatch(deleteUser())
+        store.dispatch(deleteTokens())
+        window.localStorage.removeItem('userData')
+        window.localStorage.removeItem(authConfig.storageTokenKeyName)
+        window.location.replace('/login')
       }
 
       // Case 2: If the response body error is EmentorApi, log the error
-      if (data && data.error === 'EmentorApi') {
-        console.log('Error:', data)
+      if (data && data.exception === 'com.ementor.quiz.core.exceptions.EmentorApiError') {
+        toast.error('Eroare: ' + data.message, {
+          duration: 5000,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true
+        })
       }
     }
 

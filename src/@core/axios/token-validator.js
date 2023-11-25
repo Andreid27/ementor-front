@@ -45,11 +45,6 @@ export const verifyToken = async token => {
       }
     })
   } else {
-    console.log('Valid token')
-    console.log(decodedToken.exp * 1000)
-    console.log(currentDate.getTime())
-    console.log(getRefreshToken())
-
     return token
   }
 }

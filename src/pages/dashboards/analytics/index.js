@@ -21,6 +21,7 @@ import { selectUser } from 'src/store/apps/user'
 import { useSelector } from 'react-redux'
 import { selectDashboardData } from 'src/store/apps/dashboard'
 import StudentStatsQuestions from './components/StudentStatsQuestions'
+import { CircularProgress } from '@mui/material'
 
 const AnalyticsDashboard = () => {
   const user = useSelector(selectUser)
@@ -50,12 +51,18 @@ const AnalyticsDashboard = () => {
           <Grid item xs={12} md={6}>
             <AnalyticsEarningReports />
           </Grid> */}
-          <Grid item xs={12} md={6}>
-            <CongratulationsQuizzes user={user} quizzes={dashboardData.quizzes} />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <StudentStatsQuestions questions={dashboardData.questions} />
-          </Grid>
+          {dashboardData ? (
+            <>
+              <Grid item xs={12} md={6}>
+                <CongratulationsQuizzes user={user} quizzes={dashboardData.quizzes} />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <StudentStatsQuestions questions={dashboardData.questions} />
+              </Grid>
+            </>
+          ) : (
+            <CircularProgress />
+          )}
           {/* <Grid item xs={12} md={6} lg={4}>
             <AnalyticsSalesByCountries />
           </Grid>
