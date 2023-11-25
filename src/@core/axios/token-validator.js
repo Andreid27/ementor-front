@@ -10,21 +10,21 @@ import { useDispatch } from 'react-redux'
 import { AuthContext } from 'src/context/AuthContext'
 import { useRouter } from 'next/router'
 
-export const verifyToken = token => {
+export const verifyToken = async token => {
   let decodedToken = jwt_decode(token)
   console.log('Decoded Token', decodedToken)
   let currentDate = new Date()
 
   const handleLogoutHere = () => {
-    store.dispatch(deleteUser()) // dispatch deleteUser action with no payload
-    store.dispatch(deleteTokens()) // dispatch deleteUser action with no payload
+    store.dispatch(deleteUser())
+    store.dispatch(deleteTokens())
     window.localStorage.removeItem('userData')
     window.localStorage.removeItem(authConfig.storageTokenKeyName)
     window.location.replace('/login')
   }
 
   if (decodedToken.exp * 1000 < currentDate.getTime() + 60) {
-    async function refreshToken() {
+    return new Promise(async (resolve, reject) => {
       try {
         const response = await axios.post(`${apiSpec.PROD_HOST + apiSpec.USER_SERVICE}/refresh-token`, null, {
           headers: {
@@ -37,14 +37,13 @@ export const verifyToken = token => {
         store.dispatch(
           updateTokens({ accessToken: response.data.accessToken, refreshToken: response.data.refreshToken })
         )
+        resolve(response.data.accessToken)
       } catch (error) {
         console.error(error)
         handleLogoutHere()
+        reject(error)
       }
-    }
-    refreshToken()
-
-    return response.data.accessToken
+    })
   } else {
     console.log('Valid token')
     console.log(decodedToken.exp * 1000)
@@ -56,7 +55,6 @@ export const verifyToken = token => {
 }
 
 function getRefreshToken() {
-  // Replace this with actual logic to retrieve the token from your state
   const state = store.getState()
   let refreshTokens = state.user.tokens.refreshToken
 

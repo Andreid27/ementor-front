@@ -24,22 +24,50 @@ const apiClient = axios.create({
 
 // Add a request interceptor
 apiClient.interceptors.request.use(
-  config => {
-    const token = getCurrentToken()
-    const verifiedToken = verifyToken(token)
+  async config => {
+    try {
+      const token = getCurrentToken()
+      const verifiedToken = await verifyToken(token)
 
-    if (verifiedToken) {
-      config.headers['Authorization'] = `Bearer ${verifiedToken}`
+      if (verifiedToken) {
+        config.headers['Authorization'] = `Bearer ${verifiedToken}`
+      }
+
+      // If the data is a file, set the Content-Type to multipart/form-data
+      if (config.data instanceof FormData) {
+        config.headers['Content-Type'] = 'multipart/form-data'
+      }
+
+      return config
+    } catch (error) {
+      return Promise.reject(error)
     }
-
-    // If the data is a file, set the Content-Type to multipart/form-data
-    if (config.data instanceof FormData) {
-      config.headers['Content-Type'] = 'multipart/form-data'
-    }
-
-    return config
   },
   error => Promise.reject(error)
+)
+
+apiClient.interceptors.response.use(
+  response => response,
+  async error => {
+    // Handle specific cases
+    if (error.response) {
+      const { status, data } = error.response
+
+      // Case 1: If the response is 403, call verifyToken
+      if (status === 403) {
+        const token = getCurrentToken()
+        await verifyToken(token)
+      }
+
+      // Case 2: If the response body error is EmentorApi, log the error
+      if (data && data.error === 'EmentorApi') {
+        console.log('Error:', data)
+      }
+    }
+
+    // Always reject the promise to propagate the error further
+    return Promise.reject(error)
+  }
 )
 
 export default apiClient
