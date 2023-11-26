@@ -45,7 +45,6 @@ const QuizReviewAttempt = props => {
 
   useEffect(() => {
     const quizId = asPath.split('/')[2]
-    console.log(quizId)
     apiClient
       .get(apiSpec.QUIZ_SERVICE + `/attempt/${quizId}`)
       .then(response => {
@@ -53,18 +52,13 @@ const QuizReviewAttempt = props => {
 
         dispatch(addQuiz(response.data))
         setLoading(false)
-
-        console.log(quiz)
       })
       .catch(error => {
         console.log(error)
       })
   }, [])
 
-  console.log(quiz)
-
   const getSubmitedQuestionAnswers = () => {
-    console.log
     let submitedQuestionAnswers = []
     if (answersMap.size <= 0) {
       return []

@@ -116,8 +116,6 @@ const StudentStatsQuestions = props => {
     ]
   }
 
-  console.log(+'%')
-
   return (
     <Card>
       <CardHeader

@@ -18,7 +18,16 @@ export const selectAnswers = state => state.quiz.answers
 
 const initialState = {
   quiz: {},
-  answers: new Map()
+  answers: new Map(),
+  newQuiz: {
+    title: '',
+    description: '',
+    componentType: '',
+    difficultyLevel: 0,
+    maxTime: 0,
+    chaptersId: [],
+    questionsList: []
+  }
 }
 
 export const appQuizSlice = createSlice({

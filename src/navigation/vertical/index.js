@@ -19,6 +19,23 @@ const navigation = () => {
       path: '/quizzes'
     },
     {
+      path: '/acl',
+      action: 'read',
+      subject: 'acl-page',
+      icon: 'tabler:shield',
+      title: 'Dashboard'
+    },
+    {
+      icon: 'tabler:list-check',
+      title: 'Quizzes',
+      badgeContent: 'new',
+      badgeColor: 'error',
+      subject: 'professor-pages',
+      title: 'Teste',
+      action: 'read',
+      path: '/all-quizzes'
+    },
+    {
       sectionTitle: 'Apps & Pages'
     },
     {
@@ -564,13 +581,7 @@ const navigation = () => {
         }
       ]
     },
-    {
-      path: '/acl',
-      action: 'read',
-      subject: 'acl-page',
-      icon: 'tabler:shield',
-      title: 'Access Control'
-    },
+
     {
       title: 'Others',
       icon: 'tabler:dots',
