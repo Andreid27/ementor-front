@@ -30,6 +30,7 @@ const defaultValues = {
   componentType: 'CS',
   difficultyLevel: 0,
   maxTime: 0,
+  numberOfAnswers: 5,
   chaptersId: [],
   questionsList: []
 }
@@ -40,6 +41,8 @@ const QuizComponent = () => {
   const dispatch = useDispatch()
   const { asPath, pathname } = useRouter()
   const [selectedChapters, setSelectedChapters] = useState([])
+  const [numberOfAnswers, setNumberOfAnswers] = useState()
+  const [questionsDefaultDifficultyLevel, setQuestionsDefaultDifficultyLevel] = useState()
 
   const ITEM_HEIGHT = 48
   const ITEM_PADDING_TOP = 8
@@ -202,7 +205,7 @@ const QuizComponent = () => {
                   />
                 </Grid>
 
-                <Grid item xs={6} sm={4}>
+                <Grid item xs={6} sm={2}>
                   <Controller
                     name='maxTime'
                     control={control}
@@ -226,7 +229,7 @@ const QuizComponent = () => {
                   />
                 </Grid>
 
-                <Grid item xs={12} sm={4}>
+                <Grid item xs={4} sm={3}>
                   <Controller
                     name='difficultyLevel'
                     control={control}
@@ -236,8 +239,40 @@ const QuizComponent = () => {
                         <Typography variant='subtitle2' gutterBottom>
                           Grad de dificultate
                         </Typography>
-                        <Rating value={Number(value)} onChange={onChange} max={3} defaultValue={1.5} precision={0.5} />
+                        <Rating
+                          value={Number(value)}
+                          onChange={e => {
+                            onChange(e)
+                            setQuestionsDefaultDifficultyLevel(e.target.value) // Set the value in real-time
+                          }}
+                          max={3}
+                          defaultValue={1.5}
+                          precision={0.5}
+                        />
                       </div>
+                    )}
+                  />
+                </Grid>
+
+                <Grid item xs={8} sm={3}>
+                  <Controller
+                    name='numberOfAnswers'
+                    control={control}
+                    rules={{ required: true, minLength: 3, maxLength: 100 }}
+                    render={({ field: { value, onChange } }) => (
+                      <CustomTextField
+                        fullWidth
+                        value={value}
+                        type='number'
+                        label='Numărul de răspunsuri posibile:'
+                        onChange={e => {
+                          onChange(e)
+                          setNumberOfAnswers(e.target.value) // Set the value in real-time
+                        }}
+                        placeholder='5'
+                        error={Boolean(errors.lastName)}
+                        aria-describedby='validation-async-title'
+                      />
                     )}
                   />
                 </Grid>
@@ -268,7 +303,12 @@ const QuizComponent = () => {
                     name='questionsList'
                     control={control}
                     rules={{ required: true, minLength: 3, maxLength: 100 }}
-                    render={({ field: { value, onChange } }) => <QuestionsComponent />}
+                    render={({ field: { value, onChange } }) => (
+                      <QuestionsComponent
+                        numberOfAnswers={numberOfAnswers}
+                        difficultyLevel={questionsDefaultDifficultyLevel}
+                      />
+                    )}
                   />
                 </Grid>
               </Grid>
