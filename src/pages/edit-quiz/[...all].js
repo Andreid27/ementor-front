@@ -37,7 +37,7 @@ const QuizPage = () => {
         </Box>
       ) : (
         <Card>
-          <CardHeader title='Edit Test' />
+          <CardHeader title='Editare test' />
           <QuizComponent />
         </Card>
       )}

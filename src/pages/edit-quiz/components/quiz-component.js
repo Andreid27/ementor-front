@@ -23,6 +23,7 @@ import * as apiSpec from '../../../apiSpec'
 import { set } from 'nprogress'
 import CustomChip from 'src/@core/components/mui/chip'
 import QuestionsComponent from './questions-component'
+import toast from 'react-hot-toast'
 
 const defaultValues = {
   title: '',
@@ -32,17 +33,216 @@ const defaultValues = {
   maxTime: 0,
   numberOfAnswers: 5,
   chaptersId: [],
-  questionsList: []
+  questionsList: [
+    {
+      content: '',
+      answer1: '',
+      answer2: '',
+      answer3: '',
+      answer4: '',
+      answer5: '',
+      correctAnswer: 0,
+      source: '',
+      sourcePage: 0,
+      difficultyLevel: 0,
+      hint: ''
+    },
+    {
+      content: '',
+      answer1: '',
+      answer2: '',
+      answer3: '',
+      answer4: '',
+      answer5: '',
+      correctAnswer: 0,
+      source: '',
+      sourcePage: 0,
+      difficultyLevel: 0,
+      hint: ''
+    },
+    {
+      content: '',
+      answer1: '',
+      answer2: '',
+      answer3: '',
+      answer4: '',
+      answer5: '',
+      correctAnswer: 0,
+      source: '',
+      sourcePage: 0,
+      difficultyLevel: 0,
+      hint: ''
+    },
+    {
+      content: '',
+      answer1: '',
+      answer2: '',
+      answer3: '',
+      answer4: '',
+      answer5: '',
+      correctAnswer: 0,
+      source: '',
+      sourcePage: 0,
+      difficultyLevel: 0,
+      hint: ''
+    },
+    {
+      content: '',
+      answer1: '',
+      answer2: '',
+      answer3: '',
+      answer4: '',
+      answer5: '',
+      correctAnswer: 0,
+      source: '',
+      sourcePage: 0,
+      difficultyLevel: 0,
+      hint: ''
+    },
+    {
+      content: '',
+      answer1: '',
+      answer2: '',
+      answer3: '',
+      answer4: '',
+      answer5: '',
+      correctAnswer: 0,
+      source: '',
+      sourcePage: 0,
+      difficultyLevel: 0,
+      hint: ''
+    },
+    {
+      content: '',
+      answer1: '',
+      answer2: '',
+      answer3: '',
+      answer4: '',
+      answer5: '',
+      correctAnswer: 0,
+      source: '',
+      sourcePage: 0,
+      difficultyLevel: 0,
+      hint: ''
+    },
+    {
+      content: '',
+      answer1: '',
+      answer2: '',
+      answer3: '',
+      answer4: '',
+      answer5: '',
+      correctAnswer: 0,
+      source: '',
+      sourcePage: 0,
+      difficultyLevel: 0,
+      hint: ''
+    },
+    {
+      content: '',
+      answer1: '',
+      answer2: '',
+      answer3: '',
+      answer4: '',
+      answer5: '',
+      correctAnswer: 0,
+      source: '',
+      sourcePage: 0,
+      difficultyLevel: 0,
+      hint: ''
+    },
+    {
+      content: '',
+      answer1: '',
+      answer2: '',
+      answer3: '',
+      answer4: '',
+      answer5: '',
+      correctAnswer: 0,
+      source: '',
+      sourcePage: 0,
+      difficultyLevel: 0,
+      hint: ''
+    },
+    {
+      content: '',
+      answer1: '',
+      answer2: '',
+      answer3: '',
+      answer4: '',
+      answer5: '',
+      correctAnswer: 0,
+      source: '',
+      sourcePage: 0,
+      difficultyLevel: 0,
+      hint: ''
+    },
+    {
+      content: '',
+      answer1: '',
+      answer2: '',
+      answer3: '',
+      answer4: '',
+      answer5: '',
+      correctAnswer: 0,
+      source: '',
+      sourcePage: 0,
+      difficultyLevel: 0,
+      hint: ''
+    },
+    {
+      content: '',
+      answer1: '',
+      answer2: '',
+      answer3: '',
+      answer4: '',
+      answer5: '',
+      correctAnswer: 0,
+      source: '',
+      sourcePage: 0,
+      difficultyLevel: 0,
+      hint: ''
+    },
+    {
+      content: '',
+      answer1: '',
+      answer2: '',
+      answer3: '',
+      answer4: '',
+      answer5: '',
+      correctAnswer: 0,
+      source: '',
+      sourcePage: 0,
+      difficultyLevel: 0,
+      hint: ''
+    },
+    {
+      content: '',
+      answer1: '',
+      answer2: '',
+      answer3: '',
+      answer4: '',
+      answer5: '',
+      correctAnswer: 0,
+      source: '',
+      sourcePage: 0,
+      difficultyLevel: 0,
+      hint: ''
+    }
+  ]
 }
 
 const QuizComponent = () => {
   const [loading, setLoading] = useState(true)
+  const [submitLoading, setSubmitLoading] = useState(false)
   const [chapters, setChapters] = useState([])
   const dispatch = useDispatch()
   const { asPath, pathname } = useRouter()
   const [selectedChapters, setSelectedChapters] = useState([])
   const [numberOfAnswers, setNumberOfAnswers] = useState()
   const [questionsDefaultDifficultyLevel, setQuestionsDefaultDifficultyLevel] = useState()
+
+  const [componentType, setComponentType] = useState('CS')
 
   const ITEM_HEIGHT = 48
   const ITEM_PADDING_TOP = 8
@@ -85,11 +285,82 @@ const QuizComponent = () => {
     getValues
   } = useForm({ defaultValues })
 
-  const onSubmit = async data => {
-    // setLoading(true)
-    console.log(getValues())
+  const validateQuiz = quizData => {
+    const errors = {}
 
-    // handleNext(data)
+    // Check required fields
+    const requiredFields = [
+      'title',
+      'description',
+      'componentType',
+      'difficultyLevel',
+      'maxTime',
+      'chaptersId',
+      'questionsList'
+    ]
+    requiredFields.forEach(field => {
+      if (!quizData[field] || (Array.isArray(quizData[field]) && quizData[field].length === 0)) {
+        errors[field] = `${field} is required`
+      }
+    })
+
+    // Check questionsList content and correctAnswer
+    if (quizData.questionsList) {
+      quizData.questionsList.forEach((question, index) => {
+        if (!question.content) {
+          errors[`questionsList[${index}].content`] = `Content for question ${index + 1} is required`
+        }
+        if (question.correctAnswer === undefined || question.correctAnswer === 0) {
+          errors[`questionsList[${index}].correctAnswer`] = `Correct answer for question ${
+            index + 1
+          } is required and should be different than 0`
+        }
+      })
+    }
+
+    return errors
+  }
+
+  const onSubmit = async data => {
+    try {
+      const validationErrors = validateQuiz(getValues())
+
+      if (Object.keys(validationErrors).length === 0) {
+        // Perform the API call and return a promise
+        const apiPromise = new Promise((resolve, reject) => {
+          apiClient
+            .post(apiSpec.PROD_HOST + apiSpec.QUIZ_SERVICE + '/create-complete', getValues())
+            .then(response => {
+              console.log('Success')
+              resolve(response) // Resolve with the response if successful
+            })
+            .catch(error => {
+              console.log(error)
+              reject(error) // Reject with the error if there's an issue
+            })
+            .finally(() => {
+              setSubmitLoading(false) // Set loading to false when the request is complete
+            })
+        })
+
+        // Use toast.promise to handle loading, success, and error states
+        return toast.promise(apiPromise, {
+          loading: 'Loading',
+          success: 'Quiz submitted successfully',
+          error: 'Error submitting quiz'
+        })
+      } else {
+        // Handle validation errors
+        toast.error('Validation errors: ' + JSON.stringify(validationErrors), {
+          duration: 5000,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true
+        })
+      }
+    } catch (error) {
+      console.error('An unexpected error occurred:', error)
+    }
   }
 
   return (
@@ -183,7 +454,10 @@ const QuizComponent = () => {
                       <CustomTextField
                         select
                         fullWidth
-                        onChange={onChange}
+                        onChange={e => {
+                          setComponentType(e.target.value) // Your existing function to handle chip changes
+                          onChange(e.target.value) // Update the form state with the selected values
+                        }}
                         value={value}
                         name='componentType'
                         label='Tipul de complement'
@@ -247,7 +521,7 @@ const QuizComponent = () => {
                           }}
                           max={3}
                           defaultValue={1.5}
-                          precision={0.5}
+                          precision={1}
                         />
                       </div>
                     )}
@@ -305,17 +579,20 @@ const QuizComponent = () => {
                     rules={{ required: true, minLength: 3, maxLength: 100 }}
                     render={({ field: { value, onChange } }) => (
                       <QuestionsComponent
+                        questions={value} // Pass the questions array as a prop
+                        updateQuestions={updatedQuestions => onChange(updatedQuestions)} // Pass the update function
                         numberOfAnswers={numberOfAnswers}
                         difficultyLevel={questionsDefaultDifficultyLevel}
+                        componentType={componentType}
                       />
                     )}
                   />
                 </Grid>
               </Grid>
             </CardContent>
-            <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: '2em' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: '2em', marginBottom: '2.5em' }}>
               <Button variant='contained' onClick={onSubmit}>
-                Finalizare cont
+                {submitLoading ? <CircularProgress color='info' /> : 'Finalizare cont'}
               </Button>
             </Box>
           </form>

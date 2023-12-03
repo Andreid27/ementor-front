@@ -28,12 +28,20 @@ const navigation = () => {
     {
       icon: 'tabler:list-check',
       title: 'Quizzes',
-      badgeContent: 'new',
-      badgeColor: 'error',
       subject: 'professor-pages',
       title: 'Teste',
       action: 'read',
       path: '/all-quizzes'
+    },
+    {
+      icon: 'tabler:report-analytics',
+      title: 'Results',
+      badgeContent: 'new',
+      badgeColor: 'error',
+      subject: 'professor-pages',
+      title: 'Rezultate teste',
+      action: 'read',
+      path: '/student-results'
     },
     {
       sectionTitle: 'Apps & Pages'

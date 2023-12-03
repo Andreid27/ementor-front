@@ -57,6 +57,7 @@
     "jsonwebtoken": "8.5.1",
     "jwt-decode": "^3.1.2",
     "keen-slider": "6.8.5",
+    "lodash": "^4.17.21",
     "moment": "^2.29.4",
     "next": "^13.3.2",
     "nprogress": "0.2.0",
