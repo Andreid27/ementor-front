@@ -39,27 +39,22 @@ const SecondBoxWrapper = styled(Box)(({ theme }) => ({
 }))
 
 const RadioComponentReview = props => {
-  const [option, setOption] = useState()
+  const [option, setOption] = useState('answer0')
   const [corectOption, setCorectOption] = useState()
 
   const dispatch = useDispatch()
 
   useEffect(() => {
-    console.log(props.viewResults)
     if (props.viewResults) {
-      console.log(props.resultSet.correctAnswers)
-
       let optionNumber = props.resultSet.correctAnswers.filter(answer => {
         return answer.questionId === props.question.id
       })
-      setCorectOption(`answer${optionNumber[0].answer}`)
+      optionNumber[0] ? setCorectOption(`answer${optionNumber[0].answer}`) : null
       if (props.answersMap) {
-        console.log(props.answersMap)
-
         let optionNumber = props.answersMap.filter(answer => {
           return answer.questionId === props.question.id
         })
-        setOption(`answer${optionNumber[0].answer}`)
+        optionNumber[0] ? setOption(`answer${optionNumber[0].answer}`) : null
       }
     }
   }, [option, props.viewResults])

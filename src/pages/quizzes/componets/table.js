@@ -120,7 +120,6 @@ const EnhancedTable = props => {
         setQuizzes(response.data.data)
         setTotalCount(response.data.totalCount)
         setLoading(false)
-        console.log(response.data)
       })
       .catch(error => {
         console.log(error)
@@ -164,7 +163,6 @@ const EnhancedTable = props => {
   }
 
   const handleClick = (event, quizId) => {
-    console.log(quizId)
     props.setPreview(quizId)
   }
 

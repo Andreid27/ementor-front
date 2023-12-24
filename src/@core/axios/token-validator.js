@@ -12,7 +12,6 @@ import { useRouter } from 'next/router'
 
 export const verifyToken = async token => {
   let decodedToken = jwt_decode(token)
-  console.log('Decoded Token', decodedToken)
   let currentDate = new Date()
 
   const handleLogoutHere = () => {
@@ -31,8 +30,6 @@ export const verifyToken = async token => {
             Authorization: `Bearer ${getRefreshToken()}`
           }
         })
-        console.log('Token expired.')
-        console.log('New token', response.data.accessToken)
         window.localStorage.setItem(authConfig.storageTokenKeyName, response.data.accessToken)
         store.dispatch(
           updateTokens({ accessToken: response.data.accessToken, refreshToken: response.data.refreshToken })

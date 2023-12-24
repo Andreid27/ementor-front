@@ -77,8 +77,6 @@ const QuizReviewAttempt = props => {
     return submitedQuestionAnswers
   }
 
-  console.log(completed)
-
   return (
     <>
       {loading ? (

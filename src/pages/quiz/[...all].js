@@ -39,6 +39,7 @@ const QuizAttempt = props => {
   const [loadingButton, setLoadingButton] = useState(false)
   const [viewResults, setViewResults] = useState(false)
   const [completed, setCompleted] = useState(false)
+  const [timeFinished, setTimeFinished] = useState(false)
   const [resultSet, setResultSet] = useState(null)
   const [answersMap, setAnswersMap] = useState(new Map())
   const { asPath, pathname } = useRouter()
@@ -46,7 +47,6 @@ const QuizAttempt = props => {
 
   useEffect(() => {
     const quizId = asPath.split('/')[2]
-    console.log(quizId)
     apiClient
       .get(apiSpec.QUIZ_SERVICE + `/start/${quizId}`)
       .then(response => {
@@ -54,15 +54,11 @@ const QuizAttempt = props => {
 
         dispatch(addQuiz(response.data))
         setLoading(false)
-
-        console.log(quiz)
       })
       .catch(error => {
         console.log(error)
       })
   }, [])
-
-  console.log(quiz)
 
   const handleStartTest = () => {
     props.setPreview()
@@ -70,7 +66,6 @@ const QuizAttempt = props => {
   }
 
   useEffect(() => {
-    console.log(completed)
     if (completed) {
       setLoadingButton(true)
 
@@ -78,10 +73,10 @@ const QuizAttempt = props => {
         quizStudentId: asPath.split('/')[2],
         submitedQuestionAnswers: getSubmitedQuestionAnswers()
       }
-      console.log(body)
 
-      if (body.submitedQuestionAnswers.length < quiz.questions.length) {
+      if (body.submitedQuestionAnswers.length < quiz.questions.length && !timeFinished) {
         setLoadingButton(false)
+        setCompleted(false)
         toast.error('Nu ai raspuns la toate intrebarile')
 
         return
@@ -99,7 +94,6 @@ const QuizAttempt = props => {
   }, [completed])
 
   const getSubmitedQuestionAnswers = () => {
-    console.log
     let submitedQuestionAnswers = []
     if (answersMap.size <= 0) {
       return []
@@ -117,8 +111,6 @@ const QuizAttempt = props => {
 
     return submitedQuestionAnswers
   }
-
-  console.log(completed)
 
   return (
     <>
@@ -168,6 +160,7 @@ const QuizAttempt = props => {
                   targetTimestamp={new Date(quiz.endTime).getTime()}
                   size={150}
                   setCompleted={setCompleted}
+                  setTimeFinished={setTimeFinished}
                 />
               </Box>
 

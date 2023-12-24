@@ -26,7 +26,6 @@ import { CircularProgress } from '@mui/material'
 const AnalyticsDashboard = () => {
   const user = useSelector(selectUser)
   const dashboardData = useSelector(selectDashboardData)
-  console.log(dashboardData)
 
   return (
     <ApexChartWrapper>

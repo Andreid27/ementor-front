@@ -1,6 +1,7 @@
 // CountdownTimer.js
 
 import { Box } from '@mui/material'
+import { tr } from 'date-fns/locale'
 import React from 'react'
 import { CountdownCircleTimer } from 'react-countdown-circle-timer'
 
@@ -28,6 +29,7 @@ const CountdownTimer = props => {
         size={props.size}
         onComplete={() => {
           props.setCompleted(true) // Set the completed state to true
+          props.setTimeFinished(true)
 
           return [false, 0] // Stop the timer
         }} // Don't repeat the timer

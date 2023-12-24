@@ -10,7 +10,6 @@ const PreviousAttempt = props => {
   const getAlertType = () => {
     const questions = props.questionsCount
     const score = (props.attempt.correctAnswers / questions) * 100
-    console.log(score)
     if (score <= 50) {
       return 'error'
     }
@@ -38,10 +37,6 @@ const PreviousAttempt = props => {
 
     return roundedDifference
   }
-
-  console.log(getAlertType())
-  console.log(formatDate(props.attempt.startAt))
-  console.log(calculateTime())
 
   const handleViewAttempt = event => {
     event.preventDefault()

@@ -1,5 +1,6 @@
 // ** React Imports
 import { Button, Card, CardHeader, CircularProgress } from '@mui/material'
+import Router, { useRouter } from 'next/router'
 import { useState } from 'react'
 
 const SubmitComponent = props => {
@@ -11,7 +12,7 @@ const SubmitComponent = props => {
           color='primary'
           size='large'
           onClick={() => {
-            props.setViewResults(false)
+            Router.push('/quizzes')
           }}
         >
           Înapoi
