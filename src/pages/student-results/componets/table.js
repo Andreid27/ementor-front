@@ -22,6 +22,9 @@ import apiClient from 'src/@core/axios/axiosEmentor'
 import componentTypes from 'src/pages/student-results/componets/componentsType.json'
 import { Button, LinearProgress } from '@mui/material'
 import AssignationModal from './assignationModal'
+import { useDispatch } from 'react-redux'
+import { updateAllStudents } from 'src/store/apps/user'
+import Router from 'next/router'
 
 // ** renders client column
 const renderClient = (params, user) => {
@@ -181,6 +184,7 @@ const StudentsResultsTable = () => {
   const [totalCount, setTotalCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const isInitialRender = useRef(true)
+  const dispatch = useDispatch()
 
   const handleSearch = searchValue => {
     setSearchText(searchValue)
@@ -226,7 +230,7 @@ const StudentsResultsTable = () => {
             pageSize: paginationModel.pageSize
           })
         ])
-
+        dispatch(updateAllStudents(userServiceResponse.data.data))
         setUsers(userServiceResponse.data.data)
         setData(quizServiceResponse.data.data)
         setTotalCount(quizServiceResponse.data.totalCount)
@@ -271,6 +275,11 @@ const StudentsResultsTable = () => {
     return apiSortingConfig
   }
 
+  const handleViewAttempt = params => {
+    console.log(params.row.id)
+    Router.push(`/review-attempt/${params.row.id}`)
+  }
+
   return (
     <Card>
       <CardHeader title='Rezultate studenți' />
@@ -312,6 +321,7 @@ const StudentsResultsTable = () => {
                 onChange: event => handleSearch(event.target.value)
               }
             }}
+            onCellClick={handleViewAttempt}
           />
         </>
       )}

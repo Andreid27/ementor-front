@@ -3,6 +3,10 @@ import { Alert, Box, Button, Card, CardHeader, Grid, Typography } from '@mui/mat
 import moment from 'moment'
 import { useRouter } from 'next/router'
 import { useState } from 'react'
+import CustomAvatar from 'src/@core/components/mui/avatar'
+
+// ** Utils Import
+import { getInitials } from 'src/@core/utils/get-initials'
 
 const PreviousAttempt = props => {
   const router = useRouter()
@@ -18,6 +22,46 @@ const PreviousAttempt = props => {
     }
 
     return 'success'
+  }
+
+  const renderClient = (attempt, user) => {
+    const stateNum = Math.floor(Math.random() * 6)
+    const states = ['success', 'error', 'warning', 'info', 'primary', 'secondary']
+    const color = states[stateNum]
+
+    if (attempt.avatar && attempt.avatar.length) {
+      return (
+        <CustomAvatar src={`/images/avatars/${attempt.avatar}`} sx={{ mr: 3, width: '1.875rem', height: '1.875rem' }} />
+      )
+    } else {
+      return (
+        <CustomAvatar
+          skin='light'
+          color={color}
+          sx={{ mr: 3, fontSize: '.8rem', width: '1.875rem', height: '1.875rem' }}
+        >
+          {getInitials(user.lastName ? `${user.firstName} ${user.lastName} ` : 'John Doe')}
+        </CustomAvatar>
+      )
+    }
+  }
+
+  const renderUser = attempt => {
+    const user = props.users.find(user => user.id === attempt.userId)
+
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        {renderClient(attempt, user)}
+        <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+          <Typography noWrap variant='body2' sx={{ color: 'text.primary', fontWeight: 600 }}>
+            {user.firstName} {user.lastName}
+          </Typography>
+          <Typography noWrap variant='caption'>
+            {user.email}
+          </Typography>
+        </Box>
+      </Box>
+    )
   }
 
   const formatDate = dateString => {
@@ -40,7 +84,7 @@ const PreviousAttempt = props => {
 
   const handleViewAttempt = event => {
     event.preventDefault()
-    router.push(`/quiz-attempt/${props.attempt.id}`)
+    router.push(`/review-attempt/${props.attempt.id}`)
   }
 
   return (
@@ -48,22 +92,22 @@ const PreviousAttempt = props => {
       {props ? (
         <Alert variant='outlined' severity={getAlertType()} icon={false}>
           <Box sx={{ width: '100%' }}>
-            <Grid container spacing={14}>
+            <Grid container spacing={10}>
               <Grid item xs={1} sm={1}>
                 {props.index + 1}.
               </Grid>
               <Grid item xs={3} sm={3}>
-                Data: {formatDate(props.attempt.startAt)}
+                {renderUser(props.attempt)}
               </Grid>
-              <Grid item xs={3} sm={3}>
-                {' '}
+              <Grid item xs={3.5} sm={3.5}>
+                <div>Data: {formatDate(props.attempt.startAt)}</div>
                 Rezultat obtinut: {props.attempt.correctAnswers}/{props.questionsCount}
               </Grid>
               <Grid item xs={2} sm={1.75}>
                 {' '}
                 Timp total: {calculateTime()} minute
               </Grid>
-              <Grid item xs={3} sm={3}>
+              <Grid item xs={2} sm={2}>
                 <Button variant='contained' onClick={handleViewAttempt}>
                   Vezualizeaza raspunsurile <i className='fa fa-arrow-right'></i>
                 </Button>

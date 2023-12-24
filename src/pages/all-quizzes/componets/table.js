@@ -175,8 +175,8 @@ const EnhancedTable = props => {
     setOrderBy(property)
   }
 
-  const handleClick = (event, quizId) => {
-    props.setPreview(quizId)
+  const handleClick = (event, quiz) => {
+    props.setPreview(quiz)
   }
 
   const handleChangePage = (event, newPage) => {

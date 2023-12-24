@@ -4,14 +4,16 @@ import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import CircularProgress from '@mui/material/CircularProgress'
 import { styled } from '@mui/material/styles'
-import QuizComponent from './components/quiz-component'
+import QuizComponent from './new-quiz/quiz-component'
+import QuizEdit from './edit-quiz/edit'
 
 const QuizPage = () => {
   const [loading, setLoading] = useState(true)
   const { asPath, pathname } = useRouter()
+  const [quizId, setQuizId] = useState(null)
 
   useEffect(() => {
-    const quizId = asPath.split('/')[2]
+    setQuizId(asPath.split('/')[2])
     setLoading(false)
   }, [])
 
@@ -38,7 +40,7 @@ const QuizPage = () => {
       ) : (
         <Card>
           <CardHeader title='Editare test' />
-          <QuizComponent />
+          {quizId == 'new' ? <QuizComponent /> : <QuizEdit />}
         </Card>
       )}
     </>

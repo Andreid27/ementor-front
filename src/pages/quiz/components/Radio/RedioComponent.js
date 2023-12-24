@@ -65,7 +65,12 @@ const RadioComponent = props => {
         <CardContent>
           <SecondBoxWrapper sx={corectOption === 'answer1' ? { borderColor: '#28C76F' } : {}}>
             <BoxWrapper
-              onClick={() => setOption('answer1')}
+              onClick={() => {
+                if (props.viewResults) {
+                  return
+                }
+                setOption('answer1')
+              }}
               sx={option === 'answer1' ? { borderColor: '#00CFE8' } : {}}
             >
               <Box sx={{ width: '100%' }}>
@@ -78,7 +83,12 @@ const RadioComponent = props => {
 
           <SecondBoxWrapper sx={corectOption === 'answer2' ? { borderColor: '#28C76F' } : {}}>
             <BoxWrapper
-              onClick={() => setOption('answer2')}
+              onClick={() => {
+                if (props.viewResults) {
+                  return
+                }
+                setOption('answer2')
+              }}
               sx={option === 'answer2' ? { borderColor: '#00CFE8' } : {}}
             >
               <Box sx={{ width: '100%' }}>
@@ -91,7 +101,12 @@ const RadioComponent = props => {
 
           <SecondBoxWrapper sx={corectOption === 'answer3' ? { borderColor: '#28C76F' } : {}}>
             <BoxWrapper
-              onClick={() => setOption('answer3')}
+              onClick={() => {
+                if (props.viewResults) {
+                  return
+                }
+                setOption('answer3')
+              }}
               sx={option === 'answer3' ? { borderColor: '#00CFE8' } : {}}
             >
               <Box sx={{ width: '100%' }}>
@@ -103,7 +118,12 @@ const RadioComponent = props => {
           </SecondBoxWrapper>
           <SecondBoxWrapper sx={corectOption === 'answer4' ? { borderColor: '#28C76F' } : {}}>
             <BoxWrapper
-              onClick={() => setOption('answer4')}
+              onClick={() => {
+                if (props.viewResults) {
+                  return
+                }
+                setOption('answer4')
+              }}
               sx={option === 'answer4' ? { borderColor: '#00CFE8' } : {}}
             >
               <Box sx={{ width: '100%' }}>
@@ -115,7 +135,12 @@ const RadioComponent = props => {
           </SecondBoxWrapper>
           <SecondBoxWrapper sx={corectOption === 'answer5' ? { borderColor: '#28C76F' } : {}}>
             <BoxWrapper
-              onClick={() => setOption('answer5')}
+              onClick={() => {
+                if (props.viewResults) {
+                  return
+                }
+                setOption('answer5')
+              }}
               sx={option === 'answer5' ? { borderColor: '#00CFE8' } : {}}
             >
               <Box sx={{ width: '100%' }}>

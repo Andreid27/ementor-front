@@ -22,7 +22,7 @@ const QuizPreview = props => {
 
   useEffect(() => {
     apiClient
-      .get(apiSpec.QUIZ_SERVICE + `/${props.preview.quizId}`)
+      .get(apiSpec.QUIZ_SERVICE + `/${props.preview.id}`)
       .then(response => {
         setPreview(response.data)
       })
@@ -31,9 +31,9 @@ const QuizPreview = props => {
       })
   }, [])
 
-  const handleStartTest = () => {
+  const handleViewQuiz = () => {
     props.setPreview()
-    router.push(`/quiz/${props.preview.id}`)
+    router.push(`/edit-quiz/${props.preview.id}`)
   }
 
   return (
@@ -161,16 +161,16 @@ const QuizPreview = props => {
                       </Box>
 
                       <Typography sx={{ color: 'secondary.main', marginRight: '0.3em' }}>
-                        Încercări rămase: {preview ? preview.remainedAttempts : null}
+                        Rezolvări trimise: {preview ? preview.quizPreviousAttempts.length : null}
                       </Typography>
                     </Typography>
                     <Button onClick={() => props.setPreview()}>Inapoi</Button>
                     <Button
                       variant='contained'
-                      onClick={() => handleStartTest()}
+                      onClick={() => handleViewQuiz()}
                       disabled={preview ? preview.remainedAttempts <= 0 : true}
                     >
-                      Start test
+                      Vezi test
                     </Button>
                   </div>
                 </CardContent>
@@ -186,11 +186,16 @@ const QuizPreview = props => {
               <Box sx={{ display: 'flex', justifyContent: 'space-between', padding: '1em' }}>
                 <Grid container spacing={6}>
                   <Grid item xs={12} sm={12}>
-                    <Typography variant='h4'>Încercări anterioare</Typography>
+                    <Typography variant='h4'>Încercările studenților</Typography>
                   </Grid>
                   {preview.quizPreviousAttempts.map((attempt, index) => (
                     <Grid key={attempt.id} item xs={12} sm={12}>
-                      <PreviousAttempt attempt={attempt} questionsCount={props.preview.questionsCount} index={index} />
+                      <PreviousAttempt
+                        attempt={attempt}
+                        questionsCount={props.preview.questionsCount}
+                        index={index}
+                        users={props.users}
+                      />
                     </Grid>
                   ))}
                 </Grid>

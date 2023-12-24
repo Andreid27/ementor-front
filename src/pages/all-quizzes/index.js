@@ -1,18 +1,55 @@
 // ** React Imports
 import { Button, Card, CardHeader } from '@mui/material'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import TestsTable from 'src/pages/all-quizzes/componets/table'
 import QuizPreview from './componets/quiz-preview'
 import { margin } from '@mui/system'
 import { useRouter } from 'next/router'
+import apiClient from 'src/@core/axios/axiosEmentor'
+import * as apiSpec from '../../apiSpec'
+import toast from 'react-hot-toast'
+import { useDispatch } from 'react-redux'
+import { updateAllStudents } from 'src/store/apps/user'
 
 const QuizzesPage = () => {
   const [preview, setPreview] = useState()
   const router = useRouter()
+  const [users, setUsers] = useState([])
+  const dispatch = useDispatch()
 
   const createTest = () => {
     router.push('/edit-quiz/new')
   }
+
+  useEffect(() => {
+    try {
+      apiClient
+        .post(apiSpec.USER_SERVICE + '/paginated', {
+          filters: [
+            {
+              key: 'role',
+              operation: 'EQUAL',
+              value: 'STUDENT'
+
+              //TODO continue filter users by role here
+            }
+          ],
+          sorters: [],
+          page: 0,
+          pageSize: 1000
+        })
+        .then(response => {
+          setUsers(response.data.data)
+          dispatch(updateAllStudents(response.data.data))
+        })
+        .catch(error => {
+          console.log(error)
+          toast.error('Nu s-au putut prelua utilizatorii')
+        })
+    } catch (error) {
+      console.error(error)
+    }
+  }, [])
 
   return (
     <>
@@ -21,7 +58,7 @@ const QuizzesPage = () => {
       </Button>
       <Card>
         {preview ? (
-          <QuizPreview preview={preview} setPreview={setPreview} />
+          <QuizPreview preview={preview} setPreview={setPreview} users={users} />
         ) : (
           <TestsTable preview={preview} setPreview={setPreview} />
         )}

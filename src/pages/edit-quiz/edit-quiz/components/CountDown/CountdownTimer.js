@@ -1,21 +1,14 @@
 // CountdownTimer.js
 
 import { Box } from '@mui/material'
-import { tr } from 'date-fns/locale'
 import React from 'react'
 import { CountdownCircleTimer } from 'react-countdown-circle-timer'
 
 const CountdownTimer = props => {
-  const startTime = props.startTime / 1000 // use UNIX timestamp in seconds
+  const startTime = new Date().getTime() / 1000 // use UNIX timestamp in seconds
   const endTime = props.targetTimestamp / 1000 // use UNIX timestamp in seconds
 
-  let remainingTime = 0
-  if (props.timeFinished || props.completed) {
-    remainingTime = endTime - startTime
-  } else {
-    remainingTime = endTime - startTime
-  }
-  console.log(props.initialTimeRemaining)
+  const remainingTime = endTime - startTime
 
   return (
     <>
@@ -28,15 +21,13 @@ const CountdownTimer = props => {
         </defs>
       </svg>
       <CountdownCircleTimer
-        isPlaying={!(props.timeFinished || props.completed)}
-        duration={props.initialTimeRemaining ? props.initialTimeRemaining : remainingTime}
-        initialRemainingTime={props.initialTimeRemaining ? remainingTime : null}
+        isPlaying
+        duration={remainingTime}
         colors={'url(#your-unique-id)'}
         strokeWidth={6}
         size={props.size}
         onComplete={() => {
           props.setCompleted(true) // Set the completed state to true
-          props.setTimeFinished(true)
 
           return [false, 0] // Stop the timer
         }} // Don't repeat the timer

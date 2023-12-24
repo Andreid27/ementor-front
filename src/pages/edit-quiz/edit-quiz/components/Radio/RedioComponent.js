@@ -46,6 +46,8 @@ const RadioComponentReview = props => {
 
   useEffect(() => {
     if (props.viewResults) {
+      console.log(props.resultSet)
+
       let optionNumber = props.resultSet.correctAnswers.filter(answer => {
         return answer.questionId === props.question.id
       })

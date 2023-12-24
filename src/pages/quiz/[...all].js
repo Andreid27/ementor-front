@@ -161,6 +161,9 @@ const QuizAttempt = props => {
                   size={150}
                   setCompleted={setCompleted}
                   setTimeFinished={setTimeFinished}
+                  startTime={new Date().getTime()}
+                  completed={completed}
+                  timeFinished={timeFinished}
                 />
               </Box>
 

@@ -25,10 +25,10 @@ const persistConfig = {
 }
 
 //UNCOMMENT HERE TO ENABLE LOGGER
-// // ** Logger instance
-// const logger = createLogger({
-//   stateTransformer: state => state
-// })
+// ** Logger instance
+const logger = createLogger({
+  stateTransformer: state => state
+})
 
 // Wrap the root reducer with persistReducer
 const persistedReducer = persistReducer(
@@ -51,9 +51,8 @@ export const store = configureStore({
     getDefaultMiddleware({
       serializableCheck: false
     })
-
-  //UNCOMMENT HERE TO ENABLE LOGGER
-  // .concat(logger) // ** Logger middleware
+      //UNCOMMENT HERE TO ENABLE LOGGER
+      .concat(logger) // ** Logger middleware
 })
 
 // Export the persistor, so you can use it in the 'PersistGate'
