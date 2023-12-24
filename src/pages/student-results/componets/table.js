@@ -123,7 +123,7 @@ const StudentsResultsTable = () => {
       )
     },
     {
-      flex: 0.15,
+      flex: 0.18,
       field: 'componentType',
       minWidth: 120,
       headerName: 'Tip complement',
@@ -134,8 +134,8 @@ const StudentsResultsTable = () => {
       )
     },
     {
-      flex: 0.2,
-      minWidth: 140,
+      flex: 0.08,
+      minWidth: 80,
       field: 'correctAnswers',
       headerName: 'Status',
       renderCell: params => {
@@ -152,6 +152,24 @@ const StudentsResultsTable = () => {
           />
         )
       }
+    },
+    {
+      flex: 0.12,
+      type: 'date',
+      minWidth: 100,
+      headerName: 'Dată asignare',
+      field: 'assignedAt',
+      valueGetter: params => new Date(params.value),
+      renderCell: params => (
+        <Typography variant='body2' sx={{ color: 'text.primary' }}>
+          {new Date(params.row.assignedAt).toLocaleString('ro-RO', {
+            timeZone: 'UTC',
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+          })}
+        </Typography>
+      )
     }
   ]
 
@@ -159,7 +177,7 @@ const StudentsResultsTable = () => {
   const [searchText, setSearchText] = useState('')
   const [filteredData, setFilteredData] = useState([])
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 })
-  const [sortModel, setSortModel] = useState([])
+  const [sortModel, setSortModel] = useState([{ field: 'assignedAt', sort: 'desc' }])
   const [totalCount, setTotalCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const isInitialRender = useRef(true)

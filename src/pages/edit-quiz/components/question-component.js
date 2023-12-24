@@ -16,11 +16,11 @@ const QuestionComponent = props => {
   const [componentType, setComponentType] = useState('CS')
 
   const [options, setOptions] = useState([
-    { id: 1, text: 'Option 1', isCorrect: false },
-    { id: 2, text: 'Option 2', isCorrect: false },
-    { id: 3, text: 'Option 3', isCorrect: false },
-    { id: 4, text: 'Option 4', isCorrect: false },
-    { id: 5, text: 'Option 5', isCorrect: false }
+    { id: 1, text: '', isCorrect: false },
+    { id: 2, text: '', isCorrect: false },
+    { id: 3, text: '', isCorrect: false },
+    { id: 4, text: '', isCorrect: false },
+    { id: 5, text: '', isCorrect: false }
   ])
 
   const updateQuestionField = (fieldName, value) => {

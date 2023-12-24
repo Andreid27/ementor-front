@@ -55,7 +55,7 @@ const AssignationModal = props => {
 
   useEffect(() => {
     apiClient
-      .post(apiSpec.PROD_HOST + '/service3/quiz/paginated', {
+      .post(apiSpec.QUIZ_SERVICE + '/paginated', {
         filters: [],
         sorters: [],
         page: 0,

@@ -11,7 +11,7 @@ import {
   Rating,
   Typography
 } from '@mui/material'
-import { useRouter } from 'next/router'
+import Router, { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import CircularProgress from '@mui/material/CircularProgress'
 import { styled } from '@mui/material/styles'
@@ -24,6 +24,7 @@ import { set } from 'nprogress'
 import CustomChip from 'src/@core/components/mui/chip'
 import QuestionsComponent from './questions-component'
 import toast from 'react-hot-toast'
+import { ro } from 'date-fns/locale'
 
 const defaultValues = {
   title: '',
@@ -232,6 +233,8 @@ const defaultValues = {
   ]
 }
 
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
+
 const QuizComponent = () => {
   const [loading, setLoading] = useState(true)
   const [submitLoading, setSubmitLoading] = useState(false)
@@ -263,7 +266,7 @@ const QuizComponent = () => {
   useEffect(() => {
     const quizId = asPath.split('/')[2]
     apiClient
-      .post(apiSpec.PROD_HOST + '/service3/chapter/paginated', {
+      .post('/service3/chapter/paginated', {
         filters: [],
         sorters: [],
         page: 0,
@@ -329,14 +332,16 @@ const QuizComponent = () => {
         // Perform the API call and return a promise
         const apiPromise = new Promise((resolve, reject) => {
           apiClient
-            .post(apiSpec.PROD_HOST + apiSpec.QUIZ_SERVICE + '/create-complete', getValues())
-            .then(response => {
+            .post(apiSpec.QUIZ_SERVICE + '/create-complete', getValues())
+            .then(async response => {
               console.log('Success')
-              resolve(response) // Resolve with the response if successful
+              resolve(response)
+              await delay(3000)
+              await Router.push('/all-quizzes')
             })
             .catch(error => {
               console.log(error)
-              reject(error) // Reject with the error if there's an issue
+              reject(error)
             })
             .finally(() => {
               setSubmitLoading(false) // Set loading to false when the request is complete
@@ -346,12 +351,12 @@ const QuizComponent = () => {
         // Use toast.promise to handle loading, success, and error states
         return toast.promise(apiPromise, {
           loading: 'Loading',
-          success: 'Quiz submitted successfully',
-          error: 'Error submitting quiz'
+          success: 'Testul a fost creat cu succes',
+          error: 'Eroare la crearea testului'
         })
       } else {
         // Handle validation errors
-        toast.error('Validation errors: ' + JSON.stringify(validationErrors), {
+        toast.error('Eroare de validare: ' + JSON.stringify(validationErrors), {
           duration: 5000,
           closeOnClick: true,
           pauseOnHover: true,
@@ -592,7 +597,7 @@ const QuizComponent = () => {
             </CardContent>
             <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: '2em', marginBottom: '2.5em' }}>
               <Button variant='contained' onClick={onSubmit}>
-                {submitLoading ? <CircularProgress color='info' /> : 'Finalizare cont'}
+                {submitLoading ? <CircularProgress color='info' /> : 'Finalizare test'}
               </Button>
             </Box>
           </form>

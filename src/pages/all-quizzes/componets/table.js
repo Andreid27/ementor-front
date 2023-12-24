@@ -51,6 +51,12 @@ const headCells = [
     numeric: true,
     disablePadding: false,
     label: 'Dificultate'
+  },
+  {
+    id: 'quizCreation',
+    numeric: true,
+    disablePadding: false,
+    label: 'Data creării'
   }
 ]
 function EnhancedTableHead(props) {
@@ -127,7 +133,7 @@ const EnhancedTable = props => {
   }, [page, orderBy, order, rowsPerPage])
 
   const getSorters = () => {
-    let sorters = []
+    let sorters = [{ key: 'quizCreation', direction: 'DESC' }]
     if (orderBy === 'chapterTitles') {
       sorters.push({
         key: 'chapterTitles',
@@ -149,6 +155,13 @@ const EnhancedTable = props => {
     if (orderBy === 'difficultyLevel') {
       sorters.push({
         key: 'difficultyLevel',
+        direction: order.toUpperCase()
+      })
+    }
+    if (orderBy === 'quizCreation') {
+      sorters = sorters.filter(sorter => sorter.key !== 'quizCreation')
+      sorters.push({
+        key: 'quizCreation',
         direction: order.toUpperCase()
       })
     }
@@ -195,7 +208,7 @@ const EnhancedTable = props => {
               <Box sx={{ padding: '1.5rem' }}>
                 <Typography sx={{ mb: 2, color: 'text.primary' }}>Nu ai niciun test asignat</Typography>
                 <Typography sx={{ mb: 2, color: 'text.secondary' }}>
-                  Contactează-ți profesorul pentru a începe testele.
+                  Adaugă un test nou sau contactează un administrator pentru a primi instrucțiuni
                 </Typography>
               </Box>
             </>
@@ -239,6 +252,17 @@ const EnhancedTable = props => {
                               precision={row.difficultyLevel}
                               name='read-only'
                             />
+                          </TableCell>
+                          <TableCell align='right'>
+                            {new Date(row.quizCreation).toLocaleString('ro-RO', {
+                              timeZone: 'UTC',
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric',
+                              hour: 'numeric',
+                              minute: 'numeric',
+                              hour12: false // Use 24-hour format
+                            })}
                           </TableCell>
                         </TableRow>
                       )
