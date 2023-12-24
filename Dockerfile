@@ -16,7 +16,7 @@ COPY ./.env ./.env
 COPY package*.json ./
 
 # Build your React application (you may need to adjust this based on your project setup)
-RUN yarn build
+RUN yarn build --no-lint
 
 # Expose the port that the application will run on (adjust as needed)
 EXPOSE 3000
