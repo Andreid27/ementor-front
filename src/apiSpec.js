@@ -1,6 +1,6 @@
 export const LOCAL_HOST = 'http://localhost'
 
-export const PROD_HOST = 'https://api.e-mentor.ro'
+export const PROD_HOST = process.env.NEXT_PUBLIC_PROD_HOST
 
 export const USER_SERVICE = '/service1/user'
 
