@@ -5,22 +5,22 @@ import isEqual from 'lodash/isEqual'
 
 const QuestionComponent = props => {
   const [questionContent, setQuestionContent] = useState({
-    content: '',
-    correctAnswer: 0,
-    source: '',
-    sourcePage: 0,
+    content: props.value.content,
+    correctAnswer: props.value.correctAnswer,
+    source: props.value.source,
+    sourcePage: props.value.sourcePage,
     difficultyLevel: props.difficultyLevel,
-    hint: ''
+    hint: props.value.hint
   })
   const [difficultyLevel, setDifficultyLevel] = useState(0)
   const [componentType, setComponentType] = useState('CS')
 
   const [options, setOptions] = useState([
-    { id: 1, text: '', isCorrect: false },
-    { id: 2, text: '', isCorrect: false },
-    { id: 3, text: '', isCorrect: false },
-    { id: 4, text: '', isCorrect: false },
-    { id: 5, text: '', isCorrect: false }
+    { id: 1, text: props.value.answer1, isCorrect: 1 == props.value.correctAnswer },
+    { id: 2, text: props.value.answer2, isCorrect: 2 == props.value.correctAnswer },
+    { id: 3, text: props.value.answer3, isCorrect: 3 == props.value.correctAnswer },
+    { id: 4, text: props.value.answer4, isCorrect: 4 == props.value.correctAnswer },
+    { id: 5, text: props.value.answer5, isCorrect: 5 == props.value.correctAnswer }
   ])
 
   const updateQuestionField = (fieldName, value) => {
@@ -125,6 +125,7 @@ const QuestionComponent = props => {
             />
             <TextField
               fullWidth
+              value={option.text}
               label={`Răspunsul ${option.id}`}
               onChange={e => handleTextField(index, e.target.value)}
             />

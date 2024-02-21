@@ -6,16 +6,24 @@ import CircularProgress from '@mui/material/CircularProgress'
 import { styled } from '@mui/material/styles'
 import QuizComponent from './new-quiz/quiz-component'
 import QuizEdit from './edit-quiz/edit'
+import { useSelector } from 'react-redux'
+import { selectNewQuiz } from 'src/store/apps/quiz'
 
 const QuizPage = () => {
   const [loading, setLoading] = useState(true)
   const { asPath, pathname } = useRouter()
   const [quizId, setQuizId] = useState(null)
+  const previousValues = useSelector(selectNewQuiz)
 
   useEffect(() => {
     setQuizId(asPath.split('/')[2])
-    setLoading(false)
   }, [])
+
+  useEffect(() => {
+    if (previousValues && loading) {
+      setLoading(false)
+    }
+  }, [previousValues])
 
   const CircularProgressIndeterminate = styled(CircularProgress)(({ theme }) => ({
     left: 0,
@@ -40,7 +48,7 @@ const QuizPage = () => {
       ) : (
         <Card>
           <CardHeader title='Editare test' />
-          {quizId == 'new' ? <QuizComponent /> : <QuizEdit />}
+          {quizId == 'new' ? <QuizComponent previousValues={previousValues} /> : <QuizEdit />}
         </Card>
       )}
     </>

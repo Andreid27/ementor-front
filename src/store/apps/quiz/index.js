@@ -12,22 +12,24 @@ export const resetQuiz = createAsyncThunk('appQuiz/resetQuiz', () => {
   return null
 })
 
+export const updateNewQuiz = createAsyncThunk('appQuiz/updateNewQuiz', async data => {
+  return data
+})
+
+export const resetNewQuiz = createAsyncThunk('appQuiz/resetNewQuiz', () => {
+  return null
+})
+
 export const selectQuiz = state => state.quiz.quiz
 
 export const selectAnswers = state => state.quiz.answers
 
+export const selectNewQuiz = state => state.quiz.newQuiz
+
 const initialState = {
   quiz: {},
   answers: new Map(),
-  newQuiz: {
-    title: '',
-    description: '',
-    componentType: '',
-    difficultyLevel: 0,
-    maxTime: 0,
-    chaptersId: [],
-    questionsList: []
-  }
+  newQuiz: {}
 }
 
 export const appQuizSlice = createSlice({
@@ -47,6 +49,12 @@ export const appQuizSlice = createSlice({
       .addCase(resetQuiz.fulfilled, state => {
         state.quiz = initialState.quiz
         state.answers = initialState.answers
+      })
+      .addCase(updateNewQuiz.fulfilled, (state, action) => {
+        state.newQuiz = action.payload
+      })
+      .addCase(resetNewQuiz.fulfilled, state => {
+        state.newQuiz = initialState.newQuiz
       })
   }
 })

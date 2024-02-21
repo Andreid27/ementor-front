@@ -48,7 +48,6 @@ const QuestionsComponent = props => {
         ...answers
       }
     }
-    console.log(updatedQuestions)
 
     updateQuestions(updatedQuestions)
   }

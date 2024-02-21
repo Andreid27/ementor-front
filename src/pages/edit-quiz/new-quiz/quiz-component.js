@@ -17,7 +17,7 @@ import CircularProgress from '@mui/material/CircularProgress'
 import { styled } from '@mui/material/styles'
 import { Controller, useForm } from 'react-hook-form'
 import CustomTextField from 'src/@core/components/mui/text-field'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import apiClient from 'src/@core/axios/axiosEmentor'
 import * as apiSpec from '../../../apiSpec'
 import { set } from 'nprogress'
@@ -25,6 +25,7 @@ import CustomChip from 'src/@core/components/mui/chip'
 import QuestionsComponent from './questions-component'
 import toast from 'react-hot-toast'
 import { ro } from 'date-fns/locale'
+import { selectNewQuiz, updateNewQuiz } from 'src/store/apps/quiz'
 
 const defaultValues = {
   title: '',
@@ -235,7 +236,8 @@ const defaultValues = {
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 
-const QuizComponent = () => {
+const QuizComponent = props => {
+  const { previousValues } = props
   const [loading, setLoading] = useState(true)
   const [submitLoading, setSubmitLoading] = useState(false)
   const [chapters, setChapters] = useState([])
@@ -244,8 +246,8 @@ const QuizComponent = () => {
   const [selectedChapters, setSelectedChapters] = useState([])
   const [numberOfAnswers, setNumberOfAnswers] = useState()
   const [questionsDefaultDifficultyLevel, setQuestionsDefaultDifficultyLevel] = useState()
-
   const [componentType, setComponentType] = useState('CS')
+  const [successfullSubmit, setSuccessfullSubmit] = useState(false)
 
   const ITEM_HEIGHT = 48
   const ITEM_PADDING_TOP = 8
@@ -286,7 +288,35 @@ const QuizComponent = () => {
     handleSubmit,
     formState: { errors },
     getValues
-  } = useForm({ defaultValues })
+  } = useForm({
+    defaultValues:
+      previousValues && previousValues != {} && previousValues.questionsList && previousValues.questionsList.length > 0
+        ? previousValues
+        : defaultValues
+  })
+
+  const cacheNewQuiz = () => {
+    dispatch(updateNewQuiz(getValues()))
+  }
+
+  useEffect(() => {
+    // Set up an interval only if not loading
+    if (!loading) {
+      const intervalId = setInterval(() => {
+        cacheNewQuiz()
+      }, 60000) // 60000 milliseconds = 1 minute
+
+      // Clean up the interval when the component is unmounted
+      return () => {
+        clearInterval(intervalId)
+        console.log('Component will unmount, cleanup here')
+        if (!successfullSubmit) {
+          //TODO CONTINUE HERE CLEAR LOGIC
+          cacheNewQuiz()
+        }
+      }
+    }
+  }, [loading]) // The empty dependency array ensures that this effect runs only once when the component mounts
 
   const validateQuiz = quizData => {
     const errors = {}
@@ -336,6 +366,11 @@ const QuizComponent = () => {
             .then(async response => {
               console.log('Success')
               resolve(response)
+              if (response.status === 201) {
+                //TODO CONTINUE HERE CLEAR LOGIC
+                setSuccessfullSubmit(true)
+                dispatch(updateNewQuiz({}))
+              }
               await delay(3000)
               await Router.push('/all-quizzes')
             })
