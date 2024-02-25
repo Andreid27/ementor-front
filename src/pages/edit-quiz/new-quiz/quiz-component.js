@@ -26,6 +26,8 @@ import QuestionsComponent from './questions-component'
 import toast from 'react-hot-toast'
 import { ro } from 'date-fns/locale'
 import { selectNewQuiz, updateNewQuiz } from 'src/store/apps/quiz'
+import { right } from '@popperjs/core'
+import DialogTransition from './DialogTransition'
 
 const defaultValues = {
   title: '',
@@ -247,7 +249,7 @@ const QuizComponent = props => {
   const [numberOfAnswers, setNumberOfAnswers] = useState()
   const [questionsDefaultDifficultyLevel, setQuestionsDefaultDifficultyLevel] = useState()
   const [componentType, setComponentType] = useState('CS')
-  const [successfullSubmit, setSuccessfullSubmit] = useState(false)
+  const [dialogOpen, setDialogOpen] = useState(false)
 
   const ITEM_HEIGHT = 48
   const ITEM_PADDING_TOP = 8
@@ -287,6 +289,7 @@ const QuizComponent = props => {
     control,
     handleSubmit,
     formState: { errors },
+    reset,
     getValues
   } = useForm({
     defaultValues:
@@ -310,10 +313,7 @@ const QuizComponent = props => {
       return () => {
         clearInterval(intervalId)
         console.log('Component will unmount, cleanup here')
-        if (!successfullSubmit) {
-          //TODO CONTINUE HERE CLEAR LOGIC
-          cacheNewQuiz()
-        }
+        cacheNewQuiz()
       }
     }
   }, [loading]) // The empty dependency array ensures that this effect runs only once when the component mounts
@@ -367,8 +367,7 @@ const QuizComponent = props => {
               console.log('Success')
               resolve(response)
               if (response.status === 201) {
-                //TODO CONTINUE HERE CLEAR LOGIC
-                setSuccessfullSubmit(true)
+                reset({ ...defaultValues })
                 dispatch(updateNewQuiz({}))
               }
               await delay(3000)
@@ -403,6 +402,20 @@ const QuizComponent = props => {
     }
   }
 
+  const handleOpenDialog = () => {
+    setDialogOpen(true)
+  }
+
+  const handleCloseDialog = () => {
+    setDialogOpen(false)
+  }
+
+  const handleConfirmation = () => {
+    reset({ ...defaultValues })
+    handleCloseDialog()
+    Router.push('/all-quizzes')
+  }
+
   return (
     <>
       {loading ? (
@@ -418,6 +431,17 @@ const QuizComponent = props => {
         </Box>
       ) : (
         <>
+          <Box display='flex' justifyContent='flex-end' marginRight='0.7em' marginTop='-3.5rem'>
+            <Button
+              variant='outlined'
+              color='error'
+              onClick={() => {
+                handleOpenDialog()
+              }}
+            >
+              Resetare test
+            </Button>
+          </Box>
           <form onSubmit={handleSubmit(onSubmit)}>
             <CardContent>
               <Grid container spacing={5}>
@@ -636,6 +660,7 @@ const QuizComponent = props => {
               </Button>
             </Box>
           </form>
+          <DialogTransition open={dialogOpen} handleClose={handleCloseDialog} handleConfirm={handleConfirmation} />
         </>
       )}
     </>
