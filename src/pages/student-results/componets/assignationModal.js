@@ -14,7 +14,7 @@ import CustomTextField from 'src/@core/components/mui/text-field'
 import CustomChip from 'src/@core/components/mui/chip'
 import apiClient from 'src/@core/axios/axiosEmentor'
 import * as apiSpec from '../../../apiSpec'
-import { Box, Grid, LinearProgress, MenuItem } from '@mui/material'
+import { Box, Chip, Grid, LinearProgress, MenuItem } from '@mui/material'
 import DatePicker from 'react-datepicker'
 import CustomInput from 'src/views/forms/form-elements/pickers/PickersCustomInput.js'
 import { useTheme } from '@emotion/react'
@@ -22,6 +22,7 @@ import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker'
 import { LocalizationProvider } from '@mui/lab'
 import AdapterDateFns from '@mui/lab/AdapterDateFns'
 import toast from 'react-hot-toast'
+import CustomAutocomplete from 'src/@core/components/mui/autocomplete'
 
 const AssignationModal = props => {
   // ** State
@@ -49,15 +50,14 @@ const AssignationModal = props => {
     }
   }
 
-  const handleChangeChapters = event => {
-    setSelectedQuizzes(event.target.value)
-  }
-
   useEffect(() => {
     apiClient
       .post(apiSpec.QUIZ_SERVICE + '/paginated', {
         filters: [],
-        sorters: [],
+        sorters: [
+          { key: 'quizCreation', direction: 'DESC' },
+          { key: 'title', direction: 'ASC' }
+        ],
         page: 0,
         pageSize: 10000
       })
@@ -74,11 +74,11 @@ const AssignationModal = props => {
     //TODO reset content if succeded
     const assignments = []
 
-    selectedQuizzes.forEach(quizId => {
-      selectedUsers.forEach(userId => {
+    selectedQuizzes.forEach(quiz => {
+      selectedUsers.forEach(user => {
         assignments.push({
-          quizId,
-          userId,
+          quizId: quiz.id,
+          userId: user.id,
           startAfter: dateTime.toISOString()
         })
       })
@@ -123,93 +123,83 @@ const AssignationModal = props => {
             sx={{ '& .MuiDialog-paper': { overflow: 'visible' } }}
             aria-labelledby='form-dialog-title'
           >
-            <DialogTitle id='form-dialog-title'>Asignează teste:</DialogTitle>
+            <DialogTitle id='form-dialog-title'>Asignează teste</DialogTitle>
             <DialogContent>
-              <Grid container spacing={2} sx={{ margin: '1em' }}>
-                <Grid item xs={12} sm={11}>
-                  <CustomTextField
-                    select
-                    fullWidth
-                    label='Teste:'
-                    id='select-multiple-chip'
-                    SelectProps={{
-                      MenuProps,
-                      multiple: true,
-                      value: selectedQuizzes,
-                      onChange: e => {
-                        handleChangeChapters(e) // Your existing function to handle chip changes
-                      },
-                      renderValue: selected => (
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap' }}>
-                          {selected.map(value => (
-                            <CustomChip
-                              key={value}
-                              label={quizzes.find(quiz => quiz.id === value)?.title}
-                              sx={{ m: 0.75 }}
-                              color='primary'
-                            />
-                          ))}
-                        </Box>
-                      )
-                    }}
-                  >
-                    {quizzes.map(quiz => (
-                      <MenuItem key={quiz.id} value={quiz.id}>
-                        {quiz.title}
-                      </MenuItem>
-                    ))}
-                  </CustomTextField>
+              <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                <Grid container spacing={2} sx={{ margin: '1em', marginTop: '0' }}>
+                  <Grid item xs={12} sm={11}>
+                    <CustomAutocomplete
+                      multiple
+                      value={selectedQuizzes}
+                      options={quizzes}
+                      id='autocomplete-fixed-option'
+                      getOptionLabel={option => option.title || ''}
+                      renderInput={params => (
+                        <CustomTextField {...params} label='Teste' placeholder='Selectează un test' />
+                      )}
+                      onChange={(event, newValue) => {
+                        setSelectedQuizzes(newValue)
+                      }}
+                      renderTags={(value, getTagProps) =>
+                        value.map((option, index) => (
+                          <Chip
+                            label={option.title}
+                            {...getTagProps({ index })}
+                            onDelete={() => {
+                              const newValue = [...selectedQuizzes]
+                              newValue.splice(index, 1)
+                              setSelectedQuizzes(newValue)
+                            }}
+                            key={option.id}
+                          />
+                        ))
+                      }
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={11}>
+                    <CustomAutocomplete
+                      multiple
+                      value={selectedUsers}
+                      options={props.users}
+                      id='autocomplete-fixed-option'
+                      getOptionLabel={option => `${option.lastName} ${option.firstName}` || ''}
+                      renderInput={params => (
+                        <CustomTextField {...params} label='Studenți' placeholder='Selectează un student' />
+                      )}
+                      onChange={(event, newValue) => {
+                        setSelectedUsers(newValue)
+                      }}
+                      renderTags={(value, getTagProps) =>
+                        value.map((option, index) => (
+                          <Chip
+                            label={`${option.lastName} ${option.firstName}`}
+                            {...getTagProps({ index })}
+                            onDelete={() => {
+                              const newValue = [...selectedUsers]
+                              newValue.splice(index, 1)
+                              setSelectedUsers(newValue)
+                            }}
+                            key={option.id}
+                          />
+                        ))
+                      }
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <DatePicker
+                      showTimeSelect
+                      timeFormat='HH:mm'
+                      timeIntervals={15}
+                      selected={dateTime}
+                      id='date-time-picker'
+                      dateFormat='dd/MM/yyyy hh:mm'
+                      popperPlacement={popperPlacement}
+                      onChange={date => setDateTime(date)}
+                      customInput={<CustomInput label='Poate începe după:' />}
+                    />
+                  </Grid>
                 </Grid>
-                <Grid item xs={12} sm={11}>
-                  <CustomTextField
-                    select
-                    fullWidth
-                    label='Studenți:'
-                    id='select-multiple-chip'
-                    SelectProps={{
-                      MenuProps,
-                      multiple: true,
-                      value: selectedUsers,
-                      onChange: e => {
-                        setSelectedUsers(e.target.value) // Your existing function to handle chip changes
-                      },
-                      renderValue: selected => (
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap' }}>
-                          {selected.map(value => (
-                            <CustomChip
-                              key={value}
-                              label={(user => (user ? `${user.lastName} ${user.firstName}` : ''))(
-                                props.users.find(user => user.id === value)
-                              )}
-                              sx={{ m: 0.75 }}
-                              color='primary'
-                            />
-                          ))}
-                        </Box>
-                      )
-                    }}
-                  >
-                    {props.users.map(user => (
-                      <MenuItem key={user.id} value={user.id}>
-                        {user.firstName + ' ' + user.lastName}
-                      </MenuItem>
-                    ))}
-                  </CustomTextField>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <DatePicker
-                    showTimeSelect
-                    timeFormat='HH:mm'
-                    timeIntervals={15}
-                    selected={dateTime}
-                    id='date-time-picker'
-                    dateFormat='dd/MM/yyyy hh:mm'
-                    popperPlacement={popperPlacement}
-                    onChange={date => setDateTime(date)}
-                    customInput={<CustomInput label='Poate începe după:' />}
-                  />
-                </Grid>
-              </Grid>
+              </Box>
             </DialogContent>
             <DialogActions className='dialog-actions-dense'>
               <Button onClick={handleClose} variant='outlined'>
