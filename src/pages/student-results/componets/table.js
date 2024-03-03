@@ -7,6 +7,9 @@ import Card from '@mui/material/Card'
 import Typography from '@mui/material/Typography'
 import CardHeader from '@mui/material/CardHeader'
 import { DataGrid } from '@mui/x-data-grid'
+import { makeStyles } from '@mui/styles'
+import { TrashX } from 'tabler-icons-react'
+import toast from 'react-hot-toast'
 
 // ** Custom Components
 import CustomChip from 'src/@core/components/mui/chip'
@@ -23,8 +26,9 @@ import componentTypes from 'src/pages/student-results/componets/componentsType.j
 import { Button, LinearProgress } from '@mui/material'
 import AssignationModal from './assignationModal'
 import { useDispatch } from 'react-redux'
-import { updateAllStudents } from 'src/store/apps/user'
+import { fetchData, updateAllStudents } from 'src/store/apps/user'
 import Router from 'next/router'
+import DeleteDialogTransition from './DeleteDialogTransition'
 
 // ** renders client column
 const renderClient = (params, user) => {
@@ -74,14 +78,23 @@ const getScoreType = (correctCount, totalCount) => {
   }
 }
 
+const useStyles = makeStyles({
+  button: {
+    padding: '1%',
+    width: '10px',
+    minHeight: '40px'
+  }
+})
+
 const StudentsResultsTable = () => {
   // ** States
   const [users, setUsers] = useState([])
+  const classes = useStyles()
 
   const columns = [
     {
-      flex: 0.275,
-      minWidth: 290,
+      flex: 0.2,
+      minWidth: 250,
       field: 'studentId',
       headerName: 'Student',
       renderCell: params => {
@@ -157,7 +170,7 @@ const StudentsResultsTable = () => {
       }
     },
     {
-      flex: 0.12,
+      flex: 0.04,
       type: 'date',
       minWidth: 100,
       headerName: 'Dată asignare',
@@ -173,6 +186,21 @@ const StudentsResultsTable = () => {
           })}
         </Typography>
       )
+    },
+    {
+      flex: 0.065,
+      field: 'actions',
+      headerName: 'DEL',
+      renderCell: params => (
+        <Button
+          className={classes.button}
+          variant='text'
+          color='error'
+          onClick={event => handleOpenDialog(params.row, event)}
+        >
+          <TrashX size={20} strokeWidth={2} color={'#EA5455'} />
+        </Button>
+      )
     }
   ]
 
@@ -183,6 +211,8 @@ const StudentsResultsTable = () => {
   const [sortModel, setSortModel] = useState([{ field: 'assignedAt', sort: 'desc' }])
   const [totalCount, setTotalCount] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [dialogOpenRow, setDialogOpenRow] = useState({})
   const isInitialRender = useRef(true)
   const dispatch = useDispatch()
 
@@ -192,7 +222,6 @@ const StudentsResultsTable = () => {
 
     const filteredRows = data.filter(row => {
       return Object.keys(row).some(field => {
-        // @ts-ignore
         return searchRegex.test(row[field].toString())
       })
     })
@@ -280,6 +309,34 @@ const StudentsResultsTable = () => {
     Router.push(`/review-attempt/${params.row.id}`)
   }
 
+  const handleOpenDialog = (row, event) => {
+    event.stopPropagation()
+    setDialogOpenRow({ id: row.id, title: row.title, student: users.find(user => user.id === row.studentId) })
+    setDialogOpen(true)
+  }
+
+  const handleCloseDialog = () => {
+    setDialogOpen(false)
+  }
+
+  const handleConfirmation = () => {
+    apiClient
+      .delete(`${apiSpec.QUIZ_SERVICE}/delete-assigned/${dialogOpenRow.id}`)
+      .then(response => {
+        if (response.status === 204) {
+          toast.success('Încercarea a fost ștearsă cu succes!')
+
+          //TODO update data after delete
+
+          handleCloseDialog()
+        }
+      })
+      .catch(error => {
+        console.log(error)
+        toast.error(error.toString())
+      })
+  }
+
   return (
     <Card>
       <CardHeader title='Rezultate studenți' />
@@ -294,15 +351,27 @@ const StudentsResultsTable = () => {
         </>
       ) : (
         <>
+          {dialogOpen && dialogOpenRow && (
+            <DeleteDialogTransition
+              open={dialogOpen}
+              handleClose={handleCloseDialog}
+              handleConfirm={handleConfirmation}
+              dialogOpenRow={dialogOpenRow}
+            />
+          )}
           <AssignationModal users={users} />
           <DataGrid
             autoHeight
             columns={columns}
-            pageSizeOptions={[10, 25, 50]}
+            pageSizeOptions={[10, 35, 70]}
+            sortingMode='server'
+            filterMode='server'
             paginationMode='server'
             paginationModel={paginationModel}
+            sortModel={sortModel}
             slots={{ toolbar: QuickSearchToolbar }}
             onPaginationModelChange={newModel => setPaginationModel(newModel)}
+            onSortModelChange={newModel => setSortModel(newModel)}
             rows={filteredData.length ? filteredData : data}
             rowCount={totalCount}
             sx={{
