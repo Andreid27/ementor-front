@@ -22,10 +22,7 @@ const DeleteDialogTransition = ({ open, handleClose, handleConfirm, dialogOpenRo
     >
       <DialogTitle id='alert-dialog-slide-title'>
         <Typography variant='h5' component='div' color='error'>
-          <strong>
-            Ștegeți încercarea lui {`${dialogOpenRow.student.lastName} ${dialogOpenRow.student.firstName}`} la testul{' '}
-            {dialogOpenRow.title}?
-          </strong>
+          <strong>Ștegeți lecția {dialogOpenRow.title}?</strong>
         </Typography>
       </DialogTitle>
       <DialogContent>

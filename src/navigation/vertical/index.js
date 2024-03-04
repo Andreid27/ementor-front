@@ -22,8 +22,28 @@ const navigation = () => {
       path: '/acl',
       action: 'read',
       subject: 'acl-page',
-      icon: 'tabler:shield',
+      icon: 'tabler:layout-dashboard',
       title: 'Dashboard'
+    },
+    {
+      sectionTitle: 'Cursuri',
+      action: 'read',
+      subject: 'professor-pages'
+    },
+    {
+      icon: 'tabler:presentation',
+      title: 'Lessons',
+      badgeContent: 'new',
+      badgeColor: 'error',
+      subject: 'professor-pages',
+      title: 'Cursuri',
+      action: 'read',
+      path: '/all-lessons'
+    },
+    {
+      sectionTitle: 'Teste',
+      action: 'read',
+      subject: 'professor-pages'
     },
     {
       icon: 'tabler:list-check',
@@ -36,8 +56,6 @@ const navigation = () => {
     {
       icon: 'tabler:report-analytics',
       title: 'Results',
-      badgeContent: 'new',
-      badgeColor: 'error',
       subject: 'professor-pages',
       title: 'Rezultate teste',
       action: 'read',

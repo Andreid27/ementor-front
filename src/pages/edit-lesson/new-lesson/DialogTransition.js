@@ -11,37 +11,39 @@ import Slide from '@mui/material/Slide'
 import DialogContentText from '@mui/material/DialogContentText'
 import { Typography } from '@mui/material'
 
-const DeleteDialogTransition = ({ open, handleClose, handleConfirm, dialogOpenRow }) => {
+const Transition = forwardRef(function Transition(props, ref) {
+  return <Slide direction='up' ref={ref} {...props} />
+})
+
+const DialogTransition = ({ open, handleClose, handleConfirm }) => {
   return (
     <Dialog
       open={open}
       keepMounted
       onClose={handleClose}
+      TransitionComponent={Transition}
       aria-labelledby='alert-dialog-slide-title'
       aria-describedby='alert-dialog-slide-description'
     >
       <DialogTitle id='alert-dialog-slide-title'>
         <Typography variant='h5' component='div' color='error'>
-          <strong>
-            Ștegeți încercarea lui {`${dialogOpenRow.student.lastName} ${dialogOpenRow.student.firstName}`} la testul{' '}
-            {dialogOpenRow.title}?
-          </strong>
+          <strong>Doriți resetați testul?</strong>
         </Typography>
       </DialogTitle>
       <DialogContent>
         <DialogContentText id='alert-dialog-slide-description'>
-          Sunteți sigur că doriți să ștegeți încercarea? Vă rugăm să rețineți că, odată ce încercarea este ștearsă, nu
-          veți mai putea să reveniți și tot conținutul acestuia va fi șters. Confirmați că doriți să continuați?
+          Sunteți sigur că doriți să resetați testul? Vă rugăm să rețineți că, odată ce testul este resetat, nu veți mai
+          putea să reveniți și tot conținutul acestui test va fi șters. Confirmați că doriți să resetați testul?
         </DialogContentText>
       </DialogContent>
       <DialogActions className='dialog-actions-dense'>
-        <Button onClick={handleClose}>Nu, anulează</Button>
+        <Button onClick={handleClose}>Nu, revin la test</Button>
         <Button variant='contained' onClick={handleConfirm} color='error'>
-          Da, șterge încercarea
+          Da, șterge testul
         </Button>
       </DialogActions>
     </Dialog>
   )
 }
 
-export default DeleteDialogTransition
+export default DialogTransition

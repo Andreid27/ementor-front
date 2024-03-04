@@ -3,7 +3,7 @@ import { Card, CardHeader } from '@mui/material'
 import { useState } from 'react'
 import StudentsTestsTable from 'src/pages/quizzes/componets/table'
 import QuizPreview from './componets/quiz-preview'
-import StudentsResultsTable from './componets/table'
+import LessonsTable from './componets/table'
 
 const AttemptsPage = () => {
   const [preview, setPreview] = useState()
@@ -13,7 +13,7 @@ const AttemptsPage = () => {
       {preview ? (
         <QuizPreview preview={preview} setPreview={setPreview} />
       ) : (
-        <StudentsResultsTable preview={preview} setPreview={setPreview} />
+        <LessonsTable preview={preview} setPreview={setPreview} />
       )}
     </>
   )
