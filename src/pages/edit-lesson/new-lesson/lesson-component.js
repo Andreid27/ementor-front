@@ -1,24 +1,48 @@
 // ** React Imports
-import { Box, Button, CardContent, Grid, InputAdornment, MenuItem, Rating, Typography } from '@mui/material'
+import { Box, Button, CardContent, Chip, Grid, InputAdornment } from '@mui/material'
 import Router, { useRouter } from 'next/router'
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import CircularProgress from '@mui/material/CircularProgress'
-import { styled } from '@mui/material/styles'
 import { Controller, useForm } from 'react-hook-form'
 import CustomTextField from 'src/@core/components/mui/text-field'
 import { useDispatch, useSelector } from 'react-redux'
 import apiClient from 'src/@core/axios/axiosEmentor'
 import * as apiSpec from '../../../apiSpec'
-import CustomChip from 'src/@core/components/mui/chip'
 import toast from 'react-hot-toast'
 import DialogTransition from './DialogTransition'
 import { updateNewLesson } from 'src/store/apps/lesson'
+import CustomAutocomplete from 'src/@core/components/mui/autocomplete'
+import dynamic from 'next/dynamic'
+import 'react-quill/dist/quill.snow.css'
+import FileUploaderMultiple from './FileUploaderMultiple'
+
+const QuillNoSSRWrapper = dynamic(import('react-quill'), { ssr: false })
+const Quill = QuillNoSSRWrapper.Quill
+var Size = Quill ? Quill.import('attributors/style/size') : null
+if (Size) {
+  Size.whitelist = ['10px', '20px', '30px', '40px', '50px', '60px', '70px']
+  Quill.register(Size, true)
+}
+
+// Customize toolbar
+const modules = {
+  toolbar: [
+    [{ font: [] }, { size: ['small', false, 'large', 'huge'] }], // custom dropdown
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ color: [] }, { background: [] }],
+    [{ script: 'sub' }, { script: 'super' }],
+    [{ header: 1 }, { header: 2 }, 'blockquote', 'code-block'],
+    [{ list: 'ordered' }, { list: 'bullet' }, { indent: '-1' }, { indent: '+1' }],
+    [{ direction: 'rtl' }, { align: [] }],
+    ['clean']
+  ]
+}
 
 const defaultValues = {
   title: '',
   description: '',
-  timeToRead: 300,
-  chaptersId: [],
+  timeToRead: 5,
+  chapters: [],
   files: []
 }
 
@@ -30,27 +54,14 @@ const LessonComponent = props => {
   const [submitLoading, setSubmitLoading] = useState(false)
   const [chapters, setChapters] = useState([])
   const dispatch = useDispatch()
-  const { asPath } = useRouter()
-  const [selectedChapters, setSelectedChapters] = useState([])
   const [dialogOpen, setDialogOpen] = useState(false)
-  const ITEM_HEIGHT = 48
-  const ITEM_PADDING_TOP = 8
+  const uploadFilesRef = React.createRef()
 
-  const MenuProps = {
-    PaperProps: {
-      style: {
-        width: 250,
-        maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP
-      }
-    }
-  }
-
-  const handleChangeChapters = event => {
-    setSelectedChapters(event.target.value)
+  const uploadFiles = () => {
+    uploadFilesRef.current.uploadFiles()
   }
 
   useEffect(() => {
-    const quizId = asPath.split('/')[2]
     apiClient
       .post('/service3/chapter/paginated', {
         filters: [],
@@ -74,10 +85,7 @@ const LessonComponent = props => {
     reset,
     getValues
   } = useForm({
-    defaultValues:
-      previousValues && previousValues != {} && previousValues.questionsList && previousValues.questionsList.length > 0
-        ? previousValues
-        : defaultValues
+    defaultValues: previousValues && previousValues != {} ? previousValues : defaultValues
   })
 
   const cacheNewLesson = () => {
@@ -100,38 +108,16 @@ const LessonComponent = props => {
     }
   }, [loading]) // The empty dependency array ensures that this effect runs only once when the component mounts
 
-  const validateQuiz = quizData => {
+  const validateQuiz = lessonData => {
     const errors = {}
 
     // Check required fields
-    const requiredFields = [
-      'title',
-      'description',
-      'componentType',
-      'difficultyLevel',
-      'maxTime',
-      'chaptersId',
-      'questionsList'
-    ]
+    const requiredFields = ['title', 'description', 'timeToRead', 'chapters']
     requiredFields.forEach(field => {
-      if (!quizData[field] || (Array.isArray(quizData[field]) && quizData[field].length === 0)) {
+      if (!lessonData[field] || (Array.isArray(lessonData[field]) && lessonData[field].length === 0)) {
         errors[field] = `${field} is required`
       }
     })
-
-    // Check questionsList content and correctAnswer
-    if (quizData.questionsList) {
-      quizData.questionsList.forEach((question, index) => {
-        if (!question.content) {
-          errors[`questionsList[${index}].content`] = `Content for question ${index + 1} is required`
-        }
-        if (question.correctAnswer === undefined || question.correctAnswer === 0) {
-          errors[`questionsList[${index}].correctAnswer`] = `Correct answer for question ${
-            index + 1
-          } is required and should be different than 0`
-        }
-      })
-    }
 
     return errors
   }
@@ -144,7 +130,7 @@ const LessonComponent = props => {
         // Perform the API call and return a promise
         const apiPromise = new Promise((resolve, reject) => {
           apiClient
-            .post(apiSpec.QUIZ_SERVICE + '/create-complete', getValues())
+            .post(apiSpec.LESSON_SERVICE + '/lesson/create', getValues())
             .then(async response => {
               console.log('Success')
               resolve(response)
@@ -153,7 +139,7 @@ const LessonComponent = props => {
                 dispatch(updateNewLesson({}))
               }
               await delay(3000)
-              await Router.push('/all-quizzes')
+              await Router.push('/all-lessons')
             })
             .catch(error => {
               console.log(error)
@@ -167,8 +153,8 @@ const LessonComponent = props => {
         // Use toast.promise to handle loading, success, and error states
         return toast.promise(apiPromise, {
           loading: 'Loading',
-          success: 'Testul a fost creat cu succes',
-          error: 'Eroare la crearea testului'
+          success: 'Lecția a fost creată cu succes',
+          error: 'Eroare la crearea lecției'
         })
       } else {
         // Handle validation errors
@@ -195,7 +181,7 @@ const LessonComponent = props => {
   const handleConfirmation = () => {
     reset({ ...defaultValues })
     handleCloseDialog()
-    Router.push('/all-quizzes')
+    Router.push('/all-lessons')
   }
 
   return (
@@ -227,7 +213,7 @@ const LessonComponent = props => {
           <form onSubmit={handleSubmit(onSubmit)}>
             <CardContent>
               <Grid container spacing={5}>
-                <Grid item xs={12} sm={6}>
+                <Grid item xs={12} sm={5}>
                   <Controller
                     name='title'
                     control={control}
@@ -238,7 +224,7 @@ const LessonComponent = props => {
                         value={value}
                         label='Titlu'
                         onChange={onChange}
-                        placeholder='Test 1 - Admitere'
+                        placeholder='Lecția 1 - Admitere'
                         error={Boolean(errors.lastName)}
                         aria-describedby='validation-async-title'
                         {...(errors.lastName && { helperText: 'Acest câmp este obligatoriu.' })}
@@ -247,45 +233,39 @@ const LessonComponent = props => {
                   />
                 </Grid>
 
-                <Grid item xs={12} sm={6}>
+                <Grid item xs={12} sm={5}>
                   <Controller
-                    name='chaptersId'
+                    name='chapters'
                     control={control}
                     rules={{ required: true, minLength: 3, maxLength: 100 }}
                     render={({ field: { value, onChange } }) => (
-                      <CustomTextField
-                        select
-                        fullWidth
-                        label='Capitol'
-                        id='select-multiple-chip'
-                        SelectProps={{
-                          MenuProps,
-                          multiple: true,
-                          value: selectedChapters,
-                          onChange: e => {
-                            handleChangeChapters(e) // Your existing function to handle chip changes
-                            onChange(e.target.value) // Update the form state with the selected values
-                          },
-                          renderValue: selected => (
-                            <Box sx={{ display: 'flex', flexWrap: 'wrap' }}>
-                              {selected.map(value => (
-                                <CustomChip
-                                  key={value}
-                                  label={chapters.find(chapter => chapter.id === value)?.title}
-                                  sx={{ m: 0.75 }}
-                                  color='primary'
-                                />
-                              ))}
-                            </Box>
-                          )
+                      <CustomAutocomplete
+                        multiple
+                        value={value}
+                        options={chapters}
+                        id='autocomplete-fixed-option'
+                        getOptionLabel={option => option.title || ''}
+                        renderInput={params => (
+                          <CustomTextField {...params} label='Capitole' placeholder='Selectează un capitol' />
+                        )}
+                        onChange={(event, newValue) => {
+                          onChange(newValue)
                         }}
-                      >
-                        {chapters.map(chapter => (
-                          <MenuItem key={chapter.id} value={chapter.id}>
-                            {chapter.title}
-                          </MenuItem>
-                        ))}
-                      </CustomTextField>
+                        renderTags={(value, getTagProps) =>
+                          value.map((option, index) => (
+                            <Chip
+                              label={option.title}
+                              {...getTagProps({ index })}
+                              onDelete={() => {
+                                const newValue = [...value]
+                                newValue.splice(index, 1)
+                                onChange(newValue)
+                              }}
+                              key={option.id}
+                            />
+                          ))
+                        }
+                      />
                     )}
                   />
                 </Grid>
@@ -320,26 +300,42 @@ const LessonComponent = props => {
                     control={control}
                     rules={{ required: true, minLength: 3, maxLength: 100 }}
                     render={({ field: { value, onChange } }) => (
-                      <CustomTextField
-                        fullWidth
-                        rows={4}
-                        multiline
-                        value={value}
-                        label='Descriere'
-                        onChange={onChange}
-                        placeholder='Aceasta este descrierea testului.'
-                        error={Boolean(errors.lastName)}
-                        aria-describedby='validation-async-description'
-                        {...(errors.lastName && { helperText: 'Acest câmp este obligatoriu.' })}
-                      />
+                      <>
+                        <style jsx global>{`
+                          .ql-editor {
+                            min-height: 20vh;
+                            max-height: 40vh;
+                          }
+                        `}</style>
+                        <QuillNoSSRWrapper
+                          placeholder='Introduceți aici o descriere pentru lecție...'
+                          theme='snow'
+                          value={value}
+                          onChange={onChange}
+                          modules={modules}
+                        />
+                      </>
+                    )}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={12}>
+                  <Controller
+                    name='files'
+                    control={control}
+                    rules={{ required: true, minLength: 3, maxLength: 100 }}
+                    render={({ field: { value, onChange } }) => (
+                      <Box padding={'2rem'} border={'dashed'} borderRadius={'25px'}>
+                        <FileUploaderMultiple ref={uploadFilesRef} value={value} onChange={onChange} />
+                      </Box>
                     )}
                   />
                 </Grid>
               </Grid>
             </CardContent>
             <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: '2em', marginBottom: '2.5em' }}>
-              <Button variant='contained' onClick={onSubmit}>
-                {submitLoading ? <CircularProgress color='info' /> : 'Finalizare test'}
+              {/* <Button variant='contained' onClick={onSubmit}> */}
+              <Button variant='contained' onClick={uploadFiles}>
+                {submitLoading ? <CircularProgress color='info' /> : 'Încarcă lecția'}
               </Button>
             </Box>
           </form>

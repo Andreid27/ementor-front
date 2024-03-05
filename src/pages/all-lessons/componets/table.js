@@ -173,7 +173,7 @@ const LessonsTable = () => {
 
   const handleConfirmation = () => {
     apiClient
-      .delete(`${apiSpec.LESSON_SERVICE}/lesson/delete-assigned/${dialogOpenRow.id}`)
+      .delete(`${apiSpec.LESSON_SERVICE}/lesson/delete/${dialogOpenRow.id}`)
       .then(response => {
         if (response.status === 204) {
           toast.success('Încercarea a fost ștearsă cu succes!')
