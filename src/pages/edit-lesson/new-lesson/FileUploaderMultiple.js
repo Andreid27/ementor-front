@@ -1,40 +1,81 @@
-// ** React Imports
 import React, { Fragment, useImperativeHandle, useState } from 'react'
-
-// ** MUI Imports
 import Box from '@mui/material/Box'
 import List from '@mui/material/List'
 import Button from '@mui/material/Button'
 import ListItem from '@mui/material/ListItem'
 import Typography from '@mui/material/Typography'
 import IconButton from '@mui/material/IconButton'
-
-// ** Icon Imports
 import Icon from 'src/@core/components/icon'
-
-// ** Third Party Imports
 import { useDropzone } from 'react-dropzone'
 import apiClient from 'src/@core/axios/axiosEmentor'
 import * as apiSpec from '../../../apiSpec'
+import LinearProgress from '@mui/material/LinearProgress'
+import toast from 'react-hot-toast'
 
-const FileUploaderMultiple = React.forwardRef(({ value, onChange }, ref) => {
-  // ** State
+const FileUploaderMultiple = React.forwardRef((props, ref) => {
   const [files, setFiles] = useState([])
+  const [uploading, setUploading] = useState(false)
 
   const uploadFiles = () => {
-    apiClient.post(`${apiSpec.LESSON_SERVICE}/host-file/upload`)
+    return new Promise(async (resolve, reject) => {
+      const uploads = files.map(file => {
+        setUploading(true)
+        const formData = new FormData()
+        formData.append('file', file)
 
-    //TODO continue from here
+        return apiClient
+          .post(`${apiSpec.LESSON_SERVICE}/host-file/upload`, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            },
+            onUploadProgress: progressEvent => {
+              const progress = Math.round((progressEvent.loaded / progressEvent.total) * 100)
+              file.progress = progress
+              setFiles([...files])
+            }
+          })
+          .then(response => {
+            if (response.status === 201) {
+              file.fileId = response.data
+              setFiles([...files])
+            }
+          })
+      })
+
+      try {
+        await Promise.all(uploads).then(() => {
+          toast.success('Fișierele au fost încărcate cu succes!')
+          console.log('Sent resolve' + files)
+          resolve(files)
+        })
+      } catch (error) {
+        // Handle errors
+        toast.error('A apărut o eroare la încărcarea fișierelor')
+        if (
+          error &&
+          error.response &&
+          error.response.data &&
+          error.response.data.exception === 'com.ementor.lessons.service.core.exceptions.EmentorApiError'
+        ) {
+          toast.error(`${error.response.data.message}: `, { duration: 10000 })
+        } else setUploading(false)
+        reject(error)
+      }
+    })
   }
 
   useImperativeHandle(ref, () => ({
     uploadFiles
   }))
 
-  // ** Hooks
   const { getRootProps, getInputProps } = useDropzone({
     onDrop: acceptedFiles => {
-      setFiles(acceptedFiles.map(file => Object.assign(file)))
+      const newFiles = acceptedFiles.map(file => {
+        file.progress = 0
+
+        return file
+      })
+      setFiles([...files, ...newFiles])
     }
   })
 
@@ -47,9 +88,8 @@ const FileUploaderMultiple = React.forwardRef(({ value, onChange }, ref) => {
   }
 
   const handleRemoveFile = file => {
-    const uploadedFiles = files
-    const filtered = uploadedFiles.filter(i => i.name !== file.name)
-    setFiles([...filtered])
+    const updatedFiles = files.filter(f => f !== file)
+    setFiles(updatedFiles)
   }
 
   const fileList = files.map(file => (
@@ -65,15 +105,23 @@ const FileUploaderMultiple = React.forwardRef(({ value, onChange }, ref) => {
           </Typography>
         </div>
       </div>
+      <LinearProgress variant='determinate' value={file.progress} sx={{ height: 10, width: '100%' }} />
+      <Box sx={{ marginLeft: '3%', minWidth: 35 }}>
+        {file.progress < 100 ? (
+          <Typography variant='body2' color='text.secondary'>
+            {Math.round(file.progress)}%
+          </Typography>
+        ) : file.fileId ? (
+          <Icon icon='tabler:check' style={{ color: 'green' }} fontSize={20} />
+        ) : (
+          <Icon icon='tabler:circle-letter-x' style={{ color: 'red' }} fontSize={30} />
+        )}
+      </Box>
       <IconButton onClick={() => handleRemoveFile(file)}>
-        <Icon icon='tabler:x' fontSize={20} />
+        {uploading && !file.fileId ? null : <Icon icon='tabler:x' fontSize={20} />}
       </IconButton>
     </ListItem>
   ))
-
-  const handleRemoveAllFiles = () => {
-    setFiles([])
-  }
 
   return (
     <Fragment>
@@ -107,11 +155,6 @@ const FileUploaderMultiple = React.forwardRef(({ value, onChange }, ref) => {
       {files.length ? (
         <Fragment>
           <List>{fileList}</List>
-          <div className='buttons'>
-            <Button color='error' variant='outlined' onClick={handleRemoveAllFiles}>
-              Remove All
-            </Button>
-          </div>
         </Fragment>
       ) : null}
     </Fragment>

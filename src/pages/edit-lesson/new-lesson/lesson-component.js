@@ -27,7 +27,7 @@ if (Size) {
 // Customize toolbar
 const modules = {
   toolbar: [
-    [{ font: [] }, { size: ['small', false, 'large', 'huge'] }], // custom dropdown
+    [{ font: [] }, { size: ['small', false, 'large', 'huge'] }],
     ['bold', 'italic', 'underline', 'strike'],
     [{ color: [] }, { background: [] }],
     [{ script: 'sub' }, { script: 'super' }],
@@ -58,7 +58,7 @@ const LessonComponent = props => {
   const uploadFilesRef = React.createRef()
 
   const uploadFiles = () => {
-    uploadFilesRef.current.uploadFiles()
+    return uploadFilesRef.current.uploadFiles()
   }
 
   useEffect(() => {
@@ -108,7 +108,7 @@ const LessonComponent = props => {
     }
   }, [loading]) // The empty dependency array ensures that this effect runs only once when the component mounts
 
-  const validateQuiz = lessonData => {
+  const validateLesson = lessonData => {
     const errors = {}
 
     // Check required fields
@@ -124,13 +124,17 @@ const LessonComponent = props => {
 
   const onSubmit = async data => {
     try {
-      const validationErrors = validateQuiz(getValues())
+      let values = getValues()
+      values.timeToRead = values.timeToRead * 60
+      const validationErrors = validateLesson(values)
+      setSubmitLoading(true)
+      values.files = await uploadFiles()
 
       if (Object.keys(validationErrors).length === 0) {
         // Perform the API call and return a promise
         const apiPromise = new Promise((resolve, reject) => {
           apiClient
-            .post(apiSpec.LESSON_SERVICE + '/lesson/create', getValues())
+            .post(apiSpec.LESSON_SERVICE + '/lesson/create', values)
             .then(async response => {
               console.log('Success')
               resolve(response)
@@ -166,7 +170,8 @@ const LessonComponent = props => {
         })
       }
     } catch (error) {
-      console.error('An unexpected error occurred:', error)
+      toast.error('An unexpected error occurred: ' + error.message)
+      setSubmitLoading(false)
     }
   }
 
@@ -245,6 +250,7 @@ const LessonComponent = props => {
                         options={chapters}
                         id='autocomplete-fixed-option'
                         getOptionLabel={option => option.title || ''}
+                        isOptionEqualToValue={(option, value) => option.id === value.id}
                         renderInput={params => (
                           <CustomTextField {...params} label='Capitole' placeholder='Selectează un capitol' />
                         )}
@@ -325,7 +331,7 @@ const LessonComponent = props => {
                     rules={{ required: true, minLength: 3, maxLength: 100 }}
                     render={({ field: { value, onChange } }) => (
                       <Box padding={'2rem'} border={'dashed'} borderRadius={'25px'}>
-                        <FileUploaderMultiple ref={uploadFilesRef} value={value} onChange={onChange} />
+                        <FileUploaderMultiple ref={uploadFilesRef} />
                       </Box>
                     )}
                   />
@@ -333,8 +339,7 @@ const LessonComponent = props => {
               </Grid>
             </CardContent>
             <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: '2em', marginBottom: '2.5em' }}>
-              {/* <Button variant='contained' onClick={onSubmit}> */}
-              <Button variant='contained' onClick={uploadFiles}>
+              <Button variant='contained' onClick={onSubmit}>
                 {submitLoading ? <CircularProgress color='info' /> : 'Încarcă lecția'}
               </Button>
             </Box>
