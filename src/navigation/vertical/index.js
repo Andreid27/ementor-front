@@ -41,6 +41,14 @@ const navigation = () => {
       path: '/all-lessons'
     },
     {
+      icon: 'tabler:presentation-analytics',
+      title: 'Lessons',
+      subject: 'professor-pages',
+      title: 'Rezultate cursuri',
+      action: 'read',
+      path: '/student-lessons'
+    },
+    {
       sectionTitle: 'Teste',
       action: 'read',
       subject: 'professor-pages'
