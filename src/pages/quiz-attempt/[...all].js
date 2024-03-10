@@ -78,7 +78,13 @@ const QuizReviewAttempt = props => {
   }
 
   return (
-    <>
+    <Box
+      sx={{
+        '@media print': {
+          display: 'none'
+        }
+      }}
+    >
       {loading ? (
         <>
           <LinearProgress />
@@ -143,7 +149,7 @@ const QuizReviewAttempt = props => {
           </Card>
         </>
       )}
-    </>
+    </Box>
   )
 }
 

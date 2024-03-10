@@ -33,7 +33,13 @@ const QuizPage = () => {
   }))
 
   return (
-    <>
+    <Box
+      sx={{
+        '@media print': {
+          display: 'none'
+        }
+      }}
+    >
       {loading ? (
         <Box
           sx={{
@@ -51,7 +57,7 @@ const QuizPage = () => {
           {quizId == 'new' ? <QuizComponent previousValues={previousValues} /> : <QuizEdit />}
         </Card>
       )}
-    </>
+    </Box>
   )
 }
 
