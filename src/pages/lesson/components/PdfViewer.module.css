@@ -1,0 +1,82 @@
+.pdfViewer {
+  position: relative;
+  width: 100%;
+  background: #f0f0f0;
+  border-radius: 10px;
+}
+
+.document {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%; /* Adjust based on your header/footer size */
+  margin: 5% 0; /* Adjust margin to center the document vertically */
+}
+
+.page {
+  box-shadow: 0 1px 15px rgba(0, 0, 0, 0.2);
+  border-radius: 20px;
+  transition: opacity 0.15s ease; /* Smooth opacity transition */
+  opacity: 0.5; /* Make page invisible by default */
+}
+
+.pageVisible {
+  opacity: 1; /* Make page visible */
+}
+
+.controls {
+  position: absolute;
+  bottom: 5%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: row; /* Align buttons horizontally */
+  align-items: center; /* Center buttons vertically */
+  justify-content: space-between;
+  min-width: 200px;
+  max-width: 250px;
+  width: 17.5%;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  padding: 10px;
+  z-index: 2;
+  opacity: 0; /* Make controls disappear */
+  transition: opacity 0.5s; /* Smooth transition */
+}
+
+.pdfViewer:hover .controls {
+  opacity: 1; /* Make controls appear on hover */
+}
+
+.controlButton {
+  width: 30px;
+  height: 30px;
+  background: white;
+  border: 1px solid #ddd;
+  font: inherit;
+  font-size: 0.8em;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease; /* Smooth color transition */
+}
+
+.controlButtonDisabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.controlButtonHover:focus,
+.controlButtonHover:hover {
+  background-color: #e6e6e6;
+}
+
+.controlButton:first-child {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.controlButton:last-child {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}

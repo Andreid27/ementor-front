@@ -1,0 +1,92 @@
+import { useEffect, useState } from 'react'
+import { pdfjs } from 'react-pdf'
+
+const { TabPanel } = require('@mui/lab')
+const { Box } = require('tabler-icons-react')
+const { default: LinearProgressWithLabel } = require('./LiniarProgessWithLabel')
+
+import apiClient from 'src/@core/axios/axiosEmentor'
+import * as apiSpec from '../../../apiSpec'
+import { Document, Page } from 'react-pdf'
+import PdfViewer from './PdfViewer'
+
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.js`
+
+const FileTab = ({ file, index }) => {
+  const [loadingProgress, setLoadingProgress] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [fileContent, setFileContent] = useState(null)
+
+  const [numPages, setNumPages] = useState(null)
+  const [pageNumber, setPageNumber] = useState(1)
+  const [fileURL, setFileURL] = useState(null)
+
+  function changePage(offset) {
+    setPageNumber(prevPageNumber => prevPageNumber + offset)
+  }
+
+  function previousPage() {
+    changePage(-1)
+  }
+
+  function nextPage() {
+    changePage(1)
+  }
+
+  function onDocumentLoadSuccess(numPages) {
+    setNumPages(numPages)
+  }
+
+  useEffect(() => {
+    //TODO debug here why multiple requests are being made
+    //TODO continue prevent file preview logic if not pdf
+    //TODO full screen react pdf viewer
+    apiClient
+      .get(apiSpec.LESSON_SERVICE + `/host-file/download/${file.fileId}`, {
+        headers: {
+          Accept: '*/*'
+        },
+        onDownloadProgress: progressEvent => {
+          const progress = Math.round((progressEvent.loaded / progressEvent.total) * 100)
+          setLoadingProgress(progress)
+        },
+        responseType: 'blob'
+      })
+      .then(response => {
+        setFileContent(response.data)
+        console.log('File Content:', response.data)
+        setFileURL(URL.createObjectURL(response.data))
+        console.log('File URL:', fileURL)
+        setLoading(false)
+      })
+
+    const cleanup = () => {
+      URL.revokeObjectURL(fileContent)
+      setFileContent(null)
+    }
+
+    // Attach the cleanup function to the 'beforeunload' event
+    window.addEventListener('beforeunload', cleanup)
+
+    // Return the cleanup function to run when the component unmounts
+    return () => {
+      cleanup()
+      window.removeEventListener('beforeunload', cleanup)
+    }
+  }, [])
+  console.log('File URL2:', fileURL)
+
+  return loading && fileURL != null ? (
+    <TabPanel key={index} value={file.fileId}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+        <LinearProgressWithLabel value={loadingProgress} />
+      </Box>
+    </TabPanel>
+  ) : (
+    <TabPanel key={index} value={file.fileId}>
+      <PdfViewer fileURL={fileURL} />
+    </TabPanel>
+  )
+}
+
+export default FileTab

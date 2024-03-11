@@ -13,38 +13,24 @@ import {
   Typography
 } from '@mui/material'
 
-import Icon from 'src/@core/components/icon'
-import { styled } from '@mui/material/styles'
 import { useEffect, useState } from 'react'
 import apiClient from 'src/@core/axios/axiosEmentor'
 import * as apiSpec from '../../apiSpec'
 import { useRouter } from 'next/router'
-import CountdownTimer from './components/CountDown/CountdownTimer'
-import RadioComponent from './components/Radio/RedioComponent'
 import { useDispatch } from 'react-redux'
 import { addQuiz } from 'src/store/apps/quiz'
 import SubmitComponent from './components/SubmitComponent'
-import toast from 'react-hot-toast'
 import RadioComponentReview from './components/Radio/RedioComponent'
-
-const StyledBox = styled(Box)(({ theme }) => ({
-  [theme.breakpoints.up('sm')]: {
-    borderRight: `1px solid ${theme.palette.divider}`
-  }
-}))
 
 const QuizReviewAttempt = props => {
   const [quiz, setQuiz] = useState(null)
   const [loading, setLoading] = useState(true)
   const [viewResults, setViewResults] = useState(true)
-  const [completed, setCompleted] = useState(true)
-  const [resultSet, setResultSet] = useState(null)
   const [answersMap, setAnswersMap] = useState(new Map())
-  const { asPath, pathname } = useRouter()
   const dispatch = useDispatch()
 
   useEffect(() => {
-    const quizId = asPath.split('/')[2]
+    const quizId = window.location.pathname.split('/')[2]
     apiClient
       .get(apiSpec.QUIZ_SERVICE + `/attempt/${quizId}`)
       .then(response => {

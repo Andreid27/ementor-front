@@ -11,12 +11,11 @@ import { selectNewQuiz } from 'src/store/apps/quiz'
 
 const QuizPage = () => {
   const [loading, setLoading] = useState(true)
-  const { asPath, pathname } = useRouter()
   const [quizId, setQuizId] = useState(null)
   const previousValues = useSelector(selectNewQuiz)
 
   useEffect(() => {
-    setQuizId(asPath.split('/')[2])
+    setQuizId(window.location.pathname.split('/')[2])
   }, [])
 
   useEffect(() => {

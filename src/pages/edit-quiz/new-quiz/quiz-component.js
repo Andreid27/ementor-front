@@ -230,7 +230,6 @@ const QuizComponent = props => {
   const [submitLoading, setSubmitLoading] = useState(false)
   const [chapters, setChapters] = useState([])
   const dispatch = useDispatch()
-  const { asPath, pathname } = useRouter()
   const [selectedChapters, setSelectedChapters] = useState([])
   const [numberOfAnswers, setNumberOfAnswers] = useState()
   const [questionsDefaultDifficultyLevel, setQuestionsDefaultDifficultyLevel] = useState()
@@ -254,7 +253,7 @@ const QuizComponent = props => {
   }
 
   useEffect(() => {
-    const quizId = asPath.split('/')[2]
+    const quizId = window.location.pathname.split('/')[2]
     apiClient
       .post('/service3/chapter/paginated', {
         filters: [],

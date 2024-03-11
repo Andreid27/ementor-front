@@ -79,6 +79,7 @@
     "react-hook-form": "7.43.9",
     "react-hot-toast": "2.4.1",
     "react-i18next": "^13.0.2",
+    "react-pdf": "^7.7.1",
     "react-perfect-scrollbar": "1.5.8",
     "react-popper": "2.3.0",
     "react-quill": "^2.0.0",
