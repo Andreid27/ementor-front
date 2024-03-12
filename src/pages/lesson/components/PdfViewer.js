@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Document, Page, pdfjs } from 'react-pdf'
-import styles from './PdfViewer.module.css' // Import your CSS Module file
+import styles from './PdfViewer.module.css'
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css'
 import 'react-pdf/dist/esm/Page/TextLayer.css'
-import { ArrowLeft, ArrowRight, Typography } from 'tabler-icons-react'
-import { Icon, Button } from '@mui/material'
+import { ArrowLeft, ArrowRight, ArrowsMaximize, ArrowsMinimize } from 'tabler-icons-react'
+import { Button } from '@mui/material'
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`
 
@@ -17,6 +17,11 @@ const PdfViewer = ({ fileURL }) => {
   const [numPages, setNumPages] = useState(null)
   const [pageNumber, setPageNumber] = useState(1)
   const [pageVisible, setPageVisible] = useState(false)
+  const [fullscreen, setFullscreen] = useState(false)
+  const [scale, setScale] = useState(1)
+  const [pageHeight, setPageHeight] = useState(null)
+  const [pageWidth, setPageWidth] = useState(null)
+  const viewerRef = useRef(null)
 
   useEffect(() => {
     setPageVisible(false)
@@ -24,13 +29,73 @@ const PdfViewer = ({ fileURL }) => {
     const timer = setTimeout(() => {
       setPageNumber(pageNumber)
       setPageVisible(true)
-    }, 300) // Adjust delay to match CSS transition duration
+    }, 300)
 
     return () => clearTimeout(timer)
   }, [pageNumber])
 
-  function onDocumentLoadSuccess({ numPages }) {
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isFullscreenNow = Boolean(
+        document.fullscreenElement ||
+          document.webkitFullscreenElement ||
+          document.mozFullScreenElement ||
+          document.msFullscreenElement
+      )
+      setFullscreen(isFullscreenNow)
+      console.log('Fullscreen ANDREI:', isFullscreenNow)
+    }
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange)
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange)
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange)
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange)
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange)
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange)
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange)
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange)
+    }
+  }, [])
+
+  useEffect(() => {
+    const resizeObserver = new ResizeObserver(entries => {
+      if (fullscreen) {
+        for (let entry of entries) {
+          console.log('Width:', entry.contentRect.width)
+          console.log('Height:', entry.contentRect.height)
+          console.log('Page Width:', pageWidth)
+          console.log('Page Height:', pageHeight)
+          const scaleWidth = entry.contentRect.width / pageWidth
+          const scaleHeight = entry.contentRect.height / pageHeight
+          console.log('Scale Width:', scaleWidth)
+          console.log('Scale Height:', scaleHeight)
+
+          // Choose the smaller scale to ensure both width and height fit into the screen
+          const scale = Math.min(scaleWidth, scaleHeight)
+
+          setScale(scale)
+        }
+      } else {
+        setScale(1) // Reset to default when not in fullscreen
+      }
+    })
+
+    resizeObserver.observe(viewerRef.current)
+
+    return () => {
+      if (viewerRef.current) {
+        resizeObserver.unobserve(viewerRef.current)
+      }
+    }
+  }, [fullscreen])
+
+  function onDocumentLoadSuccess({ numPages, originalWidth, originalHeight }) {
+    setPageHeight(originalHeight)
+    setPageWidth(originalWidth)
     setNumPages(numPages)
+
     setPageNumber(1)
   }
 
@@ -46,10 +111,50 @@ const PdfViewer = ({ fileURL }) => {
     changePage(1)
   }
 
+  function toggleFullscreen() {
+    if (fullscreen) {
+      if (document.exitFullscreen) {
+        document.exitFullscreen()
+      } else if (document.mozCancelFullScreen) {
+        /* Firefox */
+        document.mozCancelFullScreen()
+      } else if (document.webkitExitFullscreen) {
+        /* Chrome, Safari and Opera */
+        document.webkitExitFullscreen()
+      } else if (document.msExitFullscreen) {
+        /* IE/Edge */
+        document.msExitFullscreen()
+      }
+    } else {
+      if (viewerRef.current.requestFullscreen) {
+        viewerRef.current.requestFullscreen()
+      } else if (viewerRef.current.mozRequestFullScreen) {
+        /* Firefox */
+        viewerRef.current.mozRequestFullScreen()
+      } else if (viewerRef.current.webkitRequestFullscreen) {
+        /* Chrome, Safari and Opera */
+        viewerRef.current.webkitRequestFullscreen()
+      } else if (viewerRef.current.msRequestFullscreen) {
+        /* IE/Edge */
+        viewerRef.current.msRequestFullscreen()
+      }
+    }
+  }
+
   return (
-    <div className={styles.pdfViewer}>
+    <div className={`${styles.pdfViewer} ${fullscreen ? styles.fullscreen : ''}`} ref={viewerRef}>
       <Document className={styles.document} file={fileURL} onLoadSuccess={onDocumentLoadSuccess} options={options}>
-        <Page className={`${styles.page} ${pageVisible ? styles.pageVisible : ''}`} pageNumber={pageNumber} />
+        <Page
+          scale={scale}
+          className={`${styles.page} ${pageVisible ? styles.pageVisible : ''} ${
+            fullscreen ? styles.fullscreenPage : ''
+          }`}
+          onLoadSuccess={({ width, height }) => {
+            setPageWidth(width)
+            setPageHeight(height)
+          }}
+          pageNumber={pageNumber}
+        />
       </Document>
 
       <div className={styles.controls}>
@@ -64,7 +169,6 @@ const PdfViewer = ({ fileURL }) => {
         <p>
           Pag {pageNumber || (numPages ? 1 : '--')} <br></br> din {numPages || '--'}
         </p>
-
         <Button
           variant='text'
           className={` ${pageNumber >= numPages ? styles.controlButtonDisabled : styles.controlButtonHover}`}
@@ -73,6 +177,15 @@ const PdfViewer = ({ fileURL }) => {
         >
           <ArrowRight size={15} />{' '}
         </Button>
+        {fullscreen ? (
+          <Button variant='text' className={`${styles.fullscreenButton}`} onClick={toggleFullscreen}>
+            <ArrowsMinimize size={15} />
+          </Button>
+        ) : (
+          <Button variant='text' className={`${styles.fullscreenButton}`} onClick={toggleFullscreen}>
+            <ArrowsMaximize size={15} />
+          </Button>
+        )}
       </div>
     </div>
   )

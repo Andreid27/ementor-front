@@ -4,7 +4,6 @@ import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import CircularProgress from '@mui/material/CircularProgress'
 import LessonComponent from './new-lesson/lesson-component'
-import QuizEdit from './edit-quiz/edit'
 import { useSelector } from 'react-redux'
 import { selectNewLesson } from 'src/store/apps/lesson'
 
@@ -40,7 +39,7 @@ const QuizPage = () => {
       ) : (
         <Card>
           <CardHeader title='Editare lecție' />
-          {quizId == 'new' ? <LessonComponent previousValues={previousValues} /> : <QuizEdit />}
+          {quizId == 'new' ? <LessonComponent previousValues={previousValues} /> : null}
         </Card>
       )}
     </>

@@ -1,7 +1,7 @@
 .pdfViewer {
   position: relative;
   width: 100%;
-  background: #f0f0f0;
+  background: #ececec;
   border-radius: 10px;
 }
 
@@ -33,9 +33,9 @@
   flex-direction: row; /* Align buttons horizontally */
   align-items: center; /* Center buttons vertically */
   justify-content: space-between;
-  min-width: 200px;
-  max-width: 250px;
-  width: 17.5%;
+  min-width: 250px;
+  max-width: 300px;
+  width: 20%;
   background: white;
   border-radius: 10px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
@@ -79,4 +79,21 @@
 .controlButton:last-child {
   border-top-left-radius: 0;
   border-top-right-radius: 0;
+}
+
+.fullscreen {
+  height: 100vh; /* Set the height to 100% of the viewport height */
+  width: 100vw;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+.fullscreenPage {
+  align-items: center;
+  align-self: center;
+  display: flex;
+  height: auto; /* Set the height to 100% of the viewport height */
+  width: auto; /* Set the width to 100% of the viewport width */
+  transform: translateY(-9vh);
 }

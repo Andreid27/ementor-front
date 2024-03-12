@@ -38,9 +38,8 @@ const FileTab = ({ file, index }) => {
   }
 
   useEffect(() => {
-    //TODO debug here why multiple requests are being made
     //TODO continue prevent file preview logic if not pdf
-    //TODO full screen react pdf viewer
+    //TODO remove file type from file name
     apiClient
       .get(apiSpec.LESSON_SERVICE + `/host-file/download/${file.fileId}`, {
         headers: {
