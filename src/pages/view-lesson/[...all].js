@@ -8,7 +8,7 @@ import toast from 'react-hot-toast'
 import { TabContext, TabList } from '@mui/lab'
 import FileTab from './components/FileTab'
 
-const Lesson = props => {
+const ViewLesson = props => {
   const [lesson, setLesson] = useState(null)
   const [selectedTab, setSelectedTab] = useState('0')
   const [loading, setLoading] = useState(true)
@@ -28,12 +28,6 @@ const Lesson = props => {
       .catch(error => {
         console.log(error)
       })
-
-    return () => {
-      const timeSpent = Math.floor((Date.now() - startTime.current) / 1000)
-      console.log('Time spent:', timeSpent)
-      apiClient.get(`${apiSpec.LESSON_SERVICE}/lesson/student-lesson-time/${lessonId}?timeToAdd=${timeSpent}`)
-    }
   }, [])
 
   const getFilesTab = () => {
@@ -102,9 +96,9 @@ const Lesson = props => {
   )
 }
 
-Lesson.acl = {
+ViewLesson.acl = {
   action: 'read',
-  subject: 'student-pages'
+  subject: 'professor-pages'
 }
 
-export default Lesson
+export default ViewLesson

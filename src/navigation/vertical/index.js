@@ -9,10 +9,18 @@ const navigation = () => {
       path: '/dashboards/analytics'
     },
     {
+      icon: 'tabler:presentation',
+      title: 'Lessons',
+      badgeContent: 'Nou',
+      badgeColor: 'error',
+      subject: 'student-pages',
+      title: 'Cursuri',
+      action: 'read',
+      path: '/lessons'
+    },
+    {
       icon: 'tabler:certificate',
       title: 'Quizzes',
-      badgeContent: 'new',
-      badgeColor: 'error',
       subject: 'student-pages',
       title: 'Teste',
       action: 'read',

@@ -154,7 +154,7 @@ const LessonsTable = () => {
 
   const handleViewLesson = params => {
     console.log(params.row.id)
-    Router.push(`/lesson/${params.row.id}`)
+    Router.push(`/view-lesson/${params.row.id}`)
   }
 
   const handleCreateLesson = () => {
