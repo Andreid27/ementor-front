@@ -7,7 +7,6 @@ import { useEffect, useState } from 'react'
 import apiClient from 'src/@core/axios/axiosEmentor'
 import * as apiSpec from '../../../apiSpec'
 import { useRouter } from 'next/router'
-import PreviousAttempt from './previous-attempt'
 import quiz from 'src/store/apps/quiz'
 
 const StyledBox = styled(Box)(({ theme }) => ({
@@ -179,26 +178,6 @@ const QuizPreview = props => {
           </Box>
         </CardContent>
       </Card>
-      {preview && preview.quizPreviousAttempts.length > 0 ? (
-        <>
-          <Card sx={{ marginTop: '2rem' }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', padding: '1em' }}>
-                <Grid container spacing={6}>
-                  <Grid item xs={12} sm={12}>
-                    <Typography variant='h4'>Încercări anterioare</Typography>
-                  </Grid>
-                  {preview.quizPreviousAttempts.map((attempt, index) => (
-                    <Grid key={attempt.id} item xs={12} sm={12}>
-                      <PreviousAttempt attempt={attempt} questionsCount={props.preview.questionsCount} index={index} />
-                    </Grid>
-                  ))}
-                </Grid>
-              </Box>
-            </CardContent>
-          </Card>
-        </>
-      ) : null}
     </>
   )
 }

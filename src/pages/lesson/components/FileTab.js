@@ -16,26 +16,7 @@ const FileTab = ({ file, index }) => {
   const [loadingProgress, setLoadingProgress] = useState(0)
   const [loading, setLoading] = useState(true)
   const [fileContent, setFileContent] = useState(null)
-
-  const [numPages, setNumPages] = useState(null)
-  const [pageNumber, setPageNumber] = useState(1)
   const [fileURL, setFileURL] = useState(null)
-
-  function changePage(offset) {
-    setPageNumber(prevPageNumber => prevPageNumber + offset)
-  }
-
-  function previousPage() {
-    changePage(-1)
-  }
-
-  function nextPage() {
-    changePage(1)
-  }
-
-  function onDocumentLoadSuccess(numPages) {
-    setNumPages(numPages)
-  }
 
   useEffect(() => {
     //TODO continue prevent file preview logic if not pdf
@@ -64,10 +45,8 @@ const FileTab = ({ file, index }) => {
       setFileContent(null)
     }
 
-    // Attach the cleanup function to the 'beforeunload' event
     window.addEventListener('beforeunload', cleanup)
 
-    // Return the cleanup function to run when the component unmounts
     return () => {
       cleanup()
       window.removeEventListener('beforeunload', cleanup)
