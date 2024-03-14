@@ -52,13 +52,10 @@ const FileTab = ({ file, index }) => {
       window.removeEventListener('beforeunload', cleanup)
     }
   }, [])
-  console.log('File URL2:', fileURL)
 
-  return loading && fileURL != null ? (
+  return loading && fileURL == null ? (
     <TabPanel key={index} value={file.fileId}>
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-        <LinearProgressWithLabel value={loadingProgress} />
-      </Box>
+      <LinearProgressWithLabel value={loadingProgress} />
     </TabPanel>
   ) : (
     <TabPanel key={index} value={file.fileId}>
