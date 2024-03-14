@@ -17,7 +17,7 @@ const Lesson = props => {
   useEffect(() => {
     const lessonId = window.location.pathname.split('/')[2]
     apiClient
-      .get(apiSpec.LESSON_SERVICE + `/lesson/${lessonId}`)
+      .get(apiSpec.LESSON_SERVICE + `/lesson/student-lesson/${lessonId}`)
       .then(response => {
         setLesson(response.data)
         if (response.data.files && response.data.files.length > 0) {
@@ -29,10 +29,19 @@ const Lesson = props => {
         console.log(error)
       })
 
-    return () => {
+    // Function to calculate time spent and make API call
+    const saveTimeSpent = () => {
       const timeSpent = Math.floor((Date.now() - startTime.current) / 1000)
       console.log('Time spent:', timeSpent)
       apiClient.get(`${apiSpec.LESSON_SERVICE}/lesson/student-lesson-time/${lessonId}?timeToAdd=${timeSpent}`)
+    }
+
+    // Event listener for window/tab close event
+    window.addEventListener('beforeunload', saveTimeSpent)
+
+    return () => {
+      saveTimeSpent() // Save time spent when component unmounts
+      window.removeEventListener('beforeunload', saveTimeSpent) // Remove event listener
     }
   }, [])
 

@@ -47,7 +47,7 @@ const LessonCard = props => {
     return lesson && isVisible ? (
       <Grid item {...gridProps}>
         <Box
-          onClick={() => !isDisabled && handleChange(lesson.lessonId)}
+          onClick={() => !isDisabled && handleChange(lesson.lessonStudentId)}
           sx={theme => ({
             p: 4,
             height: '100%',
