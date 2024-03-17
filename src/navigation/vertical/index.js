@@ -9,10 +9,18 @@ const navigation = () => {
       path: '/dashboards/analytics'
     },
     {
+      icon: 'tabler:presentation',
+      title: 'Lessons',
+      badgeContent: 'Nou',
+      badgeColor: 'error',
+      subject: 'student-pages',
+      title: 'Cursuri',
+      action: 'read',
+      path: '/lessons'
+    },
+    {
       icon: 'tabler:certificate',
       title: 'Quizzes',
-      badgeContent: 'new',
-      badgeColor: 'error',
       subject: 'student-pages',
       title: 'Teste',
       action: 'read',
@@ -22,8 +30,36 @@ const navigation = () => {
       path: '/acl',
       action: 'read',
       subject: 'acl-page',
-      icon: 'tabler:shield',
+      icon: 'tabler:layout-dashboard',
       title: 'Dashboard'
+    },
+    {
+      sectionTitle: 'Cursuri',
+      action: 'read',
+      subject: 'professor-pages'
+    },
+    {
+      icon: 'tabler:presentation',
+      title: 'Lessons',
+      badgeContent: 'new',
+      badgeColor: 'error',
+      subject: 'professor-pages',
+      title: 'Cursuri',
+      action: 'read',
+      path: '/all-lessons'
+    },
+    {
+      icon: 'tabler:presentation-analytics',
+      title: 'Lessons',
+      subject: 'professor-pages',
+      title: 'Rezultate cursuri',
+      action: 'read',
+      path: '/student-lessons'
+    },
+    {
+      sectionTitle: 'Teste',
+      action: 'read',
+      subject: 'professor-pages'
     },
     {
       icon: 'tabler:list-check',
@@ -36,8 +72,6 @@ const navigation = () => {
     {
       icon: 'tabler:report-analytics',
       title: 'Results',
-      badgeContent: 'new',
-      badgeColor: 'error',
       subject: 'professor-pages',
       title: 'Rezultate teste',
       action: 'read',

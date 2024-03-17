@@ -45,7 +45,6 @@ const QuizReviewAttempt = props => {
   const [completed, setCompleted] = useState(true)
   const [resultSet, setResultSet] = useState(null)
   const [answersMap, setAnswersMap] = useState(new Map())
-  const { asPath, pathname } = useRouter()
   const dispatch = useDispatch()
   const [user, setUser] = useState(null)
   const students = useSelector(selectAllStudents)
@@ -83,7 +82,7 @@ const QuizReviewAttempt = props => {
   }
 
   useEffect(() => {
-    const quizId = asPath.split('/')[2]
+    const quizId = window.location.pathname.split('/')[2]
     apiClient
       .get(apiSpec.QUIZ_SERVICE + `/attempt/${quizId}`)
       .then(response => {

@@ -1,16 +1,5 @@
 // ** React Imports
-import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  Grid,
-  InputAdornment,
-  MenuItem,
-  Rating,
-  Typography
-} from '@mui/material'
+import { Box, Button, CardContent, Grid, InputAdornment, MenuItem, Rating, Typography } from '@mui/material'
 import Router, { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import CircularProgress from '@mui/material/CircularProgress'
@@ -20,13 +9,10 @@ import CustomTextField from 'src/@core/components/mui/text-field'
 import { useDispatch, useSelector } from 'react-redux'
 import apiClient from 'src/@core/axios/axiosEmentor'
 import * as apiSpec from '../../../apiSpec'
-import { set } from 'nprogress'
 import CustomChip from 'src/@core/components/mui/chip'
 import QuestionsComponent from './questions-component'
 import toast from 'react-hot-toast'
-import { ro } from 'date-fns/locale'
-import { selectNewQuiz, updateNewQuiz } from 'src/store/apps/quiz'
-import { right } from '@popperjs/core'
+import { updateNewQuiz } from 'src/store/apps/quiz'
 import DialogTransition from './DialogTransition'
 
 const defaultValues = {
@@ -244,7 +230,6 @@ const QuizComponent = props => {
   const [submitLoading, setSubmitLoading] = useState(false)
   const [chapters, setChapters] = useState([])
   const dispatch = useDispatch()
-  const { asPath, pathname } = useRouter()
   const [selectedChapters, setSelectedChapters] = useState([])
   const [numberOfAnswers, setNumberOfAnswers] = useState()
   const [questionsDefaultDifficultyLevel, setQuestionsDefaultDifficultyLevel] = useState()
@@ -268,7 +253,7 @@ const QuizComponent = props => {
   }
 
   useEffect(() => {
-    const quizId = asPath.split('/')[2]
+    const quizId = window.location.pathname.split('/')[2]
     apiClient
       .post('/service3/chapter/paginated', {
         filters: [],

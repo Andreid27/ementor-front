@@ -18,7 +18,6 @@ import { styled } from '@mui/material/styles'
 import { useEffect, useState } from 'react'
 import apiClient from 'src/@core/axios/axiosEmentor'
 import * as apiSpec from '../../apiSpec'
-import { useRouter } from 'next/router'
 import CountdownTimer from './components/CountDown/CountdownTimer'
 import RadioComponent from './components/Radio/RedioComponent'
 import { useDispatch } from 'react-redux'
@@ -42,11 +41,10 @@ const QuizAttempt = props => {
   const [timeFinished, setTimeFinished] = useState(false)
   const [resultSet, setResultSet] = useState(null)
   const [answersMap, setAnswersMap] = useState(new Map())
-  const { asPath, pathname } = useRouter()
   const dispatch = useDispatch()
 
   useEffect(() => {
-    const quizId = asPath.split('/')[2]
+    const quizId = window.location.pathname.split('/')[2]
     apiClient
       .get(apiSpec.QUIZ_SERVICE + `/start/${quizId}`)
       .then(response => {
@@ -70,7 +68,7 @@ const QuizAttempt = props => {
       setLoadingButton(true)
 
       let body = {
-        quizStudentId: asPath.split('/')[2],
+        quizStudentId: window.location.pathname.split('/')[2],
         submitedQuestionAnswers: getSubmitedQuestionAnswers()
       }
 
@@ -113,7 +111,13 @@ const QuizAttempt = props => {
   }
 
   return (
-    <>
+    <Box
+      sx={{
+        '@media print': {
+          display: 'none'
+        }
+      }}
+    >
       {loading ? (
         <>
           <LinearProgress />
@@ -194,7 +198,7 @@ const QuizAttempt = props => {
           </Card>
         </>
       )}
-    </>
+    </Box>
   )
 }
 

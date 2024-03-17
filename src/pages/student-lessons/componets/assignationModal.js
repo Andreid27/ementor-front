@@ -12,7 +12,7 @@ import DialogActions from '@mui/material/DialogActions'
 import CustomTextField from 'src/@core/components/mui/text-field'
 import apiClient from 'src/@core/axios/axiosEmentor'
 import * as apiSpec from '../../../apiSpec'
-import { Box, Chip, Grid, LinearProgress, MenuItem } from '@mui/material'
+import { Box, Checkbox, Chip, FormControlLabel, Grid, LinearProgress, MenuItem } from '@mui/material'
 import DatePicker from 'react-datepicker'
 import CustomInput from 'src/views/forms/form-elements/pickers/PickersCustomInput.js'
 import { useTheme } from '@emotion/react'
@@ -25,32 +25,21 @@ const AssignationModal = props => {
   const handleClickOpen = () => setOpen(true)
   const handleClose = () => setOpen(false)
   const [quizzes, setQuizzes] = useState([])
-  const [selectedQuizzes, setSelectedQuizzes] = useState([])
+  const [selectedLessons, setSelectedLessons] = useState([])
   const [selectedUsers, setSelectedUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [dateTime, setDateTime] = useState(new Date())
   const theme = useTheme()
   const { direction } = theme
   const popperPlacement = direction === 'ltr' ? 'bottom-start' : 'bottom-end'
-
-  const ITEM_HEIGHT = 48
-  const ITEM_PADDING_TOP = 8
-
-  const MenuProps = {
-    PaperProps: {
-      style: {
-        width: 250,
-        maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP
-      }
-    }
-  }
+  const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
     apiClient
-      .post(apiSpec.QUIZ_SERVICE + '/paginated', {
+      .post(apiSpec.LESSON_SERVICE + '/lesson/paginated', {
         filters: [],
         sorters: [
-          { key: 'quizCreation', direction: 'DESC' },
+          { key: 'creation', direction: 'DESC' },
           { key: 'title', direction: 'ASC' }
         ],
         page: 0,
@@ -69,21 +58,22 @@ const AssignationModal = props => {
     //TODO reset content if succeded
     const assignments = []
 
-    selectedQuizzes.forEach(quiz => {
+    selectedLessons.forEach(lesson => {
       selectedUsers.forEach(user => {
         assignments.push({
-          quizId: quiz.id,
+          lessonId: lesson.id,
           userId: user.id,
-          startAfter: dateTime.toISOString()
+          startAfter: dateTime.toISOString(),
+          isVisible: isVisible
         })
       })
     })
 
     apiClient
-      .post(apiSpec.QUIZ_SERVICE + '/assign', assignments)
+      .post(apiSpec.LESSON_SERVICE + '/lesson/assign', assignments)
       .then(response => {
         console.log(assignments)
-        setSelectedQuizzes([])
+        setSelectedLessons([])
         setSelectedUsers([])
         toast.success('Testele au fost asignate cu succes!')
         handleClose()
@@ -103,7 +93,7 @@ const AssignationModal = props => {
       ) : (
         <Fragment>
           <Button sx={{ margin: '2em', marginLeft: '0em' }} variant='contained' size='large' onClick={handleClickOpen}>
-            Asignează un test
+            Asignează o lecție
           </Button>
           <Dialog
             open={open}
@@ -113,22 +103,22 @@ const AssignationModal = props => {
             sx={{ '& .MuiDialog-paper': { overflow: 'visible' } }}
             aria-labelledby='form-dialog-title'
           >
-            <DialogTitle id='form-dialog-title'>Asignează teste</DialogTitle>
+            <DialogTitle id='form-dialog-title'>Asignează lecție</DialogTitle>
             <DialogContent>
               <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                 <Grid container spacing={2} sx={{ margin: '1em', marginTop: '0' }}>
                   <Grid item xs={12} sm={11}>
                     <CustomAutocomplete
                       multiple
-                      value={selectedQuizzes}
+                      value={selectedLessons}
                       options={quizzes}
                       id='autocomplete-fixed-option'
                       getOptionLabel={option => option.title || ''}
                       renderInput={params => (
-                        <CustomTextField {...params} label='Teste' placeholder='Selectează un test' />
+                        <CustomTextField {...params} label='Cursuri' placeholder='Selectează o lecție' />
                       )}
                       onChange={(event, newValue) => {
-                        setSelectedQuizzes(newValue)
+                        setSelectedLessons(newValue)
                       }}
                       renderTags={(value, getTagProps) =>
                         value.map((option, index) => (
@@ -136,9 +126,9 @@ const AssignationModal = props => {
                             label={option.title}
                             {...getTagProps({ index })}
                             onDelete={() => {
-                              const newValue = [...selectedQuizzes]
+                              const newValue = [...selectedLessons]
                               newValue.splice(index, 1)
-                              setSelectedQuizzes(newValue)
+                              setSelectedLessons(newValue)
                             }}
                             key={option.id}
                           />
@@ -186,6 +176,20 @@ const AssignationModal = props => {
                       popperPlacement={popperPlacement}
                       onChange={date => setDateTime(date)}
                       customInput={<CustomInput label='Poate începe după:' />}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={3}>
+                    <FormControlLabel
+                      label='Este vizibilă?'
+                      control={
+                        <Checkbox
+                          checked={isVisible}
+                          onChange={event => {
+                            setIsVisible(event.target.checked)
+                          }}
+                          name='controlled'
+                        />
+                      }
                     />
                   </Grid>
                 </Grid>

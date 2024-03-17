@@ -20,15 +20,14 @@ import QuickSearchToolbar from 'src/views/table/data-grid/QuickSearchToolbar'
 import { getInitials } from 'src/@core/utils/get-initials'
 
 // ** Data Import
-import * as apiSpec from '../../../apiSpec'
+import * as apiSpec from '../../apiSpec'
 import apiClient from 'src/@core/axios/axiosEmentor'
-import componentTypes from 'src/pages/student-results/componets/componentsType.json'
-import { Button, LinearProgress } from '@mui/material'
-import AssignationModal from './assignationModal'
+import { Button, Checkbox, LinearProgress } from '@mui/material'
+import AssignationModal from './componets/assignationModal'
 import { useDispatch } from 'react-redux'
 import { fetchData, updateAllStudents } from 'src/store/apps/user'
 import Router from 'next/router'
-import DeleteDialogTransition from './DeleteDialogTransition'
+import DeleteDialogTransition from './componets/DeleteDialogTransition'
 
 // ** renders client column
 const renderClient = (params, user) => {
@@ -38,6 +37,7 @@ const renderClient = (params, user) => {
   // Use the user ID as a seed to generate a consistent index
   const stateNum = parseInt(user.id, 16) % states.length
   const color = states[stateNum]
+
   if (row.avatar && row.avatar.length) {
     return <CustomAvatar src={`/images/avatars/${row.avatar}`} sx={{ mr: 3, width: '1.875rem', height: '1.875rem' }} />
   } else {
@@ -53,30 +53,30 @@ const escapeRegExp = value => {
   return value.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
 }
 
-const getScoreType = (correctCount, totalCount) => {
-  if (!correctCount || correctCount === 0) {
+const getScoreType = totalTime => {
+  if (!totalTime || totalTime === 0) {
     return {
       color: 'info',
       text: 'N/A'
     }
   }
-  const score = (correctCount / totalCount) * 100
-  if (score <= 50) {
+  const score = (totalTime / 60).toFixed(1)
+  if (totalTime <= 600) {
     return {
       color: 'error',
-      text: `${correctCount}/${totalCount}`
+      text: `${score} min`
     }
   }
-  if (score <= 80) {
+  if (totalTime <= 1500) {
     return {
       color: 'warning',
-      text: `${correctCount}/${totalCount}`
+      text: `${score} min`
     }
   }
 
   return {
     color: 'success',
-    text: `${correctCount}/${totalCount}`
+    text: `${score} min`
   }
 }
 
@@ -88,7 +88,7 @@ const useStyles = makeStyles({
   }
 })
 
-const StudentsResultsTable = () => {
+const StudentsLessonsTable = () => {
   // ** States
   const [users, setUsers] = useState([])
   const classes = useStyles()
@@ -96,12 +96,12 @@ const StudentsResultsTable = () => {
   const columns = [
     {
       flex: 0.2,
-      minWidth: 250,
+      minWidth: 230,
       field: 'studentId',
       headerName: 'Student',
       renderCell: params => {
         const { row } = params
-        const user = users.find(user => user.id === row.studentId)
+        const user = users.find(user => user.id === row.userId)
 
         return (
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -121,7 +121,7 @@ const StudentsResultsTable = () => {
     {
       flex: 0.2,
       minWidth: 120,
-      headerName: 'Test',
+      headerName: 'Lecție',
       field: 'title',
       renderCell: params => (
         <Typography variant='body2' sx={{ color: 'text.primary' }}>
@@ -140,24 +140,49 @@ const StudentsResultsTable = () => {
         </Typography>
       )
     },
+
     {
-      flex: 0.18,
-      field: 'componentType',
-      minWidth: 120,
-      headerName: 'Tip complement',
+      flex: 0.14,
+      minWidth: 100,
+      headerName: 'începe/Citit',
+      field: 'startAfter',
       renderCell: params => (
         <Typography variant='body2' sx={{ color: 'text.primary' }}>
-          {componentTypes.find(item => item.type === params.row.componentType)?.name}
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <Box>
+              {new Date(params.row.startAfter).toLocaleString('ro-RO', {
+                timeZone: 'UTC',
+                day: '2-digit',
+                month: '2-digit',
+                year: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+            </Box>
+            <Box sx={{ fontWeight: 'bold' }}>
+              {params.row.firstRead
+                ? new Date(params.row.firstRead).toLocaleString('ro-RO', {
+                    timeZone: 'UTC',
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })
+                : 'N/A'}
+            </Box>
+          </Box>
         </Typography>
       )
     },
+
     {
-      flex: 0.08,
+      flex: 0.105,
       minWidth: 80,
-      field: 'correctAnswers',
-      headerName: 'Status',
+      field: 'totalTime',
+      headerName: 'Timp citit',
       renderCell: params => {
-        const status = getScoreType(params.row.correctAnswers, params.row.questionsCount)
+        const status = getScoreType(params.row.totalTime)
 
         return (
           <CustomChip
@@ -173,18 +198,21 @@ const StudentsResultsTable = () => {
     },
     {
       flex: 0.04,
-      type: 'date',
-      minWidth: 100,
+      headerName: 'Vizibil',
+      field: 'isVisible',
+      renderCell: params => <Checkbox checked={params.row.isVisible} />
+    },
+    {
+      flex: 0.075,
       headerName: 'Dată asignare',
       field: 'assignedAt',
-      valueGetter: params => new Date(params.value),
       renderCell: params => (
         <Typography variant='body2' sx={{ color: 'text.primary' }}>
           {new Date(params.row.assignedAt).toLocaleString('ro-RO', {
             timeZone: 'UTC',
             day: '2-digit',
             month: '2-digit',
-            year: 'numeric'
+            year: '2-digit'
           })}
         </Typography>
       )
@@ -254,7 +282,7 @@ const StudentsResultsTable = () => {
             page: 0,
             pageSize: 1000
           }),
-          apiClient.post(apiSpec.QUIZ_SERVICE + '/assigned-paginated', {
+          apiClient.post(apiSpec.LESSON_SERVICE + '/lesson/assigned-paginated', {
             filters: [],
             sorters: getSorters(),
             page: paginationModel.page,
@@ -282,7 +310,7 @@ const StudentsResultsTable = () => {
       return
     }
     apiClient
-      .post(apiSpec.QUIZ_SERVICE + '/assigned-paginated', {
+      .post(apiSpec.LESSON_SERVICE + '/lesson/assigned-paginated', {
         filters: [],
         sorters: getSorters(),
         page: paginationModel.page,
@@ -306,14 +334,13 @@ const StudentsResultsTable = () => {
     return apiSortingConfig
   }
 
-  const handleViewAttempt = params => {
-    console.log(params.row.id)
-    Router.push(`/review-attempt/${params.row.id}`)
+  const handleViewLesson = params => {
+    Router.push(`/view-lesson/${params.row.lessonId}`)
   }
 
   const handleOpenDialog = (row, event) => {
     event.stopPropagation()
-    setDialogOpenRow({ id: row.id, title: row.title, student: users.find(user => user.id === row.studentId) })
+    setDialogOpenRow({ id: row.lessonStudentId, title: row.title, student: users.find(user => user.id === row.userId) })
     setDialogOpen(true)
   }
 
@@ -323,10 +350,10 @@ const StudentsResultsTable = () => {
 
   const handleConfirmation = () => {
     apiClient
-      .delete(`${apiSpec.QUIZ_SERVICE}/delete-assigned/${dialogOpenRow.id}`)
+      .delete(`${apiSpec.LESSON_SERVICE}/lesson/delete-assigned/${dialogOpenRow.id}`)
       .then(response => {
         if (response.status === 204) {
-          toast.success('Încercarea a fost ștearsă cu succes!')
+          toast.success('Lecția a fost ștearsă cu succes!')
 
           //TODO update data after delete
 
@@ -346,7 +373,7 @@ const StudentsResultsTable = () => {
         <CardHeader title='Rezultate studenți' />
         <Box sx={{ px: 3, pb: 3, pl: '1.7%' }}>
           <Typography variant='body2' sx={{ color: 'text.secondary' }}>
-            Aici puteți vedea rezultatele studenților la testele pe care le-ați creat.
+            Aici puteți vedea rezultatele studenților la lecțiile pe care le-ați asignat.
           </Typography>
         </Box>
         {loading ? (
@@ -372,6 +399,7 @@ const StudentsResultsTable = () => {
               paginationMode='server'
               paginationModel={paginationModel}
               sortModel={sortModel}
+              getRowId={row => row.lessonStudentId}
               slots={{ toolbar: QuickSearchToolbar }}
               onPaginationModelChange={newModel => setPaginationModel(newModel)}
               onSortModelChange={newModel => setSortModel(newModel)}
@@ -393,7 +421,7 @@ const StudentsResultsTable = () => {
                   onChange: event => handleSearch(event.target.value)
                 }
               }}
-              onCellClick={handleViewAttempt}
+              onCellClick={handleViewLesson}
             />
           </>
         )}
@@ -402,4 +430,9 @@ const StudentsResultsTable = () => {
   )
 }
 
-export default StudentsResultsTable
+StudentsLessonsTable.acl = {
+  action: 'read',
+  subject: 'professor-pages'
+}
+
+export default StudentsLessonsTable

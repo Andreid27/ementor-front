@@ -19,7 +19,7 @@ function getCurrentToken() {
 // Create an instance of axios
 const apiClient = axios.create({
   baseURL: apiSpec.PROD_HOST,
-  timeout: 3000,
+  timeout: 300000,
   headers: {
     'Content-Type': 'application/json'
   }
