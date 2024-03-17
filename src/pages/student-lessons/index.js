@@ -335,8 +335,7 @@ const StudentsLessonsTable = () => {
   }
 
   const handleViewLesson = params => {
-    console.log(params.row.lessonStudentId)
-    Router.push(`/view-lesson/${params.row.lessonStudentId}`)
+    Router.push(`/view-lesson/${params.row.lessonId}`)
   }
 
   const handleOpenDialog = (row, event) => {
