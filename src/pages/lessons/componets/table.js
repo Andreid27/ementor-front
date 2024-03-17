@@ -8,7 +8,7 @@ import TablePagination from '@mui/material/TablePagination'
 // ** Icon Imports
 import apiClient from 'src/@core/axios/axiosEmentor'
 import * as apiSpec from '../../../apiSpec'
-import { CardHeader, Grid, LinearProgress } from '@mui/material'
+import { CardHeader, Grid, LinearProgress, Typography } from '@mui/material'
 import LessonCard from './lesson-card'
 import Router from 'next/router'
 
@@ -106,7 +106,7 @@ const StudentLessons = props => {
         <>
           <LinearProgress />
         </>
-      ) : (
+      ) : lessons.length > 0 ? (
         <Box sx={{ p: '2rem' }}>
           <Grid container spacing={6}>
             {lessons.map((item, index) => (
@@ -131,6 +131,11 @@ const StudentLessons = props => {
               onRowsPerPageChange={handleChangeRowsPerPage}
             />
           </Box>
+        </Box>
+      ) : (
+        <Box sx={{ p: '2rem' }}>
+          <Typography variant='h3'>Nu ai niciun atribuit curs încă!</Typography>
+          <p>Nu ai niciun curs atribuit. Pentru a începe studiul contactează-ți profesorul și hai să începem. 😊 </p>
         </Box>
       )}
     </>
