@@ -1,9 +1,7 @@
 // ** React Imports
 import { Box, Button, CardContent, Grid, InputAdornment, MenuItem, Rating, Typography } from '@mui/material'
-import Router, { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import CircularProgress from '@mui/material/CircularProgress'
-import { styled } from '@mui/material/styles'
 import { Controller, useForm } from 'react-hook-form'
 import CustomTextField from 'src/@core/components/mui/text-field'
 import { useDispatch, useSelector } from 'react-redux'
@@ -14,6 +12,8 @@ import QuestionsComponent from './questions-component'
 import toast from 'react-hot-toast'
 import { updateNewQuiz } from 'src/store/apps/quiz'
 import DialogTransition from './DialogTransition'
+import validator from 'validator'
+import Router from 'next/router'
 
 const defaultValues = {
   title: '',
@@ -225,16 +225,19 @@ const defaultValues = {
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 const QuizComponent = props => {
-  const { previousValues } = props
+  const { previousValues, quizId } = props
   const [loading, setLoading] = useState(true)
   const [submitLoading, setSubmitLoading] = useState(false)
   const [chapters, setChapters] = useState([])
   const dispatch = useDispatch()
   const [selectedChapters, setSelectedChapters] = useState([])
-  const [numberOfAnswers, setNumberOfAnswers] = useState()
+  const [numberOfAnswers, setNumberOfAnswers] = useState(5)
   const [questionsDefaultDifficultyLevel, setQuestionsDefaultDifficultyLevel] = useState()
   const [componentType, setComponentType] = useState('CS')
   const [dialogOpen, setDialogOpen] = useState(false)
+
+  const loadPreviousValues =
+    previousValues && previousValues != {} && previousValues.questionsList && previousValues.questionsList.length > 0
 
   const ITEM_HEIGHT = 48
   const ITEM_PADDING_TOP = 8
@@ -253,7 +256,6 @@ const QuizComponent = props => {
   }
 
   useEffect(() => {
-    const quizId = window.location.pathname.split('/')[2]
     apiClient
       .post('/service3/chapter/paginated', {
         filters: [],
@@ -268,6 +270,10 @@ const QuizComponent = props => {
       .catch(error => {
         console.log(error)
       })
+    if (loadPreviousValues) {
+      setSelectedChapters(previousValues.chaptersId)
+      setQuestionsDefaultDifficultyLevel(previousValues.difficultyLevel)
+    }
   }, [])
 
   const {
@@ -277,14 +283,13 @@ const QuizComponent = props => {
     reset,
     getValues
   } = useForm({
-    defaultValues:
-      previousValues && previousValues != {} && previousValues.questionsList && previousValues.questionsList.length > 0
-        ? previousValues
-        : defaultValues
+    defaultValues: loadPreviousValues ? previousValues : defaultValues
   })
 
   const cacheNewQuiz = () => {
-    dispatch(updateNewQuiz(getValues()))
+    if (quizId === 'new') {
+      dispatch(updateNewQuiz(getValues()))
+    }
   }
 
   useEffect(() => {
@@ -346,31 +351,50 @@ const QuizComponent = props => {
       if (Object.keys(validationErrors).length === 0) {
         // Perform the API call and return a promise
         const apiPromise = new Promise((resolve, reject) => {
-          apiClient
-            .post(apiSpec.QUIZ_SERVICE + '/create-complete', getValues())
-            .then(async response => {
-              console.log('Success')
-              resolve(response)
-              if (response.status === 201) {
-                reset({ ...defaultValues })
-                dispatch(updateNewQuiz({}))
-              }
-              await delay(3000)
-              await Router.push('/all-quizzes')
-            })
-            .catch(error => {
-              console.log(error)
-              reject(error)
-            })
-            .finally(() => {
-              setSubmitLoading(false) // Set loading to false when the request is complete
-            })
+          if (quizId === 'new') {
+            apiClient
+              .post(apiSpec.QUIZ_SERVICE + '/create-complete', getValues())
+              .then(async response => {
+                console.log('Success')
+                resolve(response)
+                if (response.status === 201) {
+                  reset({ ...defaultValues })
+                  dispatch(updateNewQuiz({}))
+                }
+                await delay(3000)
+                await Router.push('/all-quizzes')
+              })
+              .catch(error => {
+                console.log(error)
+                reject(error)
+              })
+              .finally(() => {
+                setSubmitLoading(false)
+              })
+          } else if (validator.isUUID(quizId, 4)) {
+            apiClient
+              .put(apiSpec.QUIZ_SERVICE + `/update-complete`, getValues())
+              .then(async response => {
+                console.log('Success')
+                resolve(response)
+
+                await delay(3000)
+                await Router.push('/all-quizzes')
+              })
+              .catch(error => {
+                console.log(error)
+                reject(error)
+              })
+              .finally(() => {
+                setSubmitLoading(false)
+              })
+            resolve()
+          }
         })
 
-        // Use toast.promise to handle loading, success, and error states
         return toast.promise(apiPromise, {
           loading: 'Loading',
-          success: 'Testul a fost creat cu succes',
+          success: `Testul a fost ${validator.isUUID(quizId, 4) && quizId != 'new' ? 'modificat' : 'creat'} cu succes`,
           error: 'Eroare la crearea testului'
         })
       } else {
@@ -466,8 +490,8 @@ const QuizComponent = props => {
                           multiple: true,
                           value: selectedChapters,
                           onChange: e => {
-                            handleChangeChapters(e) // Your existing function to handle chip changes
-                            onChange(e.target.value) // Update the form state with the selected values
+                            handleChangeChapters(e)
+                            onChange(e.target.value)
                           },
                           renderValue: selected => (
                             <Box sx={{ display: 'flex', flexWrap: 'wrap' }}>
@@ -628,8 +652,8 @@ const QuizComponent = props => {
                     rules={{ required: true, minLength: 3, maxLength: 100 }}
                     render={({ field: { value, onChange } }) => (
                       <QuestionsComponent
-                        questions={value} // Pass the questions array as a prop
-                        updateQuestions={updatedQuestions => onChange(updatedQuestions)} // Pass the update function
+                        questions={value}
+                        updateQuestions={updatedQuestions => onChange(updatedQuestions)}
                         numberOfAnswers={numberOfAnswers}
                         difficultyLevel={questionsDefaultDifficultyLevel}
                         componentType={componentType}

@@ -129,7 +129,7 @@ const QuizReviewAttempt = props => {
                 </Grid>
               </Grid>
               <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: '2em' }}>
-                <SubmitComponent viewResults={viewResults} loading={loading} setCompleted={setCompleted} />
+                <SubmitComponent viewResults={viewResults} loading={loading} setCompleted={true} />
               </Box>
             </CardContent>
           </Card>
