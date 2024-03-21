@@ -1,9 +1,7 @@
 // ** React Imports
 import { Box, Button, CardContent, Grid, InputAdornment, MenuItem, Rating, Typography } from '@mui/material'
-import Router, { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import CircularProgress from '@mui/material/CircularProgress'
-import { styled } from '@mui/material/styles'
 import { Controller, useForm } from 'react-hook-form'
 import CustomTextField from 'src/@core/components/mui/text-field'
 import { useDispatch, useSelector } from 'react-redux'
@@ -14,6 +12,8 @@ import QuestionsComponent from './questions-component'
 import toast from 'react-hot-toast'
 import { updateNewQuiz } from 'src/store/apps/quiz'
 import DialogTransition from './DialogTransition'
+import validator from 'validator'
+import Router from 'next/router'
 
 const defaultValues = {
   title: '',
@@ -276,8 +276,6 @@ const QuizComponent = props => {
     }
   }, [])
 
-  console.log('previousValues', previousValues)
-
   const {
     control,
     handleSubmit,
@@ -353,28 +351,47 @@ const QuizComponent = props => {
       if (Object.keys(validationErrors).length === 0) {
         // Perform the API call and return a promise
         const apiPromise = new Promise((resolve, reject) => {
-          apiClient
-            .post(apiSpec.QUIZ_SERVICE + '/create-complete', getValues())
-            .then(async response => {
-              console.log('Success')
-              resolve(response)
-              if (response.status === 201) {
-                reset({ ...defaultValues })
-                dispatch(updateNewQuiz({}))
-              }
-              await delay(3000)
-              await Router.push('/all-quizzes')
-            })
-            .catch(error => {
-              console.log(error)
-              reject(error)
-            })
-            .finally(() => {
-              setSubmitLoading(false) // Set loading to false when the request is complete
-            })
+          if (quizId === 'new') {
+            apiClient
+              .post(apiSpec.QUIZ_SERVICE + '/create-complete', getValues())
+              .then(async response => {
+                console.log('Success')
+                resolve(response)
+                if (response.status === 201) {
+                  reset({ ...defaultValues })
+                  dispatch(updateNewQuiz({}))
+                }
+                await delay(3000)
+                await Router.push('/all-quizzes')
+              })
+              .catch(error => {
+                console.log(error)
+                reject(error)
+              })
+              .finally(() => {
+                setSubmitLoading(false)
+              })
+          } else if (validator.isUUID(quizId, 4)) {
+            apiClient
+              .put(apiSpec.QUIZ_SERVICE + `/update-complete`, getValues())
+              .then(async response => {
+                console.log('Success')
+                resolve(response)
+
+                await delay(3000)
+                await Router.push('/all-quizzes')
+              })
+              .catch(error => {
+                console.log(error)
+                reject(error)
+              })
+              .finally(() => {
+                setSubmitLoading(false)
+              })
+            resolve()
+          }
         })
 
-        // Use toast.promise to handle loading, success, and error states
         return toast.promise(apiPromise, {
           loading: 'Loading',
           success: 'Testul a fost creat cu succes',
@@ -473,8 +490,8 @@ const QuizComponent = props => {
                           multiple: true,
                           value: selectedChapters,
                           onChange: e => {
-                            handleChangeChapters(e) // Your existing function to handle chip changes
-                            onChange(e.target.value) // Update the form state with the selected values
+                            handleChangeChapters(e)
+                            onChange(e.target.value)
                           },
                           renderValue: selected => (
                             <Box sx={{ display: 'flex', flexWrap: 'wrap' }}>
@@ -635,8 +652,8 @@ const QuizComponent = props => {
                     rules={{ required: true, minLength: 3, maxLength: 100 }}
                     render={({ field: { value, onChange } }) => (
                       <QuestionsComponent
-                        questions={value} // Pass the questions array as a prop
-                        updateQuestions={updatedQuestions => onChange(updatedQuestions)} // Pass the update function
+                        questions={value}
+                        updateQuestions={updatedQuestions => onChange(updatedQuestions)}
                         numberOfAnswers={numberOfAnswers}
                         difficultyLevel={questionsDefaultDifficultyLevel}
                         componentType={componentType}
