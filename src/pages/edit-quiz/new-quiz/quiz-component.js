@@ -225,16 +225,19 @@ const defaultValues = {
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 const QuizComponent = props => {
-  const { previousValues } = props
+  const { previousValues, quizId } = props
   const [loading, setLoading] = useState(true)
   const [submitLoading, setSubmitLoading] = useState(false)
   const [chapters, setChapters] = useState([])
   const dispatch = useDispatch()
   const [selectedChapters, setSelectedChapters] = useState([])
-  const [numberOfAnswers, setNumberOfAnswers] = useState()
+  const [numberOfAnswers, setNumberOfAnswers] = useState(5)
   const [questionsDefaultDifficultyLevel, setQuestionsDefaultDifficultyLevel] = useState()
   const [componentType, setComponentType] = useState('CS')
   const [dialogOpen, setDialogOpen] = useState(false)
+
+  const loadPreviousValues =
+    previousValues && previousValues != {} && previousValues.questionsList && previousValues.questionsList.length > 0
 
   const ITEM_HEIGHT = 48
   const ITEM_PADDING_TOP = 8
@@ -253,7 +256,6 @@ const QuizComponent = props => {
   }
 
   useEffect(() => {
-    const quizId = window.location.pathname.split('/')[2]
     apiClient
       .post('/service3/chapter/paginated', {
         filters: [],
@@ -268,7 +270,13 @@ const QuizComponent = props => {
       .catch(error => {
         console.log(error)
       })
+    if (loadPreviousValues) {
+      setSelectedChapters(previousValues.chaptersId)
+      setQuestionsDefaultDifficultyLevel(previousValues.difficultyLevel)
+    }
   }, [])
+
+  console.log('previousValues', previousValues)
 
   const {
     control,
@@ -277,14 +285,13 @@ const QuizComponent = props => {
     reset,
     getValues
   } = useForm({
-    defaultValues:
-      previousValues && previousValues != {} && previousValues.questionsList && previousValues.questionsList.length > 0
-        ? previousValues
-        : defaultValues
+    defaultValues: loadPreviousValues ? previousValues : defaultValues
   })
 
   const cacheNewQuiz = () => {
-    dispatch(updateNewQuiz(getValues()))
+    if (quizId === 'new') {
+      dispatch(updateNewQuiz(getValues()))
+    }
   }
 
   useEffect(() => {
