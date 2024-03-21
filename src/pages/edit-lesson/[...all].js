@@ -1,21 +1,20 @@
 // ** React Imports
-import { Box, Button, Card, CardHeader } from '@mui/material'
+import { Box, Card, CardHeader } from '@mui/material'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import CircularProgress from '@mui/material/CircularProgress'
-import { styled } from '@mui/material/styles'
-import QuizComponent from './new-quiz/quiz-component'
-import QuizEdit from './edit-quiz/edit'
+import LessonComponent from './new-lesson/lesson-component'
 import { useSelector } from 'react-redux'
-import { selectNewQuiz } from 'src/store/apps/quiz'
+import { selectNewLesson } from 'src/store/apps/lesson'
 
 const QuizPage = () => {
   const [loading, setLoading] = useState(true)
+  const { asPath } = useRouter()
   const [quizId, setQuizId] = useState(null)
-  const previousValues = useSelector(selectNewQuiz)
+  const previousValues = useSelector(selectNewLesson)
 
   useEffect(() => {
-    setQuizId(window.location.pathname.split('/')[2])
+    setQuizId(asPath.split('/')[2])
   }, [])
 
   useEffect(() => {
@@ -24,21 +23,8 @@ const QuizPage = () => {
     }
   }, [previousValues])
 
-  const CircularProgressIndeterminate = styled(CircularProgress)(({ theme }) => ({
-    left: 0,
-    position: 'absolute',
-    animationDuration: '550ms',
-    color: theme.palette.mode === 'light' ? '#1a90ff' : '#308fe8'
-  }))
-
   return (
-    <Box
-      sx={{
-        '@media print': {
-          display: 'none'
-        }
-      }}
-    >
+    <>
       {loading ? (
         <Box
           sx={{
@@ -52,11 +38,11 @@ const QuizPage = () => {
         </Box>
       ) : (
         <Card>
-          <CardHeader title='Editare test' />
-          {quizId == 'new' ? <QuizComponent previousValues={previousValues} /> : <QuizEdit />}
+          <CardHeader title='Editare lecție' />
+          {quizId == 'new' ? <LessonComponent previousValues={previousValues} /> : null}
         </Card>
       )}
-    </Box>
+    </>
   )
 }
 

@@ -9,6 +9,7 @@ enableMapSet() // Enable Immer MapSet plugin
 import chat from 'src/store/apps/chat'
 import user from 'src/store/apps/user'
 import quiz from 'src/store/apps/quiz'
+import lesson from 'src/store/apps/lesson'
 import dashboard from 'src/store/apps/dashboard'
 import email from 'src/store/apps/email'
 import invoice from 'src/store/apps/invoice'
@@ -37,6 +38,7 @@ const persistedReducer = persistReducer(
     dashboard,
     user,
     quiz,
+    lesson,
     chat,
     email,
     invoice,

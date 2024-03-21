@@ -12,72 +12,17 @@ import { TrashX } from 'tabler-icons-react'
 import toast from 'react-hot-toast'
 
 // ** Custom Components
-import CustomChip from 'src/@core/components/mui/chip'
-import CustomAvatar from 'src/@core/components/mui/avatar'
 import QuickSearchToolbar from 'src/views/table/data-grid/QuickSearchToolbar'
-
-// ** Utils Import
-import { getInitials } from 'src/@core/utils/get-initials'
 
 // ** Data Import
 import * as apiSpec from '../../../apiSpec'
 import apiClient from 'src/@core/axios/axiosEmentor'
-import componentTypes from 'src/pages/student-results/componets/componentsType.json'
 import { Button, LinearProgress } from '@mui/material'
-import AssignationModal from './assignationModal'
-import { useDispatch } from 'react-redux'
-import { fetchData, updateAllStudents } from 'src/store/apps/user'
-import Router from 'next/router'
+import Router, { useRouter } from 'next/router'
 import DeleteDialogTransition from './DeleteDialogTransition'
-
-// ** renders client column
-const renderClient = (params, user) => {
-  const { row } = params
-  const states = ['success', 'error', 'warning', 'info', 'primary', 'secondary']
-
-  // Use the user ID as a seed to generate a consistent index
-  const stateNum = parseInt(user.id, 16) % states.length
-  const color = states[stateNum]
-  if (row.avatar && row.avatar.length) {
-    return <CustomAvatar src={`/images/avatars/${row.avatar}`} sx={{ mr: 3, width: '1.875rem', height: '1.875rem' }} />
-  } else {
-    return (
-      <CustomAvatar skin='light' color={color} sx={{ mr: 3, fontSize: '.8rem', width: '1.875rem', height: '1.875rem' }}>
-        {getInitials(user.lastName ? `${user.firstName} ${user.lastName} ` : 'John Doe')}
-      </CustomAvatar>
-    )
-  }
-}
 
 const escapeRegExp = value => {
   return value.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
-}
-
-const getScoreType = (correctCount, totalCount) => {
-  if (!correctCount || correctCount === 0) {
-    return {
-      color: 'info',
-      text: 'N/A'
-    }
-  }
-  const score = (correctCount / totalCount) * 100
-  if (score <= 50) {
-    return {
-      color: 'error',
-      text: `${correctCount}/${totalCount}`
-    }
-  }
-  if (score <= 80) {
-    return {
-      color: 'warning',
-      text: `${correctCount}/${totalCount}`
-    }
-  }
-
-  return {
-    color: 'success',
-    text: `${correctCount}/${totalCount}`
-  }
 }
 
 const useStyles = makeStyles({
@@ -88,40 +33,15 @@ const useStyles = makeStyles({
   }
 })
 
-const StudentsResultsTable = () => {
+const LessonsTable = () => {
   // ** States
-  const [users, setUsers] = useState([])
   const classes = useStyles()
 
   const columns = [
     {
       flex: 0.2,
-      minWidth: 250,
-      field: 'studentId',
-      headerName: 'Student',
-      renderCell: params => {
-        const { row } = params
-        const user = users.find(user => user.id === row.studentId)
-
-        return (
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            {renderClient(params, user)}
-            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-              <Typography noWrap variant='body2' sx={{ color: 'text.primary', fontWeight: 600 }}>
-                {user.firstName} {user.lastName}
-              </Typography>
-              <Typography noWrap variant='caption'>
-                {user.email}
-              </Typography>
-            </Box>
-          </Box>
-        )
-      }
-    },
-    {
-      flex: 0.2,
       minWidth: 120,
-      headerName: 'Test',
+      headerName: 'Lecție',
       field: 'title',
       renderCell: params => (
         <Typography variant='body2' sx={{ color: 'text.primary' }}>
@@ -133,7 +53,7 @@ const StudentsResultsTable = () => {
       flex: 0.15,
       minWidth: 90,
       field: 'chapterTitles',
-      headerName: 'Capitol test',
+      headerName: 'Capitol',
       renderCell: params => (
         <Typography variant='body2' sx={{ color: 'text.primary' }}>
           {params.row.chapterTitles}
@@ -141,46 +61,15 @@ const StudentsResultsTable = () => {
       )
     },
     {
-      flex: 0.18,
-      field: 'componentType',
-      minWidth: 120,
-      headerName: 'Tip complement',
-      renderCell: params => (
-        <Typography variant='body2' sx={{ color: 'text.primary' }}>
-          {componentTypes.find(item => item.type === params.row.componentType)?.name}
-        </Typography>
-      )
-    },
-    {
-      flex: 0.08,
-      minWidth: 80,
-      field: 'correctAnswers',
-      headerName: 'Status',
-      renderCell: params => {
-        const status = getScoreType(params.row.correctAnswers, params.row.questionsCount)
-
-        return (
-          <CustomChip
-            rounded
-            size='small'
-            skin='light'
-            color={status ? status.color : 'primary'}
-            label={status ? status.text : 'N/A'}
-            sx={{ '& .MuiChip-label': { textTransform: 'capitalize' } }}
-          />
-        )
-      }
-    },
-    {
       flex: 0.04,
       type: 'date',
       minWidth: 100,
       headerName: 'Dată asignare',
-      field: 'assignedAt',
+      field: 'creation',
       valueGetter: params => new Date(params.value),
       renderCell: params => (
         <Typography variant='body2' sx={{ color: 'text.primary' }}>
-          {new Date(params.row.assignedAt).toLocaleString('ro-RO', {
+          {new Date(params.row.creation).toLocaleString('ro-RO', {
             timeZone: 'UTC',
             day: '2-digit',
             month: '2-digit',
@@ -210,13 +99,12 @@ const StudentsResultsTable = () => {
   const [searchText, setSearchText] = useState('')
   const [filteredData, setFilteredData] = useState([])
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 })
-  const [sortModel, setSortModel] = useState([{ field: 'assignedAt', sort: 'desc' }])
+  const [sortModel, setSortModel] = useState([{ field: 'creation', sort: 'desc' }])
   const [totalCount, setTotalCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [dialogOpenRow, setDialogOpenRow] = useState({})
-  const isInitialRender = useRef(true)
-  const dispatch = useDispatch()
+  const router = useRouter()
 
   const handleSearch = searchValue => {
     setSearchText(searchValue)
@@ -234,55 +122,10 @@ const StudentsResultsTable = () => {
     }
   }
 
-  // Fetch at initial render with all users
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [userServiceResponse, quizServiceResponse] = await Promise.all([
-          apiClient.post(apiSpec.USER_SERVICE + '/paginated', {
-            filters: [
-              {
-                key: 'role',
-                operation: 'EQUAL',
-                value: 'STUDENT'
-
-                //TODO continue filter users by role here
-              }
-            ],
-            sorters: [],
-            page: 0,
-            pageSize: 1000
-          }),
-          apiClient.post(apiSpec.QUIZ_SERVICE + '/assigned-paginated', {
-            filters: [],
-            sorters: getSorters(),
-            page: paginationModel.page,
-            pageSize: paginationModel.pageSize
-          })
-        ])
-        dispatch(updateAllStudents(userServiceResponse.data.data))
-        setUsers(userServiceResponse.data.data)
-        setData(quizServiceResponse.data.data)
-        setTotalCount(quizServiceResponse.data.totalCount)
-        setLoading(false)
-      } catch (error) {
-        console.error(error)
-      }
-    }
-
-    fetchData()
-  }, [])
-
   //Fetch data from api after modifying datagrid filters/sorters/pagination
   useEffect(() => {
-    if (isInitialRender.current) {
-      isInitialRender.current = false
-
-      return
-    }
     apiClient
-      .post(apiSpec.QUIZ_SERVICE + '/assigned-paginated', {
+      .post(apiSpec.LESSON_SERVICE + '/lesson/paginated', {
         filters: [],
         sorters: getSorters(),
         page: paginationModel.page,
@@ -291,6 +134,9 @@ const StudentsResultsTable = () => {
       .then(response => {
         setData(response.data.data)
         setTotalCount(response.data.totalCount)
+        if (loading) {
+          setLoading(false)
+        }
       })
       .catch(error => {
         console.log(error)
@@ -306,14 +152,18 @@ const StudentsResultsTable = () => {
     return apiSortingConfig
   }
 
-  const handleViewAttempt = params => {
+  const handleViewLesson = params => {
     console.log(params.row.id)
-    Router.push(`/review-attempt/${params.row.id}`)
+    Router.push(`/view-lesson/${params.row.id}`)
+  }
+
+  const handleCreateLesson = () => {
+    router.push('/edit-lesson/new')
   }
 
   const handleOpenDialog = (row, event) => {
     event.stopPropagation()
-    setDialogOpenRow({ id: row.id, title: row.title, student: users.find(user => user.id === row.studentId) })
+    setDialogOpenRow({ id: row.id, title: row.title })
     setDialogOpen(true)
   }
 
@@ -323,7 +173,7 @@ const StudentsResultsTable = () => {
 
   const handleConfirmation = () => {
     apiClient
-      .delete(`${apiSpec.QUIZ_SERVICE}/delete-assigned/${dialogOpenRow.id}`)
+      .delete(`${apiSpec.LESSON_SERVICE}/lesson/delete/${dialogOpenRow.id}`)
       .then(response => {
         if (response.status === 204) {
           toast.success('Încercarea a fost ștearsă cu succes!')
@@ -341,12 +191,14 @@ const StudentsResultsTable = () => {
 
   return (
     <>
-      <AssignationModal users={users} />
+      <Button sx={{ margin: '2em', marginLeft: '0em' }} variant='contained' size='large' onClick={handleCreateLesson}>
+        Creează o lecție nouă
+      </Button>
       <Card>
-        <CardHeader title='Rezultate studenți' />
+        <CardHeader title='Cursuri' />
         <Box sx={{ px: 3, pb: 3, pl: '1.7%' }}>
           <Typography variant='body2' sx={{ color: 'text.secondary' }}>
-            Aici puteți vedea rezultatele studenților la testele pe care le-ați creat.
+            Aici puteți vedea lecțiile pe care le-ați creat.
           </Typography>
         </Box>
         {loading ? (
@@ -393,7 +245,7 @@ const StudentsResultsTable = () => {
                   onChange: event => handleSearch(event.target.value)
                 }
               }}
-              onCellClick={handleViewAttempt}
+              onCellClick={handleViewLesson}
             />
           </>
         )}
@@ -402,4 +254,4 @@ const StudentsResultsTable = () => {
   )
 }
 
-export default StudentsResultsTable
+export default LessonsTable
