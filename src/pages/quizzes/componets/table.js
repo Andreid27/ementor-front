@@ -100,7 +100,7 @@ const EnhancedTableToolbar = props => {
 const EnhancedTable = props => {
   // ** States
   const [page, setPage] = useState(0)
-  const [order, setOrder] = useState('asc')
+  const [order, setOrder] = useState('desc')
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const [orderBy, setOrderBy] = useState()
   const [selected, setSelected] = useState([])
@@ -127,7 +127,12 @@ const EnhancedTable = props => {
   }, [page, orderBy, order, rowsPerPage])
 
   const getSorters = () => {
-    let sorters = []
+    let sorters = [
+      {
+        key: 'assignedAt',
+        direction: order.toUpperCase()
+      }
+    ]
     if (orderBy === 'chapterTitles') {
       sorters.push({
         key: 'chapterTitles',

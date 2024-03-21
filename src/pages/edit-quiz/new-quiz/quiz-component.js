@@ -394,7 +394,7 @@ const QuizComponent = props => {
 
         return toast.promise(apiPromise, {
           loading: 'Loading',
-          success: 'Testul a fost creat cu succes',
+          success: `Testul a fost ${validator.isUUID(quizId, 4) && quizId != 'new' ? 'modificat' : 'creat'} cu succes`,
           error: 'Eroare la crearea testului'
         })
       } else {
