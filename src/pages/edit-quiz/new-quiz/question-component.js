@@ -5,6 +5,7 @@ import isEqual from 'lodash/isEqual'
 
 const QuestionComponent = props => {
   const [questionContent, setQuestionContent] = useState({
+    ...(props.value.id && { id: props.value.id }),
     content: props.value.content,
     correctAnswer: props.value.correctAnswer,
     source: props.value.source,

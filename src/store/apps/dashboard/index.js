@@ -8,11 +8,8 @@ import * as apiSpec from 'src/apiSpec'
 // ** Fetch Users
 
 export const fetchData = createAsyncThunk('appDashboard/fetchData', async params => {
-  console.log('AAAAAAAASHJKDASHDKHSAKJDAHJHKDAJSKDHASJKHDA')
-
   const token = window.localStorage.getItem('accessToken')
   const url = `${apiSpec.PROD_HOST + apiSpec.QUIZ_SERVICE}/dashboard-stats`
-  console.log('URL', url)
 
   const response = await axios
     .get(url, {
