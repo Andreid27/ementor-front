@@ -21,10 +21,12 @@ import Icon from 'src/@core/components/icon'
 
 // ** Demo Tabs Imports
 import TabAccount from 'src/views/pages/account-settings/TabAccount/TabAccount'
-import TabBilling from 'src/views/pages/account-settings/TabBilling'
+
+// import TabBilling from 'src/views/pages/account-settings/TabBilling'
 import TabSecurity from 'src/views/pages/account-settings/TabSecurity'
-import TabConnections from 'src/views/pages/account-settings/TabConnections'
-import TabNotifications from 'src/views/pages/account-settings/TabNotifications'
+
+// import TabConnections from 'src/views/pages/account-settings/TabConnections'
+// import TabNotifications from 'src/views/pages/account-settings/TabNotifications'
 
 const TabList = styled(MuiTabList)(({ theme }) => ({
   border: '0 !important',
@@ -55,7 +57,7 @@ const TabList = styled(MuiTabList)(({ theme }) => ({
   }
 }))
 
-const AccountSettings = ({ tab, apiPricingPlanData }) => {
+const AccountSettings = ({ tab }) => {
   // ** State
   const [activeTab, setActiveTab] = useState(tab)
   const [isLoading, setIsLoading] = useState(false)
@@ -77,10 +79,11 @@ const AccountSettings = ({ tab, apiPricingPlanData }) => {
 
   const tabContentList = {
     account: <TabAccount />,
-    security: <TabSecurity />,
-    connections: <TabConnections />,
-    notifications: <TabNotifications />,
-    billing: <TabBilling apiPricingPlanData={apiPricingPlanData} />
+    security: <TabSecurity />
+
+    // connections: <TabConnections />,
+    // notifications: <TabNotifications />,
+    // billing: <TabBilling apiPricingPlanData={apiPricingPlanData} />
   }
 
   return (
