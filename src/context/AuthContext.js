@@ -66,6 +66,7 @@ const AuthProvider = ({ children }) => {
         window.localStorage.setItem('userData', JSON.stringify(response.data.userData))
         cookies.set('userData', JSON.stringify(response.data.userData), {
           path: '/',
+          domain: '.e-mentor.ro',
           sameSite: 'None',
           secure: true
         })
@@ -88,7 +89,7 @@ const AuthProvider = ({ children }) => {
     setUser(null)
     window.localStorage.removeItem('userData')
     window.localStorage.removeItem(authConfig.storageTokenKeyName)
-    cookies.remove('userData', { path: '/', sameSite: 'None', secure: true })
+    cookies.remove('userData', { path: '/', domain: '.e-mentor.ro', sameSite: 'None', secure: true })
     router.push('/login')
   }
 
