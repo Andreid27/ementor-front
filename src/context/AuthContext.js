@@ -15,6 +15,7 @@ import authConfig from 'src/configs/auth'
 import { useDispatch, useSelector } from 'react-redux'
 import { addUser, deleteTokens, deleteUser, updateTokens } from '../store/apps/user/index' // import addUser and deleteUser actions
 import { fetchData } from 'src/store/apps/dashboard'
+import Cookies from 'universal-cookie'
 
 // ** Defaults
 const defaultProvider = {
@@ -32,6 +33,7 @@ const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(defaultProvider.user)
   const [loading, setLoading] = useState(defaultProvider.loading)
   const userData = useSelector(state => state.user.data)
+  const cookies = new Cookies()
 
   // ** Hooks
   const router = useRouter()
@@ -62,6 +64,11 @@ const AuthProvider = ({ children }) => {
       .then(async response => {
         window.localStorage.setItem(authConfig.storageTokenKeyName, response.data.accessToken)
         window.localStorage.setItem('userData', JSON.stringify(response.data.userData))
+        cookies.set('userData', JSON.stringify(response.data.userData), {
+          path: '/',
+          sameSite: 'None',
+          secure: true
+        })
         setUser({ ...response.data.userData })
         dispatch(updateTokens({ accessToken: response.data.accessToken, refreshToken: response.data.refreshToken }))
         dispatch(addUser(response.data.userData)) // dispatch addUser action with user data
@@ -81,6 +88,7 @@ const AuthProvider = ({ children }) => {
     setUser(null)
     window.localStorage.removeItem('userData')
     window.localStorage.removeItem(authConfig.storageTokenKeyName)
+    cookies.remove('userData', { path: '/', sameSite: 'None', secure: true })
     router.push('/login')
   }
 
