@@ -250,7 +250,7 @@ const PersonalInfoCard = ({ fullProfile, initPrerequire }, ref) => {
               rules={{
                 required: true,
                 pattern: {
-                  value: /^\d\.\d\d$/,
+                  value: /^\d([.,]\d{1,2})?$/,
                   message: 'Acest număr de telefonu este valid.'
                 }
               }}

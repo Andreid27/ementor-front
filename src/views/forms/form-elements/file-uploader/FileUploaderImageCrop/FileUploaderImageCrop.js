@@ -107,6 +107,7 @@ const FileUploaderImageCrop = props => {
         position: 'relative'
       }}
     >
+      <input {...getInputProps()} />
       {error && (
         <div
           style={{
@@ -194,12 +195,10 @@ const FileUploaderImageCrop = props => {
           <Icon icon='tabler:upload' fontSize='1.75rem' />
         </Box>
       )}
-      {files.length ? null : (
-        <>
-          <Typography variant='h5' sx={{ pt: 8 }}>
-            Trage fișierul aici sau click pentru upload.
-          </Typography>
-        </>
+      {!files.length && (
+        <Typography variant='h5' sx={{ pt: 8 }}>
+          Trage fișierul aici sau click pentru upload.
+        </Typography>
       )}
     </Box>
   )
