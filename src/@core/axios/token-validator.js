@@ -19,7 +19,6 @@ export const verifyToken = async token => {
     store.dispatch(deleteTokens())
     window.localStorage.removeItem('userData')
     window.localStorage.removeItem(authConfig.storageTokenKeyName)
-    window.location.replace('/login')
   }
 
   if (decodedToken.exp * 1000 < currentDate.getTime() + 60) {

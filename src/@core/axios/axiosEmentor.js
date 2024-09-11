@@ -57,13 +57,18 @@ apiClient.interceptors.response.use(
       const { status, data } = error.response
 
       // Case 1: If the response is 403, call verifyToken
-      if (status === 403) {
-        store.dispatch(deleteUser())
-        store.dispatch(deleteTokens())
-        window.localStorage.removeItem('userData')
-        window.localStorage.removeItem(authConfig.storageTokenKeyName)
-        window.location.replace('/login')
-      }
+      // if (status === 403) {
+      //   store.dispatch(deleteUser())
+      //   store.dispatch(deleteTokens())
+      //   window.localStorage.removeItem('userData')
+      //   window.localStorage.removeItem(authConfig.storageTokenKeyName)
+      //   toast.error('Sesiunea a expirat. Vă rugăm să vă autentificați din nou.', {
+      //     duration: 5000,
+      //     closeOnClick: true,
+      //     pauseOnHover: true,
+      //     draggable: true
+      //   })
+      // }
 
       // Case 2: If the response body error is EmentorApi, log the error
       if (data && data.exception === 'com.ementor.quiz.core.exceptions.EmentorApiError') {

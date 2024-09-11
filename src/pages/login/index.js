@@ -5,9 +5,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 
 // ** MUI Components
-import Alert from '@mui/material/Alert'
 import Button from '@mui/material/Button'
-import Divider from '@mui/material/Divider'
 import Checkbox from '@mui/material/Checkbox'
 import Typography from '@mui/material/Typography'
 import IconButton from '@mui/material/IconButton'
@@ -18,29 +16,22 @@ import InputAdornment from '@mui/material/InputAdornment'
 import MuiFormControlLabel from '@mui/material/FormControlLabel'
 import e_mentorLogo from 'public/images/e_mentor.ico'
 
-// ** Custom Component Import
 import CustomTextField from 'src/@core/components/mui/text-field'
 
-// ** Icon Imports
 import Icon from 'src/@core/components/icon'
 
-// ** Third Party Imports
 import * as yup from 'yup'
 import { useForm, Controller } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 
-// ** Hooks
 import { useAuth } from 'src/hooks/useAuth'
 import useBgColor from 'src/@core/hooks/useBgColor'
 import { useSettings } from 'src/@core/hooks/useSettings'
 
-// ** Configs
 import themeConfig from 'src/configs/themeConfig'
 
-// ** Layout Import
 import BlankLayout from 'src/@core/layouts/BlankLayout'
 
-// ** Demo Imports
 import FooterIllustrationsV2 from 'src/views/pages/auth/FooterIllustrationsV2'
 import Image from 'next/image'
 
@@ -246,35 +237,6 @@ const LoginPage = () => {
                   Crează-ți cont
                 </Typography>
               </Box>
-              {/* <Divider
-                sx={{
-                  color: 'text.disabled',
-                  '& .MuiDivider-wrapper': { px: 6 },
-                  fontSize: theme.typography.body2.fontSize,
-                  my: theme => `${theme.spacing(6)} !important`
-                }}
-              >
-                or
-              </Divider>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <IconButton href='/' component={Link} sx={{ color: '#497ce2' }} onClick={e => e.preventDefault()}>
-                  <Icon icon='mdi:facebook' />
-                </IconButton>
-                <IconButton href='/' component={Link} sx={{ color: '#1da1f2' }} onClick={e => e.preventDefault()}>
-                  <Icon icon='mdi:twitter' />
-                </IconButton>
-                <IconButton
-                  href='/'
-                  component={Link}
-                  onClick={e => e.preventDefault()}
-                  sx={{ color: theme => (theme.palette.mode === 'light' ? '#272727' : 'grey.300') }}
-                >
-                  <Icon icon='mdi:github' />
-                </IconButton>
-                <IconButton href='/' component={Link} sx={{ color: '#db4437' }} onClick={e => e.preventDefault()}>
-                  <Icon icon='mdi:google' />
-                </IconButton>
-              </Box> */}
             </form>
           </Box>
         </Box>

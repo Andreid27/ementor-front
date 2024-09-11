@@ -1,97 +1,140 @@
-// authContext.js
-// ** React Imports
-import { createContext, useEffect, useState } from 'react'
+import { useEffect, useState, createContext } from 'react';
+import { useRouter } from 'next/router';
+import authConfig from 'src/configs/auth';
+import { useDispatch, useSelector } from 'react-redux';
+import { addUser, deleteTokens, deleteUser, updateTokens } from '../store/apps/user/index';
+import { fetchData } from 'src/store/apps/dashboard';
+import { useKeycloak } from '@react-keycloak/ssr';
+import Cookies from 'universal-cookie';
+import jwt from 'jsonwebtoken';
 
-// ** Next Import
-import { useRouter } from 'next/router'
-
-// ** Axios
-import axios from 'axios'
-
-// ** Config
-import authConfig from 'src/configs/auth'
-
-// ** Redux Imports
-import { useDispatch, useSelector } from 'react-redux'
-import { addUser, deleteTokens, deleteUser, updateTokens } from '../store/apps/user/index' // import addUser and deleteUser actions
-import { fetchData } from 'src/store/apps/dashboard'
-import Cookies from 'universal-cookie'
-
-// ** Defaults
 const defaultProvider = {
   user: null,
   loading: true,
   setUser: () => null,
   setLoading: () => Boolean,
   login: () => Promise.resolve(),
-  logout: () => Promise.resolve()
-}
-const AuthContext = createContext(defaultProvider)
+  logout: () => Promise.resolve(),
+};
+
+const AuthContext = createContext(defaultProvider);
 
 const AuthProvider = ({ children }) => {
-  // ** States
-  const [user, setUser] = useState(defaultProvider.user)
-  const [loading, setLoading] = useState(defaultProvider.loading)
-  const userData = useSelector(state => state.user.data)
-  const cookies = new Cookies()
+  const [user, setUser] = useState(defaultProvider.user);
+  const [loading, setLoading] = useState(defaultProvider.loading);
+  const dispatch = useDispatch();
+  const router = useRouter();
+  const { keycloak, initialized } = useKeycloak();
+  const cookies = new Cookies();
 
-  // ** Hooks
-  const router = useRouter()
-  const dispatch = useDispatch() // get access to dispatch function
+  // Extract necessary fields from the decoded token
+  const extractUserData = (decodedToken) => ({
+    email: decodedToken.email,
+    firstName: decodedToken.given_name,
+    lastName: decodedToken.family_name,
+    role: decodedToken.realm_access.roles.includes('PROFESSOR') ? 'PROFESSOR' : 'STUDENT',
+  });
+
+  // Update user data and tokens
+  const updateAuthData = (token) => {
+    const parsedToken = jwt.decode(token);
+    const extractedUserData = extractUserData(parsedToken);
+
+    // Update cookies
+    cookies.set('userData', JSON.stringify(extractedUserData), {
+      path: '/',
+      domain: '.e-mentor.ro',
+      sameSite: 'None',
+      secure: true,
+    });
+    cookies.set(authConfig.storageTokenKeyName, token, {
+      path: '/',
+      domain: '.e-mentor.ro',
+      sameSite: 'None',
+      secure: true,
+    });
+
+    // Update localStorage
+    window.localStorage.setItem('userData', JSON.stringify(extractedUserData));
+    window.localStorage.setItem(authConfig.storageTokenKeyName, token);
+
+    // Update Redux store and state
+    dispatch(updateTokens({ accessToken: token, refreshToken: keycloak.refreshToken }));
+    dispatch(addUser(extractedUserData));
+    setUser(extractedUserData);
+  };
 
   useEffect(() => {
     const initAuth = async () => {
-      const storedToken = window.localStorage.getItem(authConfig.storageTokenKeyName)
-      if (storedToken) {
-        setLoading(true)
-        if (userData) {
-          setUser(userData)
-          setLoading(false)
+      if (initialized) {
+        if (keycloak.authenticated) {
+          const token = keycloak.token;
+          if (token) {
+            updateAuthData(token);
+            dispatch(fetchData());
+          }
+          setLoading(false);
         } else {
-          // handle the case when there's no user data in local storage
+          keycloak.login();
         }
-      } else {
-        setLoading(false)
       }
+    };
+
+    initAuth();
+  }, [initialized, keycloak, dispatch]);
+
+  useEffect(() => {
+    if (keycloak) {
+      const onTokenRefresh = () => {
+        if (keycloak.token) {
+          updateAuthData(keycloak.token);
+        }
+      };
+
+      // Listen for token refresh events
+      keycloak.onAuthSuccess = onTokenRefresh;
+      keycloak.onAuthRefreshError = onTokenRefresh;
     }
-    initAuth()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [keycloak]);
 
-  const handleLogin = (params, errorCallback) => {
-    axios
-      .post(authConfig.loginEndpoint, params)
-      .then(async response => {
-        window.localStorage.setItem(authConfig.storageTokenKeyName, response.data.accessToken)
-        window.localStorage.setItem('userData', JSON.stringify(response.data.userData))
-        cookies.set('userData', JSON.stringify(response.data.userData), {
-          path: '/',
-          domain: '.e-mentor.ro',
-          sameSite: 'None',
-          secure: true
-        })
-        setUser({ ...response.data.userData })
-        dispatch(updateTokens({ accessToken: response.data.accessToken, refreshToken: response.data.refreshToken }))
-        dispatch(addUser(response.data.userData)) // dispatch addUser action with user data
-        const returnUrl = router.query.returnUrl
-        const redirectURL = returnUrl && returnUrl !== '/' ? returnUrl : '/'
-        router.replace(redirectURL)
-        dispatch(fetchData())
-      })
-      .catch(err => {
-        if (errorCallback) errorCallback(err)
-      })
-  }
+  useEffect(() => {
+    if (user) {
+      const returnUrl = router.query.returnUrl || '/';
+      router.replace(returnUrl);
+    }
+  }, [user]);
 
-  const handleLogout = () => {
-    dispatch(deleteUser()) // dispatch deleteUser action with no payload
-    dispatch(deleteTokens()) // dispatch deleteUser action with no payload
-    setUser(null)
-    window.localStorage.removeItem('userData')
-    window.localStorage.removeItem(authConfig.storageTokenKeyName)
-    cookies.remove('userData', { path: '/', domain: '.e-mentor.ro', sameSite: 'None', secure: true })
-    router.push('/login')
-  }
+  const handleLogin = async () => {
+    if (!keycloak.authenticated) {
+      keycloak.login();
+    }
+  };
+
+  const handleLogout = async () => {
+    // Clear user data and tokens
+    dispatch(deleteUser());
+    dispatch(deleteTokens());
+    setUser(null);
+
+    // Remove cookies and localStorage
+    cookies.remove('userData', {
+      path: '/',
+      domain: '.e-mentor.ro',
+      sameSite: 'None',
+      secure: true,
+    });
+    cookies.remove(authConfig.storageTokenKeyName, {
+      path: '/',
+      domain: '.e-mentor.ro',
+      sameSite: 'None',
+      secure: true,
+    });
+    window.localStorage.removeItem('userData');
+    window.localStorage.removeItem(authConfig.storageTokenKeyName);
+
+    // Logout from Keycloak
+    keycloak.logout();
+  };
 
   const values = {
     user,
@@ -99,10 +142,10 @@ const AuthProvider = ({ children }) => {
     setUser,
     setLoading,
     login: handleLogin,
-    logout: handleLogout
-  }
+    logout: handleLogout,
+  };
 
-  return <AuthContext.Provider value={values}>{children}</AuthContext.Provider>
-}
+  return <AuthContext.Provider value={values}>{children}</AuthContext.Provider>;
+};
 
-export { AuthContext, AuthProvider }
+export { AuthContext, AuthProvider };

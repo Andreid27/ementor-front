@@ -81,9 +81,25 @@ const Guard = ({ children, authGuard, guestGuard }) => {
   }
 }
 
+import cookie from 'cookie'
+import { IncomingMessage } from 'http'
+import { AppProps, AppContext } from 'next/app'
+import { SSRKeycloakProvider, SSRCookies } from '@react-keycloak/ssr'
+
+
+const keycloakCfg = {
+  realm: process.env.NEXT_PUBLIC_KEYCLOAK_REALM,
+  url: process.env.NEXT_PUBLIC_KEYCLOAK_URL,
+  clientId: process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID,
+}
+
+function InitialProps(cookies) {
+  this.cookies = cookies;
+}
+
 // ** Configure JSS & ClassName
 const App = props => {
-  const { Component, emotionCache = clientSideEmotionCache, pageProps } = props
+  const { Component, emotionCache = clientSideEmotionCache, pageProps, cookies } = props
 
   // Variables
   const contentHeightFixed = Component.contentHeightFixed ?? false
@@ -107,30 +123,47 @@ const App = props => {
           <meta name='keywords' content='E-mentor, Admitere, Bac, Pregătire' />
           <meta name='viewport' content='initial-scale=1, width=device-width' />
         </Head>
+        <SSRKeycloakProvider
+          keycloakConfig={keycloakCfg}
+          persistor={SSRCookies(cookies)}
+        >
+          <AuthProvider>
+            <SettingsProvider {...(setConfig ? { pageSettings: setConfig() } : {})}>
+              <SettingsConsumer>
+                {({ settings }) => {
+                  return (
+                    <ThemeComponent settings={settings}>
+                      <Guard authGuard={authGuard} guestGuard={guestGuard}>
+                        <AclGuard aclAbilities={aclAbilities} guestGuard={guestGuard} authGuard={authGuard}>
+                          {getLayout(<Component {...pageProps} />)}
+                        </AclGuard>
+                      </Guard>
+                      <ReactHotToast>
+                        <Toaster position={settings.toastPosition} toastOptions={{ className: 'react-hot-toast' }} />
+                      </ReactHotToast>
+                    </ThemeComponent>
+                  )
+                }}
+              </SettingsConsumer>
+            </SettingsProvider>
+          </AuthProvider>
+        </SSRKeycloakProvider>
 
-        <AuthProvider>
-          <SettingsProvider {...(setConfig ? { pageSettings: setConfig() } : {})}>
-            <SettingsConsumer>
-              {({ settings }) => {
-                return (
-                  <ThemeComponent settings={settings}>
-                    <Guard authGuard={authGuard} guestGuard={guestGuard}>
-                      <AclGuard aclAbilities={aclAbilities} guestGuard={guestGuard} authGuard={authGuard}>
-                        {getLayout(<Component {...pageProps} />)}
-                      </AclGuard>
-                    </Guard>
-                    <ReactHotToast>
-                      <Toaster position={settings.toastPosition} toastOptions={{ className: 'react-hot-toast' }} />
-                    </ReactHotToast>
-                  </ThemeComponent>
-                )
-              }}
-            </SettingsConsumer>
-          </SettingsProvider>
-        </AuthProvider>
       </CacheProvider>
     </Provider>
   )
 }
+function parseCookies(req) {
+  return cookie.parse(req?.headers?.cookie || '')
+}
+
+
+App.getInitialProps = async (AppContext) => {
+  return {
+    cookies: AppContext.ctx.req ? parseCookies(AppContext.ctx.req) : {},
+  }
+}
+
+
 
 export default App
