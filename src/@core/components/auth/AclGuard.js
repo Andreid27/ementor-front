@@ -31,6 +31,7 @@ const AclGuard = props => {
 
   // ** Vars
   let ability
+
   useEffect(() => {
     if (auth.user && auth.user.role && !guestGuard && router.route === '/') {
       console.log(auth.user)

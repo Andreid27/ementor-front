@@ -27,7 +27,6 @@ const AuthProvider = ({ children }) => {
   const { keycloak, initialized } = useKeycloak();
   const cookies = new Cookies();
 
-  // Extract necessary fields from the decoded token
   const extractUserData = (decodedToken) => ({
     email: decodedToken.email,
     firstName: decodedToken.given_name,
@@ -35,12 +34,10 @@ const AuthProvider = ({ children }) => {
     role: decodedToken.realm_access.roles.includes('PROFESSOR') ? 'PROFESSOR' : 'STUDENT',
   });
 
-  // Update user data and tokens
   const updateAuthData = (token) => {
     const parsedToken = jwt.decode(token);
     const extractedUserData = extractUserData(parsedToken);
 
-    // Update cookies
     cookies.set('userData', JSON.stringify(extractedUserData), {
       path: '/',
       domain: '.e-mentor.ro',
@@ -54,15 +51,30 @@ const AuthProvider = ({ children }) => {
       secure: true,
     });
 
-    // Update localStorage
     window.localStorage.setItem('userData', JSON.stringify(extractedUserData));
     window.localStorage.setItem(authConfig.storageTokenKeyName, token);
 
-    // Update Redux store and state
     dispatch(updateTokens({ accessToken: token, refreshToken: keycloak.refreshToken }));
     dispatch(addUser(extractedUserData));
     setUser(extractedUserData);
   };
+
+  const updateToken = (token) => {
+    // Update cookies
+    cookies.set(authConfig.storageTokenKeyName, token, {
+      path: '/',
+      domain: '.e-mentor.ro',
+      sameSite: 'None',
+      secure: true,
+    });
+
+    // Update localStorage
+    window.localStorage.setItem(authConfig.storageTokenKeyName, token);
+
+    // Update Redux store
+    dispatch(updateTokens({ accessToken: token, refreshToken: keycloak.refreshToken }));
+  };
+
 
   useEffect(() => {
     const initAuth = async () => {
@@ -85,15 +97,22 @@ const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     if (keycloak) {
-      const onTokenRefresh = () => {
-        if (keycloak.token) {
-          updateAuthData(keycloak.token);
+      const refreshToken = async () => {
+        try {
+          await keycloak.updateToken(30); // Refresh token if it's about to expire
+          if (keycloak.token) {
+            updateToken(keycloak.token);
+          }
+        } catch (error) {
+          console.error('Failed to refresh token:', error);
+          keycloak.login(); // Redirect to login on error
         }
       };
 
-      // Listen for token refresh events
-      keycloak.onAuthSuccess = onTokenRefresh;
-      keycloak.onAuthRefreshError = onTokenRefresh;
+      // Set up interval to refresh token periodically
+      const intervalId = setInterval(refreshToken, 60000); // Refresh every minute
+
+      return () => clearInterval(intervalId); // Cleanup interval on unmount
     }
   }, [keycloak]);
 
@@ -111,12 +130,10 @@ const AuthProvider = ({ children }) => {
   };
 
   const handleLogout = async () => {
-    // Clear user data and tokens
     dispatch(deleteUser());
     dispatch(deleteTokens());
     setUser(null);
 
-    // Remove cookies and localStorage
     cookies.remove('userData', {
       path: '/',
       domain: '.e-mentor.ro',
@@ -132,7 +149,6 @@ const AuthProvider = ({ children }) => {
     window.localStorage.removeItem('userData');
     window.localStorage.removeItem(authConfig.storageTokenKeyName);
 
-    // Logout from Keycloak
     keycloak.logout();
   };
 
