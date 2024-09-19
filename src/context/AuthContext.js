@@ -78,6 +78,9 @@ const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const initAuth = async () => {
+      console.log("initAuth")
+
+      // debugger
       if (initialized) {
         if (keycloak.authenticated) {
           const token = keycloak.token;
@@ -116,12 +119,12 @@ const AuthProvider = ({ children }) => {
     }
   }, [keycloak]);
 
-  useEffect(() => {
-    if (user) {
-      const returnUrl = router.query.returnUrl || '/';
-      router.replace(returnUrl);
-    }
-  }, [user]);
+  // useEffect(() => {
+  //   if (user) {
+  //     const returnUrl = router.query.returnUrl || '/';
+  //     router.replace(returnUrl);
+  //   }
+  // }, [user]);
 
   const handleLogin = async () => {
     if (!keycloak.authenticated) {

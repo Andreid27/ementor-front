@@ -56,6 +56,11 @@ import 'src/iconify-bundle/icons-bundle-react'
 // ** Global css styles
 import '../../styles/globals.css'
 
+// ** Added imports for cookie handling
+import { useEffect, useState } from 'react'
+import Cookies from 'js-cookie'
+import { parseCookies } from 'nookies'
+
 const clientSideEmotionCache = createEmotionCache()
 
 // ** Pace Loader
@@ -81,16 +86,17 @@ const Guard = ({ children, authGuard, guestGuard }) => {
   }
 }
 
-import cookie from 'cookie'
 import { IncomingMessage } from 'http'
 import { AppProps, AppContext } from 'next/app'
 import { SSRKeycloakProvider, SSRCookies } from '@react-keycloak/ssr'
-
 
 const keycloakCfg = {
   realm: process.env.NEXT_PUBLIC_KEYCLOAK_REALM,
   url: process.env.NEXT_PUBLIC_KEYCLOAK_URL,
   clientId: process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID,
+  onLoad: 'check-sso', // Silently check if the user is logged in
+  checkLoginIframe: true, // Enables the iframe feature for session management
+  enableLogging: true,    // Enables Keycloak logging
 }
 
 function InitialProps(cookies) {
@@ -98,8 +104,18 @@ function InitialProps(cookies) {
 }
 
 // ** Configure JSS & ClassName
-const App = props => {
-  const { Component, emotionCache = clientSideEmotionCache, pageProps, cookies } = props
+function App(props) {
+  const { Component, emotionCache = clientSideEmotionCache, pageProps, initialCookies } = props;
+
+  const [cookies, setCookies] = useState(initialCookies);
+
+  useEffect(() => {
+    // This will run on the client after the component mounts
+    const clientSideCookies = Cookies.get(); // Get all cookies
+    setCookies(clientSideCookies);
+  }, []);
+
+  console.log('cookies  ', cookies)
 
   // Variables
   const contentHeightFixed = Component.contentHeightFixed ?? false
@@ -125,6 +141,44 @@ const App = props => {
         </Head>
         <SSRKeycloakProvider
           keycloakConfig={keycloakCfg}
+          onEvent={(eventType, error) => {
+            // Log each event with detailed information
+            console.log('Keycloak Event:', eventType);
+            if (error) {
+              console.error('Error on Keycloak event:', eventType, error);
+            }
+
+            switch (eventType) {
+              case 'onReady':
+                console.log('Keycloak is ready');
+                break;
+              case 'onAuthSuccess':
+                console.log('User successfully authenticated');
+                break;
+              case 'onAuthError':
+                console.error('Authentication error:', error);
+                break;
+              case 'onAuthRefreshSuccess':
+                console.log('Token was successfully refreshed');
+                break;
+              case 'onAuthRefreshError':
+                console.error('Error refreshing token:', error);
+                break;
+              case 'onAuthLogout':
+                console.log('User logged out');
+                break;
+              case 'onTokenExpired':
+                console.log('Token has expired');
+                break;
+              default:
+                console.log('Unhandled Keycloak event:', eventType);
+            }
+          }}
+          onToken={({ token, idToken }) => {
+            // Log token details for debugging
+            console.log('Token received:', token);
+            console.log('ID Token received:', idToken);
+          }}
           persistor={SSRCookies(cookies)}
         >
           <AuthProvider>
@@ -148,22 +202,18 @@ const App = props => {
             </SettingsProvider>
           </AuthProvider>
         </SSRKeycloakProvider>
-
       </CacheProvider>
     </Provider>
   )
 }
-function parseCookies(req) {
-  return cookie.parse(req?.headers?.cookie || '')
-}
-
 
 App.getInitialProps = async (AppContext) => {
+  // Use parseCookies from nookies for server-side cookie parsing
+  const initialCookies = parseCookies(AppContext.ctx);
+
   return {
-    cookies: AppContext.ctx.req ? parseCookies(AppContext.ctx.req) : {},
-  }
-}
-
-
+    initialCookies
+  };
+};
 
 export default App
