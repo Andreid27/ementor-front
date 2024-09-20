@@ -98,12 +98,6 @@ const keycloakCfg = {
   checkLoginIframe: true, // Enables the iframe feature for session management
   enableLogging: true,    // Enables Keycloak logging
 }
-
-function InitialProps(cookies) {
-  this.cookies = cookies;
-}
-
-// ** Configure JSS & ClassName
 function App(props) {
   const { Component, emotionCache = clientSideEmotionCache, pageProps, initialCookies } = props;
 
