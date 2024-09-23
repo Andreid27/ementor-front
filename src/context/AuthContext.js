@@ -6,7 +6,7 @@ import { createContext, useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 
 // ** Axios
-import axios from 'axios'
+import jwt from 'jsonwebtoken';
 
 // ** Config
 import authConfig from 'src/configs/auth'
@@ -16,6 +16,9 @@ import { useDispatch, useSelector } from 'react-redux'
 import { addUser, deleteTokens, deleteUser, updateTokens } from '../store/apps/user/index' // import addUser and deleteUser actions
 import { fetchData } from 'src/store/apps/dashboard'
 import Cookies from 'universal-cookie'
+import session from 'redux-persist/lib/storage/session';
+import axios from 'axios';
+import store from '../store/index'
 
 // ** Defaults
 const defaultProvider = {
@@ -58,32 +61,42 @@ const AuthProvider = ({ children }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  const extractUserData = (decodedToken) => ({
+    email: decodedToken.email,
+    firstName: decodedToken.given_name,
+    lastName: decodedToken.family_name,
+    role: decodedToken.realm_access.roles.includes('PROFESSOR') ? 'PROFESSOR' : 'STUDENT',
+  });
+
   const handleLogin = (params, errorCallback) => {
-    axios
-      .post(authConfig.loginEndpoint, params)
-      .then(async response => {
-        window.localStorage.setItem(authConfig.storageTokenKeyName, response.data.accessToken)
-        window.localStorage.setItem('userData', JSON.stringify(response.data.userData))
-        cookies.set('userData', JSON.stringify(response.data.userData), {
-          path: '/',
-          domain: '.e-mentor.ro',
-          sameSite: 'None',
-          secure: true
-        })
-        setUser({ ...response.data.userData })
-        dispatch(updateTokens({ accessToken: response.data.accessToken, refreshToken: response.data.refreshToken }))
-        dispatch(addUser(response.data.userData)) // dispatch addUser action with user data
-        const returnUrl = router.query.returnUrl
-        const redirectURL = returnUrl && returnUrl !== '/' ? returnUrl : '/'
-        router.replace(redirectURL)
-        dispatch(fetchData())
-      })
-      .catch(err => {
-        if (errorCallback) errorCallback(err)
-      })
+    const parsedToken = jwt.decode(params.access_token);
+    const extractedUserData = extractUserData(parsedToken);
+
+
+    window.localStorage.setItem(authConfig.storageTokenKeyName, params.access_token)
+    window.localStorage.setItem('userData', extractedUserData)
+    cookies.set('userData', extractedUserData, {
+      path: '/',
+      domain: '.e-mentor.ro',
+      sameSite: 'None',
+      secure: true
+    })
+    setUser({ ...extractedUserData })
+    dispatch(updateTokens({ accessToken: params.access_token, refreshToken: params.refresh_token, sessionState: params.session_state })) // dispatch updateTokens action with tokens
+    dispatch(addUser(extractedUserData)) // dispatch addUser action with user data
+    const returnUrl = router.query.returnUrl
+    const redirectURL = returnUrl && returnUrl !== '/' ? returnUrl : '/'
+    router.replace(redirectURL)
+    dispatch(fetchData())
+
   }
 
   const handleLogout = () => {
+
+    axios.post(authConfig.logoutEndpoint, {
+      client_id: 'e-mentor',
+      refresh_token: getRefreshToken()
+    })
     dispatch(deleteUser()) // dispatch deleteUser action with no payload
     dispatch(deleteTokens()) // dispatch deleteUser action with no payload
     setUser(null)
@@ -103,6 +116,13 @@ const AuthProvider = ({ children }) => {
   }
 
   return <AuthContext.Provider value={values}>{children}</AuthContext.Provider>
+}
+
+function getRefreshToken() {
+  const state = store.getState()
+  let refreshTokens = state.user.tokens.refreshToken
+
+  return refreshTokens
 }
 
 export { AuthContext, AuthProvider }

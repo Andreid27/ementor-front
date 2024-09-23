@@ -6,11 +6,9 @@ import * as apiSpec from '../../apiSpec'
 import { deleteTokens, deleteUser, updateTokens } from 'src/store/apps/user'
 import { AuthProvider, logout as handleLogout } from 'src/context/AuthContext'
 import authConfig from 'src/configs/auth'
-import { useDispatch } from 'react-redux'
-import { AuthContext } from 'src/context/AuthContext'
-import { useRouter } from 'next/router'
 
 export const verifyToken = async token => {
+  var querystring = require('querystring');
   let decodedToken = jwt_decode(token)
   let currentDate = new Date()
 
@@ -25,11 +23,40 @@ export const verifyToken = async token => {
   if (decodedToken.exp * 1000 < currentDate.getTime() + 60) {
     return new Promise(async (resolve, reject) => {
       try {
-        const response = await axios.post(`${apiSpec.PROD_HOST + apiSpec.USER_SERVICE}/refresh-token`, null, {
-          headers: {
-            Authorization: `Bearer ${getRefreshToken()}`
-          }
-        })
+        let accessTokenParams = {
+          grant_type: "refresh_token",
+          client_id: authConfig.clientId,
+          refresh_token: getRefreshToken(),
+        }
+
+        axios
+          .post(authConfig.loginEndpoint, querystring.stringify(accessTokenParams),
+            {
+              headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+              }
+            })
+          .then(async response => {
+            console.log(response)
+            if (response.status === 200) {
+              console.log(response.data)
+              auth.login(response.data, () => {
+                setError('email', {
+                  type: 'manual',
+                  message: 'Email-ul sau Parola sunt invalide'
+                })
+              })
+            } else {
+              window.location.href = authConfig.authCode
+            }
+            console.log(response.data)
+          })
+          .catch(error => {
+            console.log(error)
+
+            // window.location.href = authConfig.authCode
+          })
+
         window.localStorage.setItem(authConfig.storageTokenKeyName, response.data.accessToken)
         store.dispatch(
           updateTokens({ accessToken: response.data.accessToken, refreshToken: response.data.refreshToken })

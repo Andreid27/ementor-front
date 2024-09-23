@@ -240,20 +240,7 @@ const StudentsResultsTable = () => {
     const fetchData = async () => {
       try {
         const [userServiceResponse, quizServiceResponse] = await Promise.all([
-          apiClient.post(apiSpec.USER_SERVICE + '/paginated', {
-            filters: [
-              {
-                key: 'role',
-                operation: 'EQUAL',
-                value: 'STUDENT'
-
-                //TODO continue filter users by role here
-              }
-            ],
-            sorters: [],
-            page: 0,
-            pageSize: 1000
-          }),
+          apiClient.get("service3/users/role/STUDENT"),
           apiClient.post(apiSpec.QUIZ_SERVICE + '/assigned-paginated', {
             filters: [],
             sorters: getSorters(),
@@ -261,8 +248,8 @@ const StudentsResultsTable = () => {
             pageSize: paginationModel.pageSize
           })
         ])
-        dispatch(updateAllStudents(userServiceResponse.data.data))
-        setUsers(userServiceResponse.data.data)
+        dispatch(updateAllStudents(userServiceResponse.data))
+        setUsers(userServiceResponse.data)
         setData(quizServiceResponse.data.data)
         setTotalCount(quizServiceResponse.data.totalCount)
         setLoading(false)

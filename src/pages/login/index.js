@@ -43,6 +43,8 @@ import BlankLayout from 'src/@core/layouts/BlankLayout'
 // ** Demo Imports
 import FooterIllustrationsV2 from 'src/views/pages/auth/FooterIllustrationsV2'
 import Image from 'next/image'
+import FallbackSpinner from 'src/@core/components/spinner'
+import authConfig from 'src/configs/auth'
 
 // ** Styled Components
 const LoginIllustration = styled('img')(({ theme }) => ({
@@ -127,11 +129,11 @@ const LoginPage = () => {
     })
   }
   const imageSource = skin === 'bordered' ? 'auth-v2-login-illustration-bordered' : 'auth-v2-login-illustration'
+  console.log(`${authConfig.authCode}${window.location.protocol + "//" + window.location.host}/callback/`)
+  window.location.href = `${authConfig.authCode}${window.location.protocol + "//" + window.location.host}/callback/`
 
   return (
-    window.location.href = `${process.env.NEXT_PUBLIC_KEYCLOAK_URL}/realms/${process.env.NEXT_PUBLIC_KEYCLOAK_REALM}/protocol/openid-connect/auth?client_id=e-mentor&response_type=code&redirect_uri=${window.location.protocol + "//" + window.location.host}`
-
-    //TODO: Make a callback page and continue the login process
+    <FallbackSpinner />
   )
 }
 LoginPage.getLayout = page => <BlankLayout>{page}</BlankLayout>
