@@ -92,11 +92,17 @@ const AuthProvider = ({ children }) => {
   }
 
   const handleLogout = () => {
-
-    axios.post(authConfig.logoutEndpoint, {
+    var querystring = require('querystring');
+    axios.post(authConfig.logoutEndpoint, querystring.stringify({
       client_id: 'e-mentor',
       refresh_token: getRefreshToken()
-    })
+    }),
+      {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        }
+      }
+    )
     dispatch(deleteUser()) // dispatch deleteUser action with no payload
     dispatch(deleteTokens()) // dispatch deleteUser action with no payload
     setUser(null)
