@@ -23,6 +23,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import * as apiSpec from '../../../../apiSpec'
 import apiClient from 'src/@core/axios/axiosEmentor'
 import user, { addThumbnail } from 'src/store/apps/user'
+import axios from 'axios'
 
 // ** Styled Components
 const BadgeContentSpan = styled('span')(({ theme }) => ({
@@ -58,26 +59,38 @@ const UserDropdown = props => {
   const [imageUrl, setImageUrl] = useState(null)
 
   useEffect(() => {
-    apiClient
-      .get('/service1/profile-data/download/user-thumbnail', {
-        responseType: 'blob' // Set the responseType to 'blob'
-      })
-      .then(response => {
-        // Handle the response as a Blob
-        const imageBlob = response.data
+    if (!userData || !userData.profilePicture) {
+      return
+    }
 
-        // Use the Blob as needed, for example, creating an object URL for displaying it
-        const newImageUrl = URL.createObjectURL(imageBlob)
+    let pictureUrl = new URL(userData.profilePicture)
 
-        // Update state with the new image URL
-        setImageUrl(newImageUrl)
-        dispach(addThumbnail(newImageUrl))
-      })
-      .catch(error => {
-        // Handle errors here
-        console.error('Error:', error)
-      })
+    if (pictureUrl.hostname != 'ementor.ro') {
+      setImageUrl(userData.profilePicture)
+      dispach(addThumbnail(userData.profilePicture))
+    } else {
+      apiClient
+        .get('/service1/profile-data/download/user-thumbnail', {
+          responseType: 'blob' // Set the responseType to 'blob'
+        })
+        .then(response => {
+          setProfilePicture(response)
+        })
+        .catch(error => {
+          // Handle errors here
+          console.error('Error:', error)
+        })
+    }
+
   }, []) // The empty dependency array ensures that this effect runs once when the component mounts
+
+
+  const setProfilePicture = (response) => {
+    const imageBlob = response.data
+    const newImageUrl = URL.createObjectURL(imageBlob)
+    setImageUrl(newImageUrl)
+    dispach(addThumbnail(newImageUrl))
+  }
 
   const handleDropdownOpen = event => {
     setAnchorEl(event.currentTarget)
@@ -122,7 +135,8 @@ const UserDropdown = props => {
           horizontal: 'right'
         }}
       >
-        <Avatar alt='John Doe' src={imageUrl} onClick={handleDropdownOpen} sx={{ width: 38, height: 38 }} />
+        <Avatar alt='John Doe' src={imageUrl} onClick={handleDropdownOpen} sx={{ width: 38, height: 38 }}
+          imgProps={{ referrerPolicy: 'no-referrer' }} />
       </Badge>
       <Menu
         anchorEl={anchorEl}
