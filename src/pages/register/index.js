@@ -15,6 +15,7 @@ import themeConfig from 'src/configs/themeConfig'
 import FooterIllustrationsV2 from 'src/views/pages/auth/FooterIllustrationsV2'
 import RegisterMultiStepsWizard from 'src/views/pages/auth/register-multi-steps'
 import Image from 'next/image'
+import { Button, CircularProgress } from '@mui/material'
 
 // ** Styled Components
 const RegisterMultiStepsIllustration = styled('img')(({ theme }) => ({
@@ -82,7 +83,11 @@ const RegisterMultiSteps = () => {
     </Box>
   )
 }
+
 RegisterMultiSteps.getLayout = page => <BlankLayout>{page}</BlankLayout>
-RegisterMultiSteps.guestGuard = true
+RegisterMultiSteps.acl = {
+  action: 'read',
+  subject: 'student-profile-complete-page'
+}
 
 export default RegisterMultiSteps

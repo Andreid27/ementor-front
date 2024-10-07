@@ -22,10 +22,16 @@ import { useSelector } from 'react-redux'
 import { selectDashboardData } from 'src/store/apps/dashboard'
 import StudentStatsQuestions from './components/StudentStatsQuestions'
 import { CircularProgress } from '@mui/material'
+import { useRouter } from 'next/router'
 
 const AnalyticsDashboard = () => {
   const user = useSelector(selectUser)
   const dashboardData = useSelector(selectDashboardData)
+  const router = useRouter()
+
+  if (user.profileCompleted === false) {
+    router.push('/register')
+  }
 
   return (
     <ApexChartWrapper>

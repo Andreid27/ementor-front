@@ -39,6 +39,8 @@ import { selectTokens, selectUser } from 'src/store/apps/user'
 import axios from 'axios'
 import { useRouter } from 'next/router'
 import { useAuth } from 'src/hooks/useAuth'
+import apiClient from 'src/@core/axios/axiosEmentor'
+import { Button } from '@mui/material'
 
 const steps = [
   {
@@ -100,7 +102,7 @@ const Step = styled(MuiStep)(({ theme }) => ({
 
 const RegisterMultiSteps = () => {
   // ** States
-  const [activeStep, setActiveStep] = useState(0)
+  const [activeStep, setActiveStep] = useState(1)
   const [initPrerequire, setInitPrerequire] = useState({ universities: [], counties: [] })
   const [submitLoading, setSubmitLoading] = useState(false)
   let tokens = useSelector(selectTokens)
@@ -125,15 +127,18 @@ const RegisterMultiSteps = () => {
     university: 'choose',
     speciality: 'choose',
     date: dayjs(),
-    profilePicture: '',
+    profilePicture: null,
     schoolDomain: 'ch',
-    schoolSpeciality: 'ch'
+    schoolSpeciality: 'ch',
+    prefix: '+40',
+    phone: '',
   })
 
   // ** Hooks & Var
   const { settings } = useSettings()
   const smallScreen = useMediaQuery(theme => theme.breakpoints.down('md'))
   const { direction } = settings
+  var querystring = require('querystring');
 
   // Handle Stepper
   const handleNext = props => {
@@ -154,6 +159,7 @@ const RegisterMultiSteps = () => {
 
     let requestBody = {
       pictureId: profile.profilePicture,
+      pictureUrl: user.profilePicture,
       universityId: profile.university,
       specialityId: profile.speciality,
       desiredExamDate: profile.date.toISOString(),
@@ -165,29 +171,36 @@ const RegisterMultiSteps = () => {
       address: data
     }
 
-    const response = await axios.post(apiSpec.PROD_HOST + apiSpec.PROFILE_SERVICE + '/create', requestBody, {
-      headers: {
-        Authorization: `Bearer ${tokens.accessToken}`
-      }
+    apiClient.post(apiSpec.PROD_HOST + apiSpec.PROFILE_SERVICE + '/create', requestBody).then(() => {
+      setSubmitLoading(false)
+      toast.success('Profil creat cu succes')
+
+      const accessTokenParams = {
+        grant_type: 'refresh_token',
+        client_id: authConfig.clientId,
+        refresh_token: getRefreshToken(),
+      };
+
+      axios.post(authConfig.loginEndpoint, querystring.stringify(accessTokenParams), {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then(response => {
+        auth.login(response.data);
+        const returnUrl = router.query.returnUrl
+        const redirectURL = returnUrl && returnUrl !== '/' ? returnUrl : '/'
+        router.replace(redirectURL)
+      }).catch(error => {
+        auth.logout()
+      })
+    }).catch((error) => {
+      setSubmitLoading(false)
+      toast.error('Eroare la crearea profilului')
     })
-
-    setSubmitLoading(false)
-    toast.success('Profil creat cu succes')
-
-    window.localStorage.setItem(authConfig.storageTokenKeyName, tokens.accessToken)
-    window.localStorage.setItem('userData', JSON.stringify(user))
-
-    auth.setUser({ ...user })
-
-    const returnUrl = router.query.returnUrl
-    const redirectURL = returnUrl && returnUrl !== '/' ? returnUrl : '/'
-    router.replace(redirectURL)
   }
 
   const getStepContent = step => {
     switch (step) {
-      case 0:
-        return <StepAccountDetails handleNext={handleNext} />
       case 1:
         return (
           <StepPersonalInfo

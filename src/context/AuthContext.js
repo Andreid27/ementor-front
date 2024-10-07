@@ -66,7 +66,8 @@ const AuthProvider = ({ children }) => {
     firstName: decodedToken.given_name,
     lastName: decodedToken.family_name,
     role: decodedToken.realm_access.roles.includes('PROFESSOR') ? 'PROFESSOR' : 'STUDENT',
-    profilePicture: decodedToken.picture
+    profilePicture: decodedToken.picture,
+    profileCompleted: decodedToken.profile_completed ? decodedToken.profile_completed : false,
   });
 
   const handleLogin = (params, errorCallback) => {

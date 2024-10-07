@@ -225,7 +225,14 @@ const StepBillingDetails = ({ address, setAddress, counties, handlePrev, handleS
           />
         </Grid>
 
-        <Grid item xs={12} sx={{ pt: theme => `${theme.spacing(6)} !important` }}>
+        <Grid item xs={6}>
+          <Button variant='text' sx={{ marginBottom: '30px' }}
+            onClick={() => { auth.logout() }}>
+            Sign Out
+          </Button>
+        </Grid>
+
+        <Grid item xs={6}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
             <Button
               color='secondary'

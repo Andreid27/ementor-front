@@ -5,8 +5,6 @@ import BlankLayout from 'src/@core/layouts/BlankLayout'
 import { useAuth } from 'src/hooks/useAuth'
 import axios from 'axios'
 import authConfig from 'src/configs/auth'
-import { el } from 'date-fns/locale'
-import { redirect } from 'next/dist/server/api-utils'
 
 const KeycloakCallback = () => {
   const [error, setError] = useState(null)
@@ -21,8 +19,6 @@ const KeycloakCallback = () => {
     const sessionState = keycloakParams.get('session_state')
 
     if (authorizationCode) {
-      console.log("MUIE")
-
       let accessTokenParams = {
         grant_type: "authorization_code",
         client_id: authConfig.clientId,
@@ -40,7 +36,6 @@ const KeycloakCallback = () => {
         .then(async response => {
           console.log(response)
           if (response.status === 200) {
-            console.log(response.data)
             auth.login(response.data, () => {
               setError('email', {
                 type: 'manual',
@@ -60,9 +55,15 @@ const KeycloakCallback = () => {
     }
   }, [])
 
+  let accessToken = window.localStorage.getItem(authConfig.storageTokenKeyName)
+
+  const redirect = () => {
+    console.log("Redirecting")
+    window.location.href = '/'
+  }
 
   return (
-    <FallbackSpinner />
+    accessToken ? redirect : <FallbackSpinner />
   )
 }
 KeycloakCallback.getLayout = page => <BlankLayout>{page}</BlankLayout>

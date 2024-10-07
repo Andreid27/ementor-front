@@ -110,6 +110,7 @@ export const appUsersSlice = createSlice({
       })
       .addCase(deleteTokens.fulfilled, (state, action) => {
         state.tokens = action.payload
+        state.thumbnailUrl = ''
       })
       .addCase(updateUserHasProfile.fulfilled, (state, action) => {
         state.data.hasProfile = action.payload
