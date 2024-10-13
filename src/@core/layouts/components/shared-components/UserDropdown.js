@@ -59,18 +59,15 @@ const UserDropdown = props => {
   const [imageUrl, setImageUrl] = useState(null)
 
   useEffect(() => {
-    if (!userData || !userData.profilePicture) {
-      return
-    }
 
-    let pictureUrl = new URL(userData.profilePicture)
 
-    if (pictureUrl.hostname != 'ementor.ro') {
+
+    if (userData.profilePicture) {
       setImageUrl(userData.profilePicture)
       dispach(addThumbnail(userData.profilePicture))
     } else {
       apiClient
-        .get('/service1/profile-data/download/user-thumbnail', {
+        .get(`${apiSpec.THUMBNAIL_CONTROLLER}/download`, {
           responseType: 'blob' // Set the responseType to 'blob'
         })
         .then(response => {

@@ -41,6 +41,7 @@ import { useRouter } from 'next/router'
 import { useAuth } from 'src/hooks/useAuth'
 import apiClient from 'src/@core/axios/axiosEmentor'
 import { Button } from '@mui/material'
+import { t } from 'i18next'
 
 const steps = [
   {
@@ -168,7 +169,8 @@ const RegisterMultiSteps = () => {
       about: profile.about,
       schoolDomain: profile.schoolDomain,
       schoolSpeciality: profile.schoolSpeciality,
-      address: data
+      address: data,
+      phone: profile.prefix + profile.phone,
     }
 
     apiClient.post(apiSpec.PROD_HOST + apiSpec.PROFILE_SERVICE + '/create', requestBody).then(() => {
@@ -178,7 +180,7 @@ const RegisterMultiSteps = () => {
       const accessTokenParams = {
         grant_type: 'refresh_token',
         client_id: authConfig.clientId,
-        refresh_token: getRefreshToken(),
+        refresh_token: tokens.refreshToken,
       };
 
       axios.post(authConfig.loginEndpoint, querystring.stringify(accessTokenParams), {

@@ -4,7 +4,9 @@ export const PROD_HOST = process.env.NEXT_PUBLIC_PROD_HOST
 
 export const USER_SERVICE = '/service1/user'
 
-export const PROFILE_SERVICE = '/service2/profile'
+export const THUMBNAIL_CONTROLLER = '/thumbnail'
+
+export const PROFILE_SERVICE = '/profile'
 
 export const QUIZ_SERVICE = '/service3/quiz'
 
