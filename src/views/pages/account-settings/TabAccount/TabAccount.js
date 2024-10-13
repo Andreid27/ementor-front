@@ -125,15 +125,15 @@ const TabAccount = () => {
   // Define an async function to fetch the data
   const fetchData = async () => {
     try {
-      const prerequireResponse = await axios.get(apiSpec.PROD_HOST + apiSpec.PROFILE_SERVICE + '/profile-prerequire')
+      const prerequireResponse = await axios.get(apiSpec.PROD_HOST + apiSpec.PROFILE_CONTROLLER + '/profile-prerequire')
       setInitPrerequire(prerequireResponse.data)
 
-      const fullProfileResponse = await apiClient.get(apiSpec.PROFILE_SERVICE + '/get-full')
+      const fullProfileResponse = await apiClient.get(apiSpec.PROFILE_CONTROLLER + '/get-full')
       setFullProfile(fullProfileResponse.data)
 
       if (fullProfileResponse.data.pictureId) {
 
-        const profilePictureResponse = await apiClient.get(`${apiSpec.PROFILE_SERVICE}-image/download/${fullProfileResponse.data.pictureId}`, {
+        const profilePictureResponse = await apiClient.get(`${apiSpec.PROFILE_CONTROLLER}-image/download/${fullProfileResponse.data.pictureId}`, {
           responseType: 'blob'
         })
         const imageBlob = profilePictureResponse.data
@@ -177,7 +177,7 @@ const TabAccount = () => {
     if (value === 'yes') {
       debugger
       apiClient
-        .delete(apiSpec.PROFILE_SERVICE + '/' + fullProfile.user.userId)
+        .delete(apiSpec.PROFILE_CONTROLLER + '/' + fullProfile.user.userId)
         .then(async response => {
           logout()
           dispatch(updateTokens({ accessToken: '', refreshToken: '' }))
@@ -232,7 +232,7 @@ const TabAccount = () => {
     const requestBody = buildRequestBody()
     if (userData.data.hasProfile === false) {
       apiClient
-        .post(apiSpec.PROFILE_SERVICE + '/create', requestBody)
+        .post(apiSpec.PROFILE_CONTROLLER + '/create', requestBody)
         .then(async response => {
           toast.success('Profil creat cu succes!')
           dispatch(updateUserHasProfile(true))
@@ -247,7 +247,7 @@ const TabAccount = () => {
         })
     } else {
       apiClient
-        .put(apiSpec.PROFILE_SERVICE + '/update', requestBody)
+        .put(apiSpec.PROFILE_CONTROLLER + '/update', requestBody)
         .then(async response => {
           toast.success('Cont actualizat cu succes!')
         })

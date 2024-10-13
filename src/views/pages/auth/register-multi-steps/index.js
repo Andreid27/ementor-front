@@ -173,7 +173,7 @@ const RegisterMultiSteps = () => {
       phone: profile.prefix + profile.phone,
     }
 
-    apiClient.post(apiSpec.PROD_HOST + apiSpec.PROFILE_SERVICE + '/create', requestBody).then(() => {
+    apiClient.post(apiSpec.PROD_HOST + apiSpec.PROFILE_CONTROLLER + '/create', requestBody).then(() => {
       setSubmitLoading(false)
       toast.success('Profil creat cu succes')
 
