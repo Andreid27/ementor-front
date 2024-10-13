@@ -175,8 +175,9 @@ const TabAccount = () => {
   const handleConfirmation = value => {
     handleClose()
     if (value === 'yes') {
+      debugger
       apiClient
-        .delete(apiSpec.USER_SERVICE + '/delete')
+        .delete(apiSpec.PROFILE_SERVICE + '/' + fullProfile.user.userId)
         .then(async response => {
           logout()
           dispatch(updateTokens({ accessToken: '', refreshToken: '' }))
