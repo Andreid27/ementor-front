@@ -5,15 +5,11 @@ import { useEffect, useState } from 'react'
 import Box from '@mui/material/Box'
 import Table from '@mui/material/Table'
 import Paper from '@mui/material/Paper'
-import Toolbar from '@mui/material/Toolbar'
-import Tooltip from '@mui/material/Tooltip'
 import { visuallyHidden } from '@mui/utils'
-import { alpha } from '@mui/material/styles'
 import TableRow from '@mui/material/TableRow'
 import TableBody from '@mui/material/TableBody'
 import TableCell from '@mui/material/TableCell'
 import TableHead from '@mui/material/TableHead'
-import IconButton from '@mui/material/IconButton'
 import Typography from '@mui/material/Typography'
 import TableContainer from '@mui/material/TableContainer'
 import TableSortLabel from '@mui/material/TableSortLabel'
@@ -23,9 +19,8 @@ import TablePagination from '@mui/material/TablePagination'
 import Icon from 'src/@core/components/icon'
 import apiClient from 'src/@core/axios/axiosEmentor'
 import * as apiSpec from '../../../apiSpec'
-import { tr } from 'date-fns/locale'
 import { CardHeader, LinearProgress, Rating } from '@mui/material'
-import { useRouter } from 'next/router'
+import { useTheme } from '@emotion/react'
 
 const headCells = [
   {
@@ -107,6 +102,7 @@ const EnhancedTable = props => {
   const [quizzes, setQuizzes] = useState([])
   const [loading, setLoading] = useState(true)
   const [totalCount, setTotalCount] = useState(0)
+  const theme = useTheme()
 
   useEffect(() => {
     apiClient
@@ -184,6 +180,35 @@ const EnhancedTable = props => {
   // Avoid a layout jump when reaching the last page with empty rows.
   const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - totalCount) : 0
 
+  function hexToRgba(hex, opacity) {
+    // Remove the hash at the start if it's there
+    hex = hex.replace(/^#/, '');
+
+    // Parse r, g, b values
+    let bigint = parseInt(hex, 16);
+    let r = (bigint >> 16) & 255;
+    let g = (bigint >> 8) & 255;
+    let b = bigint & 255;
+
+    // Return RGBA string
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  }
+
+  function calculateRowColor(correctPercentage) {
+    if (correctPercentage == 0) {
+      return hexToRgba(theme.palette.info.light, 0);  // 30% intensity
+    }
+    if (correctPercentage < 0.5) {
+      return hexToRgba(theme.palette.error.light, 0.1);  // 30% intensity
+    } else if (correctPercentage < 0.8) {
+      return hexToRgba(theme.palette.warning.light, 0.1);  // 30% intensity
+    } else {
+      return hexToRgba(theme.palette.primary.light, 0.1);  // 30% intensity
+    }
+  }
+
+
+
   return (
     <>
       <CardHeader title='Testele tale' />
@@ -221,6 +246,7 @@ const EnhancedTable = props => {
                     {quizzes.map((row, index) => {
                       const isItemSelected = isSelected(row.id)
                       const labelId = `enhanced-table-checkbox-${index}`
+                      const correctPercentage = row.correctAnswers ? row.correctAnswers / row.questionsCount : 0
 
                       return (
                         <TableRow
@@ -230,6 +256,7 @@ const EnhancedTable = props => {
                           selected={isItemSelected}
                           aria-checked={isItemSelected}
                           onClick={event => handleClick(event, row)}
+                          style={{ cursor: 'pointer', backgroundColor: calculateRowColor(correctPercentage) }}
                         >
                           <TableCell component='th' id={labelId} scope='row' padding='none'>
                             {row.title}

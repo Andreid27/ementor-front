@@ -32,6 +32,8 @@ const data = [
   { pv: 50, name: '21/12' }
 ]
 
+//TODO continue from here to add this information in the dashboard-stats endpoint
+
 const CustomTooltip = props => {
   // ** Props
   const { active, payload } = props
@@ -46,7 +48,7 @@ const CustomTooltip = props => {
   return null
 }
 
-const RechartsLineChart = ({ direction }) => {
+const LastTestResults = ({ direction }) => {
 
   return (
     <Card>
@@ -96,4 +98,4 @@ const RechartsLineChart = ({ direction }) => {
   )
 }
 
-export default RechartsLineChart
+export default LastTestResults

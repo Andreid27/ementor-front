@@ -23,6 +23,7 @@ import { selectDashboardData } from 'src/store/apps/dashboard'
 import StudentStatsQuestions from './components/StudentStatsQuestions'
 import { CircularProgress } from '@mui/material'
 import { useRouter } from 'next/router'
+import LastTestResults from './components/LastTestResults'
 
 const AnalyticsDashboard = () => {
   const user = useSelector(selectUser)
@@ -64,6 +65,9 @@ const AnalyticsDashboard = () => {
               <Grid item xs={12} md={6}>
                 <StudentStatsQuestions questions={dashboardData.questions} />
               </Grid>
+              {/* <Grid item xs={12} md={6}>
+                <LastTestResults direction={'ltr'} />
+              </Grid> */}
             </>
           ) : (
             <CircularProgress />

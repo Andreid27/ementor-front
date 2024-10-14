@@ -17,7 +17,6 @@ const defineRulesFor = (role, profileCompleted, subject) => {
     can(['read'], 'acl-page')
     can(['read'], 'professor-pages')
   } else if (role === 'STUDENT') {
-    console.log('profileCompleted', profileCompleted)
     if (profileCompleted) {
       can(['read'], 'student-pages')
     } else {

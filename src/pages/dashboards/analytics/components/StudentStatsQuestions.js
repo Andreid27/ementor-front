@@ -116,18 +116,28 @@ const StudentStatsQuestions = props => {
     ]
   }
 
+  function handleColorChange(options) {
+    if (correctPercentage === 'NaN') return
+
+    if (correctPercentage < 50) {
+      options.colors = [hexToRGBA(theme.palette.error.main, 1)]
+      options.fill.gradient.gradientToColors = [theme.palette.error.main]
+    } else if (correctPercentage < 75) {
+      options.colors = [hexToRGBA(theme.palette.warning.main, 1)]
+      options.fill.gradient.gradientToColors = [theme.palette.warning.main]
+    } else {
+      options.colors = [hexToRGBA(theme.palette.primary.main, 1)]
+      options.fill.gradient.gradientToColors = [theme.palette.primary.main]
+    }
+
+    return options
+  }
+
   return (
     <Card>
       <CardHeader
         title='Evoluția ta'
         subheader='Aici poți vedea progresul tău de-a lungul testelor parcurse 😊'
-
-        // action={
-        //   <OptionsMenu
-        //     options={['Refresh', 'Edit', 'Share']}
-        //     iconButtonProps={{ size: 'small', sx: { color: 'text.disabled' } }}
-        //   />
-        // }
       />
       <CardContent>
         <Grid container spacing={6}>
@@ -157,7 +167,10 @@ const StudentStatsQuestions = props => {
             ))}
           </Grid>
           <Grid item xs={12} sm={7} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <ReactApexcharts type='radialBar' height={325} options={options} series={[correctPercentage]} />
+            {correctPercentage === 'NaN' ? <Typography variant='h2'>Nu există încă suficiente date.</Typography> :
+              <ReactApexcharts type='radialBar' height={325} options={handleColorChange(options)} series={[correctPercentage]} />
+
+            }
           </Grid>
         </Grid>
       </CardContent>
