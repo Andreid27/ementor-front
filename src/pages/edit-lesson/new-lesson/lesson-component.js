@@ -136,7 +136,6 @@ const LessonComponent = props => {
           apiClient
             .post(apiSpec.LESSON_SERVICE + '/lesson/create', values)
             .then(async response => {
-              console.log('Success')
               resolve(response)
               if (response.status === 201) {
                 reset({ ...defaultValues })

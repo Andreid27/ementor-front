@@ -72,7 +72,6 @@ const AssignationModal = props => {
     apiClient
       .post(apiSpec.LESSON_SERVICE + '/lesson/assign', assignments)
       .then(response => {
-        console.log(assignments)
         setSelectedLessons([])
         setSelectedUsers([])
         toast.success('Testele au fost asignate cu succes!')

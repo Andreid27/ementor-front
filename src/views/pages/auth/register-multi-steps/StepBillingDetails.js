@@ -27,7 +27,6 @@ const StepBillingDetails = ({ address, setAddress, counties, handlePrev, handleS
   const [values, setValues] = useState(address)
 
   useEffect(() => {
-    console.log(address)
     setValues(address)
   }, [])
 
@@ -41,10 +40,6 @@ const StepBillingDetails = ({ address, setAddress, counties, handlePrev, handleS
   const onSubmit = async data => {
     let newValues = getValues()
     setAddress(newValues)
-
-    console.log(newValues)
-    console.log(address)
-
     handleSubmitProfile(newValues)
   }
 

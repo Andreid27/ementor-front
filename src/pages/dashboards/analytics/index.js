@@ -24,11 +24,14 @@ import StudentStatsQuestions from './components/StudentStatsQuestions'
 import { CircularProgress } from '@mui/material'
 import { useRouter } from 'next/router'
 import LastTestResults from './components/LastTestResults'
+import LessonStatsOverall from './components/LessonStatsOverall'
 
 const AnalyticsDashboard = () => {
+  const router = useRouter()
   const user = useSelector(selectUser)
   const dashboardData = useSelector(selectDashboardData)
-  const router = useRouter()
+  const quizServiceData = dashboardData.quizService
+  const lessonServiceData = dashboardData.lessonService
 
   if (user.profileCompleted === false) {
     router.push('/register')
@@ -57,17 +60,20 @@ const AnalyticsDashboard = () => {
           <Grid item xs={12} md={6}>
             <AnalyticsEarningReports />
           </Grid> */}
-          {dashboardData ? (
+          {quizServiceData ? (
             <>
               <Grid item xs={12} md={6}>
-                <CongratulationsQuizzes user={user} quizzes={dashboardData.quizzes} />
+                <CongratulationsQuizzes user={user} quizzes={quizServiceData.quizzes} />
               </Grid>
               <Grid item xs={12} md={6}>
-                <StudentStatsQuestions questions={dashboardData.questions} />
+                <LessonStatsOverall data={lessonServiceData} />
               </Grid>
-              {/* <Grid item xs={12} md={6}>
-                <LastTestResults direction={'ltr'} />
-              </Grid> */}
+              <Grid item xs={12} md={6}>
+                <StudentStatsQuestions questions={quizServiceData.questions} />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <LastTestResults direction={'ltr'} data={quizServiceData} />
+              </Grid>
             </>
           ) : (
             <CircularProgress />

@@ -294,7 +294,6 @@ const StudentsResultsTable = () => {
   }
 
   const handleViewAttempt = params => {
-    console.log(params.row.id)
     Router.push(`/review-attempt/${params.row.id}`)
   }
 

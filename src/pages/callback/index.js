@@ -45,7 +45,6 @@ const KeycloakCallback = () => {
           } else {
             window.location.href = authConfig.authCode
           }
-          console.log(response.data)
         })
         .catch(error => {
           console.log(error)

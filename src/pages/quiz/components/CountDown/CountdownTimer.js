@@ -15,7 +15,6 @@ const CountdownTimer = props => {
   } else {
     remainingTime = endTime - startTime
   }
-  console.log(props.initialTimeRemaining)
 
   return (
     <>

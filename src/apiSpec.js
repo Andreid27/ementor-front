@@ -13,3 +13,5 @@ export const PROFILE_CONTROLLER = PROFILE_SERVICE + '/profile'
 export const QUIZ_SERVICE = '/service3/quiz'
 
 export const LESSON_SERVICE = '/service4'
+
+export const LESSON_CONTROLLER = LESSON_SERVICE + '/lesson'

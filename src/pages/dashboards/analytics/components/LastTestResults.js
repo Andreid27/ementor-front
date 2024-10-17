@@ -13,26 +13,8 @@ import Icon from 'src/@core/components/icon'
 
 // ** Custom Components Imports
 import CustomChip from 'src/@core/components/mui/chip'
+import { useTheme } from '@emotion/react'
 
-const data = [
-  { pv: 280, name: '7/12' },
-  { pv: 200, name: '8/12' },
-  { pv: 220, name: '9/12' },
-  { pv: 180, name: '10/12' },
-  { pv: 270, name: '11/12' },
-  { pv: 250, name: '12/12' },
-  { pv: 70, name: '13/12' },
-  { pv: 90, name: '14/12' },
-  { pv: 200, name: '15/12' },
-  { pv: 150, name: '16/12' },
-  { pv: 160, name: '17/12' },
-  { pv: 100, name: '18/12' },
-  { pv: 150, name: '19/12' },
-  { pv: 100, name: '20/12' },
-  { pv: 50, name: '21/12' }
-]
-
-//TODO continue from here to add this information in the dashboard-stats endpoint
 
 const CustomTooltip = props => {
   // ** Props
@@ -40,7 +22,7 @@ const CustomTooltip = props => {
   if (active && payload) {
     return (
       <div className='recharts-custom-tooltip'>
-        <Typography sx={{ fontSize: theme => theme.typography.body2.fontSize }}>{`${payload[0].value}%`}</Typography>
+        <Typography sx={{ fontSize: theme => theme.typography.body2.fontSize }}>{`${payload[0].payload.correctAnswers}/${payload[0].payload.totalQuestions} = ${payload[0].value}%`}</Typography>
       </div>
     )
   }
@@ -48,52 +30,145 @@ const CustomTooltip = props => {
   return null
 }
 
-const LastTestResults = ({ direction }) => {
+const LastTestResults = ({ direction, data }) => {
+  const theme = useTheme()
+  const graphDataSort = data.lastMonthQuizzesResults.map(item => ({ ...item }))
+  graphDataSort.sort((a, b) => new Date(a.date) - new Date(b.date))
+
+  let correctAnswers = 0
+  let totalQuestions = 0
+
+
+  graphDataSort.forEach(item => {
+    const date = new Date(item.date)
+    item.date = `${date.getDate()}/${date.getMonth() + 1}`
+    correctAnswers += item.correctAnswers
+    totalQuestions += item.totalQuestions
+    item.result = parseFloat(item.result).toFixed(2)
+  })
+  const graphData = graphDataSort
+  let monthAverage = parseFloat(correctAnswers * 100 / totalQuestions).toFixed(2)
+  function getMonthDelta(data) {
+    if (data && data.questions && data.questions.totalQuestions === 0) {
+      return [0, 'info']
+    }
+    let totalAvarage = data.questions.correctQuestions * 100 / data.questions.totalQuestions
+    let delta = parseFloat(monthAverage - totalAvarage).toFixed(2)
+    if (delta < 0) {
+      return [Math.abs(delta), 'error']
+    } else if (delta == 0) {
+      return [delta, 'info']
+    } else {
+      return [delta, 'success']
+    }
+  }
+  let [monthDelta, monthDeltaStatus] = getMonthDelta(data)
+
+  function getChipContent(monthDeltaStatus) {
+
+    if (monthDeltaStatus === 'error') {
+      return (
+        <>
+          <Icon icon='tabler:arrow-down' fontSize='1rem' />
+          <span>{monthDelta}%</span>
+        </>
+      )
+    } else if (monthDeltaStatus === 'success') {
+      return (
+        <>
+          <Icon icon='tabler:arrow-up' fontSize='1rem' />
+          <span>{monthDelta}%</span>
+        </>
+      )
+    } else {
+      return (
+        <>
+          <Icon icon='tabler:point' fontSize='1rem' />
+          <span>{monthDelta}%</span>
+        </>
+      )
+    }
+  }
+
+  function getMonthAverageColor(monthAverage) {
+    if (monthAverage >= 80) {
+      return theme.palette.success.main
+    } else if (monthAverage > 50) {
+      return theme.palette.warning.main
+    } else {
+      return theme.palette.error.main
+    }
+  }
+
 
   return (
     <Card>
-      <CardHeader
-        title='Balance'
-        subheader='Commercial networks & enterprises'
-        subheaderTypographyProps={{ sx: { color: theme => `${theme.palette.text.disabled} !important` } }}
-        sx={{
-          flexDirection: ['column', 'row'],
-          alignItems: ['flex-start', 'center'],
-          '& .MuiCardHeader-action': { mb: 0 },
-          '& .MuiCardHeader-content': { mb: [2, 0] }
-        }}
-        action={
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Typography variant='h6' sx={{ mr: 5 }}>
-              $221,267
-            </Typography>
-            <CustomChip
-              skin='light'
-              color='success'
-              sx={{ fontWeight: 500, borderRadius: 1, fontSize: theme => theme.typography.body2.fontSize }}
-              label={
-                <Box sx={{ display: 'flex', alignItems: 'center', '& svg': { mr: 1 } }}>
-                  <Icon icon='tabler:arrow-up' fontSize='1rem' />
-                  <span>22%</span>
-                </Box>
-              }
-            />
-          </Box>
-        }
-      />
-      <CardContent>
-        <Box sx={{ height: 350 }}>
-          <ResponsiveContainer>
-            <LineChart height={350} data={data} style={{ direction }} margin={{ left: -20 }}>
-              <CartesianGrid />
-              <XAxis dataKey='name' reversed={direction === 'rtl'} />
-              <YAxis orientation={direction === 'rtl' ? 'right' : 'left'} />
-              <Tooltip content={CustomTooltip} />
-              <Line dataKey='pv' stroke='#ff9f43' strokeWidth={3} />
-            </LineChart>
-          </ResponsiveContainer>
-        </Box>
-      </CardContent>
+      {graphData.length ? (
+        <>
+          <CardHeader
+            title='Rezultate teste lunare'
+            subheader='Rezultatele tale din ultimile 30 de zile.'
+            subheaderTypographyProps={{ sx: { color: theme => `${theme.palette.text.disabled} !important` } }}
+            sx={{
+              flexDirection: ['column', 'row'],
+              alignItems: ['flex-start', 'center'],
+              '& .MuiCardHeader-action': { mb: 0 },
+              '& .MuiCardHeader-content': { mb: [2, 0] }
+            }}
+            action={
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Typography variant='h6' color={getMonthAverageColor(monthAverage)} sx={{ mr: 5, fontWeight: 1000 }}>
+                  %{monthAverage}
+                </Typography>
+                <CustomChip
+                  skin='light'
+                  color={monthDeltaStatus}
+                  sx={{ fontWeight: 500, borderRadius: 1, fontSize: theme => theme.typography.body2.fontSize }}
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center', '& svg': { mr: 1 } }}>
+                      {getChipContent(monthDeltaStatus)}
+                    </Box>
+                  }
+                />
+              </Box>
+            }
+          />
+          <CardContent>
+            <Box sx={{ height: 350 }}>
+
+              <ResponsiveContainer>
+                <LineChart height={350} data={graphData} style={{ direction }} margin={{ left: -20 }}>
+                  <CartesianGrid />
+                  <XAxis dataKey='date' reversed={direction === 'rtl'} />
+                  <YAxis orientation={direction === 'rtl' ? 'right' : 'left'} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Line dataKey='result' stroke={getMonthAverageColor(monthAverage)} strokeWidth={3} />
+                </LineChart>
+              </ResponsiveContainer>
+            </Box>
+          </CardContent>
+        </>
+      ) : (
+        <>
+          <CardHeader
+            title='Rezultate teste lunare'
+            subheader='Rezultatele tale din ultimile 30 de zile.'
+            subheaderTypographyProps={{ sx: { color: theme => `${theme.palette.text.disabled} !important` } }}
+            sx={{
+              flexDirection: ['column', 'row'],
+              alignItems: ['flex-start', 'center'],
+              '& .MuiCardHeader-action': { mb: 0 },
+              '& .MuiCardHeader-content': { mb: [2, 0] }
+            }}
+          />
+          <CardContent>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+              <Typography variant='h6'>Nu ai susținut niciun test în ultimele 30 de zile</Typography>
+            </Box>
+          </CardContent>
+        </>
+      )}
+
     </Card>
   )
 }

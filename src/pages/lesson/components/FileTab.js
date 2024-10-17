@@ -34,9 +34,7 @@ const FileTab = ({ file, index }) => {
       })
       .then(response => {
         setFileContent(response.data)
-        console.log('File Content:', response.data)
         setFileURL(URL.createObjectURL(response.data))
-        console.log('File URL:', fileURL)
         setLoading(false)
       })
 

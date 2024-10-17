@@ -17,7 +17,7 @@ import ReactApexcharts from 'src/@core/components/react-apexcharts'
 import { hexToRGBA } from 'src/@core/utils/hex-to-rgba'
 
 const StudentStatsQuestions = props => {
-  const data = [
+  let data = [
     {
       subtitle: props.questions.correctQuestions,
       title: 'Întrebări corecte',
@@ -30,7 +30,8 @@ const StudentStatsQuestions = props => {
       avatarIcon: 'tabler:circle-dashed-x'
     }
   ]
-  const correctPercentage = ((props.questions.correctQuestions / props.questions.totalQuestions) * 100).toFixed(2)
+  let correctPercentage = ((props.questions.correctQuestions / props.questions.totalQuestions) * 100).toFixed(2)
+
 
   // ** Hook
   const theme = useTheme()
@@ -136,8 +137,8 @@ const StudentStatsQuestions = props => {
   return (
     <Card>
       <CardHeader
-        title='Evoluția ta'
-        subheader='Aici poți vedea progresul tău de-a lungul testelor parcurse 😊'
+        title='Evoluția ta per total'
+        subheader='Aici poți vedea progresul tău de-a lungul tuturor testelor parcurse 😊'
       />
       <CardContent>
         <Grid container spacing={6}>
