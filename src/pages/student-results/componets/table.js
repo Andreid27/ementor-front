@@ -29,6 +29,8 @@ import { useDispatch } from 'react-redux'
 import { fetchData, updateAllStudents } from 'src/store/apps/user'
 import Router from 'next/router'
 import DeleteDialogTransition from './DeleteDialogTransition'
+import extractProfilePicture from 'src/@core/axios/profile-picture-extractor'
+import profilePictureDownloader from 'src/@core/axios/profile-picture-downloader'
 
 // ** renders client column
 const renderClient = (params, user) => {
@@ -39,7 +41,7 @@ const renderClient = (params, user) => {
   const stateNum = parseInt(user.id, 16) % states.length
   const color = states[stateNum]
   if (row.avatar && row.avatar.length) {
-    return <CustomAvatar src={`/images/avatars/${row.avatar}`} sx={{ mr: 3, width: '1.875rem', height: '1.875rem' }} />
+    return <CustomAvatar src={row.avatar} sx={{ mr: 3, width: '1.875rem', height: '1.875rem' }} />
   } else {
     return (
       <CustomAvatar skin='light' color={color} sx={{ mr: 3, fontSize: '.8rem', width: '1.875rem', height: '1.875rem' }}>
@@ -250,7 +252,8 @@ const StudentsResultsTable = () => {
         ])
         dispatch(updateAllStudents(userServiceResponse.data))
         setUsers(userServiceResponse.data)
-        setData(quizServiceResponse.data.data)
+        const processedData = await processStudentQuizzesData(quizServiceResponse.data.data, userServiceResponse.data);
+        setData(processedData)
         setTotalCount(quizServiceResponse.data.totalCount)
         setLoading(false)
       } catch (error) {
@@ -261,28 +264,37 @@ const StudentsResultsTable = () => {
     fetchData()
   }, [])
 
-  //Fetch data from api after modifying datagrid filters/sorters/pagination
   useEffect(() => {
     if (isInitialRender.current) {
-      isInitialRender.current = false
+      isInitialRender.current = false;
 
-      return
+      return;
     }
-    apiClient
-      .post(apiSpec.QUIZ_SERVICE + '/assigned-paginated', {
-        filters: [],
-        sorters: getSorters(),
-        page: paginationModel.page,
-        pageSize: paginationModel.pageSize
-      })
-      .then(response => {
-        setData(response.data.data)
-        setTotalCount(response.data.totalCount)
-      })
-      .catch(error => {
-        console.log(error)
-      })
-  }, [paginationModel, filteredData, sortModel])
+
+    // Define the async function
+    const fetchAndProcessData = async () => {
+      try {
+        const response = await apiClient.post(apiSpec.QUIZ_SERVICE + '/assigned-paginated', {
+          filters: [],
+          sorters: getSorters(),
+          page: paginationModel.page,
+          pageSize: paginationModel.pageSize,
+        });
+
+        // Await the processing of student quizzes data
+        const processedData = await processStudentQuizzesData(response.data.data, users);
+
+        // Set the processed data to the state
+        setData(processedData);
+        setTotalCount(response.data.totalCount);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    // Call the async function
+    fetchAndProcessData();
+  }, [paginationModel, filteredData, sortModel]);
 
   const getSorters = () => {
     const apiSortingConfig = sortModel.map(sortItem => ({
@@ -291,6 +303,40 @@ const StudentsResultsTable = () => {
     }))
 
     return apiSortingConfig
+  }
+
+  const processStudentQuizzesData = async (data, users) => {
+    const usersOnPage = data.map(row => row.studentId)
+    let uniqueUsers = [...new Set(usersOnPage)];
+    let processedUsersList = []
+    for (const userId of uniqueUsers) {
+      const user = users.find(user => user.id === userId)
+      if (user) {
+        const processedUser = extractProfilePicture(user)
+        processedUsersList.push(processedUser)
+      }
+    }
+
+    const result = await Promise.all(
+      processedUsersList.map(async profilePicture => {
+        if (profilePicture.type === 'API') {
+          const avatar = await profilePictureDownloader(profilePicture.url, profilePicture.userId);
+
+          return { ...profilePicture, avatar: avatar || null };
+        }
+        else if (profilePicture.type === 'EXTERNAL') {
+          return { ...profilePicture, avatar: profilePicture.url };
+        }
+        else {
+          return { ...profilePicture, avatar: null };
+        }
+      }));
+
+    return data.map(row => {
+      const user = result.find(user => user.userId === row.studentId)
+
+      return { ...row, avatar: user.avatar }
+    })
   }
 
   const handleViewAttempt = params => {

@@ -28,6 +28,8 @@ import { useDispatch } from 'react-redux'
 import { fetchData, updateAllStudents } from 'src/store/apps/user'
 import Router from 'next/router'
 import DeleteDialogTransition from './componets/DeleteDialogTransition'
+import extractProfilePicture from 'src/@core/axios/profile-picture-extractor'
+import profilePictureDownloader from 'src/@core/axios/profile-picture-downloader'
 
 // ** renders client column
 const renderClient = (params, user) => {
@@ -39,7 +41,7 @@ const renderClient = (params, user) => {
   const color = states[stateNum]
 
   if (row.avatar && row.avatar.length) {
-    return <CustomAvatar src={`/images/avatars/${row.avatar}`} sx={{ mr: 3, width: '1.875rem', height: '1.875rem' }} />
+    return <CustomAvatar src={row.avatar} sx={{ mr: 3, width: '1.875rem', height: '1.875rem' }} />
   } else {
     return (
       <CustomAvatar skin='light' color={color} sx={{ mr: 3, fontSize: '.8rem', width: '1.875rem', height: '1.875rem' }}>
@@ -267,7 +269,7 @@ const StudentsLessonsTable = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [userServiceResponse, quizServiceResponse] = await Promise.all([
+        const [userServiceResponse, lessonServiceResponse] = await Promise.all([
           apiClient.get("service3/users/role/STUDENT"),
           apiClient.post(apiSpec.LESSON_SERVICE + '/lesson/assigned-paginated', {
             filters: [],
@@ -278,8 +280,9 @@ const StudentsLessonsTable = () => {
         ])
         dispatch(updateAllStudents(userServiceResponse.data))
         setUsers(userServiceResponse.data)
-        setData(quizServiceResponse.data.data)
-        setTotalCount(quizServiceResponse.data.totalCount)
+        const processedData = await processStudentLessonsData(lessonServiceResponse.data.data, userServiceResponse.data);
+        setData(processedData)
+        setTotalCount(lessonServiceResponse.data.totalCount)
         setLoading(false)
       } catch (error) {
         console.error(error)
@@ -303,8 +306,9 @@ const StudentsLessonsTable = () => {
         page: paginationModel.page,
         pageSize: paginationModel.pageSize
       })
-      .then(response => {
-        setData(response.data.data)
+      .then(async response => {
+        const processedData = await processStudentLessonsData(response.data.data, users);
+        setData(processedData)
         setTotalCount(response.data.totalCount)
       })
       .catch(error => {
@@ -319,6 +323,40 @@ const StudentsLessonsTable = () => {
     }))
 
     return apiSortingConfig
+  }
+
+  const processStudentLessonsData = async (data, users) => {
+    const usersOnPage = data.map(row => row.userId)
+    let uniqueUsers = [...new Set(usersOnPage)];
+    let processedUsersList = []
+    for (const userId of uniqueUsers) {
+      const user = users.find(user => user.id === userId)
+      if (user) {
+        const processedUser = extractProfilePicture(user)
+        processedUsersList.push(processedUser)
+      }
+    }
+
+    const result = await Promise.all(
+      processedUsersList.map(async profilePicture => {
+        if (profilePicture.type === 'API') {
+          const avatar = await profilePictureDownloader(profilePicture.url, profilePicture.userId);
+
+          return { ...profilePicture, avatar: avatar || null };
+        }
+        else if (profilePicture.type === 'EXTERNAL') {
+          return { ...profilePicture, avatar: profilePicture.url };
+        }
+        else {
+          return { ...profilePicture, avatar: null };
+        }
+      }));
+
+    return data.map(row => {
+      const user = result.find(user => user.userId === row.userId)
+
+      return { ...row, avatar: user.avatar }
+    })
   }
 
   const handleViewLesson = params => {
