@@ -6,23 +6,9 @@ import apiClient from 'src/@core/axios/axiosEmentor'
 
 // ** Fetch Users
 export const fetchData = createAsyncThunk('appUsers/fetchData', async () => {
-  const response = await apiClient
-    .post(apiSpec.USER_SERVICE + '/paginated', {
-      filters: [
-        {
-          key: 'role',
-          operation: 'EQUAL',
-          value: 'STUDENT'
-
-          //TODO continue filter users by role here
-        }
-      ],
-      sorters: [],
-      page: 0,
-      pageSize: 1000
-    })
+  const response = await apiClient.get("service3/users/role/STUDENT")
     .then(response => {
-      return response.data.data
+      return response.data
     })
     .catch(error => {
       console.log(error)
@@ -78,7 +64,7 @@ export const selectUser = state => state.user.data
 
 export const selectThumbnail = state => state.user.tokens
 
-export const selectAllStudents = state => state.user.allStudents
+export const selectAllStudents = (state) => state.user?.allStudents || [];
 
 export const appUsersSlice = createSlice({
   name: 'appUsers',
