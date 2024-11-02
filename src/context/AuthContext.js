@@ -1,3 +1,4 @@
+// authContext.js
 // ** React Imports
 import { createContext, useEffect, useState } from 'react'
 
@@ -9,6 +10,11 @@ import axios from 'axios'
 
 // ** Config
 import authConfig from 'src/configs/auth'
+
+// ** Redux Imports
+import { useDispatch, useSelector } from 'react-redux'
+import { addUser, deleteTokens, deleteUser, updateTokens } from '../store/apps/user/index' // import addUser and deleteUser actions
+import { fetchData } from 'src/store/apps/dashboard'
 
 // ** Defaults
 const defaultProvider = {
@@ -25,34 +31,23 @@ const AuthProvider = ({ children }) => {
   // ** States
   const [user, setUser] = useState(defaultProvider.user)
   const [loading, setLoading] = useState(defaultProvider.loading)
+  const userData = useSelector(state => state.user.data)
 
   // ** Hooks
   const router = useRouter()
+  const dispatch = useDispatch() // get access to dispatch function
+
   useEffect(() => {
     const initAuth = async () => {
       const storedToken = window.localStorage.getItem(authConfig.storageTokenKeyName)
       if (storedToken) {
         setLoading(true)
-        await axios
-          .get(authConfig.meEndpoint, {
-            headers: {
-              Authorization: storedToken
-            }
-          })
-          .then(async response => {
-            setLoading(false)
-            setUser({ ...response.data.userData })
-          })
-          .catch(() => {
-            localStorage.removeItem('userData')
-            localStorage.removeItem('refreshToken')
-            localStorage.removeItem('accessToken')
-            setUser(null)
-            setLoading(false)
-            if (authConfig.onTokenExpiration === 'logout' && !router.pathname.includes('login')) {
-              router.replace('/login')
-            }
-          })
+        if (userData) {
+          setUser(userData)
+          setLoading(false)
+        } else {
+          // handle the case when there's no user data in local storage
+        }
       } else {
         setLoading(false)
       }
@@ -65,14 +60,15 @@ const AuthProvider = ({ children }) => {
     axios
       .post(authConfig.loginEndpoint, params)
       .then(async response => {
-        params.rememberMe
-          ? window.localStorage.setItem(authConfig.storageTokenKeyName, response.data.accessToken)
-          : null
-        const returnUrl = router.query.returnUrl
+        window.localStorage.setItem(authConfig.storageTokenKeyName, response.data.accessToken)
+        window.localStorage.setItem('userData', JSON.stringify(response.data.userData))
         setUser({ ...response.data.userData })
-        params.rememberMe ? window.localStorage.setItem('userData', JSON.stringify(response.data.userData)) : null
+        dispatch(updateTokens({ accessToken: response.data.accessToken, refreshToken: response.data.refreshToken }))
+        dispatch(addUser(response.data.userData)) // dispatch addUser action with user data
+        const returnUrl = router.query.returnUrl
         const redirectURL = returnUrl && returnUrl !== '/' ? returnUrl : '/'
         router.replace(redirectURL)
+        dispatch(fetchData())
       })
       .catch(err => {
         if (errorCallback) errorCallback(err)
@@ -80,6 +76,8 @@ const AuthProvider = ({ children }) => {
   }
 
   const handleLogout = () => {
+    dispatch(deleteUser()) // dispatch deleteUser action with no payload
+    dispatch(deleteTokens()) // dispatch deleteUser action with no payload
     setUser(null)
     window.localStorage.removeItem('userData')
     window.localStorage.removeItem(authConfig.storageTokenKeyName)

@@ -7,6 +7,9 @@ const navigation = () => {
         {
           icon: 'tabler:chart-pie-2',
           title: 'Analytics',
+          subject: 'studen-pages',
+          title: 'Home page',
+          action: 'read',
           path: '/dashboards/analytics'
         },
         {
@@ -128,7 +131,6 @@ const navigation = () => {
           icon: 'tabler:brand-tabler'
         },
         {
-          
           title: 'Cards',
           icon: 'tabler:id',
           children: [
@@ -237,7 +239,7 @@ const navigation = () => {
             {
               title: 'More',
               path: '/components/more'
-            },
+            }
           ]
         }
       ]
@@ -530,7 +532,7 @@ const navigation = () => {
             {
               title: 'Input Mask',
               path: '/forms/form-elements/input-mask'
-            },
+            }
           ]
         },
         {

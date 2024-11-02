@@ -9,6 +9,9 @@ import Typography from '@mui/material/Typography'
 import { styled } from '@mui/material/styles'
 import useMediaQuery from '@mui/material/useMediaQuery'
 import MuiStep from '@mui/material/Step'
+import * as apiSpec from '../../../../apiSpec'
+import jwt_decode from 'jwt-decode'
+import authConfig from 'src/configs/auth'
 
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
@@ -29,22 +32,29 @@ import { hexToRGBA } from 'src/@core/utils/hex-to-rgba'
 
 // ** Styled Components
 import StepperWrapper from 'src/@core/styles/mui/stepper'
+import { toast } from 'react-hot-toast'
+import dayjs from 'dayjs'
+import { useSelector } from 'react-redux'
+import { selectTokens, selectUser } from 'src/store/apps/user'
+import axios from 'axios'
+import { useRouter } from 'next/router'
+import { useAuth } from 'src/hooks/useAuth'
 
 const steps = [
   {
-    title: 'Account',
-    icon: 'tabler:smart-home',
-    subtitle: 'Account Details'
+    title: 'Cont',
+    icon: 'tabler:at',
+    subtitle: 'Detalii cont'
   },
   {
     title: 'Personal',
     icon: 'tabler:users',
-    subtitle: 'Enter Information'
+    subtitle: 'Detalii personale'
   },
   {
-    title: 'Billing',
-    icon: 'tabler:file-text',
-    subtitle: 'Payment Details'
+    title: 'Adresa',
+    icon: 'tabler:smart-home',
+    subtitle: 'Adresa de domiciliu'
   }
 ]
 
@@ -91,6 +101,34 @@ const Step = styled(MuiStep)(({ theme }) => ({
 const RegisterMultiSteps = () => {
   // ** States
   const [activeStep, setActiveStep] = useState(0)
+  const [initPrerequire, setInitPrerequire] = useState({ universities: [], counties: [] })
+  const [submitLoading, setSubmitLoading] = useState(false)
+  let tokens = useSelector(selectTokens)
+  const auth = useAuth()
+  let user = useSelector(selectUser)
+
+  const router = useRouter()
+
+  const [address, setAddress] = useState({
+    countyId: 'choose',
+    city: '',
+    street: '',
+    number: '',
+    block: '',
+    staircase: '',
+    apartment: ''
+  })
+
+  const [profile, setProfile] = useState({
+    school: '',
+    schoolGrade: '',
+    university: 'choose',
+    speciality: 'choose',
+    date: dayjs(),
+    profilePicture: '',
+    schoolDomain: 'ch',
+    schoolSpeciality: 'ch'
+  })
 
   // ** Hooks & Var
   const { settings } = useSettings()
@@ -98,14 +136,52 @@ const RegisterMultiSteps = () => {
   const { direction } = settings
 
   // Handle Stepper
-  const handleNext = () => {
+  const handleNext = props => {
+    if (activeStep === 1) {
+      setProfile(props)
+    }
     setActiveStep(activeStep + 1)
   }
 
   const handlePrev = () => {
-    if (activeStep !== 0) {
+    if (activeStep > 1) {
       setActiveStep(activeStep - 1)
     }
+  }
+
+  const handleSubmitProfile = async data => {
+    setSubmitLoading(true)
+
+    let requestBody = {
+      pictureId: profile.profilePicture,
+      universityId: profile.university,
+      specialityId: profile.speciality,
+      desiredExamDate: profile.date.toISOString(),
+      school: profile.school,
+      schoolGrade: profile.schoolGrade,
+      about: profile.about,
+      schoolDomain: profile.schoolDomain,
+      schoolSpeciality: profile.schoolSpeciality,
+      address: data
+    }
+
+    const response = await axios.post(apiSpec.PROD_HOST + apiSpec.PROFILE_SERVICE + '/create', requestBody, {
+      headers: {
+        Authorization: `Bearer ${tokens.accessToken}`
+      }
+    })
+
+    setSubmitLoading(false)
+    toast.success('Profil creat cu succes')
+
+    window.localStorage.setItem(authConfig.storageTokenKeyName, tokens.accessToken)
+    window.localStorage.setItem('userData', JSON.stringify(user))
+
+    auth.setUser({ ...user })
+
+    const returnUrl = router.query.returnUrl
+    const redirectURL = returnUrl && returnUrl !== '/' ? returnUrl : '/'
+    router.replace(redirectURL)
   }
 
   const getStepContent = step => {
@@ -113,9 +189,27 @@ const RegisterMultiSteps = () => {
       case 0:
         return <StepAccountDetails handleNext={handleNext} />
       case 1:
-        return <StepPersonalInfo handleNext={handleNext} handlePrev={handlePrev} />
+        return (
+          <StepPersonalInfo
+            handleNext={handleNext}
+            handlePrev={handlePrev}
+            initPrerequire={initPrerequire}
+            setInitPrerequire={setInitPrerequire}
+            profile={profile}
+            setProfile={setProfile}
+          />
+        )
       case 2:
-        return <StepBillingDetails handlePrev={handlePrev} />
+        return (
+          <StepBillingDetails
+            address={address}
+            setAddress={setAddress}
+            handlePrev={handlePrev}
+            counties={initPrerequire.counties}
+            handleSubmitProfile={handleSubmitProfile}
+            submitLoading={submitLoading}
+          />
+        )
       default:
         return null
     }
@@ -139,7 +233,7 @@ const RegisterMultiSteps = () => {
             const RenderAvatar = activeStep >= index ? CustomAvatar : Avatar
 
             return (
-              <Step key={index} onClick={() => setActiveStep(index)}>
+              <Step key={index}>
                 <StepLabel>
                   <div className='step-label'>
                     <RenderAvatar

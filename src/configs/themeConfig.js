@@ -6,7 +6,7 @@
  */
 const themeConfig = {
   // ** Layout Configs
-  templateName: 'Vuexy' /* App Name */,
+  templateName: 'E-mentor' /* App Name */,
   layout: 'vertical' /* vertical | horizontal */,
   mode: 'light' /* light | dark | semi-dark /*! Note: semi-dark value will only work for Vertical Layout */,
   direction: 'ltr' /* ltr | rtl */,
@@ -33,7 +33,7 @@ const themeConfig = {
   // ** Other Configs
   responsiveFontSizes: false /* true | false */,
   disableRipple: false /* true | false */,
-  disableCustomizer: false /* true | false */,
+  disableCustomizer: true /* true | false */,
   toastPosition: 'top-right' /* top-left | top-center | top-right | bottom-left | bottom-center | bottom-right */
 }
 

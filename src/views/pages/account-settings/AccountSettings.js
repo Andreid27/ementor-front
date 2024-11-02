@@ -20,7 +20,7 @@ import CircularProgress from '@mui/material/CircularProgress'
 import Icon from 'src/@core/components/icon'
 
 // ** Demo Tabs Imports
-import TabAccount from 'src/views/pages/account-settings/TabAccount'
+import TabAccount from 'src/views/pages/account-settings/TabAccount/TabAccount'
 import TabBilling from 'src/views/pages/account-settings/TabBilling'
 import TabSecurity from 'src/views/pages/account-settings/TabSecurity'
 import TabConnections from 'src/views/pages/account-settings/TabConnections'
@@ -113,7 +113,7 @@ const AccountSettings = ({ tab, apiPricingPlanData }) => {
                     </Box>
                   }
                 />
-                <Tab
+                {/* <Tab
                   value='billing'
                   label={
                     <Box sx={{ display: 'flex', alignItems: 'center', ...(!hideText && { '& svg': { mr: 2 } }) }}>
@@ -121,8 +121,9 @@ const AccountSettings = ({ tab, apiPricingPlanData }) => {
                       {!hideText && 'Billing'}
                     </Box>
                   }
-                />
-                <Tab
+                /> */}
+                {/* TODO add when is needed */}
+                {/* <Tab
                   value='notifications'
                   label={
                     <Box sx={{ display: 'flex', alignItems: 'center', ...(!hideText && { '& svg': { mr: 2 } }) }}>
@@ -139,7 +140,7 @@ const AccountSettings = ({ tab, apiPricingPlanData }) => {
                       {!hideText && 'Connections'}
                     </Box>
                   }
-                />
+                /> */}
               </TabList>
             </Grid>
             <Grid item xs={12}>

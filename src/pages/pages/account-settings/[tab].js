@@ -13,7 +13,8 @@ export const getStaticPaths = () => {
     paths: [
       { params: { tab: 'account' } },
       { params: { tab: 'security' } },
-      { params: { tab: 'billing' } },
+
+      // { params: { tab: 'billing' } }, TODO add when is needed, for now commented by me
       { params: { tab: 'notifications' } },
       { params: { tab: 'connections' } }
     ],
@@ -31,6 +32,11 @@ export const getStaticProps = async ({ params }) => {
       apiPricingPlanData: data.pricingPlans
     }
   }
+}
+
+AccountSettingsTab.acl = {
+  action: 'read',
+  subject: 'common-view'
 }
 
 export default AccountSettingsTab

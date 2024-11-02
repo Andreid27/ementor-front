@@ -1,24 +1,81 @@
 const navigation = () => {
   return [
     {
-      title: 'Dashboards',
       icon: 'tabler:smart-home',
+      title: 'Analytics',
+      subject: 'student-pages',
+      title: 'Home page',
+      action: 'read',
+      path: '/dashboards/analytics'
+    },
+    {
+      icon: 'tabler:presentation',
+      title: 'Lessons',
+      badgeContent: 'Nou',
+      badgeColor: 'error',
+      subject: 'student-pages',
+      title: 'Cursuri',
+      action: 'read',
+      path: '/lessons'
+    },
+    {
+      icon: 'tabler:certificate',
+      title: 'Quizzes',
+      subject: 'student-pages',
+      title: 'Teste',
+      action: 'read',
+      path: '/quizzes'
+    },
+    {
+      path: '/acl',
+      action: 'read',
+      subject: 'acl-page',
+      icon: 'tabler:layout-dashboard',
+      title: 'Dashboard'
+    },
+    {
+      sectionTitle: 'Cursuri',
+      action: 'read',
+      subject: 'professor-pages'
+    },
+    {
+      icon: 'tabler:presentation',
+      title: 'Lessons',
       badgeContent: 'new',
       badgeColor: 'error',
-      children: [
-        {
-          title: 'Analytics',
-          path: '/dashboards/analytics'
-        },
-        {
-          title: 'CRM',
-          path: '/dashboards/crm'
-        },
-        {
-          title: 'eCommerce',
-          path: '/dashboards/ecommerce'
-        }
-      ]
+      subject: 'professor-pages',
+      title: 'Cursuri',
+      action: 'read',
+      path: '/all-lessons'
+    },
+    {
+      icon: 'tabler:presentation-analytics',
+      title: 'Lessons',
+      subject: 'professor-pages',
+      title: 'Rezultate cursuri',
+      action: 'read',
+      path: '/student-lessons'
+    },
+    {
+      sectionTitle: 'Teste',
+      action: 'read',
+      subject: 'professor-pages'
+    },
+    {
+      icon: 'tabler:list-check',
+      title: 'Quizzes',
+      subject: 'professor-pages',
+      title: 'Teste',
+      action: 'read',
+      path: '/all-quizzes'
+    },
+    {
+      icon: 'tabler:report-analytics',
+      title: 'Results',
+      subject: 'professor-pages',
+      title: 'Rezultate teste',
+      action: 'read',
+      path: '/student-results'
     },
     {
       sectionTitle: 'Apps & Pages'
@@ -346,7 +403,6 @@ const navigation = () => {
       icon: 'tabler:brand-tabler'
     },
     {
-      
       title: 'Cards',
       icon: 'tabler:id',
       children: [
@@ -457,7 +513,7 @@ const navigation = () => {
         {
           title: 'More',
           path: '/components/more'
-        },
+        }
       ]
     },
     {
@@ -518,7 +574,7 @@ const navigation = () => {
         {
           title: 'Input Mask',
           path: '/forms/form-elements/input-mask'
-        },
+        }
       ]
     },
     {
@@ -567,13 +623,7 @@ const navigation = () => {
         }
       ]
     },
-    {
-      path: '/acl',
-      action: 'read',
-      subject: 'acl-page',
-      icon: 'tabler:shield',
-      title: 'Access Control'
-    },
+
     {
       title: 'Others',
       icon: 'tabler:dots',

@@ -1,5 +1,5 @@
 // ** React Imports
-import { useState, Fragment } from 'react'
+import { useState, Fragment, useEffect } from 'react'
 
 // ** Next Import
 import { useRouter } from 'next/router'
@@ -19,6 +19,10 @@ import Icon from 'src/@core/components/icon'
 
 // ** Context
 import { useAuth } from 'src/hooks/useAuth'
+import { useDispatch, useSelector } from 'react-redux'
+import * as apiSpec from '../../../../apiSpec'
+import apiClient from 'src/@core/axios/axiosEmentor'
+import user, { addThumbnail } from 'src/store/apps/user'
 
 // ** Styled Components
 const BadgeContentSpan = styled('span')(({ theme }) => ({
@@ -41,13 +45,39 @@ const UserDropdown = props => {
 
   // ** States
   const [anchorEl, setAnchorEl] = useState(null)
+  const userData = useSelector(state => state.user.data)
 
   // ** Hooks
   const router = useRouter()
   const { logout } = useAuth()
+  const dispach = useDispatch()
 
   // ** Vars
   const { direction } = settings
+
+  const [imageUrl, setImageUrl] = useState(null)
+
+  useEffect(() => {
+    apiClient
+      .get('/service1/profile-data/download/user-thumbnail', {
+        responseType: 'blob' // Set the responseType to 'blob'
+      })
+      .then(response => {
+        // Handle the response as a Blob
+        const imageBlob = response.data
+
+        // Use the Blob as needed, for example, creating an object URL for displaying it
+        const newImageUrl = URL.createObjectURL(imageBlob)
+
+        // Update state with the new image URL
+        setImageUrl(newImageUrl)
+        dispach(addThumbnail(newImageUrl))
+      })
+      .catch(error => {
+        // Handle errors here
+        console.error('Error:', error)
+      })
+  }, []) // The empty dependency array ensures that this effect runs once when the component mounts
 
   const handleDropdownOpen = event => {
     setAnchorEl(event.currentTarget)
@@ -92,12 +122,7 @@ const UserDropdown = props => {
           horizontal: 'right'
         }}
       >
-        <Avatar
-          alt='John Doe'
-          src='/images/avatars/1.png'
-          onClick={handleDropdownOpen}
-          sx={{ width: 38, height: 38 }}
-        />
+        <Avatar alt='John Doe' src={imageUrl} onClick={handleDropdownOpen} sx={{ width: 38, height: 38 }} />
       </Badge>
       <Menu
         anchorEl={anchorEl}
@@ -117,38 +142,44 @@ const UserDropdown = props => {
                 horizontal: 'right'
               }}
             >
-              <Avatar alt='John Doe' src='/images/avatars/1.png' sx={{ width: '2.5rem', height: '2.5rem' }} />
+              <Avatar alt='John Doe' src={imageUrl} sx={{ width: '2.5rem', height: '2.5rem' }} />
             </Badge>
             <Box sx={{ display: 'flex', ml: 2.5, alignItems: 'flex-start', flexDirection: 'column' }}>
-              <Typography sx={{ fontWeight: 500 }}>John Doe</Typography>
-              <Typography variant='body2'>Admin</Typography>
+              <Typography sx={{ fontWeight: 500 }}>
+                {userData.firstName} {userData.lastName}
+              </Typography>
+              {userData && userData.role != null && userData.role != '' && (
+                <Typography variant='body2'>
+                  {userData.role.charAt(0).toUpperCase() + userData.role.slice(1).toLowerCase()}
+                </Typography>
+              )}
             </Box>
           </Box>
         </Box>
         <Divider sx={{ my: theme => `${theme.spacing(2)} !important` }} />
-        <MenuItemStyled sx={{ p: 0 }} onClick={() => handleDropdownClose('/pages/user-profile/profile')}>
+        {/* <MenuItemStyled sx={{ p: 0 }} onClick={() => handleDropdownClose('/pages/user-profile/profile')}>
           <Box sx={styles}>
             <Icon icon='tabler:user-check' />
-            My Profile
+            Profilul Meu
           </Box>
-        </MenuItemStyled>
+        </MenuItemStyled> */}
         <MenuItemStyled sx={{ p: 0 }} onClick={() => handleDropdownClose('/pages/account-settings/account')}>
           <Box sx={styles}>
             <Icon icon='tabler:settings' />
-            Settings
+            Setări
           </Box>
         </MenuItemStyled>
-        <MenuItemStyled sx={{ p: 0 }} onClick={() => handleDropdownClose('/pages/account-settings/billing')}>
+        {/* <MenuItemStyled sx={{ p: 0 }} onClick={() => handleDropdownClose('/pages/account-settings/billing')}>
           <Box sx={styles}>
             <Icon icon='tabler:credit-card' />
-            Billing
+            Plăți
           </Box>
         </MenuItemStyled>
         <Divider sx={{ my: theme => `${theme.spacing(2)} !important` }} />
         <MenuItemStyled sx={{ p: 0 }} onClick={() => handleDropdownClose('/pages/help-center')}>
           <Box sx={styles}>
             <Icon icon='tabler:lifebuoy' />
-            Help
+            Ajutor
           </Box>
         </MenuItemStyled>
         <MenuItemStyled sx={{ p: 0 }} onClick={() => handleDropdownClose('/pages/faq')}>
@@ -160,9 +191,9 @@ const UserDropdown = props => {
         <MenuItemStyled sx={{ p: 0 }} onClick={() => handleDropdownClose('/pages/pricing')}>
           <Box sx={styles}>
             <Icon icon='tabler:currency-dollar' />
-            Pricing
+            Prețuri
           </Box>
-        </MenuItemStyled>
+        </MenuItemStyled> */}
         <Divider sx={{ my: theme => `${theme.spacing(2)} !important` }} />
         <MenuItemStyled sx={{ p: 0 }} onClick={handleLogout}>
           <Box sx={styles}>

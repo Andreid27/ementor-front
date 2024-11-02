@@ -124,14 +124,15 @@ const AnalyticsSupportTracker = () => {
   return (
     <Card>
       <CardHeader
-        title='Support Tracker'
-        subheader='Last 7 Days'
-        action={
-          <OptionsMenu
-            options={['Refresh', 'Edit', 'Share']}
-            iconButtonProps={{ size: 'small', sx: { color: 'text.disabled' } }}
-          />
-        }
+        title='Evoluție student'
+        subheader='Total activități'
+
+        // action={
+        //   <OptionsMenu
+        //     options={['Refresh', 'Edit', 'Share']}
+        //     iconButtonProps={{ size: 'small', sx: { color: 'text.disabled' } }}
+        //   />
+        // }
       />
       <CardContent>
         <Grid container spacing={6}>

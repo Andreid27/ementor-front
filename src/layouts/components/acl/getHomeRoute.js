@@ -1,9 +1,12 @@
 /**
  *  Set Home URL based on User Roles
  */
-const getHomeRoute = role => {
-  if (role === 'client') return '/acl'
-  else return '/dashboards/analytics'
+const getHomeRoute = user => {
+  const role = user.role
+  if (role === 'STUDENT') {
+    return user.hasProfile === false ? '/pages/account-settings/account/' : '/dashboards/analytics'
+  } else if (role === 'PROFESSOR') return '/acl'
+  else return '/dashboards/crm'
 }
 
 export default getHomeRoute
