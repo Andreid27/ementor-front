@@ -4,11 +4,8 @@ import Grid from '@mui/material/Grid'
 import Button from '@mui/material/Button'
 import MenuItem from '@mui/material/MenuItem'
 import Typography from '@mui/material/Typography'
-import FormControl from '@mui/material/FormControl'
-import InputAdornment from '@mui/material/InputAdornment'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import * as apiSpec from '../../../../apiSpec'
-import * as source from 'src/views/forms/form-elements/file-uploader/FileUploaderSourceCode'
 
 // ** Custom Component Import
 import CustomTextField from 'src/@core/components/mui/text-field'
@@ -17,27 +14,23 @@ import CustomTextField from 'src/@core/components/mui/text-field'
 import Icon from 'src/@core/components/icon'
 import axios from 'axios'
 import { useEffect, useState } from 'react'
-import FileUploaderRestrictions from 'src/views/forms/form-elements/file-uploader/FileUploaderRestrictions'
-import CardSnippet from 'src/@core/components/card-snippet'
-import FileUploaderSingle from 'src/views/forms/form-elements/file-uploader/FileUploaderSingle'
-import { Card, CardContent, CardHeader, CircularProgress, Fade, Modal } from '@mui/material'
+import { Avatar, Card, CardContent, CardHeader, CircularProgress, Fade, Modal } from '@mui/material'
 import { useSelector } from 'react-redux'
-import { selectAccessToken, selectTokens } from 'src/store/apps/user'
+import { selectUser } from 'src/store/apps/user'
 import FileUploaderImageCrop from 'src/views/forms/form-elements/file-uploader/FileUploaderImageCrop/FileUploaderImageCrop'
 import CropEasy from 'src/views/forms/form-elements/file-uploader/FileUploaderImageCrop/CropComponent/CropEasy'
 import { Controller, useForm } from 'react-hook-form'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
-import CustomInput from '../../../forms/form-elements/pickers/PickersCustomInput'
 import { useTheme } from '@emotion/react'
-import PickersMonthYearDropdowns from 'src/views/forms/form-elements/pickers/PickersMonthYearDropdowns'
 import { LocalizationProvider } from '@mui/x-date-pickers'
 import schoolSpecialities from './schoolSpecialities.json'
 import schoolDomains from './schoolDomains.json'
-import dayjs from 'dayjs'
-import { useRouter } from 'next/router'
+import countryCodes from './countryCodes.json'
+import { useAuth } from 'src/hooks/useAuth'
+
 
 const StepPersonalDetails = ({ handleNext, initPrerequire, setInitPrerequire, setCounties, profile, setProfile }) => {
-  let accessToken = useSelector(selectTokens)
+  const user = useSelector(selectUser)
   const [file, setFile] = useState()
   const [fileName, setFileName] = useState('')
   const [openCrop, setOpenCrop] = useState(false)
@@ -46,12 +39,13 @@ const StepPersonalDetails = ({ handleNext, initPrerequire, setInitPrerequire, se
   const [specialities, setSpecialities] = useState([])
   const [loading, setLoading] = useState(false)
   const [imageValidationError, setImageValidationError] = useState(false)
+  const auth = useAuth()
 
   const theme = useTheme()
   const { direction } = theme
 
   useEffect(() => {
-    axios.get(apiSpec.PROD_HOST + apiSpec.PROFILE_SERVICE + '/profile-prerequire').then(response => {
+    axios.get(apiSpec.PROD_HOST + apiSpec.PROFILE_CONTROLLER + '/profile-prerequire').then(response => {
       setInitPrerequire(response.data)
     })
     setUniversityId(profile.university)
@@ -91,12 +85,12 @@ const StepPersonalDetails = ({ handleNext, initPrerequire, setInitPrerequire, se
   }, [universityId])
 
   const validateProfilePicture = currentValues => {
-    const profilePictureLength = currentValues.profilePicture.trim().length
-    if (profilePictureLength < 32) {
+    const profilePictureLength = currentValues.profilePicture ? currentValues.profilePicture.trim().length : null
+    if (profilePictureLength && profilePictureLength < 32) {
       return true
-    } else {
-      return false
     }
+
+    return false
   }
 
   return (
@@ -154,24 +148,33 @@ const StepPersonalDetails = ({ handleNext, initPrerequire, setInitPrerequire, se
         <Grid container spacing={5}>
           <Grid item xs={12} sm={6}>
             <Card className={'bro'} sx={{ width: 300, height: 300, '& .MuiCardHeader-action': { lineHeight: 0.8 } }}>
-              <CardHeader title={'Încarcă fotografia ta aici'} />
-              <CardContent sx={{ position: 'relative', '& pre': { m: '0 !important', maxHeight: 300 } }}>
-                <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-                  <FileUploaderImageCrop
-                    uploadFile={apiSpec.PROD_HOST + apiSpec.PROFILE_SERVICE + '-image/upload'}
-                    setFile={setFile}
-                    setOpenCrop={setOpenCrop}
-                    setPhotoURL={setPhotoURL}
-                    setFileName={setFileName}
-                    file={file}
-                    openCrop={openCrop}
-                    photoURL={photoURL}
-                    fileName={fileName}
-                    setValues={setProfile}
-                  />
-                </Box>
-              </CardContent>
+
+              {user && !user.profilePicture ?
+                <>
+                  <CardHeader title={'Încarcă fotografia ta aici'} />
+                  <CardContent sx={{ position: 'relative', '& pre': { m: '0 !important', maxHeight: 300 } }}>
+                    <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                      <FileUploaderImageCrop
+                        uploadFile={apiSpec.PROD_HOST + apiSpec.PROFILE_CONTROLLER + '-image/upload'}
+                        setFile={setFile}
+                        setOpenCrop={setOpenCrop}
+                        setPhotoURL={setPhotoURL}
+                        setFileName={setFileName}
+                        file={file}
+                        openCrop={openCrop}
+                        photoURL={photoURL}
+                        fileName={fileName}
+                        setValues={setProfile}
+                      />
+                    </Box>
+                  </CardContent>
+                </>
+                : <Avatar alt={user.name} src={user.profilePicture.replace('s96-c', 's300-c')}
+                  sx={{ width: 300, height: 300 }}
+                  imgProps={{ referrerPolicy: 'no-referrer' }} variant="square" />
+              }
             </Card>
+
             {imageValidationError && (
               <Typography variant='caption' color='error'>
                 Fotografia de profil este obligatorie.
@@ -182,7 +185,48 @@ const StepPersonalDetails = ({ handleNext, initPrerequire, setInitPrerequire, se
           <Grid item xs={12} sm={6}>
             <Grid container spacing={5}>
               <Grid item xs={12} sm={12}></Grid>
-              <Grid item xs={12} sm={12}></Grid>
+
+              <Grid item xs={3} sm={2} style={{ marginRight: '25%' }}>
+                <Controller
+                  name='prefix'
+                  control={control}
+                  render={({ field: { value, onChange } }) => (
+                    <CustomTextField select onChange={onChange} value={value} name='prefix' label='Țară'>
+                      {countryCodes.map(country => (
+                        <MenuItem key={country.code} value={country.dial_code}>
+                          {country.emoji + country.dial_code}
+                        </MenuItem>
+                      ))}
+                    </CustomTextField>
+                  )}
+                />
+              </Grid>
+
+              <Grid item xs={7} sm={7}>
+                <Controller
+                  name='phone'
+                  control={control}
+                  rules={{
+                    required: true,
+                    pattern: {
+                      value: /^[0-9]{9}$/, // You can adjust the regex pattern for your specific phone number format
+                      message: 'Acest număr de telefonu este valid.'
+                    }
+                  }}
+                  render={({ field: { value, onChange } }) => (
+                    <CustomTextField
+                      fullWidth
+                      value={value}
+                      label='Număr de telefon'
+                      onChange={onChange}
+                      placeholder='740123123'
+                      error={Boolean(errors.phone)}
+                      aria-describedby='validation-async-phone'
+                      {...(errors.phone && { helperText: errors.phone.message })}
+                    />
+                  )}
+                />
+              </Grid>
 
               <Grid item xs={12} sm={12}>
                 <Controller
@@ -387,7 +431,14 @@ const StepPersonalDetails = ({ handleNext, initPrerequire, setInitPrerequire, se
             />
           </Grid>
 
-          <Grid item xs={12} sx={{ pt: theme => `${theme.spacing(6)} !important` }}>
+          <Grid item xs={6}>
+            <Button variant='text' sx={{ marginBottom: '30px' }}
+              onClick={() => { auth.logout() }}>
+              Sign Out
+            </Button>
+          </Grid>
+
+          <Grid item xs={6}>
             <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
               <Button type='submit' variant='contained'>
                 {loading ? (

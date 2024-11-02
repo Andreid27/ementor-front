@@ -38,12 +38,11 @@ const PdfViewer = ({ fileURL }) => {
     const handleFullscreenChange = () => {
       const isFullscreenNow = Boolean(
         document.fullscreenElement ||
-          document.webkitFullscreenElement ||
-          document.mozFullScreenElement ||
-          document.msFullscreenElement
+        document.webkitFullscreenElement ||
+        document.mozFullScreenElement ||
+        document.msFullscreenElement
       )
       setFullscreen(isFullscreenNow)
-      console.log('Fullscreen ANDREI:', isFullscreenNow)
     }
 
     document.addEventListener('fullscreenchange', handleFullscreenChange)
@@ -63,14 +62,8 @@ const PdfViewer = ({ fileURL }) => {
     const resizeObserver = new ResizeObserver(entries => {
       if (fullscreen) {
         for (let entry of entries) {
-          console.log('Width:', entry.contentRect.width)
-          console.log('Height:', entry.contentRect.height)
-          console.log('Page Width:', pageWidth)
-          console.log('Page Height:', pageHeight)
           const scaleWidth = entry.contentRect.width / pageWidth
           const scaleHeight = entry.contentRect.height / pageHeight
-          console.log('Scale Width:', scaleWidth)
-          console.log('Scale Height:', scaleHeight)
 
           // Choose the smaller scale to ensure both width and height fit into the screen
           const scale = Math.min(scaleWidth, scaleHeight)
@@ -146,9 +139,8 @@ const PdfViewer = ({ fileURL }) => {
       <Document className={styles.document} file={fileURL} onLoadSuccess={onDocumentLoadSuccess} options={options}>
         <Page
           scale={scale}
-          className={`${styles.page} ${pageVisible ? styles.pageVisible : ''} ${
-            fullscreen ? styles.fullscreenPage : ''
-          }`}
+          className={`${styles.page} ${pageVisible ? styles.pageVisible : ''} ${fullscreen ? styles.fullscreenPage : ''
+            }`}
           onLoadSuccess={({ width, height }) => {
             setPageWidth(width)
             setPageHeight(height)

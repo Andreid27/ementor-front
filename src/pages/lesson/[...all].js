@@ -32,7 +32,6 @@ const Lesson = props => {
     // Function to calculate time spent and make API call
     const saveTimeSpent = () => {
       const timeSpent = Math.floor((Date.now() - startTime.current) / 1000)
-      console.log('Time spent:', timeSpent)
       apiClient.get(`${apiSpec.LESSON_SERVICE}/lesson/student-lesson-time/${lessonId}?timeToAdd=${timeSpent}`)
     }
 

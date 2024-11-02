@@ -23,24 +23,10 @@ const QuizzesPage = () => {
 
   useEffect(() => {
     try {
-      apiClient
-        .post(apiSpec.USER_SERVICE + '/paginated', {
-          filters: [
-            {
-              key: 'role',
-              operation: 'EQUAL',
-              value: 'STUDENT'
-
-              //TODO continue filter users by role here
-            }
-          ],
-          sorters: [],
-          page: 0,
-          pageSize: 1000
-        })
+      apiClient.get("service3/users/role/STUDENT")
         .then(response => {
-          setUsers(response.data.data)
-          dispatch(updateAllStudents(response.data.data))
+          setUsers(response.data)
+          dispatch(updateAllStudents(response.data))
         })
         .catch(error => {
           console.log(error)

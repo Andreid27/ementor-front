@@ -9,7 +9,6 @@ import Dialog from '@mui/material/Dialog'
 import Divider from '@mui/material/Divider'
 import { styled } from '@mui/material/styles'
 import Checkbox from '@mui/material/Checkbox'
-import MenuItem from '@mui/material/MenuItem'
 import Typography from '@mui/material/Typography'
 import CardHeader from '@mui/material/CardHeader'
 import FormControl from '@mui/material/FormControl'
@@ -17,14 +16,10 @@ import CardContent from '@mui/material/CardContent'
 import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
 import FormHelperText from '@mui/material/FormHelperText'
-import InputAdornment from '@mui/material/InputAdornment'
 import Button from '@mui/material/Button'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import ModalFileUploaderImageCrop from '../../../forms/form-elements/file-uploader/ModalFileUploaderImageCrop'
 import * as apiSpec from '../../../../apiSpec'
-
-// ** Custom Component Import
-import CustomTextField from 'src/@core/components/mui/text-field'
 
 // ** Third Party Imports
 import { useForm, Controller } from 'react-hook-form'
@@ -34,7 +29,6 @@ import Icon from 'src/@core/components/icon'
 import { useDispatch, useSelector } from 'react-redux'
 import AccountDetailsCard from './Cards/AccountDetailsCards'
 import { addThumbnail, addUser, selectThumbnail, selectTokens, updateUserHasProfile } from 'src/store/apps/user'
-import { handleProfileImageUrl } from 'src/@core/layouts/components/shared-components/UserDropdown'
 import apiClient from 'src/@core/axios/axiosEmentor'
 import { Avatar, CircularProgress } from '@mui/material'
 import PersonalInfoCard from './Cards/PersonalInfoCard'
@@ -42,7 +36,6 @@ import axios from 'axios'
 import AddressInfoCard from './Cards/AddressInfoCard'
 import { toast } from 'react-hot-toast'
 import { useAuth } from 'src/hooks/useAuth'
-import { Stack } from 'immutable'
 import jwtDecode from 'jwt-decode'
 import { Router, useRouter } from 'next/router'
 
@@ -132,29 +125,34 @@ const TabAccount = () => {
   // Define an async function to fetch the data
   const fetchData = async () => {
     try {
-      const prerequireResponse = await axios.get(apiSpec.PROD_HOST + apiSpec.PROFILE_SERVICE + '/profile-prerequire')
+      const prerequireResponse = await axios.get(apiSpec.PROD_HOST + apiSpec.PROFILE_CONTROLLER + '/profile-prerequire')
       setInitPrerequire(prerequireResponse.data)
 
-      const fullProfileResponse = await apiClient.get(apiSpec.PROFILE_SERVICE + '/get-full')
+      const fullProfileResponse = await apiClient.get(apiSpec.PROFILE_CONTROLLER + '/get-full')
       setFullProfile(fullProfileResponse.data)
 
-      // Set loading to false when the requests are completed successfully
+      if (fullProfileResponse.data.pictureId) {
+
+        const profilePictureResponse = await apiClient.get(`${apiSpec.PROFILE_CONTROLLER}-image/download/${fullProfileResponse.data.pictureId}`, {
+          responseType: 'blob'
+        })
+        const imageBlob = profilePictureResponse.data
+        const newImageUrl = URL.createObjectURL(imageBlob)
+        setImgSrc(newImageUrl)
+      } else {
+        setImgSrc(userData.thumbnailUrl.replace('s96-c', 's300-c'))
+      }
       setLoading(false)
     } catch (error) {
-      // Handle errors here
       console.error('Error:', error)
-
-      // Set loading to false when there's an error
       setLoading(false)
     }
   }
 
   useEffect(() => {
-    // Fetch data when the component mounts
     fetchData()
   }, [])
 
-  // Render loading indicator while data is being fetched
 
   useEffect(() => {
     //TODO continue here updating the small profile picture component on this dispatch
@@ -177,8 +175,9 @@ const TabAccount = () => {
   const handleConfirmation = value => {
     handleClose()
     if (value === 'yes') {
+      debugger
       apiClient
-        .delete(apiSpec.USER_SERVICE + '/delete')
+        .delete(apiSpec.PROFILE_CONTROLLER + '/' + fullProfile.user.userId)
         .then(async response => {
           logout()
           dispatch(updateTokens({ accessToken: '', refreshToken: '' }))
@@ -233,7 +232,7 @@ const TabAccount = () => {
     const requestBody = buildRequestBody()
     if (userData.data.hasProfile === false) {
       apiClient
-        .post(apiSpec.PROFILE_SERVICE + '/create', requestBody)
+        .post(apiSpec.PROFILE_CONTROLLER + '/create', requestBody)
         .then(async response => {
           toast.success('Profil creat cu succes!')
           dispatch(updateUserHasProfile(true))
@@ -248,7 +247,7 @@ const TabAccount = () => {
         })
     } else {
       apiClient
-        .put(apiSpec.PROFILE_SERVICE + '/update', requestBody)
+        .put(apiSpec.PROFILE_CONTROLLER + '/update', requestBody)
         .then(async response => {
           toast.success('Cont actualizat cu succes!')
         })
@@ -277,7 +276,8 @@ const TabAccount = () => {
 
   return (
     <Grid container spacing={6}>
-      {/* Account Details Card  - TODO BUG - cand dai hard reload ramane cu referinta la poza veche*/}
+      {/* Account Details Card  - !!TODO BUG - cand dai hard reload ramane cu referinta la poza veche*/}
+      {/* !!TODO BUG 2 - cand are poza de profil OIDC si uploadeaza una in profile picture trebuie sa dea manual save. Altfel nu se asociaza */}
 
       <ModalFileUploaderImageCrop
         openFileUpload={openFileUpload}

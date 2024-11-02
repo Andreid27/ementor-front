@@ -5,38 +5,28 @@ import { useEffect, useState } from 'react'
 import Box from '@mui/material/Box'
 import Grid from '@mui/material/Grid'
 import Button from '@mui/material/Button'
-import Tooltip from '@mui/material/Tooltip'
-import Typography from '@mui/material/Typography'
-import FormControl from '@mui/material/FormControl'
-import InputAdornment from '@mui/material/InputAdornment'
 
-// ** Third Party Imports
-import Payment from 'payment'
 
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
 
 // ** Custom Components Imports
 import CustomTextField from 'src/@core/components/mui/text-field'
-import CustomRadioIcons from 'src/@core/components/custom-radio/icons'
 
 // ** Util Import
-import { formatCVC, formatExpirationDate, formatCreditCardNumber } from 'src/@core/utils/format'
 
 // ** Styles Import
 import 'react-credit-cards/es/styles-compiled.css'
 import { CircularProgress, IconButton, MenuItem } from '@mui/material'
 import { Controller, useForm } from 'react-hook-form'
-import { useDispatch } from 'react-redux'
-import { toast } from 'react-hot-toast'
+import { useAuth } from 'src/hooks/useAuth'
 
 const StepBillingDetails = ({ address, setAddress, counties, handlePrev, handleSubmitProfile, submitLoading }) => {
-  const dispatch = useDispatch()
+  const auth = useAuth()
 
   const [values, setValues] = useState(address)
 
   useEffect(() => {
-    console.log(address)
     setValues(address)
   }, [])
 
@@ -50,10 +40,6 @@ const StepBillingDetails = ({ address, setAddress, counties, handlePrev, handleS
   const onSubmit = async data => {
     let newValues = getValues()
     setAddress(newValues)
-
-    console.log(newValues)
-    console.log(address)
-
     handleSubmitProfile(newValues)
   }
 
@@ -225,7 +211,14 @@ const StepBillingDetails = ({ address, setAddress, counties, handlePrev, handleS
           />
         </Grid>
 
-        <Grid item xs={12} sx={{ pt: theme => `${theme.spacing(6)} !important` }}>
+        <Grid item xs={6}>
+          <Button variant='text' sx={{ marginBottom: '30px' }}
+            onClick={() => { auth.logout() }}>
+            Sign Out
+          </Button>
+        </Grid>
+
+        <Grid item xs={6}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
             <Button
               color='secondary'

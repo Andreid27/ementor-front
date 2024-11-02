@@ -47,6 +47,7 @@ const CustomTooltip = props => {
 }
 
 const RechartsLineChart = ({ direction }) => {
+
   return (
     <Card>
       <CardHeader

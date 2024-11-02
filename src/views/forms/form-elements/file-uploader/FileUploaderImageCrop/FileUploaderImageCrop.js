@@ -5,10 +5,9 @@ import LinearProgress from '@mui/material/LinearProgress'
 import Icon from 'src/@core/components/icon'
 import { useDropzone } from 'react-dropzone'
 import CircularProgress from '@mui/material/CircularProgress'
-import axios from 'axios' // Import axios
 import { useSelector } from 'react-redux'
 import { selectTokens } from 'src/store/apps/user'
-import CropEasy from './CropComponent/CropEasy'
+import apiClient from 'src/@core/axios/axiosEmentor'
 
 const FileUploaderImageCrop = props => {
   const [files, setFiles] = useState([])
@@ -31,10 +30,7 @@ const FileUploaderImageCrop = props => {
     formData.append('file', file)
 
     try {
-      const response = await axios.post(props.uploadFile, formData, {
-        headers: {
-          Authorization: `Bearer ${tokens.accessToken}`
-        },
+      const response = await apiClient.post(props.uploadFile, formData, {
         onUploadProgress: progressEvent => {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
           setUploadProgress(percentCompleted)

@@ -1,12 +1,7 @@
 import React, { forwardRef, useImperativeHandle, useState } from 'react'
 import Box from '@mui/material/Box'
 import Grid from '@mui/material/Grid'
-import Button from '@mui/material/Button'
 import Typography from '@mui/material/Typography'
-import IconButton from '@mui/material/IconButton'
-import FormControl from '@mui/material/FormControl'
-import InputAdornment from '@mui/material/InputAdornment'
-import Icon from 'src/@core/components/icon'
 import CustomTextField from 'src/@core/components/mui/text-field'
 import { Card, CardContent, CardHeader, CircularProgress, MenuItem } from '@mui/material'
 import { Controller, useForm } from 'react-hook-form'
@@ -21,8 +16,8 @@ import { useDispatch } from 'react-redux'
 const AccountDetailsCard = ({ fullProfile, setFullProfile }, ref) => {
   const dispatch = useDispatch()
   const [loading, setLoading] = useState(false)
-  const phoneNumber = fullProfile.user.phone.substring(fullProfile.user.phone.length - 9)
-  const prefix = fullProfile.user.phone.substring(0, fullProfile.user.phone.length - 9)
+  const phoneNumber = fullProfile.phone.substring(fullProfile.phone.length - 9)
+  const prefix = fullProfile.phone.substring(0, fullProfile.phone.length - 9)
 
   const [loadedUser, setLoadedUser] = useState({
     ...fullProfile.user,
@@ -30,7 +25,6 @@ const AccountDetailsCard = ({ fullProfile, setFullProfile }, ref) => {
     prefix: prefix
   })
 
-  // Expose the getData function through the ref
   useImperativeHandle(ref, () => ({
     getValues
   }))
@@ -132,7 +126,7 @@ const AccountDetailsCard = ({ fullProfile, setFullProfile }, ref) => {
 
         <Grid item xs={12} sm={6}>
           <Grid container spacing={1}>
-            <Grid item xs={3} sm={2} style={{ marginRight: '50px' }}>
+            <Grid item xs={3} sm={2} style={{ marginRight: '70px' }}>
               <Controller
                 name='prefix'
                 control={control}
@@ -148,7 +142,7 @@ const AccountDetailsCard = ({ fullProfile, setFullProfile }, ref) => {
               />
             </Grid>
 
-            <Grid item xs={7} sm={4}>
+            <Grid item xs={7} sm={6}>
               <Controller
                 name='phone'
                 control={control}

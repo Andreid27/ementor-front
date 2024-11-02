@@ -334,9 +334,8 @@ const QuizComponent = props => {
           errors[`questionsList[${index}].content`] = `Content for question ${index + 1} is required`
         }
         if (question.correctAnswer === undefined || question.correctAnswer === 0) {
-          errors[`questionsList[${index}].correctAnswer`] = `Correct answer for question ${
-            index + 1
-          } is required and should be different than 0`
+          errors[`questionsList[${index}].correctAnswer`] = `Correct answer for question ${index + 1
+            } is required and should be different than 0`
         }
       })
     }
@@ -355,7 +354,6 @@ const QuizComponent = props => {
             apiClient
               .post(apiSpec.QUIZ_SERVICE + '/create-complete', getValues())
               .then(async response => {
-                console.log('Success')
                 resolve(response)
                 if (response.status === 201) {
                   reset({ ...defaultValues })
@@ -375,7 +373,6 @@ const QuizComponent = props => {
             apiClient
               .put(apiSpec.QUIZ_SERVICE + `/update-complete`, getValues())
               .then(async response => {
-                console.log('Success')
                 resolve(response)
 
                 await delay(3000)

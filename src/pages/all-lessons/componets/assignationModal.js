@@ -82,7 +82,6 @@ const AssignationModal = props => {
     apiClient
       .post(apiSpec.QUIZ_SERVICE + '/assign', assignments)
       .then(response => {
-        console.log(assignments)
         setSelectedQuizzes([])
         setSelectedUsers([])
         toast.success('Testele au fost asignate cu succes!')

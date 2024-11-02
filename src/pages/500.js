@@ -12,6 +12,7 @@ import BlankLayout from 'src/@core/layouts/BlankLayout'
 
 // ** Demo Imports
 import FooterIllustrations from 'src/views/pages/misc/FooterIllustrations'
+import { useAuth } from 'src/hooks/useAuth'
 
 // ** Styled Components
 const BoxWrapper = styled(Box)(({ theme }) => ({
@@ -34,6 +35,8 @@ const Img = styled('img')(({ theme }) => ({
 }))
 
 const Error500 = () => {
+  const auth = useAuth()
+
   return (
     <Box className='content-center'>
       <Box sx={{ p: 5, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
@@ -48,6 +51,9 @@ const Error500 = () => {
             Back to Home
           </Button>
         </BoxWrapper>
+        <Button onClick={auth.logout} variant='text' sx={{ mt: 2 }}>
+          Deconectare
+        </Button>
         <Img height='500' alt='error-illustration' src='/images/pages/404.png' />
       </Box>
       <FooterIllustrations />

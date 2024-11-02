@@ -4,7 +4,7 @@
 const getHomeRoute = user => {
   const role = user.role
   if (role === 'STUDENT') {
-    return user.hasProfile === false ? '/pages/account-settings/account/' : '/dashboards/analytics'
+    return user.profileCompleted === false ? '/register/' : '/dashboards/analytics'
   } else if (role === 'PROFESSOR') return '/acl'
   else return '/dashboards/crm'
 }

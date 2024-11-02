@@ -19,7 +19,6 @@ const AddressInfoCard = ({ address, counties }, ref) => {
   } = useForm({ defaultValues: address })
 
   const onSubmit = async data => {
-    console.log('YESS')
   }
 
   return (

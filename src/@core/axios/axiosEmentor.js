@@ -6,14 +6,17 @@ import toast from 'react-hot-toast'
 import { deleteTokens, deleteUser, updateTokens } from 'src/store/apps/user'
 import authConfig from 'src/configs/auth'
 
+let isRefreshing = false;
+let refreshSubscribers = [];
+
 // Function to get token from your state
 function getCurrentToken() {
-  // Replace this with actual logic to retrieve the token from your state
+  return window.localStorage.getItem(authConfig.storageTokenKeyName);
+}
 
-  const state = store.getState()
-  let accessTokens = state.user.tokens.accessToken
-
-  return accessTokens
+function onRefreshed(newToken) {
+  refreshSubscribers.map(cb => cb(newToken));
+  refreshSubscribers = [];
 }
 
 // Create an instance of axios
@@ -23,62 +26,75 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json'
   }
-})
+});
 
 // Add a request interceptor
 apiClient.interceptors.request.use(
   async config => {
     try {
-      const token = getCurrentToken()
-      const verifiedToken = await verifyToken(token)
+      const token = getCurrentToken(); // Get current token from localStorage
 
-      if (verifiedToken) {
-        config.headers['Authorization'] = `Bearer ${verifiedToken}`
+      if (!token) {
+        return config;
       }
 
-      // If the data is a file, set the Content-Type to multipart/form-data
+      const verifiedToken = await verifyToken(token); // Wait for token verification/refresh
+
+      // Set the verified token in the Authorization header
+      config.headers['Authorization'] = `Bearer ${verifiedToken}`;
+
+      // If the request involves file upload (multipart form data)
       if (config.data instanceof FormData) {
-        config.headers['Content-Type'] = 'multipart/form-data'
+        config.headers['Content-Type'] = 'multipart/form-data';
       }
 
-      return config
+      return config; // Return the modified config to proceed with the request
     } catch (error) {
-      return Promise.reject(error)
+      return Promise.reject(error);
     }
   },
   error => Promise.reject(error)
-)
+);
 
+// Add a response interceptor to handle token refresh
 apiClient.interceptors.response.use(
   response => response,
   async error => {
-    // Handle specific cases
-    if (error.response) {
-      const { status, data } = error.response
+    if (error.response && error.response.status === 403) {
+      store.dispatch(deleteUser());
+      store.dispatch(deleteTokens());
+      window.localStorage.removeItem('userData');
+      window.localStorage.removeItem(authConfig.storageTokenKeyName);
+      window.location.replace('/login');
+    }
 
-      // Case 1: If the response is 403, call verifyToken
-      if (status === 403) {
-        store.dispatch(deleteUser())
-        store.dispatch(deleteTokens())
-        window.localStorage.removeItem('userData')
-        window.localStorage.removeItem(authConfig.storageTokenKeyName)
-        window.location.replace('/login')
+    if (error.response && error.response.status === 401) {
+      const token = getCurrentToken();
+
+      if (!token || isRefreshing) {
+        return Promise.reject(error);
       }
 
-      // Case 2: If the response body error is EmentorApi, log the error
-      if (data && data.exception === 'com.ementor.quiz.core.exceptions.EmentorApiError') {
-        toast.error('Eroare: ' + data.message, {
-          duration: 5000,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true
-        })
+      isRefreshing = true;
+
+      try {
+        const newToken = await verifyToken(token);
+        onRefreshed(newToken);
+        isRefreshing = false;
+
+        // Retry the failed request with the new token
+        error.config.headers['Authorization'] = `Bearer ${newToken}`;
+
+        return apiClient(error.config);
+      } catch (refreshError) {
+        isRefreshing = false;
+
+        return Promise.reject(refreshError);
       }
     }
 
-    // Always reject the promise to propagate the error further
-    return Promise.reject(error)
+    return Promise.reject(error);
   }
-)
+);
 
-export default apiClient
+export default apiClient;
