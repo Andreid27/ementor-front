@@ -17,7 +17,13 @@ const extractProfilePicture = (user, fullDimension) => {
         url: fullDimension ? user.attributes.picture[0].replace('s96-c', 's300-c') : user.attributes.picture[0],
         userId: user.id
       }
+    } else {
+      return {
+        type: "NONE",
+        userId: user.id
+      }
     }
+
   } else if (user.userId) { // aka user profile
     if (user.pictureId) {
       return {
@@ -30,6 +36,11 @@ const extractProfilePicture = (user, fullDimension) => {
         type: "EXTERNAL",
         url: fullDimension ? user.user.picture.replace('s96-c', 's1000-c') : user.user.picture,
         userId: user.user.userId
+      }
+    } else {
+      return {
+        type: "NONE",
+        userId: user.userId
       }
     }
   } else {
