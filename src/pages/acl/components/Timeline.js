@@ -126,7 +126,11 @@ const CardActivityTimeline = props => {
                     {quizStudent.correctAnswers} / {quizStudent.questionsCount} întrebări corecte
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Avatar src={quizStudent.avatar} sx={{ mr: 3, width: 38, height: 38 }} />
+                    <Avatar
+                      src={quizStudent.avatar}
+                      sx={{ mr: 3, width: 38, height: 38, cursor: 'pointer' }}
+                      onClick={() => window.location.href = `/student-profile/account/${quizStudent.studentId}`}
+                    />
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                       <Typography variant='body2' sx={{ fontWeight: 500, color: 'text.primary', ml: 1 }}>
                         {getStudentName(quizStudent)}

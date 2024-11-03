@@ -1,0 +1,14 @@
+{
+  "REAL": "Real",
+  "HUMANIST": "Uman",
+  "THEOLOGICAL": "Teologic",
+  "NATURAL_RESOURCES_AND_ENVIRONMENTAL_PROTECTION": "Resurse naturale si protectia mediului",
+  "VISUAL_AND_PLASTIC_ARTS": "Arte Plastice si Vizuale",
+  "ARTISTIC": "Artistic",
+  "MUSIC": "Muzica",
+  "SERVICES": "Servicii",
+  "SPORTS": "Sportiv",
+  "TECHNICAL": "Tehnic",
+  "PEDAGOGICAL": "Pedagogic",
+  "MILITARY": "Militar"
+}

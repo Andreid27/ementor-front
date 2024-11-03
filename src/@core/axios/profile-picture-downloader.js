@@ -4,9 +4,12 @@ import apiClient from "./axiosEmentor";
 const imageCache = new Map();
 
 const profilePictureDownloader = async (url, userId) => {
-  // Check if the image is already cached by user ID
+  // If an image URL is already cached for this user ID, return it
   if (imageCache.has(userId)) {
-    return imageCache.get(userId); // Return cached image URL
+    const cachedUrl = imageCache.get(userId);
+    if (cachedUrl) {
+      return cachedUrl; // Return cached image URL
+    }
   }
 
   try {
@@ -15,12 +18,17 @@ const profilePictureDownloader = async (url, userId) => {
       responseType: 'blob' // Set the responseType to 'blob'
     });
 
-    const blobUrl = URL.createObjectURL(response.data); // Create an object URL from the blob
+    // Check if the response is a valid blob
+    if (response && response.data) {
+      const blobUrl = URL.createObjectURL(response.data); // Create an object URL from the blob
 
-    // Cache the image URL by user ID
-    imageCache.set(userId, blobUrl);
+      // Cache the image URL by user ID
+      imageCache.set(userId, blobUrl);
 
-    return blobUrl; // Return the blob URL
+      return blobUrl; // Return the blob URL
+    } else {
+      throw new Error("Invalid blob response");
+    }
   } catch (error) {
     console.error(`Error downloading profile picture for user ID: ${userId}`, error);
 

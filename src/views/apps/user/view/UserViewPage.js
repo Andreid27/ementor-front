@@ -18,4 +18,9 @@ const UserView = ({ tab, invoiceData }) => {
   )
 }
 
+UserView.acl = {
+  action: 'read',
+  subject: 'professor-pages'
+}
+
 export default UserView

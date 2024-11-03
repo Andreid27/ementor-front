@@ -10,6 +10,8 @@ export const THUMBNAIL_CONTROLLER = PROFILE_SERVICE + '/thumbnail'
 
 export const PROFILE_CONTROLLER = PROFILE_SERVICE + '/profile'
 
+export const PROFILE_IMAGE_CONTROLLER = PROFILE_SERVICE + '/profile-image'
+
 export const QUIZ_SERVICE = '/service3/quiz'
 
 export const LESSON_SERVICE = '/service4'
