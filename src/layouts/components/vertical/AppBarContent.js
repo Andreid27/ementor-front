@@ -1,6 +1,7 @@
 // ** MUI Imports
 import Box from '@mui/material/Box'
 import IconButton from '@mui/material/IconButton'
+import Slide from '@mui/material/Slide'
 
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
@@ -16,6 +17,7 @@ import ShortcutsDropdown from 'src/@core/layouts/components/shared-components/Sh
 // ** Hook Import
 import { useAuth } from 'src/hooks/useAuth'
 import UserLanguageDropdown from '../UserLanguageDropdown'
+import { useAppBar } from 'src/context/AppBarContext'
 
 const notifications = [
   {
@@ -119,6 +121,7 @@ const AppBarContent = props => {
 
   // ** Hook
   const auth = useAuth()
+  const { components, removeComponent } = useAppBar();
 
   return (
     <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -131,12 +134,20 @@ const AppBarContent = props => {
         {auth.user && <Autocomplete hidden={hidden} settings={settings} />}
       </Box>
       <Box className='actions-right' sx={{ display: 'flex', alignItems: 'center' }}>
-        {/* <UserLanguageDropdown settings={settings} saveSettings={saveSettings} /> */}
+        {/* Render dynamically added components */}
+        {components.map((Component, index) => (
+          <Slide key={index} direction="down" in={true} mountOnEnter unmountOnExit>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Component />
+              <IconButton onClick={() => removeComponent(index)}>
+                <Icon fontSize='1.5rem' icon='tabler:x' />
+              </IconButton>
+            </Box>
+          </Slide>
+        ))}
         <ModeToggler settings={settings} saveSettings={saveSettings} />
         {auth.user && (
           <>
-            {/* <ShortcutsDropdown settings={settings} shortcuts={shortcuts} /> */}
-            {/* <NotificationDropdown settings={settings} notifications={notifications} /> */}
             <UserDropdown settings={settings} />
           </>
         )}

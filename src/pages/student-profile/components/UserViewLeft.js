@@ -160,7 +160,7 @@ const UserViewLeft = ({ profileData, profilePictureUrl, quizStats }) => {
       <Grid container spacing={6}>
         <Grid item xs={12}>
           <Card>
-            <CardContent sx={{ pt: 13.5, display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
+            <CardContent sx={{ pt: 5, display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
               {profilePictureUrl ? (
                 <CustomAvatar
                   src={profilePictureUrl}

@@ -31,6 +31,7 @@ import Router from 'next/router'
 import DeleteDialogTransition from './DeleteDialogTransition'
 import extractProfilePicture from 'src/@core/axios/profile-picture-extractor'
 import profilePictureDownloader from 'src/@core/axios/profile-picture-downloader'
+import UserViewDrawer from 'src/pages/student-profile/components/UserViewDrawer'
 
 // ** renders client column
 const renderClient = (params, user) => {
@@ -107,7 +108,13 @@ const StudentsResultsTable = () => {
 
         return (
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            {renderClient(params, user)}
+            <Button
+              className={classes.button}
+              sx={{ "&:hover": { backgroundColor: "transparent" } }}
+              onClick={event => handleOpenDialog(params.row, event, 'PROFILE')}
+            >
+              {renderClient(params, user)}
+            </Button>
             <Box sx={{ display: 'flex', flexDirection: 'column' }}>
               <Typography noWrap variant='body2' sx={{ color: 'text.primary', fontWeight: 600 }}>
                 {user.firstName} {user.lastName}
@@ -200,7 +207,7 @@ const StudentsResultsTable = () => {
           className={classes.button}
           variant='text'
           color='error'
-          onClick={event => handleOpenDialog(params.row, event)}
+          onClick={event => handleOpenDialog(params.row, event, 'DELETE')}
         >
           <TrashX size={20} strokeWidth={2} color={'#EA5455'} />
         </Button>
@@ -217,6 +224,8 @@ const StudentsResultsTable = () => {
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [dialogOpenRow, setDialogOpenRow] = useState({})
+  const [profileDrawerOpen, setProfileDrawerOpen] = useState(false)
+  const [selectedStudentId, setSelectedStudentId] = useState(null)
   const isInitialRender = useRef(true)
   const dispatch = useDispatch()
 
@@ -343,14 +352,21 @@ const StudentsResultsTable = () => {
     Router.push(`/review-attempt/${params.row.id}`)
   }
 
-  const handleOpenDialog = (row, event) => {
+  const handleOpenDialog = (row, event, dialogType) => {
     event.stopPropagation()
-    setDialogOpenRow({ id: row.id, title: row.title, student: users.find(user => user.id === row.studentId) })
-    setDialogOpen(true)
+
+    if (dialogType === 'DELETE') {
+      setDialogOpenRow({ id: row.id, title: row.title, student: users.find(user => user.id === row.studentId) })
+      setDialogOpen(true)
+    } else if (dialogType === 'PROFILE') {
+      setSelectedStudentId(row.studentId)
+      setProfileDrawerOpen(true)
+    }
   }
 
   const handleCloseDialog = () => {
     setDialogOpen(false)
+    setProfileDrawerOpen(false)
   }
 
   const handleConfirmation = () => {
@@ -394,6 +410,10 @@ const StudentsResultsTable = () => {
                 handleConfirm={handleConfirmation}
                 dialogOpenRow={dialogOpenRow}
               />
+            )}
+
+            {profileDrawerOpen && (
+              <UserViewDrawer open={profileDrawerOpen} onClose={handleCloseDialog} userId={selectedStudentId} tab="account" />
             )}
             <DataGrid
               autoHeight
