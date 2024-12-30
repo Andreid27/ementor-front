@@ -18,6 +18,9 @@ import ShortcutsDropdown from 'src/@core/layouts/components/shared-components/Sh
 import { useAuth } from 'src/hooks/useAuth'
 import UserLanguageDropdown from '../UserLanguageDropdown'
 import { useAppBar } from 'src/context/AppBarContext'
+import SockJS from 'sockjs-client'
+import { Stomp } from '@stomp/stompjs';
+import { useEffect } from 'react'
 
 const notifications = [
   {
@@ -122,6 +125,62 @@ const AppBarContent = props => {
   // ** Hook
   const auth = useAuth()
   const { components, removeComponent } = useAppBar();
+  let stompClient = null;
+  let retryInterval = 5000; // Retry every 5 seconds
+  let isConnected = false;
+
+  function connect() {
+    console.log(auth.user);
+
+    // Create a new SockJS connection
+    let socket = new SockJS('https://dev.api.e-mentor.ro/service5/wsevents');
+    stompClient = Stomp.over(socket);
+
+    // Attempt to connect
+    stompClient.connect(
+      {},
+      function (frame) {
+        isConnected = true;
+        console.log('Connected: ' + frame);
+
+        // Subscribe to the topic
+        stompClient.subscribe(`/topic/notifications/${auth.user.id}`, function (message) {
+          let body = JSON.parse(message.body);
+          let content = JSON.parse(body.content);
+          console.log(body, content);
+        });
+
+        // Handle WebSocket disconnection
+        socket.onclose = function () {
+          console.log('Disconnected. Attempting to reconnect...');
+          isConnected = false;
+          retryConnect(); // Retry connection on disconnect
+        };
+      },
+      function (error) {
+        console.error('Connection failed. Retrying in 5 seconds...', error);
+        isConnected = false;
+        retryConnect(); // Retry connection on failure
+      }
+    );
+  }
+
+  function retryConnect() {
+    if (!isConnected) {
+      setTimeout(() => {
+        console.log('Reconnecting...');
+        connect();
+      }, retryInterval);
+    }
+  }
+
+
+
+  useEffect(() => {
+    connect()
+  }, [])
+
+
 
   return (
     <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
