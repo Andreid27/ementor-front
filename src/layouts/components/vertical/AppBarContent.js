@@ -21,6 +21,9 @@ import { useAppBar } from 'src/context/AppBarContext'
 import SockJS from 'sockjs-client'
 import { Stomp } from '@stomp/stompjs';
 import { useEffect } from 'react'
+import { useDispatch } from 'react-redux'
+import { add } from 'lodash'
+import { addNotification } from 'src/store/apps/notifications'
 
 const notifications = [
   {
@@ -124,6 +127,7 @@ const AppBarContent = props => {
 
   // ** Hook
   const auth = useAuth()
+  const dispatch = useDispatch()
   const { components, removeComponent } = useAppBar();
   let stompClient = null;
   let retryInterval = 5000; // Retry every 5 seconds
@@ -146,8 +150,10 @@ const AppBarContent = props => {
         // Subscribe to the topic
         stompClient.subscribe(`/topic/notifications/${auth.user.id}`, function (message) {
           let body = JSON.parse(message.body);
-          let content = JSON.parse(body.content);
-          console.log(body, content);
+          body.content = JSON.parse(body.content);
+          body.creation = Date.now();
+          console.log(body);
+          dispatch(addNotification(body));
         });
 
         // Handle WebSocket disconnection
@@ -204,7 +210,13 @@ const AppBarContent = props => {
             </Box>
           </Slide>
         ))}
-        <ModeToggler settings={settings} saveSettings={saveSettings} />
+        {components.length == 0 ? (
+          <Slide direction="down" in={true} mountOnEnter unmountOnExit>
+            <Box >
+              <ModeToggler settings={settings} saveSettings={saveSettings} />
+              <NotificationDropdown settings={settings} notifications={notifications} />
+            </Box>
+          </Slide>) : null}
         {auth.user && (
           <>
             <UserDropdown settings={settings} />

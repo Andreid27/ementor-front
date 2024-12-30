@@ -24,6 +24,9 @@ import CustomAvatar from 'src/@core/components/mui/avatar'
 
 // ** Util Import
 import { getInitials } from 'src/@core/utils/get-initials'
+import { useDispatch, useSelector } from 'react-redux'
+import { selectNotifications } from 'src/store/apps/notifications'
+import timeAgo from 'src/@core/utils/time-ago'
 
 // ** Styled Menu component
 const Menu = styled(MuiMenu)(({ theme }) => ({
@@ -96,7 +99,10 @@ const ScrollWrapper = ({ children, hidden }) => {
 
 const NotificationDropdown = props => {
   // ** Props
-  const { settings, notifications } = props
+  const { settings } = props
+
+  // ** Select notifications from the Redux store
+  const notificationsData = useSelector(selectNotifications)
 
   // ** States
   const [anchorEl, setAnchorEl] = useState(null)
@@ -134,13 +140,17 @@ const NotificationDropdown = props => {
     }
   }
 
+  console.log(notificationsData)
+  console.log(notificationsData.notifications)
+  console.log(notificationsData.notifications.length)
+
   return (
     <Fragment>
       <IconButton color='inherit' aria-haspopup='true' onClick={handleDropdownOpen} aria-controls='customized-menu'>
         <Badge
           color='error'
           variant='dot'
-          invisible={!notifications.length}
+          invisible={!notificationsData.notifications.length}
           sx={{
             '& .MuiBadge-badge': { top: 4, right: 4, boxShadow: theme => `0 0 0 2px ${theme.palette.background.paper}` }
           }}
@@ -162,22 +172,22 @@ const NotificationDropdown = props => {
         >
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
             <Typography variant='h5' sx={{ cursor: 'text' }}>
-              Notifications
+              Notificări
             </Typography>
-            <CustomChip skin='light' size='small' color='primary' label={`${notifications.length} New`} />
+            <CustomChip skin='light' size='small' color='primary' label={`${notificationsData.notifications.length} New`} />
           </Box>
         </MenuItem>
         <ScrollWrapper hidden={hidden}>
-          {notifications.map((notification, index) => (
+          {notificationsData.notifications.map((notification, index) => (
             <MenuItem key={index} disableRipple disableTouchRipple onClick={handleDropdownClose}>
               <Box sx={{ width: '100%', display: 'flex', alignItems: 'center' }}>
-                <RenderAvatar notification={notification} />
+                {/* <RenderAvatar notification={notification} /> */}
                 <Box sx={{ mr: 4, ml: 2.5, flex: '1 1', display: 'flex', overflow: 'hidden', flexDirection: 'column' }}>
-                  <MenuItemTitle>{notification.title}</MenuItemTitle>
-                  <MenuItemSubtitle variant='body2'>{notification.subtitle}</MenuItemSubtitle>
+                  <MenuItemTitle>{notification.content.title}</MenuItemTitle>
+                  <MenuItemSubtitle variant='body2'>{notification.content.message}</MenuItemSubtitle>
                 </Box>
                 <Typography variant='body2' sx={{ color: 'text.disabled' }}>
-                  {notification.meta}
+                  {timeAgo(notification.creation)}
                 </Typography>
               </Box>
             </MenuItem>

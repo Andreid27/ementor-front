@@ -15,6 +15,7 @@ import email from 'src/store/apps/email'
 import invoice from 'src/store/apps/invoice'
 import calendar from 'src/store/apps/calendar'
 import permissions from 'src/store/apps/permissions'
+import notifications from 'src/store/apps/notifications'
 
 // ** Logger import
 import { createLogger } from 'redux-logger'
@@ -43,7 +44,8 @@ const persistedReducer = persistReducer(
     email,
     invoice,
     calendar,
-    permissions
+    permissions,
+    notifications
   })
 )
 
@@ -53,6 +55,7 @@ export const store = configureStore({
     getDefaultMiddleware({
       serializableCheck: false
     })
+
       //UNCOMMENT HERE TO ENABLE LOGGER
       .concat(logger) // ** Logger middleware
 })
