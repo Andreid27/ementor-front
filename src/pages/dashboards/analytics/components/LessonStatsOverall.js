@@ -19,10 +19,10 @@ const LessonStatsOverall = props => {
   // ** Hook
   const theme = useTheme()
 
-  const chapters = props.data.studentChaptersTime.map(item => ({ ...item })).sort((a, b) => b.time - a.time)
+  const chapters = (props.data.studentChaptersTime || []).map(item => ({ ...item })).sort((a, b) => b.time - a.time)
   const series = chapters.map(chapter => parseInt(chapter.time / 60))
   const labels = chapters.map(chapter => chapter.chapterTitle)
-  const lastAccessedLessons = props.data.lastAccessedLessons.map(item => ({ ...item }))
+  const lastAccessedLessons = (props.data.lastAccessedLessons || []).map(item => ({ ...item }))
 
   function getDoneLessons() {
     let doneLessons = 0

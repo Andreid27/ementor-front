@@ -7,17 +7,23 @@ import * as apiSpec from 'src/apiSpec'
 
 // ** Fetch Users
 
-export const fetchData = createAsyncThunk('appDashboard/fetchData', async params => {
+export const fetchData = createAsyncThunk('appDashboard/fetchData', async () => {
   const quizServiceUrl = `${apiSpec.QUIZ_SERVICE}/dashboard-stats`
   const lessonServiceUrl = `${apiSpec.LESSON_CONTROLLER}/dashboard-stats`
 
-  const [quizServiceData, lessonServiceData] = await Promise.all([
-    apiClient.get(quizServiceUrl).then(res => res.data),
-    apiClient.get(lessonServiceUrl).then(res => res.data)
-  ])
+  try {
+    const [quizServiceData, lessonServiceData] = await Promise.all([
+      apiClient.get(quizServiceUrl).then(res => res.data),
+      apiClient.get(lessonServiceUrl).then(res => res.data)
+    ])
 
+    const data = { quizService: quizServiceData, lessonService: lessonServiceData }
 
-  return { quizService: quizServiceData, lessonService: lessonServiceData }
+    return data
+  } catch (error) {
+    console.error('Error fetching data:', error)
+    throw error
+  }
 })
 
 export const selectDashboardData = state => state.dashboard

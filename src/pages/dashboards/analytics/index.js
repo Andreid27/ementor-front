@@ -18,8 +18,9 @@ import ApexChartWrapper from 'src/@core/styles/libs/react-apexcharts'
 import CardStatsWithAreaChart from 'src/@core/components/card-statistics/card-stats-with-area-chart'
 import CongratulationsQuizzes from './components/CongratulationsQuizzes'
 import { selectUser } from 'src/store/apps/user'
-import { useSelector } from 'react-redux'
-import { selectDashboardData } from 'src/store/apps/dashboard'
+import { useDispatch, useSelector } from 'react-redux'
+import { fetchData, selectDashboardData } from 'src/store/apps/dashboard'
+import { fetchNotifications } from 'src/store/apps/notifications'
 import StudentStatsQuestions from './components/StudentStatsQuestions'
 import { CircularProgress } from '@mui/material'
 import { useRouter } from 'next/router'
@@ -27,11 +28,17 @@ import LastTestResults from './components/LastTestResults'
 import LessonStatsOverall from './components/LessonStatsOverall'
 
 const AnalyticsDashboard = () => {
+  const dispatch = useDispatch()
   const router = useRouter()
   const user = useSelector(selectUser)
   const dashboardData = useSelector(selectDashboardData)
   const quizServiceData = dashboardData.quizService
   const lessonServiceData = dashboardData.lessonService
+  dispatch(fetchNotifications())
+
+  if (Object.keys(quizServiceData).length === 0 || Object.keys(lessonServiceData).length === 0) {
+    dispatch(fetchData())
+  }
 
   if (user.profileCompleted === false) {
     router.push('/register')

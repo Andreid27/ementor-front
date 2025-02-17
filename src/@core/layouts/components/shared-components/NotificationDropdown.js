@@ -1,5 +1,5 @@
 // ** React Imports
-import { useState, Fragment } from 'react'
+import { useState, Fragment, useEffect } from 'react'
 
 // ** MUI Imports
 import Box from '@mui/material/Box'
@@ -25,8 +25,17 @@ import CustomAvatar from 'src/@core/components/mui/avatar'
 // ** Util Import
 import { getInitials } from 'src/@core/utils/get-initials'
 import { useDispatch, useSelector } from 'react-redux'
-import { selectNotifications } from 'src/store/apps/notifications'
+import { selectNotifications, updateNotification } from 'src/store/apps/notifications'
 import timeAgo from 'src/@core/utils/time-ago'
+import WebSocketService from 'src/@core/axios/WebSocketService'
+import { selectAllStudents, selectCurrentUserRole } from 'src/store/apps/user'
+import extractProfilePicture from 'src/@core/axios/profile-picture-extractor'
+import profilePictureDownloader from 'src/@core/axios/profile-picture-downloader'
+import TimelineDot from 'src/@core/components/mui/timeline-dot'
+import notificationMapping from 'src/@core/layouts/components/shared-components/notificationMapping'
+import { useRouter } from 'next/router'
+import { useAuth } from 'src/hooks/useAuth'
+import UseBgColor from 'src/@core/hooks/useBgColor'
 
 // ** Styled Menu component
 const Menu = styled(MuiMenu)(({ theme }) => ({
@@ -100,9 +109,17 @@ const ScrollWrapper = ({ children, hidden }) => {
 const NotificationDropdown = props => {
   // ** Props
   const { settings } = props
+  const dispatch = useDispatch()
+  const router = useRouter()
+  const userRole = useAuth()?.user?.role
+
 
   // ** Select notifications from the Redux store
-  const notificationsData = useSelector(selectNotifications)
+  const notificationsStoreContent = useSelector(selectNotifications)
+  const [notificationsData, setNotificationsData] = useState(notificationsStoreContent.notifications)
+  let newNotifications = notificationsData.filter(notification => notification.readDate === null)
+  const bgColors = UseBgColor()
+  console.log(bgColors)
 
   // ** States
   const [anchorEl, setAnchorEl] = useState(null)
@@ -140,9 +157,82 @@ const NotificationDropdown = props => {
     }
   }
 
-  console.log(notificationsData)
-  console.log(notificationsData.notifications)
-  console.log(notificationsData.notifications.length)
+  const users = useSelector(selectAllStudents)
+
+  useEffect(() => {
+    const fetchAvatars = async () => {
+      const updatedNotifications = await Promise.all(notificationsStoreContent.notifications.map(async (notification) => {
+
+        if (notification && notification.content && notification.content.avatarType === 'USER' && users && users.length > 0) {
+          const user = users.find(user => user.id === notification.createdBy)
+          if (user) {
+            const profilePicture = extractProfilePicture(user)
+            if (profilePicture.type === 'API') {
+              const avatar = await profilePictureDownloader(profilePicture.url, profilePicture.userId)
+
+              return { ...notification, avatarImg: avatar }
+            } else if (profilePicture.type === 'EXTERNAL') {
+              return { ...notification, avatarImg: profilePicture.url }
+            }
+          }
+        }
+
+        return notification
+      }))
+      setNotificationsData(updatedNotifications)
+    }
+
+    fetchAvatars()
+  }, [notificationsStoreContent.notifications])
+
+  const handleViewNotification = (notification) => () => {
+    // ** Handle view notification
+    if (WebSocketService.stompClient && WebSocketService.isConnected) {
+      WebSocketService.stompClient.send(
+        "/app/event", // Your endpoint for sending messages
+        {},
+        JSON.stringify({ notificationIds: [notification.id], action: "READ" })
+      );
+    } else {
+      console.log("WebSocket is not connected.");
+    }
+
+    const updatedNotifications = notificationsData.map((notificationItem) =>
+      notificationItem.id === notification.id ? { ...notificationItem, readDate: new Date().toISOString() } : notificationItem
+    );
+    setNotificationsData(updatedNotifications);
+
+    const updatedNotification = updatedNotifications.find(item => item.id === notification.id);
+    dispatch(updateNotification(updatedNotification));
+
+    redirectToNotification(notification);
+    handleDropdownClose();
+  }
+
+  const redirectToNotification = (notification) => {
+    const subject = notification.subjectKey;
+    const url = notificationMapping[subject] ? notificationMapping[subject][userRole] + '/' + notification.subjectValue : '/';
+
+    console.log(url)
+    if (url) {
+      router.replace(url);
+    } else {
+      console.log('No URL mapping found for this notification.');
+    }
+  }
+
+  const getIcon = notification => {
+    if (notification && notification.content && notification.content.avatarType) {
+      if (notification.content.avatarType === 'USER') {
+        return <CustomAvatar src={notification.avatarImg} sx={{ mr: 2, width: '2rem', height: '2rem' }} />
+      } else {
+        const subject = notification.subjectKey;
+
+        return <Icon icon={notificationMapping[subject] && notificationMapping[subject]['ICON'] ?
+          notificationMapping[subject]['ICON'] : 'tabler:brand-feedly'} fontSize='2rem' color={bgColors.primaryFilled.backgroundColor} />
+      }
+    }
+  }
 
   return (
     <Fragment>
@@ -150,12 +240,12 @@ const NotificationDropdown = props => {
         <Badge
           color='error'
           variant='dot'
-          invisible={!notificationsData.notifications.length}
+          invisible={!notificationsData.length}
           sx={{
-            '& .MuiBadge-badge': { top: 4, right: 4, boxShadow: theme => `0 0 0 2px ${theme.palette.background.paper}` }
+            '& .MuiBadge-badge': { top: 2, right: 2, boxShadow: theme => `0 0 0 1px ${theme.palette.background.paper}` }
           }}
         >
-          <Icon fontSize='1.625rem' icon='tabler:bell' />
+          <Icon fontSize='1.25rem' icon='tabler:bell' />
         </Badge>
       </IconButton>
       <Menu
@@ -171,43 +261,58 @@ const NotificationDropdown = props => {
           sx={{ cursor: 'default', userSelect: 'auto', backgroundColor: 'transparent !important' }}
         >
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-            <Typography variant='h5' sx={{ cursor: 'text' }}>
+            <Typography variant='h6' sx={{ cursor: 'text' }}>
               Notificări
             </Typography>
-            <CustomChip skin='light' size='small' color='primary' label={`${notificationsData.notifications.length} New`} />
+            <CustomChip skin='light' size='small' color='primary' label={`${newNotifications.length} ${newNotifications.length === 1 ? 'nouă' : 'noi'}`} />
           </Box>
         </MenuItem>
         <ScrollWrapper hidden={hidden}>
-          {notificationsData.notifications.map((notification, index) => (
-            <MenuItem key={index} disableRipple disableTouchRipple onClick={handleDropdownClose}>
-              <Box sx={{ width: '100%', display: 'flex', alignItems: 'center' }}>
-                {/* <RenderAvatar notification={notification} /> */}
-                <Box sx={{ mr: 4, ml: 2.5, flex: '1 1', display: 'flex', overflow: 'hidden', flexDirection: 'column' }}>
-                  <MenuItemTitle>{notification.content.title}</MenuItemTitle>
-                  <MenuItemSubtitle variant='body2'>{notification.content.message}</MenuItemSubtitle>
+          {notificationsData.length ? (
+            notificationsData.map((notification, index) => (
+              <MenuItem key={index} disableRipple disableTouchRipple onClick={handleViewNotification(notification)}>
+                <Box sx={{ width: '100%', display: 'flex', alignItems: 'center' }}>
+                  {getIcon(notification)}
+                  <Box sx={{ mr: 3, ml: 2, flex: '1 1', display: 'flex', overflow: 'hidden', flexDirection: 'column' }}>
+                    <MenuItemTitle sx={{ whiteSpace: 'normal', fontSize: '0.675rem' }}>{notification.content.title}</MenuItemTitle>
+                    <MenuItemSubtitle variant='body2' sx={{ whiteSpace: 'normal', fontSize: '0.7rem' }}>{notification.content.message}</MenuItemSubtitle>
+                    <Typography variant='body2' sx={{ color: 'text.disabled', fontSize: '0.65rem' }}>
+                      {timeAgo(notification.creation)}
+                    </Typography>
+                  </Box>
+                  {notification.readDate === null ? (
+                    <TimelineDot size='small' color={"success"} sx={{ mt: 1.5 }} />
+                  ) : (
+                    <Box sx={{ width: '8px', height: '8px', mt: 1.5 }} />
+                  )}
                 </Box>
-                <Typography variant='body2' sx={{ color: 'text.disabled' }}>
-                  {timeAgo(notification.creation)}
-                </Typography>
-              </Box>
+              </MenuItem>
+            ))
+          ) : (
+            <MenuItem disableRipple disableTouchRipple>
+              <Typography variant='body2' sx={{ color: 'text.disabled', textAlign: 'center', width: '100%', fontSize: '0.875rem' }}>
+                Nu există notificări
+              </Typography>
             </MenuItem>
-          ))}
+          )}
         </ScrollWrapper>
-        <MenuItem
-          disableRipple
-          disableTouchRipple
-          sx={{
-            borderBottom: 0,
-            cursor: 'default',
-            userSelect: 'auto',
-            backgroundColor: 'transparent !important',
-            borderTop: theme => `1px solid ${theme.palette.divider}`
-          }}
-        >
-          <Button fullWidth variant='contained' onClick={handleDropdownClose}>
-            Read All Notifications
-          </Button>
-        </MenuItem>
+        {notificationsData.length !== 0 && (
+          <MenuItem
+            disableRipple
+            disableTouchRipple
+            sx={{
+              borderBottom: 0,
+              cursor: 'default',
+              userSelect: 'auto',
+              backgroundColor: 'transparent !important',
+              borderTop: theme => `1px solid ${theme.palette.divider}`
+            }}
+          >
+            <Button fullWidth variant='contained' onClick={handleDropdownClose} size='small'>
+              Citește toate notificările
+            </Button>
+          </MenuItem>
+        )}
       </Menu>
     </Fragment>
   )

@@ -10,65 +10,19 @@ import Icon from 'src/@core/components/icon'
 import Autocomplete from 'src/layouts/components/Autocomplete'
 import ModeToggler from 'src/@core/layouts/components/shared-components/ModeToggler'
 import UserDropdown from 'src/@core/layouts/components/shared-components/UserDropdown'
-import LanguageDropdown from 'src/@core/layouts/components/shared-components/LanguageDropdown'
 import NotificationDropdown from 'src/@core/layouts/components/shared-components/NotificationDropdown'
-import ShortcutsDropdown from 'src/@core/layouts/components/shared-components/ShortcutsDropdown'
+
+// import ShortcutsDropdown from 'src/@core/layouts/components/shared-components/ShortcutsDropdown'
+// import LanguageDropdown from 'src/@core/layouts/components/shared-components/LanguageDropdown'
+// import UserLanguageDropdown from '../UserLanguageDropdown'
 
 // ** Hook Import
 import { useAuth } from 'src/hooks/useAuth'
-import UserLanguageDropdown from '../UserLanguageDropdown'
 import { useAppBar } from 'src/context/AppBarContext'
-import SockJS from 'sockjs-client'
-import { Stomp } from '@stomp/stompjs';
 import { useEffect } from 'react'
 import { useDispatch } from 'react-redux'
-import { add } from 'lodash'
 import { addNotification } from 'src/store/apps/notifications'
-
-const notifications = [
-  {
-    meta: 'Today',
-    avatarAlt: 'Flora',
-    title: 'Congratulation Flora! 🎉',
-    avatarImg: '/images/avatars/4.png',
-    subtitle: 'Won the monthly best seller badge'
-  },
-  {
-    meta: 'Yesterday',
-    avatarColor: 'primary',
-    subtitle: '5 hours ago',
-    avatarText: 'Robert Austin',
-    title: 'New user registered.'
-  },
-  {
-    meta: '11 Aug',
-    avatarAlt: 'message',
-    title: 'New message received 👋🏻',
-    avatarImg: '/images/avatars/5.png',
-    subtitle: 'You have 10 unread messages'
-  },
-  {
-    meta: '25 May',
-    title: 'Paypal',
-    avatarAlt: 'paypal',
-    subtitle: 'Received Payment',
-    avatarImg: '/images/misc/paypal.png'
-  },
-  {
-    meta: '19 Mar',
-    avatarAlt: 'order',
-    title: 'Received Order 📦',
-    avatarImg: '/images/avatars/3.png',
-    subtitle: 'New order received from John'
-  },
-  {
-    meta: '27 Dec',
-    avatarAlt: 'chart',
-    subtitle: '25 hrs ago',
-    avatarImg: '/images/misc/chart.png',
-    title: 'Finance report has been generated'
-  }
-]
+import WebSocketService from 'src/@core/axios/WebSocketService'
 
 const shortcuts = [
   {
@@ -129,64 +83,6 @@ const AppBarContent = props => {
   const auth = useAuth()
   const dispatch = useDispatch()
   const { components, removeComponent } = useAppBar();
-  let stompClient = null;
-  let retryInterval = 5000; // Retry every 5 seconds
-  let isConnected = false;
-
-  function connect() {
-    console.log(auth.user);
-
-    // Create a new SockJS connection
-    let socket = new SockJS('https://dev.api.e-mentor.ro/service5/wsevents');
-    stompClient = Stomp.over(socket);
-
-    // Attempt to connect
-    stompClient.connect(
-      {},
-      function (frame) {
-        isConnected = true;
-        console.log('Connected: ' + frame);
-
-        // Subscribe to the topic
-        stompClient.subscribe(`/topic/notifications/${auth.user.id}`, function (message) {
-          let body = JSON.parse(message.body);
-          body.content = JSON.parse(body.content);
-          body.creation = Date.now();
-          console.log(body);
-          dispatch(addNotification(body));
-        });
-
-        // Handle WebSocket disconnection
-        socket.onclose = function () {
-          console.log('Disconnected. Attempting to reconnect...');
-          isConnected = false;
-          retryConnect(); // Retry connection on disconnect
-        };
-      },
-      function (error) {
-        console.error('Connection failed. Retrying in 5 seconds...', error);
-        isConnected = false;
-        retryConnect(); // Retry connection on failure
-      }
-    );
-  }
-
-  function retryConnect() {
-    if (!isConnected) {
-      setTimeout(() => {
-        console.log('Reconnecting...');
-        connect();
-      }, retryInterval);
-    }
-  }
-
-
-
-  useEffect(() => {
-    connect()
-  }, [])
-
-
 
   return (
     <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -214,7 +110,7 @@ const AppBarContent = props => {
           <Slide direction="down" in={true} mountOnEnter unmountOnExit>
             <Box >
               <ModeToggler settings={settings} saveSettings={saveSettings} />
-              <NotificationDropdown settings={settings} notifications={notifications} />
+              <NotificationDropdown settings={settings} auth={auth} />
             </Box>
           </Slide>) : null}
         {auth.user && (
