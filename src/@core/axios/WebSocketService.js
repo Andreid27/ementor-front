@@ -22,6 +22,7 @@ class WebSocketService {
     this.subscriptions = []
     this.connectionAttempts = 0
     this.maxConnectionAttempts = 5
+    this.isConnected = false
 
     WebSocketService.instance = this
   }
@@ -38,10 +39,6 @@ class WebSocketService {
     return instance
   }
 
-  get isConnected() {
-    return this.stompClient?.connected || false
-  }
-
   connect() {
     if (this.stompClient?.connected) return
     if (!this.auth?.user?.id) {
@@ -51,6 +48,8 @@ class WebSocketService {
     }
 
     const socket = new SockJS(`${apiSpec.PROD_HOST}/${apiSpec.NOTIFICATION_SERVICE}/wsevents`)
+
+    // const socket = new SockJS(`http://localhost:49205/wsevents`)
     this.stompClient = Stomp.over(socket)
 
     this.stompClient.connect({}, this.handleSuccessfulConnection.bind(this), this.handleConnectionError.bind(this))
@@ -59,11 +58,13 @@ class WebSocketService {
   handleSuccessfulConnection(frame) {
     console.log('Connected:', frame)
     this.connectionAttempts = 0
+    this.isConnected = true
     this.subscribeToNotifications()
   }
 
   handleConnectionError(error) {
     console.error('Connection error:', error)
+    this.isConnected = false
     this.retryConnection()
   }
 
@@ -111,7 +112,9 @@ class WebSocketService {
       this.subscriptions = []
 
       if (this.stompClient.connected) {
-        this.stompClient.disconnect()
+        this.stompClient.disconnect(() => {
+          this.isConnected = false
+        })
       }
 
       this.stompClient = null

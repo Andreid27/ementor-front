@@ -43,7 +43,6 @@ export const deleteUser = createAsyncThunk('appUsers/deleteUser', async (id, { g
   const response = await axios.delete('/apps/users/delete', {
     data: id
   })
-  dispatch(fetchData(getState().user.params))
 
   return response.data
 })

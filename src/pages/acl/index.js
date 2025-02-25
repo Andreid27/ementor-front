@@ -54,6 +54,7 @@ const ACLPage = () => {
         setUsers(userServiceResponse.data)
         const processedData = await processStudentQuizzesData(quizServiceResponse.data.data, userServiceResponse.data);
         setQuizzesData(processedData)
+        dispatch(fetchNotifications())
         setLoading(false)
       } catch (error) {
         console.error(error)

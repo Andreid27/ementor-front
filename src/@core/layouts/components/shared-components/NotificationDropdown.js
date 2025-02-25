@@ -27,8 +27,7 @@ import { getInitials } from 'src/@core/utils/get-initials'
 import { useDispatch, useSelector } from 'react-redux'
 import { selectNotifications, updateNotification } from 'src/store/apps/notifications'
 import timeAgo from 'src/@core/utils/time-ago'
-import WebSocketService from 'src/@core/axios/WebSocketService'
-import { selectAllStudents, selectCurrentUserRole } from 'src/store/apps/user'
+import { selectAllStudents } from 'src/store/apps/user'
 import extractProfilePicture from 'src/@core/axios/profile-picture-extractor'
 import profilePictureDownloader from 'src/@core/axios/profile-picture-downloader'
 import TimelineDot from 'src/@core/components/mui/timeline-dot'
@@ -36,6 +35,7 @@ import notificationMapping from 'src/@core/layouts/components/shared-components/
 import { useRouter } from 'next/router'
 import { useAuth } from 'src/hooks/useAuth'
 import UseBgColor from 'src/@core/hooks/useBgColor'
+import { useWebSocket } from 'src/context/WebSocketContext'
 
 // ** Styled Menu component
 const Menu = styled(MuiMenu)(({ theme }) => ({
@@ -112,14 +112,15 @@ const NotificationDropdown = props => {
   const dispatch = useDispatch()
   const router = useRouter()
   const userRole = useAuth()?.user?.role
-
+  const { WebSocketService, isConnected } = useWebSocket()
+  const bgColors = UseBgColor()
 
   // ** Select notifications from the Redux store
   const notificationsStoreContent = useSelector(selectNotifications)
   const [notificationsData, setNotificationsData] = useState(notificationsStoreContent.notifications)
-  let newNotifications = notificationsData.filter(notification => notification.readDate === null)
-  const bgColors = UseBgColor()
-  console.log(bgColors)
+  const [newNotifications, setNewNotifications] = useState(notificationsData.filter(notification => notification.readDate === null))
+  const users = useSelector(selectAllStudents)
+
 
   // ** States
   const [anchorEl, setAnchorEl] = useState(null)
@@ -137,27 +138,6 @@ const NotificationDropdown = props => {
   const handleDropdownClose = () => {
     setAnchorEl(null)
   }
-
-  const RenderAvatar = ({ notification }) => {
-    const { avatarAlt, avatarImg, avatarIcon, avatarText, avatarColor } = notification
-    if (avatarImg) {
-      return <Avatar alt={avatarAlt} src={avatarImg} />
-    } else if (avatarIcon) {
-      return (
-        <Avatar skin='light' color={avatarColor}>
-          {avatarIcon}
-        </Avatar>
-      )
-    } else {
-      return (
-        <Avatar skin='light' color={avatarColor}>
-          {getInitials(avatarText)}
-        </Avatar>
-      )
-    }
-  }
-
-  const users = useSelector(selectAllStudents)
 
   useEffect(() => {
     const fetchAvatars = async () => {
@@ -180,22 +160,14 @@ const NotificationDropdown = props => {
         return notification
       }))
       setNotificationsData(updatedNotifications)
+      setNewNotifications(updatedNotifications.filter(notification => notification.readDate === null))
     }
 
     fetchAvatars()
   }, [notificationsStoreContent.notifications])
 
   const handleViewNotification = (notification) => () => {
-    // ** Handle view notification
-    if (WebSocketService.stompClient && WebSocketService.isConnected) {
-      WebSocketService.stompClient.send(
-        "/app/event", // Your endpoint for sending messages
-        {},
-        JSON.stringify({ notificationIds: [notification.id], action: "READ" })
-      );
-    } else {
-      console.log("WebSocket is not connected.");
-    }
+    sendViewedNotification([notification.id]);
 
     const updatedNotifications = notificationsData.map((notificationItem) =>
       notificationItem.id === notification.id ? { ...notificationItem, readDate: new Date().toISOString() } : notificationItem
@@ -209,9 +181,50 @@ const NotificationDropdown = props => {
     handleDropdownClose();
   }
 
+  const sendViewedNotification = (notificationIdsList) => {
+    const instance = WebSocketService.getInstance();
+
+    // ** Handle view notification
+    if (instance.stompClient && isConnected) {
+      instance.stompClient.send(
+        "/app/event", // Your endpoint for sending messages
+        {},
+        JSON.stringify({ notificationIds: notificationIdsList, action: "READ" })
+      );
+    } else {
+      console.log("WebSocket is not connected or stompClient is undefined.");
+    }
+  }
+
+  const readAllNotifications = () => {
+    const unreadNotifications = notificationsData.filter(notification => notification.readDate === null);
+    const notificationIdsList = unreadNotifications.map(notification => notification.id);
+
+    const updatedNotifications = notificationsData.map(notification =>
+      notification.readDate === null ? { ...notification, readDate: new Date().toISOString() } : notification
+    );
+    setNotificationsData(updatedNotifications);
+    sendViewedNotification(notificationIdsList);
+    notificationIdsList.forEach(id => {
+      const notification = updatedNotifications.find(item => item.id === id);
+      if (notification) {
+        dispatch(updateNotification(notification));
+      }
+    });
+    handleDropdownClose();
+  }
+
   const redirectToNotification = (notification) => {
     const subject = notification.subjectKey;
-    const url = notificationMapping[subject] ? notificationMapping[subject][userRole] + '/' + notification.subjectValue : '/';
+    const mapping = notificationMapping[subject] ? notificationMapping[subject][userRole] : null;
+    if (mapping === undefined || mapping === null) {
+      console.log('No URL mapping found for this notification.');
+
+      return;
+    } else if (mapping === 'NO_REDIRECT') {
+      return;
+    }
+    const url = `${mapping}/${notification.subjectValue}`;
 
     console.log(url)
     if (url) {
@@ -240,7 +253,7 @@ const NotificationDropdown = props => {
         <Badge
           color='error'
           variant='dot'
-          invisible={!notificationsData.length}
+          invisible={newNotifications.length > 0 ? false : true}
           sx={{
             '& .MuiBadge-badge': { top: 2, right: 2, boxShadow: theme => `0 0 0 1px ${theme.palette.background.paper}` }
           }}
@@ -308,7 +321,7 @@ const NotificationDropdown = props => {
               borderTop: theme => `1px solid ${theme.palette.divider}`
             }}
           >
-            <Button fullWidth variant='contained' onClick={handleDropdownClose} size='small'>
+            <Button fullWidth variant='contained' onClick={readAllNotifications} size='small'>
               Citește toate notificările
             </Button>
           </MenuItem>

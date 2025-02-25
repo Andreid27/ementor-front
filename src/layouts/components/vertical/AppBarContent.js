@@ -21,8 +21,6 @@ import { useAuth } from 'src/hooks/useAuth'
 import { useAppBar } from 'src/context/AppBarContext'
 import { useEffect } from 'react'
 import { useDispatch } from 'react-redux'
-import { addNotification } from 'src/store/apps/notifications'
-import WebSocketService from 'src/@core/axios/WebSocketService'
 
 const shortcuts = [
   {

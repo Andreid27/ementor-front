@@ -2,7 +2,7 @@
 const notificationMapping = {
   'QuizStudent': {
     'STUDENT': '/quizzes',
-    'teacher': '/review-attempt',
+    'PROFESSOR': 'NO_REDIRECT',
     'ICON': 'solar:checklist-minimalistic-bold',
   },
   'NEW_ASSIGNMENT': {

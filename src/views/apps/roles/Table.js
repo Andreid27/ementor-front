@@ -25,9 +25,6 @@ import CustomAvatar from 'src/@core/components/mui/avatar'
 // ** Utils Import
 import { getInitials } from 'src/@core/utils/get-initials'
 
-// ** Actions Imports
-import { fetchData } from 'src/store/apps/user'
-
 // ** Custom Components Imports
 import TableHeader from 'src/views/apps/roles/TableHeader'
 
@@ -187,14 +184,6 @@ const UserList = () => {
   const dispatch = useDispatch()
   const store = useSelector(state => state.user)
   useEffect(() => {
-    dispatch(
-      fetchData({
-        role: '',
-        q: value,
-        status: '',
-        currentPlan: plan
-      })
-    )
   }, [dispatch, plan, value])
 
   const handleFilter = useCallback(val => {

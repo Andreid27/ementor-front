@@ -33,7 +33,7 @@ import CardStatsHorizontalWithDetails from 'src/@core/components/card-statistics
 import { getInitials } from 'src/@core/utils/get-initials'
 
 // ** Actions Imports
-import { fetchData, deleteUser } from 'src/store/apps/user'
+import { deleteUser } from 'src/store/apps/user'
 
 // ** Third Party Components
 import axios from 'axios'
@@ -260,14 +260,6 @@ const UserList = ({ apiData }) => {
   const dispatch = useDispatch()
   const store = useSelector(state => state.user)
   useEffect(() => {
-    dispatch(
-      fetchData({
-        role,
-        status,
-        q: value,
-        currentPlan: plan
-      })
-    )
   }, [dispatch, plan, role, status, value])
 
   const handleFilter = useCallback(val => {

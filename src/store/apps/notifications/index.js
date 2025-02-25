@@ -9,11 +9,6 @@ export const addNotification = createAsyncThunk('appNotification/addNotification
 })
 
 export const fetchNotifications = createAsyncThunk('appNotification/fetchNotifications', async (_, { getState }) => {
-  const { notifications } = getState().notifications;
-  if (notifications.length > 0) {
-    return notifications;
-  }
-
   const response = await apiClient.get(apiSpec.NOTIFICATION_CONTROLLER)
     .then(response => {
       const notifications = response.data;

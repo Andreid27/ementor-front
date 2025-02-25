@@ -37,7 +37,7 @@ import Spinner from 'src/@core/components/spinner'
 import { AuthProvider } from 'src/context/AuthContext'
 import { SettingsConsumer, SettingsProvider } from 'src/@core/context/settingsContext'
 import { AppBarProvider } from 'src/context/AppBarContext'
-import { WebSocketProvider } from 'src/context/WebSocketContext'
+import { WebSocketProvider, useWebSocket } from 'src/context/WebSocketContext'
 
 // ** Styled Components
 import ReactHotToast from 'src/@core/styles/libs/react-hot-toast'

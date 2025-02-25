@@ -26,7 +26,7 @@ import componentTypes from 'src/pages/student-results/componets/componentsType.j
 import { Button, LinearProgress } from '@mui/material'
 import AssignationModal from './assignationModal'
 import { useDispatch } from 'react-redux'
-import { fetchData, updateAllStudents } from 'src/store/apps/user'
+import { updateAllStudents } from 'src/store/apps/user'
 import Router from 'next/router'
 import DeleteDialogTransition from './DeleteDialogTransition'
 import extractProfilePicture from 'src/@core/axios/profile-picture-extractor'
