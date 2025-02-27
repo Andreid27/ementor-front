@@ -8,6 +8,7 @@ import apiClient from 'src/@core/axios/axiosEmentor'
 import * as apiSpec from '../../../apiSpec'
 import { useRouter } from 'next/router'
 import PreviousAttempt from './previous-attempt'
+import PreviousAttemptProfessor from './previous-attempt-professor'
 
 const StyledBox = styled(Box)(({ theme }) => ({
   [theme.breakpoints.up('sm')]: {
@@ -23,42 +24,40 @@ const QuizPreview = props => {
   const [previewMetadata, setPreviewMetadata] = useState(props.preview)
 
   useEffect(() => {
-    setPreviewMetadata(props.preview)
-    let quizId = props.preview && props.preview.quizId ? props.preview.quizId : null;
-    if (props.preview.quizId == null) {
-      apiClient
-        .get(apiSpec.QUIZ_SERVICE + `/attempt-preview/${props.preview.id}`)
-        .then(response => {
+    const fetchData = async () => {
+      try {
+        setPreviewMetadata(props.preview)
+        let quizId = props.preview && props.preview.quizId ? props.preview.quizId : null;
+        if (props.preview.quizId == null && props.role === 'STUDENT') {
+          const response = await apiClient.get(apiSpec.QUIZ_SERVICE + `/attempt-preview/${props.preview.id}`)
           setPreviewMetadata(response.data)
           quizId = response.data.quizId
 
-          return apiClient.get(apiSpec.QUIZ_SERVICE + `/${quizId}`)
-        })
-        .then(response => {
+          const quizResponse = await apiClient.get(apiSpec.QUIZ_SERVICE + `/${quizId}`)
+          setPreview(quizResponse.data)
+        } else {
+          const response = await apiClient.get(apiSpec.QUIZ_SERVICE + `/${previewMetadata.id}`)
           setPreview(response.data)
-          setLoading(false)
-        })
-        .catch(error => {
-          console.log(error)
-          setLoading(false)
-        })
-    } else {
-      apiClient
-        .get(apiSpec.QUIZ_SERVICE + `/${quizId}`)
-        .then(response => {
-          setPreview(response.data)
-          setLoading(false)
-        })
-        .catch(error => {
-          console.log(error)
-          setLoading(false)
-        })
+          setPreviewMetadata(response.data)
+        }
+      } catch (error) {
+        console.log(error)
+      } finally {
+        setLoading(false)
+      }
     }
+
+    fetchData()
   }, [props.preview])
 
   const handleStartTest = () => {
     props.setPreview()
     router.push(`/quiz/${previewMetadata.id}`)
+  }
+
+  const handleViewQuiz = () => {
+    props.setPreview()
+    router.push(`/edit-quiz/${props.preview.id}`)
   }
 
   return (
@@ -145,7 +144,7 @@ const QuizPreview = props => {
                           >
                             <Icon icon='tabler:list-numbers' fontSize={20} />{' '}
                             <Typography sx={{ color: 'text.secondary' }}>
-                              {previewMetadata.questionsCount} întrebări
+                              {previewMetadata.questionsCount ? previewMetadata.questionsCount : previewMetadata?.questions?.length} întrebări
                             </Typography>
                           </Box>
                           <Box sx={{ display: 'flex', alignItems: 'center', '& svg': { color: 'primary.main', mr: 2.75 } }}>
@@ -196,21 +195,34 @@ const QuizPreview = props => {
                           </Box>
 
                           <Typography sx={{ color: 'secondary.main', marginRight: '0.3em' }}>
-                            Încercări rămase: {preview ? preview.remainedAttempts : null}
+                            {
+                              props.userRole === 'STUDENT' ?
+                                `Încercări rămase: ${preview ? preview.remainedAttempts : null}` :
+                                `Rezolvări trimise: ${preview ? preview.quizPreviousAttempts.length : null}`
+                            }
+
                           </Typography>
                         </Typography>
-                        <Button onClick={() => {
-                          props.setPreview()
-                          router.push("/quizzes")
-                        }
+                        <Button onClick={() => { props.setPreview() }
                         }>Inapoi</Button>
-                        <Button
-                          variant='contained'
-                          onClick={() => handleStartTest()}
-                          disabled={preview ? preview.remainedAttempts <= 0 : true}
-                        >
-                          Start test
-                        </Button>
+                        {props.userRole === 'STUDENT' ?
+                          (<Button
+                            variant='contained'
+                            onClick={() => handleStartTest()}
+                            disabled={preview ? preview.remainedAttempts <= 0 : true}
+                          >
+                            Start test
+                          </Button>) :
+                          (
+                            <Button
+                              variant='contained'
+                              onClick={() => handleViewQuiz()}
+                              disabled={preview ? preview.remainedAttempts <= 0 : true}
+                            >
+                              Vezi test
+                            </Button>)
+                        }
+
                       </div>
                     </CardContent>
                   </Grid>
@@ -229,7 +241,15 @@ const QuizPreview = props => {
                       </Grid>
                       {preview.quizPreviousAttempts.map((attempt, index) => (
                         <Grid key={attempt.id} item xs={12} sm={12}>
-                          <PreviousAttempt attempt={attempt} questionsCount={previewMetadata.questionsCount} index={index} />
+                          {props.userRole === 'STUDENT' ? (
+                            <PreviousAttempt attempt={attempt} questionsCount={previewMetadata.questionsCount} index={index} />
+                          ) : (
+                            <PreviousAttemptProfessor
+                              attempt={attempt}
+                              questionsCount={props.preview.questionsCount}
+                              index={index}
+                              users={props.users}
+                            />)}
                         </Grid>
                       ))}
                     </Grid>

@@ -8,7 +8,7 @@ import CustomAvatar from 'src/@core/components/mui/avatar'
 // ** Utils Import
 import { getInitials } from 'src/@core/utils/get-initials'
 
-const PreviousAttempt = props => {
+const PreviousAttemptProfessor = props => {
   const router = useRouter()
 
   const getAlertType = () => {
@@ -40,6 +40,7 @@ const PreviousAttempt = props => {
           color={color}
           sx={{ mr: 3, fontSize: '.8rem', width: '1.875rem', height: '1.875rem' }}
         >
+
           {getInitials(user.lastName ? `${user.firstName} ${user.lastName} ` : 'John Doe')}
         </CustomAvatar>
       )
@@ -120,9 +121,9 @@ const PreviousAttempt = props => {
   )
 }
 
-PreviousAttempt.acl = {
+PreviousAttemptProfessor.acl = {
   action: 'read',
   subject: 'student-pages'
 }
 
-export default PreviousAttempt
+export default PreviousAttemptProfessor

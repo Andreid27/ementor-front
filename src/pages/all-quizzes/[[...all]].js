@@ -2,8 +2,7 @@
 import { Button, Card, CardHeader } from '@mui/material'
 import { useEffect, useState } from 'react'
 import TestsTable from 'src/pages/all-quizzes/componets/table'
-import QuizPreview from './componets/quiz-preview'
-import { margin } from '@mui/system'
+import QuizPreview from '../quizzes/componets/quiz-preview'
 import { useRouter } from 'next/router'
 import apiClient from 'src/@core/axios/axiosEmentor'
 import * as apiSpec from '../../apiSpec'
@@ -12,7 +11,10 @@ import { useDispatch } from 'react-redux'
 import { updateAllStudents } from 'src/store/apps/user'
 
 const QuizzesPage = () => {
-  const [preview, setPreview] = useState()
+  const [preview, setPreview] = useState(
+    window.location.pathname.split('/')[2] &&
+      window.location.pathname.split('/')[2].length === 36
+      ? { id: window.location.pathname.split('/')[2] } : null)
   const router = useRouter()
   const [users, setUsers] = useState([])
   const dispatch = useDispatch()
@@ -22,19 +24,28 @@ const QuizzesPage = () => {
   }
 
   useEffect(() => {
-    try {
-      apiClient.get("service3/users/role/STUDENT")
-        .then(response => {
-          setUsers(response.data)
-          dispatch(updateAllStudents(response.data))
-        })
-        .catch(error => {
-          console.log(error)
-          toast.error('Nu s-au putut prelua utilizatorii')
-        })
-    } catch (error) {
-      console.error(error)
+    if (router && router.query && router.query.all) {
+      if (router.query.all.length > 0 && router.query.all[0].length === 36) {
+        setPreview({ id: router.query.all[0] })
+      } else if (router.query.all.length === 0) {
+        setPreview(null)
+      }
     }
+  }, [router.query])
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await apiClient.get("service3/users/role/STUDENT")
+        setUsers(response.data)
+        dispatch(updateAllStudents(response.data))
+      } catch (error) {
+        console.log(error)
+        toast.error('Nu s-au putut prelua utilizatorii')
+      }
+    }
+
+    fetchUsers()
   }, [])
 
   return (
@@ -44,7 +55,7 @@ const QuizzesPage = () => {
       </Button>
       <Card>
         {preview ? (
-          <QuizPreview preview={preview} setPreview={setPreview} users={users} />
+          <QuizPreview preview={preview} setPreview={setPreview} users={users} userRole={'PROFESSOR'} />
         ) : (
           <TestsTable preview={preview} setPreview={setPreview} />
         )}
