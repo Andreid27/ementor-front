@@ -55,10 +55,10 @@ const PreviousAttemptProfessor = props => {
         {renderClient(attempt, user)}
         <Box sx={{ display: 'flex', flexDirection: 'column' }}>
           <Typography noWrap variant='body2' sx={{ color: 'text.primary', fontWeight: 600 }}>
-            {user.firstName} {user.lastName}
+            {user?.firstName} {user?.lastName}
           </Typography>
           <Typography noWrap variant='caption'>
-            {user.email}
+            {user?.email}
           </Typography>
         </Box>
       </Box>
