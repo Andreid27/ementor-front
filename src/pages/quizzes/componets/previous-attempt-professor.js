@@ -41,7 +41,7 @@ const PreviousAttemptProfessor = props => {
           sx={{ mr: 3, fontSize: '.8rem', width: '1.875rem', height: '1.875rem' }}
         >
 
-          {getInitials(user.lastName ? `${user.firstName} ${user.lastName} ` : 'John Doe')}
+          {getInitials(user?.lastName ? `${user.firstName} ${user.lastName} ` : 'John Doe')}
         </CustomAvatar>
       )
     }

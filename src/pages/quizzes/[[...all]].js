@@ -27,7 +27,7 @@ const QuizzesPage = () => {
     <>
       <Card>
         {preview ? (
-          <QuizPreview preview={preview} setPreview={setPreview} />
+          <QuizPreview preview={preview} setPreview={setPreview} userRole={'STUDENT'} />
         ) : (
           <StudentsTestsTable preview={preview} setPreview={setPreview} />
         )}

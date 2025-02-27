@@ -5,17 +5,18 @@ import TestsTable from 'src/pages/all-quizzes/componets/table'
 import QuizPreview from '../quizzes/componets/quiz-preview'
 import { useRouter } from 'next/router'
 import apiClient from 'src/@core/axios/axiosEmentor'
-import * as apiSpec from '../../apiSpec'
 import toast from 'react-hot-toast'
 import { useDispatch } from 'react-redux'
 import { updateAllStudents } from 'src/store/apps/user'
 
 const QuizzesPage = () => {
+  const router = useRouter()
+
   const [preview, setPreview] = useState(
     window.location.pathname.split('/')[2] &&
       window.location.pathname.split('/')[2].length === 36
       ? { id: window.location.pathname.split('/')[2] } : null)
-  const router = useRouter()
+
   const [users, setUsers] = useState([])
   const dispatch = useDispatch()
 
@@ -47,6 +48,8 @@ const QuizzesPage = () => {
 
     fetchUsers()
   }, [])
+
+  console.log(preview)
 
   return (
     <>

@@ -224,7 +224,7 @@ const NotificationDropdown = props => {
     } else if (mapping === 'NO_REDIRECT') {
       return;
     }
-    const url = `${mapping}/${notification.subjectValue}`;
+    const url = userRole === 'STUDENT' ? `${mapping}/${notification.subjectValue}` : `${mapping}/${notification?.content?.isAboutId}`;;
 
     console.log(url)
     if (url) {

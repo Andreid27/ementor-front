@@ -18,7 +18,7 @@ const StyledBox = styled(Box)(({ theme }) => ({
 
 const QuizPreview = props => {
   console.log(props)
-  const [preview, setPreview] = useState(null)
+  const [preview, setPreview] = useState()
   const [loading, setLoading] = useState(true)
   const router = useRouter()
   const [previewMetadata, setPreviewMetadata] = useState(props.preview)
@@ -28,7 +28,7 @@ const QuizPreview = props => {
       try {
         setPreviewMetadata(props.preview)
         let quizId = props.preview && props.preview.quizId ? props.preview.quizId : null;
-        if (props.preview.quizId == null && props.role === 'STUDENT') {
+        if (props.userRole === 'STUDENT') {
           const response = await apiClient.get(apiSpec.QUIZ_SERVICE + `/attempt-preview/${props.preview.id}`)
           setPreviewMetadata(response.data)
           quizId = response.data.quizId
@@ -36,7 +36,7 @@ const QuizPreview = props => {
           const quizResponse = await apiClient.get(apiSpec.QUIZ_SERVICE + `/${quizId}`)
           setPreview(quizResponse.data)
         } else {
-          const response = await apiClient.get(apiSpec.QUIZ_SERVICE + `/${previewMetadata.id}`)
+          const response = await apiClient.get(apiSpec.QUIZ_SERVICE + `/${props.preview.id}`)
           setPreview(response.data)
           setPreviewMetadata(response.data)
         }
@@ -58,6 +58,14 @@ const QuizPreview = props => {
   const handleViewQuiz = () => {
     props.setPreview()
     router.push(`/edit-quiz/${props.preview.id}`)
+  }
+
+  const handleBack = () => {
+    props.setPreview()
+    if (router.query.all && router.query.all.length > 0) {
+      router.query.all = []
+      router.push(router)
+    }
   }
 
   return (
@@ -203,8 +211,7 @@ const QuizPreview = props => {
 
                           </Typography>
                         </Typography>
-                        <Button onClick={() => { props.setPreview() }
-                        }>Inapoi</Button>
+                        <Button onClick={() => handleBack()}>Inapoi</Button>
                         {props.userRole === 'STUDENT' ?
                           (<Button
                             variant='contained'
@@ -216,7 +223,7 @@ const QuizPreview = props => {
                           (
                             <Button
                               variant='contained'
-                              onClick={() => handleViewQuiz()}
+                              onClick={() => handleBack()}
                               disabled={preview ? preview.remainedAttempts <= 0 : true}
                             >
                               Vezi test
