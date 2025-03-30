@@ -223,7 +223,7 @@ const QuizPreview = props => {
                           (
                             <Button
                               variant='contained'
-                              onClick={() => handleBack()}
+                              onClick={() => handleViewQuiz()}
                               disabled={preview ? preview.remainedAttempts <= 0 : true}
                             >
                               Vezi test
