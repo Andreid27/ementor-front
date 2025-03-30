@@ -25,7 +25,7 @@ const AssignationModal = props => {
   const handleClickOpen = () => setOpen(true)
   const handleClose = () => setOpen(false)
   const [quizzes, setQuizzes] = useState([])
-  const [selectedQuizzes, setSelectedQuizzes] = useState([])
+  const [selectedQuizzes, setSelectedQuizzes] = useState()
   const [selectedUsers, setSelectedUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [dateTime, setDateTime] = useState(new Date())
@@ -59,6 +59,7 @@ const AssignationModal = props => {
       .then(response => {
         setQuizzes(response.data.data)
         setLoading(false)
+        initializeSelectedQuizzes(response.data.data) // Initialize selectedQuizzes
       })
       .catch(error => {
         console.log(error)
@@ -86,11 +87,37 @@ const AssignationModal = props => {
         setSelectedUsers([])
         toast.success('Testele au fost asignate cu succes!')
         handleClose()
+        initializeSelectedQuizzes(quizzes)
       })
       .catch(error => {
         console.log(error)
         toast.error(error.toISOString())
       })
+
+
+  }
+
+  const initializeSelectedQuizzes = (quizzes) => {
+    let initialValues = []
+    if (props?.initialValues && props.initialValues.length > 0 && quizzes.length > 0) {
+      initialValues = quizzes.filter(quiz => props.initialValues.includes(quiz.id))
+      setSelectedQuizzes(initialValues)
+    }
+  }
+
+  const renderQuizChips = (value, getTagProps) => {
+    return value.map((option, index) => (
+      <Chip
+        label={option.title}
+        {...(getTagProps ? getTagProps({ index }) : {})}
+        onDelete={() => {
+          const newValue = [...selectedQuizzes]
+          newValue.splice(index, 1)
+          setSelectedQuizzes(newValue)
+        }}
+        key={option.id}
+      />
+    ))
   }
 
   return (
@@ -102,9 +129,9 @@ const AssignationModal = props => {
       ) : (
         <Fragment>
           <Button
-            sx={{ margin: '2em', marginLeft: '1em', marginTop: '0em' }}
+            sx={props.buttonSx}
             variant='contained'
-            size='large'
+            size={props.buttonSize === 'large' ? 'large' : 'medium'}
             onClick={handleClickOpen}
           >
             Asignează un test

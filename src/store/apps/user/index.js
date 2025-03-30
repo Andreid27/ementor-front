@@ -63,7 +63,13 @@ export const selectUser = state => state.user.data
 
 export const selectThumbnail = state => state.user.tokens
 
-export const selectAllStudents = (state) => state.user?.allStudents || [];
+export const selectAllStudents = (state) => {
+  if (!state.user?.allStudents || state.user.allStudents.length === 0) {
+    return fetchData();
+  }
+
+  return state.user.allStudents;
+};
 
 export const appUsersSlice = createSlice({
   name: 'appUsers',

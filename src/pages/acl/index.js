@@ -7,7 +7,7 @@ import { AbilityContext } from 'src/layouts/components/acl/Can'
 // ** MUI Imports
 import Grid from '@mui/material/Grid'
 import CardActivityTimeline from './components/Timeline'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { selectAllStudents, updateAllStudents } from 'src/store/apps/user'
 import apiClient from 'src/@core/axios/axiosEmentor'
 import { fetchNotifications } from 'src/store/apps/notifications'
@@ -17,7 +17,7 @@ import extractProfilePicture from 'src/@core/axios/profile-picture-extractor'
 
 const ACLPage = () => {
   const dispatch = useDispatch()
-  const [users, setUsers] = useState(dispatch(selectAllStudents))
+  const [users, setUsers] = useState(useSelector(selectAllStudents))
   const [loading, setLoading] = useState(true)
   const [quizzesData, setQuizzesData] = useState([])
 

@@ -389,7 +389,7 @@ const StudentsResultsTable = () => {
 
   return (
     <>
-      <AssignationModal users={users} />
+      <AssignationModal users={users} buttonSx={{ margin: '2em', marginLeft: '1em', marginTop: '0em' }} buttonSize={'large'} />
       <Card>
         <CardHeader title='Rezultate studenți' />
         <Box sx={{ px: 3, pb: 3, pl: '1.7%' }}>

@@ -1,5 +1,5 @@
 // ** React Imports
-import { Box, Card, CardHeader } from '@mui/material'
+import { Box, Button, Card, CardHeader } from '@mui/material'
 import { useEffect, useState } from 'react'
 import CircularProgress from '@mui/material/CircularProgress'
 import QuizComponent from './new-quiz/quiz-component'
@@ -9,6 +9,8 @@ import { selectNewQuiz } from 'src/store/apps/quiz'
 import apiClient from 'src/@core/axios/axiosEmentor'
 import { addQuiz } from 'src/store/apps/quiz'
 import * as apiSpec from 'src/apiSpec'
+import AssignationModal from '../all-lessons/componets/assignationModal'
+import { selectAllStudents } from 'src/store/apps/user'
 
 const QuizPage = () => {
   const [loading, setLoading] = useState(true)
@@ -16,6 +18,7 @@ const QuizPage = () => {
   const [isEdit, setIsEdit] = useState(null)
   const previousValues = useSelector(selectNewQuiz)
   const [quiz, setQuiz] = useState(null)
+  const [users, setUsers] = useState(useSelector(selectAllStudents))
   const dispatch = useDispatch()
   const urlId = window.location.pathname.split('/')[2]
 
@@ -82,7 +85,10 @@ const QuizPage = () => {
             </>
           ) : (
             <>
-              <CardHeader title='Vizualizare test' />
+              <CardHeader title='Vizualizare test'
+                action={
+                  <AssignationModal users={users} initialValues={[quiz.id]} />
+                } />
               <QuizView quiz={quiz} setIsEdit={setIsEdit} />
             </>
           )}
