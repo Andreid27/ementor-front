@@ -25,9 +25,25 @@ import Icon from 'src/@core/components/icon'
 // ** Styled Components
 import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker'
 
-const capitalize = string => string && string[0].toUpperCase() + string.slice(1)
+// ** Types
+import { CalendarEvent, CalendarLabel, CalendarStore } from 'src/pages/apps/calendar'
+import { CalendarApi } from '@fullcalendar/core'
+import { Dispatch } from '@reduxjs/toolkit'
 
-const defaultState = {
+const capitalize = (string: string) => string && string[0].toUpperCase() + string.slice(1)
+
+interface EventFormValues {
+  url: string
+  title: string
+  guests: string[]
+  allDay: boolean
+  description: string
+  endDate: Date
+  calendar: CalendarLabel
+  startDate: Date
+}
+
+const defaultState: EventFormValues = {
   url: '',
   title: '',
   guests: [],
@@ -38,7 +54,32 @@ const defaultState = {
   startDate: new Date()
 }
 
-const AddEventSidebar = props => {
+interface AddEventSidebarProps {
+  store: CalendarStore
+  dispatch: Dispatch<any>
+  addEvent: (event: any) => void
+  updateEvent: (event: any) => void
+  drawerWidth: number
+  calendarApi: CalendarApi | null
+  deleteEvent: (id: string | number) => void
+  handleSelectEvent: (event: CalendarEvent | null) => void
+  addEventSidebarOpen: boolean
+  handleAddEventSidebarToggle: () => void
+}
+
+interface FormData {
+  title: string
+}
+
+interface PickersComponentProps {
+  label?: string
+  error?: boolean
+  value?: any
+  onChange?: (event: any) => void
+  [key: string]: any
+}
+
+const AddEventSidebar = (props: AddEventSidebarProps) => {
   // ** Props
   const {
     store,
@@ -54,7 +95,9 @@ const AddEventSidebar = props => {
   } = props
 
   // ** States
-  const [values, setValues] = useState(defaultState)
+  const [values, setValues] = useState<EventFormValues>(defaultState)
+
+  //TODO: continue here to map the add event form to working with backend and the calendar API to add, update, and delete events, view events, and handle the sidebar functionality.
 
   const {
     control,
@@ -62,7 +105,7 @@ const AddEventSidebar = props => {
     clearErrors,
     handleSubmit,
     formState: { errors }
-  } = useForm({ defaultValues: { title: '' } })
+  } = useForm<FormData>({ defaultValues: { title: '' } })
 
   const handleSidebarClose = async () => {
     setValues(defaultState)
@@ -71,7 +114,7 @@ const AddEventSidebar = props => {
     handleAddEventSidebarToggle()
   }
 
-  const onSubmit = data => {
+  const onSubmit = (data: FormData) => {
     const modifiedEvent = {
       url: values.url,
       display: 'block',
@@ -90,7 +133,7 @@ const AddEventSidebar = props => {
     } else {
       dispatch(updateEvent({ id: store.selectedEvent.id, ...modifiedEvent }))
     }
-    calendarApi.refetchEvents()
+    calendarApi?.refetchEvents()
     handleSidebarClose()
   }
 
@@ -103,7 +146,7 @@ const AddEventSidebar = props => {
     handleSidebarClose()
   }
 
-  const handleStartDate = date => {
+  const handleStartDate = (date: Date) => {
     if (date > values.endDate) {
       setValues({ ...values, startDate: new Date(date), endDate: new Date(date) })
     }
@@ -120,8 +163,8 @@ const AddEventSidebar = props => {
         guests: event.extendedProps.guests || [],
         description: event.extendedProps.description || '',
         calendar: event.extendedProps.calendar || 'Business',
-        endDate: event.end !== null ? event.end : event.start,
-        startDate: event.start !== null ? event.start : new Date()
+        endDate: event.end !== null ? new Date(event.end) : new Date(event.start),
+        startDate: event.start !== null ? new Date(event.start) : new Date()
       })
     }
   }, [setValue, store.selectedEvent])
@@ -130,6 +173,7 @@ const AddEventSidebar = props => {
     setValue('title', '')
     setValues(defaultState)
   }, [setValue])
+
   useEffect(() => {
     if (store.selectedEvent !== null) {
       resetToStoredValues()
@@ -138,18 +182,13 @@ const AddEventSidebar = props => {
     }
   }, [addEventSidebarOpen, resetToStoredValues, resetToEmptyValues, store.selectedEvent])
 
-  const PickersComponent = forwardRef(({ ...props }, ref) => {
-    return (
-      <CustomTextField
-        inputRef={ref}
-        fullWidth
-        {...props}
-        label={props.label || ''}
-        sx={{ width: '100%' }}
-        error={props.error}
-      />
-    )
+  const PickersComponent = forwardRef<HTMLInputElement, PickersComponentProps>(({ ...props }, ref) => {
+    const TextField = CustomTextField as any
+
+    return <TextField inputRef={ref} fullWidth {...props} sx={{ width: '100%' }} />
   })
+
+  PickersComponent.displayName = 'PickersComponent'
 
   const RenderSidebarFooter = () => {
     if (store.selectedEvent === null || (store.selectedEvent !== null && !store.selectedEvent.title.length)) {
@@ -158,7 +197,7 @@ const AddEventSidebar = props => {
           <Button type='submit' variant='contained' sx={{ mr: 4 }}>
             Add
           </Button>
-          <Button variant='tonal' color='secondary' onClick={resetToEmptyValues}>
+          <Button variant='outlined' color='secondary' onClick={resetToEmptyValues}>
             Reset
           </Button>
         </Fragment>
@@ -169,7 +208,7 @@ const AddEventSidebar = props => {
           <Button type='submit' variant='contained' sx={{ mr: 4 }}>
             Update
           </Button>
-          <Button variant='tonal' color='secondary' onClick={resetToStoredValues}>
+          <Button variant='outlined' color='secondary' onClick={resetToStoredValues}>
             Reset
           </Button>
         </Fragment>
@@ -215,7 +254,7 @@ const AddEventSidebar = props => {
               color: 'text.primary',
               backgroundColor: 'action.selected',
               '&:hover': {
-                backgroundColor: theme => `rgba(${theme.palette.customColors.main}, 0.16)`
+                backgroundColor: (theme: any) => `rgba(${theme.palette.customColors.main}, 0.16)`
               }
             }}
           >
@@ -223,42 +262,52 @@ const AddEventSidebar = props => {
           </IconButton>
         </Box>
       </Box>
-      <Box className='sidebar-body' sx={{ p: theme => theme.spacing(0, 6, 6) }}>
+      <Box className='sidebar-body' sx={{ p: (theme: any) => theme.spacing(0, 6, 6) }}>
         <DatePickerWrapper>
           <form onSubmit={handleSubmit(onSubmit)} autoComplete='off'>
             <Controller
               name='title'
               control={control}
               rules={{ required: true }}
-              render={({ field: { value, onChange } }) => (
-                <CustomTextField
-                  fullWidth
-                  label='Title'
-                  value={value}
-                  sx={{ mb: 4 }}
-                  onChange={onChange}
-                  placeholder='Event Title'
-                  error={Boolean(errors.title)}
-                  {...(errors.title && { helperText: 'This field is required' })}
-                />
-              )}
-            />
-            <CustomTextField
-              select
-              fullWidth
-              sx={{ mb: 4 }}
-              label='Calendar'
-              SelectProps={{
-                value: values.calendar,
-                onChange: e => setValues({ ...values, calendar: e.target.value })
+              render={({ field: { value, onChange } }) => {
+                const TextField = CustomTextField as any
+
+                return (
+                  <TextField
+                    fullWidth
+                    label='Title'
+                    value={value}
+                    sx={{ mb: 4 }}
+                    onChange={onChange}
+                    placeholder='Event Title'
+                    error={Boolean(errors.title)}
+                    {...(errors.title && { helperText: 'This field is required' })}
+                  />
+                )
               }}
-            >
-              <MenuItem value='Personal'>Personal</MenuItem>
-              <MenuItem value='Business'>Business</MenuItem>
-              <MenuItem value='Family'>Family</MenuItem>
-              <MenuItem value='Holiday'>Holiday</MenuItem>
-              <MenuItem value='ETC'>ETC</MenuItem>
-            </CustomTextField>
+            />
+            {(() => {
+              const TextField = CustomTextField as any
+
+              return (
+                <TextField
+                  select
+                  fullWidth
+                  sx={{ mb: 4 }}
+                  label='Calendar'
+                  SelectProps={{
+                    value: values.calendar,
+                    onChange: (e: any) => setValues({ ...values, calendar: e.target.value as CalendarLabel })
+                  }}
+                >
+                  <MenuItem value='Personal'>Personal</MenuItem>
+                  <MenuItem value='Business'>Business</MenuItem>
+                  <MenuItem value='Family'>Family</MenuItem>
+                  <MenuItem value='Holiday'>Holiday</MenuItem>
+                  <MenuItem value='ETC'>ETC</MenuItem>
+                </TextField>
+              )
+            })()}
             <Box sx={{ mb: 4 }}>
               <DatePicker
                 selectsStart
@@ -268,8 +317,8 @@ const AddEventSidebar = props => {
                 startDate={values.startDate}
                 showTimeSelect={!values.allDay}
                 dateFormat={!values.allDay ? 'yyyy-MM-dd hh:mm' : 'yyyy-MM-dd'}
-                customInput={<PickersComponent label='Start Date' registername='startDate' />}
-                onChange={date => setValues({ ...values, startDate: new Date(date) })}
+                customInput={<PickersComponent label='Start Date' />}
+                onChange={(date: Date) => setValues({ ...values, startDate: new Date(date) })}
                 onSelect={handleStartDate}
               />
             </Box>
@@ -283,56 +332,81 @@ const AddEventSidebar = props => {
                 startDate={values.startDate}
                 showTimeSelect={!values.allDay}
                 dateFormat={!values.allDay ? 'yyyy-MM-dd hh:mm' : 'yyyy-MM-dd'}
-                customInput={<PickersComponent label='End Date' registername='endDate' />}
-                onChange={date => setValues({ ...values, endDate: new Date(date) })}
+                customInput={<PickersComponent label='End Date' />}
+                onChange={(date: Date) => setValues({ ...values, endDate: new Date(date) })}
               />
             </Box>
             <FormControl sx={{ mb: 4 }}>
               <FormControlLabel
                 label='All Day'
                 control={
-                  <Switch checked={values.allDay} onChange={e => setValues({ ...values, allDay: e.target.checked })} />
+                  <Switch
+                    checked={values.allDay}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setValues({ ...values, allDay: e.target.checked })
+                    }
+                  />
                 }
               />
             </FormControl>
-            <CustomTextField
-              fullWidth
-              type='url'
-              id='event-url'
-              sx={{ mb: 4 }}
-              label='Event URL'
-              value={values.url}
-              placeholder='https://www.google.com'
-              onChange={e => setValues({ ...values, url: e.target.value })}
-            />
+            {(() => {
+              const TextField = CustomTextField as any
 
-            <CustomTextField
-              select
-              fullWidth
-              label='Guests'
-              sx={{ mb: 4 }}
-              SelectProps={{
-                multiple: true,
-                value: values.guests,
-                onChange: e => setValues({ ...values, guests: e.target.value })
-              }}
-            >
-              <MenuItem value='bruce'>Bruce</MenuItem>
-              <MenuItem value='clark'>Clark</MenuItem>
-              <MenuItem value='diana'>Diana</MenuItem>
-              <MenuItem value='john'>John</MenuItem>
-              <MenuItem value='barry'>Barry</MenuItem>
-            </CustomTextField>
-            <CustomTextField
-              rows={4}
-              multiline
-              fullWidth
-              sx={{ mb: 6.5 }}
-              label='Description'
-              id='event-description'
-              value={values.description}
-              onChange={e => setValues({ ...values, description: e.target.value })}
-            />
+              return (
+                <TextField
+                  fullWidth
+                  type='url'
+                  id='event-url'
+                  sx={{ mb: 4 }}
+                  label='Event URL'
+                  value={values.url}
+                  placeholder='https://www.google.com'
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setValues({ ...values, url: e.target.value })}
+                />
+              )
+            })()}
+
+            {(() => {
+              const TextField = CustomTextField as any
+
+              return (
+                <TextField
+                  select
+                  fullWidth
+                  label='Guests'
+                  sx={{ mb: 4 }}
+                  SelectProps={{
+                    multiple: true,
+                    value: values.guests,
+                    onChange: (e: any) => setValues({ ...values, guests: e.target.value as string[] })
+                  }}
+                >
+                  <MenuItem value='bruce'>Bruce</MenuItem>
+                  <MenuItem value='clark'>Clark</MenuItem>
+                  <MenuItem value='diana'>Diana</MenuItem>
+                  <MenuItem value='john'>John</MenuItem>
+                  <MenuItem value='barry'>Barry</MenuItem>
+                </TextField>
+              )
+            })()}
+            {(() => {
+              const TextField = CustomTextField as any
+
+              return (
+                <TextField
+                  rows={4}
+                  multiline
+                  fullWidth
+                  sx={{ mb: 6.5 }}
+                  label='Description'
+                  id='event-description'
+                  value={values.description}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                    setValues({ ...values, description: e.target.value })
+                  }
+                />
+              )
+            })()}
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <RenderSidebarFooter />
             </Box>

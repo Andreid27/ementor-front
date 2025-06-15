@@ -20,11 +20,13 @@ const QuizStatsOverall = props => {
     if (seconds < 60) return `${seconds} secunde`
     if (seconds < 3600) {
       const minutes = Math.floor(seconds / 60)
-      return `${minutes} minut${minutes === 1 ? '' : 'e'}`
+      
+return `${minutes} minut${minutes === 1 ? '' : 'e'}`
     }
     const hours = Math.floor(seconds / 3600)
     const minutes = Math.floor((seconds % 3600) / 60)
-    return `${hours} or${hours === 1 ? 'ă' : 'e'} ${minutes} minut${minutes === 1 ? '' : 'e'}`
+    
+return `${hours} or${hours === 1 ? 'ă' : 'e'} ${minutes} minut${minutes === 1 ? '' : 'e'}`
   }
 
   const StatRow = ({ label, value }) => (

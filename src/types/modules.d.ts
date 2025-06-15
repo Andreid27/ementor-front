@@ -9,6 +9,7 @@ declare module 'src/@core/hooks/useSettings' {
 
 declare module 'src/views/apps/calendar/Calendar' {
   import { ComponentType } from 'react'
+
   const Calendar: ComponentType<{
     store: any
     dispatch: any
@@ -26,6 +27,7 @@ declare module 'src/views/apps/calendar/Calendar' {
 
 declare module 'src/views/apps/calendar/SidebarLeft' {
   import { ComponentType } from 'react'
+
   const SidebarLeft: ComponentType<{
     store: any
     mdAbove: boolean
@@ -44,29 +46,13 @@ declare module 'src/views/apps/calendar/SidebarLeft' {
 
 declare module 'src/@core/styles/libs/fullcalendar' {
   import { ComponentType } from 'react'
+
   const CalendarWrapper: ComponentType<{
     className?: string
     sx?: any
     children: React.ReactNode
   }>
   export default CalendarWrapper
-}
-
-declare module 'src/views/apps/calendar/AddEventSidebar' {
-  import { ComponentType } from 'react'
-  const AddEventSidebar: ComponentType<{
-    store: any
-    dispatch: any
-    addEvent: any
-    updateEvent: any
-    deleteEvent: any
-    calendarApi: any
-    drawerWidth: number
-    handleSelectEvent: any
-    addEventSidebarOpen: boolean
-    handleAddEventSidebarToggle: any
-  }>
-  export default AddEventSidebar
 }
 
 declare module 'src/store/apps/calendar' {
