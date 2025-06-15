@@ -16,9 +16,29 @@ module.exports = {
       experimentalObjectRestSpread: true
     }
   },
+  overrides: [
+    {
+      files: ['**/*.ts', '**/*.tsx'],
+      parser: '@typescript-eslint/parser',
+      plugins: ['@typescript-eslint'],
+      parserOptions: {
+        ecmaVersion: 11,
+        sourceType: 'module',
+        project: './tsconfig.json',
+        ecmaFeatures: {
+          jsx: true
+        }
+      },
+      extends: ['next/core-web-vitals', 'prettier'],
+      rules: {
+        '@typescript-eslint/no-unused-vars': 'error',
+        '@typescript-eslint/no-explicit-any': 'off'
+      }
+    }
+  ],
   rules: {
     'react/react-in-jsx-scope': 'off',
-    'react/jsx-filename-extension': [1, { extensions: ['.js', '.jsx'] }],
+    'react/jsx-filename-extension': [1, { extensions: ['.js', '.jsx', '.ts', '.tsx'] }],
     'react/display-name': 'off',
     '@next/next/no-img-element': 'off',
     'react/no-unescaped-entities': 'off',

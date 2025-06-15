@@ -78,6 +78,18 @@ const navigation = () => {
       path: '/student-results'
     },
     {
+      sectionTitle: 'Administrativ',
+      action: 'read',
+      subject: 'professor-pages'
+    },
+    {
+      title: 'Calendar',
+      icon: 'tabler:calendar',
+      subject: 'professor-pages',
+      action: 'read',
+      path: '/apps/calendar'
+    },
+    {
       sectionTitle: 'Apps & Pages'
     },
     {
@@ -89,11 +101,6 @@ const navigation = () => {
       title: 'Chat',
       icon: 'tabler:messages',
       path: '/apps/chat'
-    },
-    {
-      title: 'Calendar',
-      icon: 'tabler:calendar',
-      path: '/apps/calendar'
     },
     {
       title: 'Invoice',

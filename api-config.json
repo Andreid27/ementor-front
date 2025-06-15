@@ -1,0 +1,25 @@
+{
+  "services": [
+    {
+      "name": "user-service",
+      "swaggerUrl": "https://petstore.swagger.io/v2/swagger.json",
+      "outputDir": "src/generated/user-service",
+      "baseUrl": "/service1/user"
+    },
+    {
+      "name": "profile-service",
+      "swaggerUrl": "https://dev.api.e-mentor.ro/service2/e-docs",
+      "outputDir": "src/generated/profile-service",
+      "baseUrl": "/service2"
+    }
+  ],
+  "globalConfig": {
+    "generator": "typescript-axios",
+    "additionalProperties": {
+      "npmName": "ementor-api-client",
+      "supportsES6": true,
+      "withInterfaces": true,
+      "useSingleRequestParameter": true
+    }
+  }
+}

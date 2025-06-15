@@ -3,18 +3,24 @@ import { useEffect, useState } from 'react'
 
 // ** MUI Imports
 import Box from '@mui/material/Box'
+import { Theme } from '@mui/material/styles'
 import useMediaQuery from '@mui/material/useMediaQuery'
 
 // ** Redux Imports
 import { useDispatch, useSelector } from 'react-redux'
 
 // ** Hooks
+// @ts-ignore
 import { useSettings } from 'src/@core/hooks/useSettings'
 
 // ** FullCalendar & App Components Imports
+// @ts-ignore
 import Calendar from 'src/views/apps/calendar/Calendar'
+// @ts-ignore
 import SidebarLeft from 'src/views/apps/calendar/SidebarLeft'
+// @ts-ignore
 import CalendarWrapper from 'src/@core/styles/libs/fullcalendar'
+// @ts-ignore
 import AddEventSidebar from 'src/views/apps/calendar/AddEventSidebar'
 
 // ** Actions
@@ -26,10 +32,43 @@ import {
   handleSelectEvent,
   handleAllCalendars,
   handleCalendarsUpdate
+  // @ts-ignore
 } from 'src/store/apps/calendar'
 
+// ** Types
+import { CalendarApi } from '@fullcalendar/core'
+import { profileServiceClient } from 'src/services'
+
+// ** Types
+export interface CalendarEvent {
+  id: number | string
+  url: string
+  title: string
+  start: Date | string
+  end: Date | string
+  allDay: boolean
+  extendedProps: {
+    calendar: CalendarLabel
+    guests?: string[]
+    location?: string
+    description?: string
+  }
+}
+
+export type CalendarLabel = 'Personal' | 'Business' | 'Family' | 'Holiday' | 'ETC'
+
+export type CalendarColors = {
+  [key in CalendarLabel]: 'error' | 'primary' | 'warning' | 'success' | 'info'
+}
+
+export interface CalendarStore {
+  events: CalendarEvent[]
+  selectedEvent: CalendarEvent | null
+  selectedCalendars: CalendarLabel[]
+}
+
 // ** CalendarColors
-const calendarsColor = {
+const calendarsColor: CalendarColors = {
   Personal: 'error',
   Business: 'primary',
   Family: 'warning',
@@ -39,23 +78,30 @@ const calendarsColor = {
 
 const AppCalendar = () => {
   // ** States
-  const [calendarApi, setCalendarApi] = useState(null)
-  const [leftSidebarOpen, setLeftSidebarOpen] = useState(false)
-  const [addEventSidebarOpen, setAddEventSidebarOpen] = useState(false)
+  const [calendarApi, setCalendarApi] = useState<CalendarApi | null>(null)
+  const [leftSidebarOpen, setLeftSidebarOpen] = useState<boolean>(false)
+  const [addEventSidebarOpen, setAddEventSidebarOpen] = useState<boolean>(false)
 
   // ** Hooks
   const { settings } = useSettings()
   const dispatch = useDispatch()
-  const store = useSelector(state => state.calendar)
+  const store = useSelector((state: any) => state.calendar) as CalendarStore
 
   // ** Vars
   const leftSidebarWidth = 300
   const addEventSidebarWidth = 400
   const { skin, direction } = settings
-  const mdAbove = useMediaQuery(theme => theme.breakpoints.up('md'))
+  const mdAbove = useMediaQuery((theme: Theme) => theme.breakpoints.up('md'))
+
   useEffect(() => {
+    // @ts-ignore
     dispatch(fetchEvents(store.selectedCalendars))
+    profileServiceClient.events.getConsolidatedEvents({
+      startDate: new Date().toISOString(),
+      endDate: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString()
+    })
   }, [dispatch, store.selectedCalendars])
+
   const handleLeftSidebarToggle = () => setLeftSidebarOpen(!leftSidebarOpen)
   const handleAddEventSidebarToggle = () => setAddEventSidebarOpen(!addEventSidebarOpen)
 
@@ -64,14 +110,13 @@ const AppCalendar = () => {
       className='app-calendar'
       sx={{
         boxShadow: skin === 'bordered' ? 0 : 6,
-        ...(skin === 'bordered' && { border: theme => `1px solid ${theme.palette.divider}` })
+        ...(skin === 'bordered' && { border: (theme: Theme) => `1px solid ${theme.palette.divider}` })
       }}
     >
       <SidebarLeft
         store={store}
         mdAbove={mdAbove}
         dispatch={dispatch}
-        calendarApi={calendarApi}
         calendarsColor={calendarsColor}
         leftSidebarOpen={leftSidebarOpen}
         leftSidebarWidth={leftSidebarWidth}
@@ -119,6 +164,11 @@ const AppCalendar = () => {
       />
     </CalendarWrapper>
   )
+}
+
+AppCalendar.acl = {
+  action: 'read',
+  subject: 'professor-pages'
 }
 
 export default AppCalendar
