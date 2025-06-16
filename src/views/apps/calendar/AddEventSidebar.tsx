@@ -38,6 +38,8 @@ interface EventFormValues {
   isRecurring?: boolean
 }
 
+//TODO continue with event creation here
+
 const defaultState: EventFormValues = {
   url: '',
   title: '',
