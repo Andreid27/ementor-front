@@ -29,18 +29,13 @@ import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker'
 import { CalendarEvent, CalendarLabel, CalendarStore } from 'src/pages/apps/calendar'
 import { CalendarApi } from '@fullcalendar/core'
 import { Dispatch } from '@reduxjs/toolkit'
+import { RecurringSeriesDTO } from 'src/generated/profile-service'
 
 const capitalize = (string: string) => string && string[0].toUpperCase() + string.slice(1)
 
 interface EventFormValues {
-  url: string
-  title: string
-  guests: string[]
-  allDay: boolean
-  description: string
-  endDate: Date
-  calendar: CalendarLabel
-  startDate: Date
+  recurringSeriesDTO?: RecurringSeriesDTO
+  isRecurring?: boolean
 }
 
 const defaultState: EventFormValues = {
@@ -167,7 +162,7 @@ const AddEventSidebar = (props: AddEventSidebarProps) => {
         startDate: event.start !== null ? new Date(event.start) : new Date()
       })
     }
-  }, [setValue, store.selectedEvent])
+  }, [setValue, store])
 
   const resetToEmptyValues = useCallback(() => {
     setValue('title', '')
@@ -175,12 +170,12 @@ const AddEventSidebar = (props: AddEventSidebarProps) => {
   }, [setValue])
 
   useEffect(() => {
-    if (store.selectedEvent !== null) {
+    if (store !== null) {
       resetToStoredValues()
     } else {
       resetToEmptyValues()
     }
-  }, [addEventSidebarOpen, resetToStoredValues, resetToEmptyValues, store.selectedEvent])
+  }, [addEventSidebarOpen, resetToStoredValues, resetToEmptyValues, store])
 
   const PickersComponent = forwardRef<HTMLInputElement, PickersComponentProps>(({ ...props }, ref) => {
     const TextField = CustomTextField as any

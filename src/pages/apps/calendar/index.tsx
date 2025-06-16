@@ -37,7 +37,7 @@ import {
 
 // ** Types
 import { CalendarApi } from '@fullcalendar/core'
-import { profileServiceClient } from 'src/services'
+import { EventOccurrenceDTO, profileServiceClient } from 'src/services'
 
 // ** Types
 export interface CalendarEvent {
@@ -62,7 +62,7 @@ export type CalendarColors = {
 }
 
 export interface CalendarStore {
-  events: CalendarEvent[]
+  events: EventOccurrenceDTO[]
   selectedEvent: CalendarEvent | null
   selectedCalendars: CalendarLabel[]
 }
@@ -86,6 +86,8 @@ const AppCalendar = () => {
   const { settings } = useSettings()
   const dispatch = useDispatch()
   const store = useSelector((state: any) => state.calendar) as CalendarStore
+  const [localStore, setLocalStore] = useState<CalendarStore>(store)
+  const [calendarInfo, setCalendarInfo] = useState<any>(null)
 
   // ** Vars
   const leftSidebarWidth = 300
@@ -95,12 +97,25 @@ const AppCalendar = () => {
 
   useEffect(() => {
     // @ts-ignore
-    dispatch(fetchEvents(store.selectedCalendars))
-    profileServiceClient.events.getConsolidatedEvents({
-      startDate: new Date().toISOString(),
-      endDate: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString()
-    })
-  }, [dispatch, store.selectedCalendars])
+    dispatch(fetchEvents())
+    setLocalStore(store)
+  }, [])
+
+  useEffect(() => {
+    console.log('Local store updated:', calendarInfo)
+    profileServiceClient.events
+      .getConsolidatedEvents({
+        startDate: calendarInfo?.start?.toISOString() || new Date().toISOString(),
+        endDate:
+          calendarInfo?.end?.toISOString() || new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString()
+      })
+      .then(response => {
+        setLocalStore({ ...localStore, events: response.data })
+      })
+      .catch(error => {
+        console.error('Error fetching events:', error)
+      })
+  }, [calendarInfo])
 
   const handleLeftSidebarToggle = () => setLeftSidebarOpen(!leftSidebarOpen)
   const handleAddEventSidebarToggle = () => setAddEventSidebarOpen(!addEventSidebarOpen)
@@ -137,8 +152,9 @@ const AppCalendar = () => {
           ...(mdAbove ? { borderTopLeftRadius: 0, borderBottomLeftRadius: 0 } : {})
         }}
       >
+        {/* @ts-ignore */}
         <Calendar
-          store={store}
+          store={localStore}
           dispatch={dispatch}
           direction={direction}
           updateEvent={updateEvent}
@@ -148,10 +164,11 @@ const AppCalendar = () => {
           handleSelectEvent={handleSelectEvent}
           handleLeftSidebarToggle={handleLeftSidebarToggle}
           handleAddEventSidebarToggle={handleAddEventSidebarToggle}
+          onDatesSet={info => setCalendarInfo(info)}
         />
       </Box>
       <AddEventSidebar
-        store={store}
+        store={localStore}
         dispatch={dispatch}
         addEvent={addEvent}
         updateEvent={updateEvent}

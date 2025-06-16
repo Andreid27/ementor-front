@@ -38,7 +38,8 @@ const Calendar = props => {
     setCalendarApi,
     handleSelectEvent,
     handleLeftSidebarToggle,
-    handleAddEventSidebarToggle
+    handleAddEventSidebarToggle,
+    onDatesSet
   } = props
 
   // ** Refs
@@ -148,6 +149,9 @@ const Calendar = props => {
         dispatch(updateEvent(resizedEvent))
       },
       ref: calendarRef,
+      datesSet(info) {
+        if (onDatesSet) onDatesSet(info)
+      },
 
       // Get direction from app state (store)
       direction

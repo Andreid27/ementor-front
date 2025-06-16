@@ -40,13 +40,7 @@ const SidebarLeft = props => {
             key={key}
             label={key}
             sx={{ '& .MuiFormControlLabel-label': { color: 'text.secondary' } }}
-            control={
-              <Checkbox
-                color={value}
-                checked={store.selectedCalendars.includes(key)}
-                onChange={() => dispatch(handleCalendarsUpdate(key))}
-              />
-            }
+            control={<Checkbox color={value} checked={store} onChange={() => dispatch(handleCalendarsUpdate(key))} />}
           />
         )
       })
@@ -114,12 +108,7 @@ const SidebarLeft = props => {
           <FormControlLabel
             label='View All'
             sx={{ '& .MuiFormControlLabel-label': { color: 'text.secondary' } }}
-            control={
-              <Checkbox
-                checked={store.selectedCalendars.length === colorsArr.length}
-                onChange={e => dispatch(handleAllCalendars(e.target.checked))}
-              />
-            }
+            control={<Checkbox onChange={e => dispatch(handleAllCalendars(e.target.checked))} />}
           />
           {renderFilters}
         </Box>
