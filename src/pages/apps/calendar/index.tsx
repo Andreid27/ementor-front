@@ -145,15 +145,21 @@ const AppCalendar = () => {
   }, [])
 
   useEffect(() => {
-    console.log('Local store updated:', calendarInfo)
+    console.log('Calendar info updated:', calendarInfo)
     if (calendarInfo) {
+      const startDate = calendarInfo?.start?.toISOString() || new Date().toISOString()
+      const endDate =
+        calendarInfo?.end?.toISOString() || new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString()
+
+      console.log('Fetching events for date range:', { startDate, endDate })
+
       profileServiceClient.events
         .getConsolidatedEvents({
-          startDate: calendarInfo?.start?.toISOString() || new Date().toISOString(),
-          endDate:
-            calendarInfo?.end?.toISOString() || new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString()
+          startDate,
+          endDate
         })
         .then(async response => {
+          console.log('Fetched events:', response.data)
           const studentsWithAvatars = await processStudentAvatars(response.data, students)
           setStudentAvatars(studentsWithAvatars)
           setLocalStore(prevStore => ({ ...prevStore, events: response.data }))
@@ -162,10 +168,11 @@ const AppCalendar = () => {
           console.error('Error fetching events:', error)
         })
     }
-  }, [calendarInfo])
+  }, [calendarInfo, processStudentAvatars, students])
 
   const handleLeftSidebarToggle = () => setLeftSidebarOpen(!leftSidebarOpen)
   const handleAddEventSidebarToggle = () => setAddEventSidebarOpen(!addEventSidebarOpen)
+  console.log(localStore)
 
   return (
     <CalendarWrapper

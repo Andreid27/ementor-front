@@ -26,7 +26,8 @@ import Icon from 'src/@core/components/icon'
 import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker'
 
 // ** Types
-import { CalendarEvent, CalendarStore } from 'src/pages/apps/calendar'
+import { CalendarStore } from 'src/pages/apps/calendar'
+import { EventOccurrenceDTO } from 'src/generated/profile-service'
 import { CalendarApi } from '@fullcalendar/core'
 import { Dispatch } from '@reduxjs/toolkit'
 import { RecurringSeriesDTO } from 'src/generated/profile-service'
@@ -74,7 +75,7 @@ interface AddEventSidebarProps {
   drawerWidth: number
   calendarApi: CalendarApi | null
   deleteEvent: (id: string | number) => void
-  handleSelectEvent: (event: CalendarEvent | null) => void
+  handleSelectEvent: (event: EventOccurrenceDTO | null) => void
   addEventSidebarOpen: boolean
   handleAddEventSidebarToggle: () => void
   students: any[]
@@ -150,10 +151,10 @@ const AddEventSidebar = (props: AddEventSidebarProps) => {
         isRecurring: true
       }
 
-      if (store.selectedEvent === null || (store.selectedEvent !== null && !store.selectedEvent.title.length)) {
+      if (store.selectedEvent === null || (store.selectedEvent !== null && !store.selectedEvent.seriesTitle?.length)) {
         dispatch(addEvent(eventPayload))
       } else {
-        dispatch(updateEvent({ id: store.selectedEvent.id, ...eventPayload }))
+        dispatch(updateEvent({ id: store.selectedEvent.recurringSeriesId, ...eventPayload }))
       }
     } else {
       // Create singular event - maintaining compatibility with existing calendar format
@@ -170,10 +171,10 @@ const AddEventSidebar = (props: AddEventSidebarProps) => {
         }
       }
 
-      if (store.selectedEvent === null || (store.selectedEvent !== null && !store.selectedEvent.title.length)) {
+      if (store.selectedEvent === null || (store.selectedEvent !== null && !store.selectedEvent.seriesTitle?.length)) {
         dispatch(addEvent(modifiedEvent))
       } else {
-        dispatch(updateEvent({ id: store.selectedEvent.id, ...modifiedEvent }))
+        dispatch(updateEvent({ id: store.selectedEvent.recurringSeriesId, ...modifiedEvent }))
       }
     }
 
@@ -201,17 +202,31 @@ const AddEventSidebar = (props: AddEventSidebarProps) => {
 
   const resetToStoredValues = useCallback(() => {
     if (store.selectedEvent !== null) {
-      const event = store.selectedEvent
-      setValue('title', event.title || '')
+      const event = store.selectedEvent as any // Type assertion since we know it's EventOccurrenceDTO
+      setValue('title', event.title || event.seriesTitle || '')
+
+      // Safe date parsing with fallbacks
+      const startDate = event.start
+        ? new Date(event.start)
+        : event.effectiveStartTime
+        ? new Date(event.effectiveStartTime)
+        : new Date()
+
+      const endDate = event.end
+        ? new Date(event.end)
+        : event.effectiveEndTime
+        ? new Date(event.effectiveEndTime)
+        : new Date(startDate.getTime() + 60 * 60 * 1000) // Add 1 hour if no end date
+
       setValues({
         isRecurring: false, // Default to non-recurring when editing
-        title: event.title || '',
-        description: event.extendedProps?.description || '',
-        startDate: event.start !== null ? new Date(event.start) : new Date(),
-        endDate: event.end !== null ? new Date(event.end) : new Date(event.start),
-        allDay: event.allDay,
-        meetingLink: '',
-        price: 0,
+        title: event.title || event.seriesTitle || '',
+        description: event.description || event.seriesDescription || '',
+        startDate: startDate,
+        endDate: endDate,
+        allDay: event.allDay || false,
+        meetingLink: event.url || event.meetingLink || '',
+        price: event.extendedProps?.price || event.price || 0,
         pattern: 'WEEKLY',
         durationHours: 1,
         durationMinutes: 0,
@@ -242,7 +257,11 @@ const AddEventSidebar = (props: AddEventSidebarProps) => {
   PickersComponent.displayName = 'PickersComponent'
 
   const RenderSidebarFooter = () => {
-    if (store.selectedEvent === null || (store.selectedEvent !== null && !store.selectedEvent.title.length)) {
+    const selectedEvent = store.selectedEvent as any
+    if (
+      store.selectedEvent === null ||
+      (store.selectedEvent !== null && !(selectedEvent.title || selectedEvent.seriesTitle)?.length)
+    ) {
       return (
         <Fragment>
           <Button type='submit' variant='contained' sx={{ mr: 4 }}>
@@ -293,18 +312,28 @@ const AddEventSidebar = (props: AddEventSidebarProps) => {
         }}
       >
         <Typography variant='h5'>
-          {store.selectedEvent !== null && store.selectedEvent.title.length ? 'Update Event' : 'Add Event'}
+          {(() => {
+            const selectedEvent = store.selectedEvent as any
+
+            return store.selectedEvent !== null && (selectedEvent.title || selectedEvent.seriesTitle)?.length
+              ? 'Update Event'
+              : 'Add Event'
+          })()}
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          {store.selectedEvent !== null && store.selectedEvent.title.length ? (
-            <IconButton
-              size='small'
-              onClick={handleDeleteEvent}
-              sx={{ color: 'text.primary', mr: store.selectedEvent !== null ? 1 : 0 }}
-            >
-              <Icon icon='tabler:trash' fontSize='1.25rem' />
-            </IconButton>
-          ) : null}
+          {(() => {
+            const selectedEvent = store.selectedEvent as any
+
+            return store.selectedEvent !== null && (selectedEvent.title || selectedEvent.seriesTitle)?.length ? (
+              <IconButton
+                size='small'
+                onClick={handleDeleteEvent}
+                sx={{ color: 'text.primary', mr: store.selectedEvent !== null ? 1 : 0 }}
+              >
+                <Icon icon='tabler:trash' fontSize='1.25rem' />
+              </IconButton>
+            ) : null
+          })()}
           <IconButton
             size='small'
             onClick={handleSidebarClose}

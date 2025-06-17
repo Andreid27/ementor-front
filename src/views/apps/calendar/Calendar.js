@@ -51,9 +51,52 @@ const Calendar = props => {
     }
   }, [calendarApi, setCalendarApi])
   if (store) {
+    console.log('Calendar rendering with events:', store.events)
+
     // ** calendarOptions(Props)
     const calendarOptions = {
       events: store.events.length ? store.events : [],
+      eventDataTransform: eventData => {
+        // Transform EventOccurrenceDTO to FullCalendar event format
+        // Create unique ID using recurringSeriesId + start time to avoid duplicates
+        const uniqueId = eventData.recurringSeriesId
+          ? `${eventData.recurringSeriesId}-${eventData.effectiveStartTime}`
+          : eventData.id || `event-${eventData.effectiveStartTime}`
+
+        const transformedEvent = {
+          id: uniqueId,
+          title: eventData.seriesTitle || 'Untitled Event',
+          start: eventData.effectiveStartTime,
+          end: eventData.effectiveEndTime,
+          allDay: false,
+          url: eventData.meetingLink || '',
+          extendedProps: {
+            calendar: 'Business',
+            description: eventData.seriesDescription || '',
+            location: eventData.virtual ? 'Virtual Meeting' : '',
+            guests: [],
+            professorName: eventData.professorName,
+            professorId: eventData.professorId,
+            price: eventData.price,
+            attendance: eventData.attendance,
+            virtual: eventData.virtual,
+            cancelled: eventData.cancelled,
+            completed: eventData.completed,
+            upcoming: eventData.upcoming,
+            missed: eventData.missed,
+            rescheduled: eventData.rescheduled,
+            recurringSeriesId: eventData.recurringSeriesId
+          }
+        }
+        console.log('Transforming event:', eventData, 'to:', transformedEvent)
+
+        //TODO continue transforming other fields as needed and ensure all necessary fields are included
+        // ALSO edit recurringSeries
+        // ALSO add single event and add
+        // Also prevent event redirect on click of the link
+
+        return transformedEvent
+      },
       plugins: [interactionPlugin, dayGridPlugin, timeGridPlugin, listPlugin, bootstrap5Plugin],
       initialView: 'dayGridMonth',
       headerToolbar: {
@@ -97,7 +140,8 @@ const Calendar = props => {
       navLinks: true,
       eventClassNames({ event: calendarEvent }) {
         // @ts-ignore
-        const colorName = calendarsColor[calendarEvent._def.extendedProps.calendar]
+        const calendarType = calendarEvent._def.extendedProps.calendar || 'Business'
+        const colorName = calendarsColor[calendarType] || 'primary'
 
         return [
           // Background Color
@@ -150,6 +194,13 @@ const Calendar = props => {
       },
       ref: calendarRef,
       datesSet(info) {
+        console.log('FullCalendar datesSet called with:', info)
+        console.log('Date range:', {
+          start: info.start,
+          end: info.end,
+          startStr: info.startStr,
+          endStr: info.endStr
+        })
         if (onDatesSet) onDatesSet(info)
       },
 
