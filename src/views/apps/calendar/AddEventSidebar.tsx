@@ -26,29 +26,44 @@ import Icon from 'src/@core/components/icon'
 import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker'
 
 // ** Types
-import { CalendarEvent, CalendarLabel, CalendarStore } from 'src/pages/apps/calendar'
+import { CalendarEvent, CalendarStore } from 'src/pages/apps/calendar'
 import { CalendarApi } from '@fullcalendar/core'
 import { Dispatch } from '@reduxjs/toolkit'
 import { RecurringSeriesDTO } from 'src/generated/profile-service'
-
-const capitalize = (string: string) => string && string[0].toUpperCase() + string.slice(1)
+import { Avatar } from '@mui/material'
 
 interface EventFormValues {
   recurringSeriesDTO?: RecurringSeriesDTO
   isRecurring?: boolean
+  // Individual event fields
+  title: string
+  description: string
+  startDate: Date
+  endDate: Date
+  allDay: boolean
+  meetingLink: string
+  price: number
+  pattern: 'DAILY' | 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY'
+  // Duration fields for easier form handling
+  durationHours: number
+  durationMinutes: number
+  endRecurrence?: Date
+  expectedAttendees: string[]
 }
 
-//TODO continue with event creation here
-
 const defaultState: EventFormValues = {
-  url: '',
+  isRecurring: false,
   title: '',
-  guests: [],
-  allDay: true,
   description: '',
+  startDate: new Date(),
   endDate: new Date(),
-  calendar: 'Business',
-  startDate: new Date()
+  allDay: true,
+  meetingLink: '',
+  price: 0,
+  pattern: 'WEEKLY',
+  durationHours: 1,
+  durationMinutes: 0,
+  expectedAttendees: []
 }
 
 interface AddEventSidebarProps {
@@ -62,6 +77,7 @@ interface AddEventSidebarProps {
   handleSelectEvent: (event: CalendarEvent | null) => void
   addEventSidebarOpen: boolean
   handleAddEventSidebarToggle: () => void
+  students: any[]
 }
 
 interface FormData {
@@ -88,7 +104,8 @@ const AddEventSidebar = (props: AddEventSidebarProps) => {
     deleteEvent,
     handleSelectEvent,
     addEventSidebarOpen,
-    handleAddEventSidebarToggle
+    handleAddEventSidebarToggle,
+    students
   } = props
 
   // ** States
@@ -112,24 +129,54 @@ const AddEventSidebar = (props: AddEventSidebarProps) => {
   }
 
   const onSubmit = (data: FormData) => {
-    const modifiedEvent = {
-      url: values.url,
-      display: 'block',
-      title: data.title,
-      end: values.endDate,
-      allDay: values.allDay,
-      start: values.startDate,
-      extendedProps: {
-        calendar: capitalize(values.calendar),
-        guests: values.guests && values.guests.length ? values.guests : undefined,
-        description: values.description.length ? values.description : undefined
+    if (values.isRecurring) {
+      // Create recurring series
+      const durationISO8601 = formatDurationToISO8601(values.durationHours, values.durationMinutes)
+
+      const recurringSeriesDTO: RecurringSeriesDTO = {
+        title: data.title,
+        description: values.description,
+        startTime: values.startDate.toISOString(),
+        duration: durationISO8601 as any, // Backend expects ISO 8601 duration string
+        pattern: values.pattern,
+        price: values.price,
+        meetingLink: values.meetingLink,
+        endRecurrence: values.endRecurrence?.toISOString(),
+        expectedAttendees: values.expectedAttendees
+      }
+
+      const eventPayload = {
+        recurringSeriesDTO,
+        isRecurring: true
+      }
+
+      if (store.selectedEvent === null || (store.selectedEvent !== null && !store.selectedEvent.title.length)) {
+        dispatch(addEvent(eventPayload))
+      } else {
+        dispatch(updateEvent({ id: store.selectedEvent.id, ...eventPayload }))
+      }
+    } else {
+      // Create singular event - maintaining compatibility with existing calendar format
+      const modifiedEvent = {
+        display: 'block',
+        title: data.title,
+        end: values.endDate,
+        allDay: values.allDay,
+        start: values.startDate,
+        extendedProps: {
+          description: values.description.length ? values.description : undefined,
+          meetingLink: values.meetingLink,
+          price: values.price
+        }
+      }
+
+      if (store.selectedEvent === null || (store.selectedEvent !== null && !store.selectedEvent.title.length)) {
+        dispatch(addEvent(modifiedEvent))
+      } else {
+        dispatch(updateEvent({ id: store.selectedEvent.id, ...modifiedEvent }))
       }
     }
-    if (store.selectedEvent === null || (store.selectedEvent !== null && !store.selectedEvent.title.length)) {
-      dispatch(addEvent(modifiedEvent))
-    } else {
-      dispatch(updateEvent({ id: store.selectedEvent.id, ...modifiedEvent }))
-    }
+
     calendarApi?.refetchEvents()
     handleSidebarClose()
   }
@@ -144,8 +191,11 @@ const AddEventSidebar = (props: AddEventSidebarProps) => {
   }
 
   const handleStartDate = (date: Date) => {
-    if (date > values.endDate) {
+    // For recurring events, we don't need to update end date since it's determined by duration
+    if (!values.isRecurring && date > values.endDate) {
       setValues({ ...values, startDate: new Date(date), endDate: new Date(date) })
+    } else {
+      setValues({ ...values, startDate: new Date(date) })
     }
   }
 
@@ -154,14 +204,18 @@ const AddEventSidebar = (props: AddEventSidebarProps) => {
       const event = store.selectedEvent
       setValue('title', event.title || '')
       setValues({
-        url: event.url || '',
+        isRecurring: false, // Default to non-recurring when editing
         title: event.title || '',
-        allDay: event.allDay,
-        guests: event.extendedProps.guests || [],
-        description: event.extendedProps.description || '',
-        calendar: event.extendedProps.calendar || 'Business',
+        description: event.extendedProps?.description || '',
+        startDate: event.start !== null ? new Date(event.start) : new Date(),
         endDate: event.end !== null ? new Date(event.end) : new Date(event.start),
-        startDate: event.start !== null ? new Date(event.start) : new Date()
+        allDay: event.allDay,
+        meetingLink: '',
+        price: 0,
+        pattern: 'WEEKLY',
+        durationHours: 1,
+        durationMinutes: 0,
+        expectedAttendees: []
       })
     }
   }, [setValue, store])
@@ -211,6 +265,15 @@ const AddEventSidebar = (props: AddEventSidebarProps) => {
         </Fragment>
       )
     }
+  }
+
+  // Helper functions for duration conversion
+  const formatDurationToISO8601 = (hours: number, minutes: number): string => {
+    let duration = 'PT'
+    if (hours > 0) duration += `${hours}H`
+    if (minutes > 0) duration += `${minutes}M`
+
+    return duration || 'PT0M' // At least 0 minutes if no duration specified
   }
 
   return (
@@ -283,28 +346,122 @@ const AddEventSidebar = (props: AddEventSidebarProps) => {
                 )
               }}
             />
-            {(() => {
-              const TextField = CustomTextField as any
 
-              return (
-                <TextField
-                  select
-                  fullWidth
-                  sx={{ mb: 4 }}
-                  label='Calendar'
-                  SelectProps={{
-                    value: values.calendar,
-                    onChange: (e: any) => setValues({ ...values, calendar: e.target.value as CalendarLabel })
-                  }}
-                >
-                  <MenuItem value='Personal'>Personal</MenuItem>
-                  <MenuItem value='Business'>Business</MenuItem>
-                  <MenuItem value='Family'>Family</MenuItem>
-                  <MenuItem value='Holiday'>Holiday</MenuItem>
-                  <MenuItem value='ETC'>ETC</MenuItem>
-                </TextField>
-              )
-            })()}
+            <FormControl sx={{ mb: 4 }}>
+              <FormControlLabel
+                label='Recurring Event'
+                control={
+                  <Switch
+                    checked={values.isRecurring}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setValues({ ...values, isRecurring: e.target.checked })
+                    }
+                  />
+                }
+              />
+            </FormControl>
+
+            {values.isRecurring && (
+              <>
+                <Typography variant='body2' sx={{ mb: 3, color: 'text.secondary' }}>
+                  For recurring events, specify the start time and duration. The end time will be calculated
+                  automatically.
+                </Typography>
+
+                {(() => {
+                  const TextField = CustomTextField as any
+
+                  return (
+                    <TextField
+                      select
+                      fullWidth
+                      sx={{ mb: 4 }}
+                      label='Recurrence Pattern'
+                      SelectProps={{
+                        value: values.pattern,
+                        onChange: (e: any) => setValues({ ...values, pattern: e.target.value })
+                      }}
+                    >
+                      <MenuItem value='DAILY'>Daily</MenuItem>
+                      <MenuItem value='WEEKLY'>Weekly</MenuItem>
+                      <MenuItem value='BIWEEKLY'>Bi-weekly</MenuItem>
+                      <MenuItem value='MONTHLY'>Monthly</MenuItem>
+                    </TextField>
+                  )
+                })()}
+
+                <Box sx={{ mb: 4 }}>
+                  <DatePicker
+                    id='event-end-recurrence'
+                    selected={values.endRecurrence}
+                    customInput={<PickersComponent label='End Recurrence (Optional)' />}
+                    onChange={(date: Date | null) => setValues({ ...values, endRecurrence: date || undefined })}
+                  />
+                </Box>
+
+                {(() => {
+                  const TextField = CustomTextField as any
+
+                  return (
+                    <TextField
+                      fullWidth
+                      type='number'
+                      sx={{ mb: 4 }}
+                      label='Price'
+                      value={values.price}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        setValues({ ...values, price: parseFloat(e.target.value) || 0 })
+                      }
+                    />
+                  )
+                })()}
+
+                {(() => {
+                  const TextField = CustomTextField as any
+
+                  return (
+                    <TextField
+                      fullWidth
+                      type='number'
+                      sx={{ mb: 4 }}
+                      label='Duration (hours)'
+                      value={values.durationHours}
+                      inputProps={{ min: 0, step: 1 }}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                        const hours = parseInt(e.target.value) || 0
+                        setValues({
+                          ...values,
+                          durationHours: hours
+                        })
+                      }}
+                    />
+                  )
+                })()}
+
+                {(() => {
+                  const TextField = CustomTextField as any
+
+                  return (
+                    <TextField
+                      fullWidth
+                      type='number'
+                      sx={{ mb: 4 }}
+                      label='Duration (minutes)'
+                      value={values.durationMinutes}
+                      inputProps={{ min: 0, max: 59, step: 1 }}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                        const minutes = parseInt(e.target.value) || 0
+                        setValues({
+                          ...values,
+                          durationMinutes: minutes
+                        })
+                      }}
+                    />
+                  )
+                })()}
+              </>
+            )}
+
             <Box sx={{ mb: 4 }}>
               <DatePicker
                 selectsStart
@@ -319,33 +476,47 @@ const AddEventSidebar = (props: AddEventSidebarProps) => {
                 onSelect={handleStartDate}
               />
             </Box>
-            <Box sx={{ mb: 4 }}>
-              <DatePicker
-                selectsEnd
-                id='event-end-date'
-                endDate={values.endDate}
-                selected={values.endDate}
-                minDate={values.startDate}
-                startDate={values.startDate}
-                showTimeSelect={!values.allDay}
-                dateFormat={!values.allDay ? 'yyyy-MM-dd hh:mm' : 'yyyy-MM-dd'}
-                customInput={<PickersComponent label='End Date' />}
-                onChange={(date: Date) => setValues({ ...values, endDate: new Date(date) })}
-              />
-            </Box>
+
+            {!values.isRecurring && (
+              <Box sx={{ mb: 4 }}>
+                <DatePicker
+                  selectsEnd
+                  id='event-end-date'
+                  endDate={values.endDate}
+                  selected={values.endDate}
+                  minDate={values.startDate}
+                  startDate={values.startDate}
+                  showTimeSelect={!values.allDay}
+                  dateFormat={!values.allDay ? 'yyyy-MM-dd hh:mm' : 'yyyy-MM-dd'}
+                  customInput={<PickersComponent label='End Date' />}
+                  onChange={(date: Date) => setValues({ ...values, endDate: new Date(date) })}
+                />
+              </Box>
+            )}
             <FormControl sx={{ mb: 4 }}>
               <FormControlLabel
                 label='All Day'
                 control={
                   <Switch
                     checked={values.allDay}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      setValues({ ...values, allDay: e.target.checked })
-                    }
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      const isAllDay = e.target.checked
+                      setValues({
+                        ...values,
+                        allDay: isAllDay,
+                        // For recurring all-day events, set duration to 24 hours
+                        ...(values.isRecurring &&
+                          isAllDay && {
+                            durationHours: 24,
+                            durationMinutes: 0
+                          })
+                      })
+                    }}
                   />
                 }
               />
             </FormControl>
+
             {(() => {
               const TextField = CustomTextField as any
 
@@ -353,12 +524,14 @@ const AddEventSidebar = (props: AddEventSidebarProps) => {
                 <TextField
                   fullWidth
                   type='url'
-                  id='event-url'
+                  id='event-meeting-link'
                   sx={{ mb: 4 }}
-                  label='Event URL'
-                  value={values.url}
-                  placeholder='https://www.google.com'
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setValues({ ...values, url: e.target.value })}
+                  label='Meeting Link'
+                  value={values.meetingLink}
+                  placeholder='https://meet.google.com/abc-def-ghi'
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setValues({ ...values, meetingLink: e.target.value })
+                  }
                 />
               )
             })()}
@@ -370,22 +543,52 @@ const AddEventSidebar = (props: AddEventSidebarProps) => {
                 <TextField
                   select
                   fullWidth
-                  label='Guests'
+                  label='Expected Attendees'
                   sx={{ mb: 4 }}
                   SelectProps={{
                     multiple: true,
-                    value: values.guests,
-                    onChange: (e: any) => setValues({ ...values, guests: e.target.value as string[] })
+                    value: values.expectedAttendees,
+                    onChange: (e: any) => setValues({ ...values, expectedAttendees: e.target.value as string[] }),
+                    renderValue: (selected: any) => (
+                      <Box>
+                        {(selected as string[]).map((id, idx) => {
+                          const student = students.find((s: any) => s.id === id)
+                          if (!student) return null
+
+                          return (
+                            <Box
+                              key={id}
+                              sx={{ display: 'flex', alignItems: 'center', mb: idx < selected.length - 1 ? 0.5 : 0 }}
+                            >
+                              <Avatar
+                                src={student.avatar || ''}
+                                alt={`${student.firstName} ${student.lastName}`}
+                                sx={{ width: 24, height: 24, mr: 3, mt: 1 }}
+                              />
+                              {student.lastName} {student.firstName}
+                            </Box>
+                          )
+                        })}
+                      </Box>
+                    )
                   }}
                 >
-                  <MenuItem value='bruce'>Bruce</MenuItem>
-                  <MenuItem value='clark'>Clark</MenuItem>
-                  <MenuItem value='diana'>Diana</MenuItem>
-                  <MenuItem value='john'>John</MenuItem>
-                  <MenuItem value='barry'>Barry</MenuItem>
+                  {students.map((student: any) => (
+                    <MenuItem key={student.id} value={student.id}>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Avatar
+                          src={student.avatar || ''}
+                          alt={`${student.firstName} ${student.lastName}`}
+                          sx={{ width: 24, height: 24, mr: 2 }}
+                        />
+                        {student.lastName} {student.firstName}
+                      </Box>
+                    </MenuItem>
+                  ))}
                 </TextField>
               )
             })()}
+
             {(() => {
               const TextField = CustomTextField as any
 

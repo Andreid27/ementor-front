@@ -24,31 +24,73 @@ export const fetchEvents = createAsyncThunk<EventOccurrenceDTO[]>('appCalendar/f
 })
 
 // ** Add Event
-export const addEvent = createAsyncThunk<RecurringSeriesDTO, Partial<RecurringSeriesDTO>>(
-  'appCalendar/addEvent',
-  async (event: Partial<RecurringSeriesDTO>, { dispatch }) => {
-    console.log('Adding event:', event)
+export const addEvent = createAsyncThunk<any, any>('appCalendar/addEvent', async (event: any, { dispatch }) => {
+  console.log('Adding event:', event)
 
-    const response = await profileServiceClient.events.createRecurringSeries({ recurringSeriesDTO: event })
+  if (event.isRecurring && event.recurringSeriesDTO) {
+    // Create recurring series
+    const response = await profileServiceClient.events.createRecurringSeries({
+      recurringSeriesDTO: event.recurringSeriesDTO
+    })
     await dispatch(fetchEvents())
 
     return response.data
-  }
-)
+  } else {
+    // Create singular event - convert to SingularEventDTO format
+    const singularEventDTO: SingularEventDTO = {
+      title: event.title,
+      description: event.extendedProps?.description,
+      startTime: event.start instanceof Date ? event.start.toISOString() : event.start,
+      duration: {
+        seconds: event.allDay
+          ? 86400
+          : Math.floor((new Date(event.end).getTime() - new Date(event.start).getTime()) / 1000)
+      },
+      price: event.extendedProps?.price || 0,
+      meetingLink: event.extendedProps?.meetingLink
+    }
 
-// ** Update Event
-export const updateEvent = createAsyncThunk<SingularEventDTO, Partial<SingularEventDTO> & { id: string | number }>(
-  'appCalendar/updateEvent',
-  async (event: Partial<SingularEventDTO> & { id: string | number }, { dispatch }) => {
-    const response = await profileServiceClient.events.updateSingularEvent({
-      eventId: event.id,
-      singularEventDTO: event
+    const response = await profileServiceClient.events.createSingularEvent({
+      singularEventDTO
     })
     await dispatch(fetchEvents())
 
     return response.data
   }
-)
+})
+
+// ** Update Event
+export const updateEvent = createAsyncThunk<any, any>('appCalendar/updateEvent', async (event: any, { dispatch }) => {
+  if (event.isRecurring && event.recurringSeriesDTO) {
+    // For now, updating recurring series is complex - we'll handle individual occurrence modifications
+    // This could be expanded to handle full series updates
+    console.log('Updating recurring series not yet implemented')
+
+    return event
+  } else {
+    // Update singular event
+    const singularEventDTO: SingularEventDTO = {
+      title: event.title,
+      description: event.extendedProps?.description,
+      startTime: event.start instanceof Date ? event.start.toISOString() : event.start,
+      duration: {
+        seconds: event.allDay
+          ? 86400
+          : Math.floor((new Date(event.end).getTime() - new Date(event.start).getTime()) / 1000)
+      },
+      price: event.extendedProps?.price || 0,
+      meetingLink: event.extendedProps?.meetingLink
+    }
+
+    const response = await profileServiceClient.events.updateSingularEvent({
+      eventId: event.id,
+      singularEventDTO
+    })
+    await dispatch(fetchEvents())
+
+    return response.data
+  }
+})
 
 // ** Update Recurring Series
 export const modifyEventOccurrence = createAsyncThunk<

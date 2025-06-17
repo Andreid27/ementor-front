@@ -1,5 +1,5 @@
 // ** React Imports
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 
 // ** MUI Imports
 import Box from '@mui/material/Box'
@@ -35,9 +35,14 @@ import {
   // @ts-ignore
 } from 'src/store/apps/calendar'
 
+// ** Profile Picture Processing
+import extractProfilePicture from 'src/@core/axios/profile-picture-extractor'
+import profilePictureDownloader from 'src/@core/axios/profile-picture-downloader'
+
 // ** Types
 import { CalendarApi } from '@fullcalendar/core'
 import { EventOccurrenceDTO, profileServiceClient } from 'src/services'
+import { selectAllStudents } from 'src/store/apps/user'
 
 // ** Types
 export interface CalendarEvent {
@@ -81,6 +86,7 @@ const AppCalendar = () => {
   const [calendarApi, setCalendarApi] = useState<CalendarApi | null>(null)
   const [leftSidebarOpen, setLeftSidebarOpen] = useState<boolean>(false)
   const [addEventSidebarOpen, setAddEventSidebarOpen] = useState<boolean>(false)
+  const [studentAvatars, setStudentAvatars] = useState<any[]>([])
 
   // ** Hooks
   const { settings } = useSettings()
@@ -88,12 +94,49 @@ const AppCalendar = () => {
   const store = useSelector((state: any) => state.calendar) as CalendarStore
   const [localStore, setLocalStore] = useState<CalendarStore>(store)
   const [calendarInfo, setCalendarInfo] = useState<any>(null)
+  const students = useSelector(selectAllStudents)
 
   // ** Vars
   const leftSidebarWidth = 300
   const addEventSidebarWidth = 400
   const { skin, direction } = settings
   const mdAbove = useMediaQuery((theme: Theme) => theme.breakpoints.up('md'))
+
+  // ** Profile Picture Processing Function
+  const processStudentAvatars = useCallback(async (events: EventOccurrenceDTO[], users: any[]) => {
+    let uniqueStudents = Array.from(new Set(students))
+    let processedUsersList = []
+
+    for (const studentUser of uniqueStudents) {
+      const user = users.find(user => user.id === studentUser.id)
+      if (user) {
+        const processedUser = extractProfilePicture(user)
+        processedUsersList.push(processedUser)
+      }
+    }
+
+    const result = await Promise.all(
+      processedUsersList.map(async profilePicture => {
+        if (profilePicture.type === 'API') {
+          const avatar = await profilePictureDownloader(profilePicture.url, profilePicture.userId)
+
+          return { ...profilePicture, avatar: avatar || null }
+        } else if (profilePicture.type === 'EXTERNAL') {
+          return { ...profilePicture, avatar: profilePicture.url }
+        } else {
+          return { ...profilePicture, avatar: null }
+        }
+      })
+    )
+
+    const studentsWithAvatars = uniqueStudents.map((row: any) => {
+      const user = result.find(u => u.userId === row.id)
+
+      return { ...row, avatar: user?.avatar }
+    })
+
+    return studentsWithAvatars
+  }, [])
 
   useEffect(() => {
     // @ts-ignore
@@ -103,18 +146,22 @@ const AppCalendar = () => {
 
   useEffect(() => {
     console.log('Local store updated:', calendarInfo)
-    profileServiceClient.events
-      .getConsolidatedEvents({
-        startDate: calendarInfo?.start?.toISOString() || new Date().toISOString(),
-        endDate:
-          calendarInfo?.end?.toISOString() || new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString()
-      })
-      .then(response => {
-        setLocalStore({ ...localStore, events: response.data })
-      })
-      .catch(error => {
-        console.error('Error fetching events:', error)
-      })
+    if (calendarInfo) {
+      profileServiceClient.events
+        .getConsolidatedEvents({
+          startDate: calendarInfo?.start?.toISOString() || new Date().toISOString(),
+          endDate:
+            calendarInfo?.end?.toISOString() || new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString()
+        })
+        .then(async response => {
+          const studentsWithAvatars = await processStudentAvatars(response.data, students)
+          setStudentAvatars(studentsWithAvatars)
+          setLocalStore(prevStore => ({ ...prevStore, events: response.data }))
+        })
+        .catch(error => {
+          console.error('Error fetching events:', error)
+        })
+    }
   }, [calendarInfo])
 
   const handleLeftSidebarToggle = () => setLeftSidebarOpen(!leftSidebarOpen)
@@ -164,6 +211,9 @@ const AppCalendar = () => {
           handleSelectEvent={handleSelectEvent}
           handleLeftSidebarToggle={handleLeftSidebarToggle}
           handleAddEventSidebarToggle={handleAddEventSidebarToggle}
+          // @ts-ignore
+          studentAvatars={studentAvatars}
+          // @ts-ignore
           onDatesSet={info => setCalendarInfo(info)}
         />
       </Box>
@@ -178,6 +228,7 @@ const AppCalendar = () => {
         handleSelectEvent={handleSelectEvent}
         addEventSidebarOpen={addEventSidebarOpen}
         handleAddEventSidebarToggle={handleAddEventSidebarToggle}
+        students={studentAvatars}
       />
     </CalendarWrapper>
   )
