@@ -60,10 +60,10 @@ export interface CalendarEvent {
   }
 }
 
-export type CalendarLabel = 'Personal' | 'Business' | 'Family' | 'Holiday' | 'ETC'
+export type CalendarLabel = string // Make it dynamic instead of fixed types
 
 export type CalendarColors = {
-  [key in CalendarLabel]: 'error' | 'primary' | 'warning' | 'success' | 'info'
+  [key: string]: 'error' | 'primary' | 'warning' | 'success' | 'info'
 }
 
 export interface CalendarStore {
@@ -72,13 +72,11 @@ export interface CalendarStore {
   selectedCalendars: CalendarLabel[]
 }
 
-// ** CalendarColors
+// ** Dynamic CalendarColors - will be populated based on actual event data
 const calendarsColor: CalendarColors = {
-  Personal: 'error',
-  Business: 'primary',
-  Family: 'warning',
-  Holiday: 'success',
-  ETC: 'info'
+  'Virtual-Meetings': 'success',
+  'General-Events': 'primary'
+  // Series and Professor colors will be added dynamically
 }
 
 const AppCalendar = () => {
@@ -87,6 +85,7 @@ const AppCalendar = () => {
   const [leftSidebarOpen, setLeftSidebarOpen] = useState<boolean>(false)
   const [addEventSidebarOpen, setAddEventSidebarOpen] = useState<boolean>(false)
   const [studentAvatars, setStudentAvatars] = useState<any[]>([])
+  const [dynamicCalendarsColor, setDynamicCalendarsColor] = useState<CalendarColors>(calendarsColor)
 
   // ** Hooks
   const { settings } = useSettings()
@@ -98,7 +97,7 @@ const AppCalendar = () => {
 
   // ** Vars
   const leftSidebarWidth = 300
-  const addEventSidebarWidth = 400
+  const addEventSidebarWidth = 600
   const { skin, direction } = settings
   const mdAbove = useMediaQuery((theme: Theme) => theme.breakpoints.up('md'))
 
@@ -138,6 +137,48 @@ const AppCalendar = () => {
     return studentsWithAvatars
   }, [])
 
+  // ** Function to dynamically generate calendar colors based on event data
+  const generateDynamicCalendarColors = useCallback((events: EventOccurrenceDTO[]) => {
+    const dynamicColors: CalendarColors = { ...calendarsColor }
+
+    const colorOptions: Array<'error' | 'primary' | 'warning' | 'success' | 'info'> = [
+      'primary',
+      'info',
+      'warning',
+      'error',
+      'success'
+    ]
+
+    let colorIndex = 0
+
+    events.forEach(event => {
+      // Generate category name
+      const calendarCategory = event.recurringSeriesId
+        ? `Series-${event.recurringSeriesId}`
+        : event.virtual
+        ? 'Virtual-Meetings'
+        : event.professorName
+        ? `Professor-${event.professorName.replace(/\s+/g, '-')}`
+        : 'General-Events'
+
+      // Assign color if not already assigned
+      if (!dynamicColors[calendarCategory]) {
+        if (calendarCategory.startsWith('Series-')) {
+          dynamicColors[calendarCategory] = 'info'
+        } else if (calendarCategory === 'Virtual-Meetings') {
+          dynamicColors[calendarCategory] = 'success'
+        } else if (calendarCategory.startsWith('Professor-')) {
+          dynamicColors[calendarCategory] = 'warning'
+        } else {
+          dynamicColors[calendarCategory] = colorOptions[colorIndex % colorOptions.length]
+          colorIndex++
+        }
+      }
+    })
+
+    return dynamicColors
+  }, [])
+
   useEffect(() => {
     // @ts-ignore
     dispatch(fetchEvents())
@@ -145,30 +186,28 @@ const AppCalendar = () => {
   }, [])
 
   useEffect(() => {
-    console.log('Calendar info updated:', calendarInfo)
+    console.log('Local store updated:', calendarInfo)
     if (calendarInfo) {
-      const startDate = calendarInfo?.start?.toISOString() || new Date().toISOString()
-      const endDate =
-        calendarInfo?.end?.toISOString() || new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString()
-
-      console.log('Fetching events for date range:', { startDate, endDate })
-
       profileServiceClient.events
         .getConsolidatedEvents({
-          startDate,
-          endDate
+          startDate: calendarInfo?.start?.toISOString() || new Date().toISOString(),
+          endDate:
+            calendarInfo?.end?.toISOString() || new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString()
         })
         .then(async response => {
-          console.log('Fetched events:', response.data)
           const studentsWithAvatars = await processStudentAvatars(response.data, students)
           setStudentAvatars(studentsWithAvatars)
           setLocalStore(prevStore => ({ ...prevStore, events: response.data }))
+
+          // Generate dynamic calendar colors based on event data
+          const newDynamicColors = generateDynamicCalendarColors(response.data)
+          setDynamicCalendarsColor(newDynamicColors)
         })
         .catch(error => {
           console.error('Error fetching events:', error)
         })
     }
-  }, [calendarInfo, processStudentAvatars, students])
+  }, [calendarInfo, processStudentAvatars, students, generateDynamicCalendarColors])
 
   const handleLeftSidebarToggle = () => setLeftSidebarOpen(!leftSidebarOpen)
   const handleAddEventSidebarToggle = () => setAddEventSidebarOpen(!addEventSidebarOpen)
@@ -186,7 +225,7 @@ const AppCalendar = () => {
         store={store}
         mdAbove={mdAbove}
         dispatch={dispatch}
-        calendarsColor={calendarsColor}
+        calendarsColor={dynamicCalendarsColor}
         leftSidebarOpen={leftSidebarOpen}
         leftSidebarWidth={leftSidebarWidth}
         handleSelectEvent={handleSelectEvent}
@@ -213,7 +252,7 @@ const AppCalendar = () => {
           direction={direction}
           updateEvent={updateEvent}
           calendarApi={calendarApi}
-          calendarsColor={calendarsColor}
+          calendarsColor={dynamicCalendarsColor}
           setCalendarApi={setCalendarApi}
           handleSelectEvent={handleSelectEvent}
           handleLeftSidebarToggle={handleLeftSidebarToggle}
@@ -225,7 +264,7 @@ const AppCalendar = () => {
         />
       </Box>
       <AddEventSidebar
-        store={localStore}
+        store={store}
         dispatch={dispatch}
         addEvent={addEvent}
         updateEvent={updateEvent}

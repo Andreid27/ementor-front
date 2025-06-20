@@ -51,8 +51,6 @@ const Calendar = props => {
     }
   }, [calendarApi, setCalendarApi])
   if (store) {
-    console.log('Calendar rendering with events:', store.events)
-
     // ** calendarOptions(Props)
     const calendarOptions = {
       events: store.events.length ? store.events : [],
@@ -61,18 +59,27 @@ const Calendar = props => {
         // Create unique ID using recurringSeriesId + start time to avoid duplicates
         const uniqueId = eventData.recurringSeriesId
           ? `${eventData.recurringSeriesId}-${eventData.effectiveStartTime}`
-          : eventData.id || `event-${eventData.effectiveStartTime}`
+          : eventData.id || `event-${eventData.effectiveStartTime || Date.now()}`
+
+        // Determine calendar category based on event data
+        const calendarCategory = eventData.recurringSeriesId
+          ? `Series-${eventData.recurringSeriesId}`
+          : eventData.virtual
+          ? 'Virtual-Meetings'
+          : eventData.professorName
+          ? `Professor-${eventData.professorName.replace(/\s+/g, '-')}`
+          : 'General-Events'
 
         const transformedEvent = {
           id: uniqueId,
-          title: eventData.seriesTitle || 'Untitled Event',
-          start: eventData.effectiveStartTime,
-          end: eventData.effectiveEndTime,
-          allDay: false,
-          url: eventData.meetingLink || '',
+          title: eventData.seriesTitle || eventData.title || 'Untitled Event',
+          start: eventData.effectiveStartTime || eventData.start,
+          end: eventData.effectiveEndTime || eventData.end,
+          allDay: eventData.allDay || false,
+          url: '', // Remove direct URL to prevent automatic redirection
           extendedProps: {
-            calendar: 'Business',
-            description: eventData.seriesDescription || '',
+            calendar: calendarCategory,
+            description: eventData.seriesDescription || eventData.description || '',
             location: eventData.virtual ? 'Virtual Meeting' : '',
             guests: [],
             professorName: eventData.professorName,
@@ -85,17 +92,12 @@ const Calendar = props => {
             upcoming: eventData.upcoming,
             missed: eventData.missed,
             rescheduled: eventData.rescheduled,
-            recurringSeriesId: eventData.recurringSeriesId
+            recurringSeriesId: eventData.recurringSeriesId,
+            meetingLink: eventData.meetingLink // Store meeting link in extendedProps instead of url
           }
         }
-        console.log('Transforming event:', eventData, 'to:', transformedEvent)
 
-        //TODO continue transforming other fields as needed and ensure all necessary fields are included
-        // ALSO edit recurringSeries
-        // ALSO add single event and add
-        // Also prevent event redirect on click of the link
-
-        return transformedEvent
+        return transformedEvent // This was missing!
       },
       plugins: [interactionPlugin, dayGridPlugin, timeGridPlugin, listPlugin, bootstrap5Plugin],
       initialView: 'dayGridMonth',
@@ -140,16 +142,52 @@ const Calendar = props => {
       navLinks: true,
       eventClassNames({ event: calendarEvent }) {
         // @ts-ignore
-        const calendarType = calendarEvent._def.extendedProps.calendar || 'Business'
-        const colorName = calendarsColor[calendarType] || 'primary'
+        const calendarType = calendarEvent._def.extendedProps.calendar || 'General-Events'
+
+        // Determine color based on calendar type
+        let colorName = 'primary'
+        if (calendarType.startsWith('Series-')) {
+          colorName = 'info'
+        } else if (calendarType === 'Virtual-Meetings') {
+          colorName = 'success'
+        } else if (calendarType.startsWith('Professor-')) {
+          colorName = 'warning'
+        } else {
+          colorName = calendarsColor[calendarType] || 'primary'
+        }
 
         return [
           // Background Color
           `bg-${colorName}`
         ]
       },
-      eventClick({ event: clickedEvent }) {
-        dispatch(handleSelectEvent(clickedEvent))
+      eventClick({ event: clickedEvent, jsEvent }) {
+        // Prevent default URL navigation
+        jsEvent.preventDefault()
+
+        // Convert FullCalendar event back to expected format for the sidebar
+        const convertedEvent = {
+          id: clickedEvent.id,
+          title: clickedEvent.title,
+          seriesTitle: clickedEvent.title,
+          start: clickedEvent.start,
+          end: clickedEvent.end,
+          effectiveStartTime: clickedEvent.start,
+          effectiveEndTime: clickedEvent.end,
+          allDay: clickedEvent.allDay,
+          url: clickedEvent.extendedProps?.meetingLink || '',
+          description: clickedEvent.extendedProps?.description || '',
+          seriesDescription: clickedEvent.extendedProps?.description || '',
+          extendedProps: {
+            ...clickedEvent.extendedProps,
+            meetingLink: clickedEvent.extendedProps?.meetingLink
+          },
+
+          // Copy all extendedProps to top level for compatibility
+          ...clickedEvent.extendedProps
+        }
+
+        dispatch(handleSelectEvent(convertedEvent))
         handleAddEventSidebarToggle()
 
         // * Only grab required field otherwise it goes in infinity loop
@@ -168,8 +206,12 @@ const Calendar = props => {
       dateClick(info) {
         const ev = { ...blankEvent }
         ev.start = info.date
-        ev.end = info.date
-        ev.allDay = true
+
+        // Set end time to 1 hour after start for new events
+        const endDate = new Date(info.date)
+        endDate.setHours(endDate.getHours() + 1)
+        ev.end = endDate
+        ev.allDay = false // Default to timed events, not all-day
 
         // @ts-ignore
         dispatch(handleSelectEvent(ev))
@@ -194,13 +236,6 @@ const Calendar = props => {
       },
       ref: calendarRef,
       datesSet(info) {
-        console.log('FullCalendar datesSet called with:', info)
-        console.log('Date range:', {
-          start: info.start,
-          end: info.end,
-          startStr: info.startStr,
-          endStr: info.endStr
-        })
         if (onDatesSet) onDatesSet(info)
       },
 
