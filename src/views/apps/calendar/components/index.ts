@@ -12,3 +12,5 @@ export { default as EventForm } from './EventForm'
 export { default as SidebarHeader } from './SidebarHeader'
 
 export { default as SidebarFooter } from './SidebarFooter'
+
+export { default as DaySummaryView } from './DaySummaryView'

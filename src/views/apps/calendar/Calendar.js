@@ -204,17 +204,45 @@ const Calendar = props => {
         }
       },
       dateClick(info) {
-        const ev = { ...blankEvent }
-        ev.start = info.date
+        // Find all events for the clicked date
+        const clickedDate = new Date(info.date)
 
-        // Set end time to 1 hour after start for new events
-        const endDate = new Date(info.date)
-        endDate.setHours(endDate.getHours() + 1)
-        ev.end = endDate
-        ev.allDay = false // Default to timed events, not all-day
+        const eventsForDay = store.events.filter(event => {
+          const eventStart = new Date(event.effectiveStartTime || event.start)
 
-        // @ts-ignore
-        dispatch(handleSelectEvent(ev))
+          return eventStart.toDateString() === clickedDate.toDateString()
+        })
+
+        if (eventsForDay.length > 0) {
+          // If there are events for this day, show day summary
+          const daySummary = {
+            isDaySummary: true,
+            selectedDate: clickedDate,
+            eventsForDay: eventsForDay,
+            title: `Events for ${clickedDate.toLocaleDateString('en-US', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            })}`,
+            start: clickedDate,
+            end: clickedDate
+          }
+          dispatch(handleSelectEvent(daySummary))
+        } else {
+          // If no events, create new event for that day
+          const ev = { ...blankEvent }
+          ev.start = info.date
+
+          // Set end time to 1 hour after start for new events
+          const endDate = new Date(info.date)
+          endDate.setHours(endDate.getHours() + 1)
+          ev.end = endDate
+          ev.allDay = false // Default to timed events, not all-day
+
+          dispatch(handleSelectEvent(ev))
+        }
+
         handleAddEventSidebarToggle()
       },
 

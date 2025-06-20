@@ -19,11 +19,15 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({
   onEdit,
   onDelete,
   onCancel,
-  onClose
+  onClose,
+  isDaySummary = false
 }) => {
   const isExistingEvent = selectedEvent !== null && (selectedEvent.title || selectedEvent.seriesTitle)?.length
 
   const getTitle = () => {
+    if (isDaySummary) {
+      return 'Day Overview'
+    }
     if (isExistingEvent) {
       return isEditMode ? 'Edit Event' : 'Event Details'
     }
@@ -32,6 +36,11 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({
   }
 
   const renderActionButtons = () => {
+    if (isDaySummary) {
+      // No action buttons for day summary
+      return null
+    }
+
     if (isExistingEvent && !isEditMode && canEdit) {
       // Show Edit button for professors when viewing event
       return (

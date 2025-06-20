@@ -19,7 +19,22 @@ import { RecurringSeriesDTO } from 'src/generated/profile-service'
 import { EventFormValues, FormData, defaultEventFormState, AddEventSidebarProps } from './types'
 
 // ** Components
-import { EventView, EventForm, SidebarHeader, SidebarFooter } from './components'
+import { EventView, EventForm, SidebarHeader, SidebarFooter, DaySummaryView } from './components'
+
+// ** Constants
+const blankEvent = {
+  title: '',
+  start: new Date(),
+  end: new Date(),
+  allDay: false,
+  url: '',
+  extendedProps: {
+    calendar: '',
+    guests: [],
+    location: '',
+    description: ''
+  }
+}
 
 const AddEventSidebar = (props: AddEventSidebarProps) => {
   // ** Props
@@ -178,7 +193,7 @@ const AddEventSidebar = (props: AddEventSidebarProps) => {
       // Set edit mode to true for new events
       setIsEditMode(true)
     }
-  }, [addEventSidebarOpen, resetToStoredValues, resetToEmptyValues, store.selectedEvent])
+  }, [addEventSidebarOpen, resetToStoredValues, resetToEmptyValues, store.selectedEvent, isEditMode])
 
   // Helper functions for duration conversion
   const formatDurationToISO8601 = (hours: number, minutes: number): string => {
@@ -228,11 +243,84 @@ const AddEventSidebar = (props: AddEventSidebarProps) => {
         onDelete={handleDelete}
         onCancel={handleCancel}
         onClose={handleSidebarClose}
+        isDaySummary={(store.selectedEvent as any)?.isDaySummary}
       />
 
       <Box className='sidebar-body' sx={{ p: (theme: any) => theme.spacing(0, 6, 6) }}>
         <DatePickerWrapper>
-          {!isEditMode && store.selectedEvent !== null ? (
+          {(store.selectedEvent as any)?.isDaySummary ? (
+            // DAY SUMMARY MODE - Show all events for the selected day
+            <DaySummaryView
+              selectedDate={(store.selectedEvent as any).selectedDate}
+              eventsForDay={(store.selectedEvent as any).eventsForDay}
+              onEventClick={event => {
+                // Format the event data the same way as eventClick in Calendar.js
+                const convertedEvent = {
+                  id: event.id || `event-${event.effectiveStartTime || Date.now()}`,
+                  title: event.title || event.seriesTitle || 'Untitled Event',
+                  seriesTitle: event.seriesTitle || event.title || 'Untitled Event',
+                  start: event.effectiveStartTime || event.start,
+                  end: event.effectiveEndTime || event.end,
+                  effectiveStartTime: event.effectiveStartTime || event.start,
+                  effectiveEndTime: event.effectiveEndTime || event.end,
+                  allDay: event.allDay || false,
+                  url: event.meetingLink || '',
+                  description: event.seriesDescription || event.description || '',
+                  seriesDescription: event.seriesDescription || event.description || '',
+                  extendedProps: {
+                    calendar: 'Business',
+                    description: event.seriesDescription || event.description || '',
+                    location: event.virtual ? 'Virtual Meeting' : '',
+                    guests: [],
+                    professorName: event.professorName,
+                    professorId: event.professorId,
+                    price: event.price,
+                    attendance: event.attendance,
+                    virtual: event.virtual,
+                    cancelled: event.cancelled,
+                    completed: event.completed,
+                    upcoming: event.upcoming,
+                    missed: event.missed,
+                    rescheduled: event.rescheduled,
+                    recurringSeriesId: event.recurringSeriesId,
+                    meetingLink: event.meetingLink
+                  },
+
+                  // Copy all original properties to top level for compatibility
+                  professorName: event.professorName,
+                  professorId: event.professorId,
+                  price: event.price,
+                  attendance: event.attendance,
+                  virtual: event.virtual,
+                  cancelled: event.cancelled,
+                  completed: event.completed,
+                  upcoming: event.upcoming,
+                  missed: event.missed,
+                  rescheduled: event.rescheduled,
+                  recurringSeriesId: event.recurringSeriesId,
+                  meetingLink: event.meetingLink
+                }
+
+                dispatch(handleSelectEvent(convertedEvent))
+                // Keep sidebar open to show the selected event
+              }}
+              onAddNewEvent={() => {
+                // Create a new event for this specific day
+                const selectedDate = (store.selectedEvent as any).selectedDate
+                const ev = { ...blankEvent }
+                ev.start = selectedDate
+
+                const endDate = new Date(selectedDate)
+                endDate.setHours(endDate.getHours() + 1)
+                ev.end = endDate
+                ev.allDay = false
+
+                dispatch(handleSelectEvent(ev as any))
+                setIsEditMode(true)
+              }}
+              onClose={handleSidebarClose}
+            />
+          ) : !isEditMode && store.selectedEvent !== null ? (
             // VIEW MODE - Show event details in readable format
             <EventView selectedEvent={store.selectedEvent} values={values} onClose={handleSidebarClose} />
           ) : (

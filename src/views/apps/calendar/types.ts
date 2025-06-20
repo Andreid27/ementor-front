@@ -88,6 +88,7 @@ export interface SidebarHeaderProps {
   onDelete: () => void
   onCancel: () => void
   onClose: () => void
+  isDaySummary?: boolean
 }
 
 export interface SidebarFooterProps {
