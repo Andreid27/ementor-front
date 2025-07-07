@@ -14,6 +14,9 @@ import { AddEventSidebarProps } from './types'
 // ** Components
 import { SidebarHeaderImproved, SidebarContentContainer, SidebarFooter } from './components'
 
+// ** Utils
+// import { createBlankEvent } from './utils/eventTransforms' // Used in SidebarContentContainer
+
 // ** Constants
 import { DRAWER_STYLES, SIDEBAR_BODY_STYLES } from './constants'
 
@@ -33,7 +36,7 @@ import { useEventData, useEventActions } from './hooks'
  * - Utils: Pure functions for data transformation
  * - Modular Structure: Easy to test, maintain, and extend
  */
-const AddEventSidebar: React.FC<AddEventSidebarProps> = props => {
+const AddEventSidebarRefactored: React.FC<AddEventSidebarProps> = props => {
   const {
     store,
     dispatch,
@@ -55,7 +58,7 @@ const AddEventSidebar: React.FC<AddEventSidebarProps> = props => {
   }, [dispatch, handleSelectEvent, handleAddEventSidebarToggle])
 
   // Extract event data management logic
-  const { isEditMode, setIsEditMode, resetForm, values, setValues, control, handleSubmit, errors } = useEventData({
+  const { isEditMode, setIsEditMode, resetForm } = useEventData({
     selectedEvent: store.selectedEvent,
     addEventSidebarOpen
   })
@@ -137,14 +140,6 @@ const AddEventSidebar: React.FC<AddEventSidebarProps> = props => {
             addEventSidebarOpen={addEventSidebarOpen}
             students={students}
             onClose={handleSidebarClose}
-            // Pass edit mode state to avoid duplication
-            isEditMode={isEditMode}
-            setIsEditMode={setIsEditMode}
-            values={values}
-            setValues={setValues}
-            control={control}
-            handleSubmit={handleSubmit}
-            errors={errors}
           />
 
           {/* Footer for form actions - only show in edit mode */}
@@ -174,4 +169,4 @@ const AddEventSidebar: React.FC<AddEventSidebarProps> = props => {
   )
 }
 
-export default React.memo(AddEventSidebar)
+export default React.memo(AddEventSidebarRefactored)

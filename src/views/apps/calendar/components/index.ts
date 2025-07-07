@@ -5,12 +5,19 @@ export { default as EventDetailsCards } from './EventDetailsCards'
 
 export { default as EventMeetingLink } from './EventMeetingLink'
 
-export { default as EventView } from './EventView'
-
-export { default as EventForm } from './EventForm'
-
-export { default as SidebarHeader } from './SidebarHeader'
-
 export { default as SidebarFooter } from './SidebarFooter'
 
 export { default as DaySummaryView } from './DaySummaryView'
+
+// ** Primary Components (Improved)
+export { default as SidebarHeaderImproved } from './SidebarHeaderImproved'
+
+export { default as EventFormImproved } from './EventFormImproved'
+
+export { default as EventViewImproved } from './EventViewImproved'
+
+export { default as EventFormFields } from './EventFormFields'
+
+export { default as RecurringEventFields } from './RecurringEventFields'
+
+export { default as SidebarContentContainer } from './SidebarContentContainer'
