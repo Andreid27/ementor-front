@@ -16,6 +16,7 @@ Name | Type | Description | Notes
 **speciality** | [**Speciality**](Speciality.md) |  | [optional] [default to undefined]
 **fullName** | **string** |  | [optional] [default to undefined]
 **about** | **string** |  | [optional] [default to undefined]
+**studentRelationships** | [**Array&lt;StudentProfessorRelationship&gt;**](StudentProfessorRelationship.md) |  | [optional] [default to undefined]
 **bankAccounts** | [**Array&lt;BankAccount&gt;**](BankAccount.md) |  | [optional] [default to undefined]
 
 ## Example
@@ -35,6 +36,7 @@ const instance: ProfessorProfile = {
     speciality,
     fullName,
     about,
+    studentRelationships,
     bankAccounts,
 };
 ```

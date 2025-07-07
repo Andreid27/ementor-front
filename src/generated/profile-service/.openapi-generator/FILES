@@ -13,6 +13,7 @@ docs/BankAccountControllerApi.md
 docs/BankAccountDTO.md
 docs/CredentialRepresentation.md
 docs/CredentialRepresentationConfig.md
+docs/EventAttendee.md
 docs/EventOccurrence.md
 docs/EventOccurrenceDTO.md
 docs/EventOccurrenceDuration.md
@@ -47,6 +48,9 @@ docs/SortCriteria.md
 docs/Speciality.md
 docs/SpecialityControllerApi.md
 docs/SpecialityDTO.md
+docs/StudentProfessorRelationship.md
+docs/StudentProfessorRelationshipControllerApi.md
+docs/StudentProfile.md
 docs/StudentProfileControllerApi.md
 docs/StudentProfileDTO.md
 docs/StudentProfileView.md

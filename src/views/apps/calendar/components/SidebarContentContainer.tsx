@@ -6,9 +6,6 @@ import EventViewImproved from './EventViewImproved'
 import EventFormImproved from './EventFormImproved'
 import DaySummaryView from './DaySummaryView'
 
-// ** Hooks
-import { useEventActions } from '../hooks'
-
 // ** Utils
 import { transformEventForSidebar, createBlankEvent } from '../utils/eventTransforms'
 
@@ -60,18 +57,6 @@ const SidebarContentContainer: React.FC<SidebarContentContainerProps> = ({
   handleSubmit,
   errors
 }) => {
-  // Only use event actions hook, not data hook (to avoid duplication)
-  const { handleSubmit: handleFormSubmit } = useEventActions({
-    values,
-    store,
-    dispatch,
-    addEvent,
-    updateEvent,
-    deleteEvent,
-    calendarApi,
-    onClose
-  })
-
   // Determine the current sidebar mode
   const sidebarMode = useMemo((): SidebarMode => {
     const isDaySummary = (store.selectedEvent as any)?.isDaySummary
@@ -118,17 +103,15 @@ const SidebarContentContainer: React.FC<SidebarContentContainerProps> = ({
 
     case SidebarMode.EVENT_FORM:
       return (
-        <form onSubmit={handleSubmit(handleFormSubmit)} autoComplete='off'>
-          <EventFormImproved
-            values={values}
-            setValues={setValues}
-            isEditMode={isEditMode}
-            selectedEvent={store.selectedEvent}
-            students={students}
-            control={control}
-            errors={errors}
-          />
-        </form>
+        <EventFormImproved
+          values={values}
+          setValues={setValues}
+          isEditMode={isEditMode}
+          selectedEvent={store.selectedEvent}
+          students={students}
+          control={control}
+          errors={errors}
+        />
       )
 
     default:

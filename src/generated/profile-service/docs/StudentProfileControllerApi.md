@@ -1,6 +1,6 @@
 # StudentProfileControllerApi
 
-All URIs are relative to *https://dev.api.e-mentor.ro/service2*
+All URIs are relative to *https://dev.api.e-mentor.ro//service2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
@@ -12,6 +12,7 @@ All URIs are relative to *https://dev.api.e-mentor.ro/service2*
 |[**getPaginated**](#getpaginated) | **POST** /student-profile/paginated | Get paginated workpoints|
 |[**getProfilePrerequire**](#getprofileprerequire) | **GET** /student-profile/profile-prerequire | Get current initial data for creating student profile|
 |[**getUserProfile**](#getuserprofile) | **GET** /student-profile/get | Get current student profile|
+|[**setDefaultPricePerSession**](#setdefaultpricepersession) | **PUT** /student-profile/{studentId}/default-price | Set default price per session for a student|
 |[**update1**](#update1) | **PUT** /student-profile/update | Update a existing student profile.|
 
 # **create1**
@@ -398,6 +399,61 @@ This endpoint does not have any parameters.
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
+|**200** | Request successful |  -  |
+|**400** | Invalid request |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **setDefaultPricePerSession**
+> setDefaultPricePerSession()
+
+
+### Example
+
+```typescript
+import {
+    StudentProfileControllerApi,
+    Configuration
+} from 'ementor-api-client';
+
+const configuration = new Configuration();
+const apiInstance = new StudentProfileControllerApi(configuration);
+
+let studentId: string; // (default to undefined)
+let defaultPrice: number; // (default to undefined)
+
+const { status, data } = await apiInstance.setDefaultPricePerSession(
+    studentId,
+    defaultPrice
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **studentId** | [**string**] |  | defaults to undefined|
+| **defaultPrice** | [**number**] |  | defaults to undefined|
+
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+[OIDC Authentication](../README.md#OIDC Authentication)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: Not defined
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**403** | Access denied |  -  |
 |**200** | Request successful |  -  |
 |**400** | Invalid request |  -  |
 

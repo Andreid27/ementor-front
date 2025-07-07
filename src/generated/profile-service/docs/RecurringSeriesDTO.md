@@ -19,6 +19,7 @@ Name | Type | Description | Notes
 **professorName** | **string** |  | [optional] [default to undefined]
 **creation** | **string** |  | [optional] [default to undefined]
 **modified** | **string** |  | [optional] [default to undefined]
+**attendeePrices** | **{ [key: string]: number; }** |  | [optional] [default to undefined]
 
 ## Example
 
@@ -40,6 +41,7 @@ const instance: RecurringSeriesDTO = {
     professorName,
     creation,
     modified,
+    attendeePrices,
 };
 ```
 

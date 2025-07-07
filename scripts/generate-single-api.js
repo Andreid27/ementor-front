@@ -26,7 +26,8 @@ async function generateSingleApi() {
       -i ${swaggerUrl} \\
       -g typescript-axios \\
       -o ${outputDir} \\
-      --additional-properties=npmName=ementor-api-client,supportsES6=true,withInterfaces=true,useSingleRequestParameter=true`
+      --additional-properties=npmName=ementor-api-client,supportsES6=true,withInterfaces=true,useSingleRequestParameter=true \\
+      --skip-validate-spec`
 
     console.log(`Running: ${command.replace(/\s+/g, ' ')}`)
     execSync(command, { stdio: 'inherit' })

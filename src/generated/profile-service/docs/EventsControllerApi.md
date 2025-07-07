@@ -1,6 +1,6 @@
 # EventsControllerApi
 
-All URIs are relative to *https://dev.api.e-mentor.ro/service2*
+All URIs are relative to *https://dev.api.e-mentor.ro//service2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
@@ -9,12 +9,17 @@ All URIs are relative to *https://dev.api.e-mentor.ro/service2*
 |[**createRecurringSeries**](#createrecurringseries) | **POST** /events/series | Create a new recurring series|
 |[**createSingularEvent**](#createsingularevent) | **POST** /events/singular | Create a new singular event|
 |[**deleteSingularEvent**](#deletesingularevent) | **DELETE** /events/singular/{eventId} | Delete a singular event|
+|[**getAttendees**](#getattendees) | **GET** /events/attendees | Get full user DTOs for expected attendees by series or occurrence ID|
 |[**getConsolidatedEvents**](#getconsolidatedevents) | **GET** /events/consolidated | Get consolidated events for date range|
 |[**getConsolidatedEventsForProfessor**](#getconsolidatedeventsforprofessor) | **GET** /events/consolidated/professor/{professorId} | Get consolidated events for a specific professor|
 |[**getMyEvents**](#getmyevents) | **GET** /events/my-events | Get my events (for current professor)|
 |[**getMySingularEvents**](#getmysingularevents) | **GET** /events/singular/my-events | Get my singular events|
 |[**getSingularEventsForProfessor**](#getsingulareventsforprofessor) | **GET** /events/singular/professor/{professorId} | Get singular events for a specific professor|
 |[**modifyEventOccurrence**](#modifyeventoccurrence) | **POST** /events/occurrence/modify | Modify/reschedule an event occurrence. It will be found by seriesId and originalStartTime.|
+|[**setEventOccurrenceAttendeePrice**](#seteventoccurrenceattendeeprice) | **PUT** /events/occurrence/{occurrenceId}/attendee-price | Set price for specific attendee in event occurrence|
+|[**setRecurringSeriesAttendeePrice**](#setrecurringseriesattendeeprice) | **PUT** /events/series/{seriesId}/attendee-price | Set price for specific attendee in recurring series|
+|[**setSingularEventAttendeePrice**](#setsingulareventattendeeprice) | **PUT** /events/singular/{eventId}/attendee-price | Set price for specific attendee in singular event|
+|[**updateRecurringSeries**](#updaterecurringseries) | **PUT** /events/series/{seriesId} | Update a recurring series|
 |[**updateSingularEvent**](#updatesingularevent) | **PUT** /events/singular/{eventId} | Update a singular event|
 
 # **cancelEventOccurrence**
@@ -286,6 +291,60 @@ void (empty response body)
 |-------------|-------------|------------------|
 |**200** | Singular event deleted successfully |  -  |
 |**404** | Event not found |  -  |
+|**400** | Invalid request |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getAttendees**
+> Array<UserDTO> getAttendees()
+
+
+### Example
+
+```typescript
+import {
+    EventsControllerApi,
+    Configuration
+} from 'ementor-api-client';
+
+const configuration = new Configuration();
+const apiInstance = new EventsControllerApi(configuration);
+
+let seriesId: string; // (optional) (default to undefined)
+let occurrenceId: string; // (optional) (default to undefined)
+
+const { status, data } = await apiInstance.getAttendees(
+    seriesId,
+    occurrenceId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **seriesId** | [**string**] |  | (optional) defaults to undefined|
+| **occurrenceId** | [**string**] |  | (optional) defaults to undefined|
+
+
+### Return type
+
+**Array<UserDTO>**
+
+### Authorization
+
+[OIDC Authentication](../README.md#OIDC Authentication)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: */*
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Request successful |  -  |
 |**400** | Invalid request |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -629,6 +688,239 @@ const { status, data } = await apiInstance.modifyEventOccurrence(
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 |**200** | Event modified successfully |  -  |
+|**400** | Invalid request |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **setEventOccurrenceAttendeePrice**
+> setEventOccurrenceAttendeePrice()
+
+Sets or updates the price for a specific attendee in an event occurrence. Uses transaction-safe operations. Requires PROFESSOR or ADMIN role.
+
+### Example
+
+```typescript
+import {
+    EventsControllerApi,
+    Configuration
+} from 'ementor-api-client';
+
+const configuration = new Configuration();
+const apiInstance = new EventsControllerApi(configuration);
+
+let occurrenceId: string; // (default to undefined)
+let attendeeId: string; // (default to undefined)
+let price: number; // (optional) (default to undefined)
+
+const { status, data } = await apiInstance.setEventOccurrenceAttendeePrice(
+    occurrenceId,
+    attendeeId,
+    price
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **occurrenceId** | [**string**] |  | defaults to undefined|
+| **attendeeId** | [**string**] |  | defaults to undefined|
+| **price** | [**number**] |  | (optional) defaults to undefined|
+
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+[OIDC Authentication](../README.md#OIDC Authentication)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: Not defined
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**403** | Access denied |  -  |
+|**200** | Attendee price set successfully |  -  |
+|**400** | Invalid request |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **setRecurringSeriesAttendeePrice**
+> setRecurringSeriesAttendeePrice()
+
+Sets or updates the price for a specific attendee in a recurring series. Uses transaction-safe operations. Requires PROFESSOR or ADMIN role.
+
+### Example
+
+```typescript
+import {
+    EventsControllerApi,
+    Configuration
+} from 'ementor-api-client';
+
+const configuration = new Configuration();
+const apiInstance = new EventsControllerApi(configuration);
+
+let seriesId: string; // (default to undefined)
+let attendeeId: string; // (default to undefined)
+let price: number; // (optional) (default to undefined)
+
+const { status, data } = await apiInstance.setRecurringSeriesAttendeePrice(
+    seriesId,
+    attendeeId,
+    price
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **seriesId** | [**string**] |  | defaults to undefined|
+| **attendeeId** | [**string**] |  | defaults to undefined|
+| **price** | [**number**] |  | (optional) defaults to undefined|
+
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+[OIDC Authentication](../README.md#OIDC Authentication)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: Not defined
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**403** | Access denied |  -  |
+|**200** | Attendee price set successfully |  -  |
+|**400** | Invalid request |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **setSingularEventAttendeePrice**
+> setSingularEventAttendeePrice()
+
+Sets or updates the price for a specific attendee in a singular event. Uses transaction-safe operations. Requires PROFESSOR or ADMIN role.
+
+### Example
+
+```typescript
+import {
+    EventsControllerApi,
+    Configuration
+} from 'ementor-api-client';
+
+const configuration = new Configuration();
+const apiInstance = new EventsControllerApi(configuration);
+
+let eventId: string; // (default to undefined)
+let attendeeId: string; // (default to undefined)
+let price: number; // (optional) (default to undefined)
+
+const { status, data } = await apiInstance.setSingularEventAttendeePrice(
+    eventId,
+    attendeeId,
+    price
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **eventId** | [**string**] |  | defaults to undefined|
+| **attendeeId** | [**string**] |  | defaults to undefined|
+| **price** | [**number**] |  | (optional) defaults to undefined|
+
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+[OIDC Authentication](../README.md#OIDC Authentication)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: Not defined
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**403** | Access denied |  -  |
+|**200** | Attendee price set successfully |  -  |
+|**400** | Invalid request |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **updateRecurringSeries**
+> RecurringSeriesDTO updateRecurringSeries(recurringSeriesDTO)
+
+
+### Example
+
+```typescript
+import {
+    EventsControllerApi,
+    Configuration,
+    RecurringSeriesDTO
+} from 'ementor-api-client';
+
+const configuration = new Configuration();
+const apiInstance = new EventsControllerApi(configuration);
+
+let seriesId: string; // (default to undefined)
+let recurringSeriesDTO: RecurringSeriesDTO; //
+
+const { status, data } = await apiInstance.updateRecurringSeries(
+    seriesId,
+    recurringSeriesDTO
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **recurringSeriesDTO** | **RecurringSeriesDTO**|  | |
+| **seriesId** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**RecurringSeriesDTO**
+
+### Authorization
+
+[OIDC Authentication](../README.md#OIDC Authentication)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: */*
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Series updated successfully |  -  |
+|**404** | Series not found |  -  |
 |**400** | Invalid request |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)

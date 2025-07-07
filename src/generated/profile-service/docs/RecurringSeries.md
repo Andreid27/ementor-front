@@ -17,7 +17,7 @@ Name | Type | Description | Notes
 **price** | **number** |  | [optional] [default to undefined]
 **meetingLink** | **string** |  | [optional] [default to undefined]
 **endRecurrence** | **string** |  | [optional] [default to undefined]
-**expectedAttendees** | **Array&lt;string&gt;** |  | [optional] [default to undefined]
+**eventAttendees** | [**Array&lt;EventAttendee&gt;**](EventAttendee.md) |  | [optional] [default to undefined]
 **professor** | [**ProfessorProfile**](ProfessorProfile.md) |  | [optional] [default to undefined]
 
 ## Example
@@ -38,7 +38,7 @@ const instance: RecurringSeries = {
     price,
     meetingLink,
     endRecurrence,
-    expectedAttendees,
+    eventAttendees,
     professor,
 };
 ```

@@ -154,7 +154,7 @@ const AppCalendar = () => {
     events.forEach(event => {
       // Generate category name
       const calendarCategory = event.recurringSeriesId
-        ? `Series-${event.recurringSeriesId}`
+        ? `Series-${event.seriesTitle}`
         : event.virtual
         ? 'Virtual-Meetings'
         : event.professorName

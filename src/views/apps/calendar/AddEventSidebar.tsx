@@ -61,8 +61,12 @@ const AddEventSidebar: React.FC<AddEventSidebarProps> = props => {
   })
 
   // Extract event actions logic
-  const { handleDelete, canEdit } = useEventActions({
-    values: { isRecurring: false } as any, // Temporary for compatibility
+  const {
+    handleSubmit: handleFormSubmit,
+    handleDelete,
+    canEdit
+  } = useEventActions({
+    values,
     store,
     dispatch,
     addEvent,
@@ -126,48 +130,50 @@ const AddEventSidebar: React.FC<AddEventSidebarProps> = props => {
       {/* Main Content Area */}
       <Box className='sidebar-body' sx={SIDEBAR_BODY_STYLES}>
         <DatePickerWrapper>
-          <SidebarContentContainer
-            store={store}
-            dispatch={dispatch}
-            addEvent={addEvent}
-            updateEvent={updateEvent}
-            deleteEvent={deleteEvent}
-            calendarApi={calendarApi}
-            handleSelectEvent={handleSelectEvent}
-            addEventSidebarOpen={addEventSidebarOpen}
-            students={students}
-            onClose={handleSidebarClose}
-            // Pass edit mode state to avoid duplication
-            isEditMode={isEditMode}
-            setIsEditMode={setIsEditMode}
-            values={values}
-            setValues={setValues}
-            control={control}
-            handleSubmit={handleSubmit}
-            errors={errors}
-          />
+          <form onSubmit={handleSubmit(handleFormSubmit)} autoComplete='off'>
+            <SidebarContentContainer
+              store={store}
+              dispatch={dispatch}
+              addEvent={addEvent}
+              updateEvent={updateEvent}
+              deleteEvent={deleteEvent}
+              calendarApi={calendarApi}
+              handleSelectEvent={handleSelectEvent}
+              addEventSidebarOpen={addEventSidebarOpen}
+              students={students}
+              onClose={handleSidebarClose}
+              // Pass edit mode state to avoid duplication
+              isEditMode={isEditMode}
+              setIsEditMode={setIsEditMode}
+              values={values}
+              setValues={setValues}
+              control={control}
+              handleSubmit={handleSubmit}
+              errors={errors}
+            />
 
-          {/* Footer for form actions - only show in edit mode */}
-          {(isEditMode || store.selectedEvent === null) && !isDaySummary && (
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'center',
-                mt: 3,
-                pt: 2,
-                borderTop: '1px solid',
-                borderColor: 'divider'
-              }}
-            >
-              <SidebarFooter
-                isEditMode={isEditMode}
-                selectedEvent={store.selectedEvent}
-                onClose={handleSidebarClose}
-                onCancel={handleCancel}
-                onReset={handleReset}
-              />
-            </Box>
-          )}
+            {/* Footer for form actions - only show in edit mode */}
+            {(isEditMode || store.selectedEvent === null) && !isDaySummary && (
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  mt: 3,
+                  pt: 2,
+                  borderTop: '1px solid',
+                  borderColor: 'divider'
+                }}
+              >
+                <SidebarFooter
+                  isEditMode={isEditMode}
+                  selectedEvent={store.selectedEvent}
+                  onClose={handleSidebarClose}
+                  onCancel={handleCancel}
+                  onReset={handleReset}
+                />
+              </Box>
+            )}
+          </form>
         </DatePickerWrapper>
       </Box>
     </Drawer>

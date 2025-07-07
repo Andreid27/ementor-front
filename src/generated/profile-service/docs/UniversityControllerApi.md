@@ -1,6 +1,6 @@
 # UniversityControllerApi
 
-All URIs are relative to *https://dev.api.e-mentor.ro/service2*
+All URIs are relative to *https://dev.api.e-mentor.ro//service2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|

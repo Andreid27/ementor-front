@@ -14,7 +14,7 @@ Name | Type | Description | Notes
 **title** | **string** |  | [optional] [default to undefined]
 **description** | **string** |  | [optional] [default to undefined]
 **duration** | [**EventOccurrenceDuration**](EventOccurrenceDuration.md) |  | [optional] [default to undefined]
-**expectedAttendees** | **Array&lt;string&gt;** |  | [optional] [default to undefined]
+**eventAttendees** | [**Array&lt;EventAttendee&gt;**](EventAttendee.md) |  | [optional] [default to undefined]
 **originalStartTime** | **string** |  | [optional] [default to undefined]
 **actualStartTime** | **string** |  | [optional] [default to undefined]
 **actualEndTime** | **string** |  | [optional] [default to undefined]
@@ -38,7 +38,7 @@ const instance: EventOccurrence = {
     title,
     description,
     duration,
-    expectedAttendees,
+    eventAttendees,
     originalStartTime,
     actualStartTime,
     actualEndTime,
