@@ -78,7 +78,8 @@ export const useEventData = ({ selectedEvent, addEventSidebarOpen }: UseEventDat
         pattern: event.pattern || 'WEEKLY',
         durationHours: Math.max(durationHours, 1),
         durationMinutes: Math.max(durationMinutes, 0),
-        expectedAttendees: event.expectedAttendees || event.attendance || event.extendedProps?.expectedAttendees || []
+        expectedAttendees: event.expectedAttendees || event.attendance || event.extendedProps?.expectedAttendees || [],
+        attendeePrices: event.attendeePrices || event.extendedProps?.attendeePrices || {}
       })
     }
   }, [setValue, selectedEvent])

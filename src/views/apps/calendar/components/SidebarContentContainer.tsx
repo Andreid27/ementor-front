@@ -111,6 +111,7 @@ const SidebarContentContainer: React.FC<SidebarContentContainerProps> = ({
           students={students}
           control={control}
           errors={errors}
+          store={store}
         />
       )
 

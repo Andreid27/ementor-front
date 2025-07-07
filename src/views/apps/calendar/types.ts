@@ -21,6 +21,8 @@ export interface EventFormValues {
   durationMinutes: number
   endRecurrence?: Date
   expectedAttendees: string[]
+  // Per-student pricing
+  attendeePrices: { [key: string]: number }
 }
 
 export const defaultEventFormState: EventFormValues = {
@@ -35,7 +37,8 @@ export const defaultEventFormState: EventFormValues = {
   pattern: 'WEEKLY',
   durationHours: 1,
   durationMinutes: 0,
-  expectedAttendees: []
+  expectedAttendees: [],
+  attendeePrices: {}
 }
 
 export interface AddEventSidebarProps {
@@ -78,6 +81,7 @@ export interface EventFormProps {
   students: any[]
   control: any
   errors: any
+  store: any
 }
 
 export interface SidebarHeaderProps {

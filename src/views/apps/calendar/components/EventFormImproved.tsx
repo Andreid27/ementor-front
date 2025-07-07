@@ -10,6 +10,7 @@ import Typography from '@mui/material/Typography'
 // ** Components
 import EventFormFields from './EventFormFields'
 import RecurringEventFields from './RecurringEventFields'
+import EventAttendeeManagement from './EventAttendeeManagement'
 
 // ** Types
 import { EventFormProps } from '../types'
@@ -21,7 +22,8 @@ const EventForm: React.FC<EventFormProps> = ({
   selectedEvent,
   students,
   control,
-  errors
+  errors,
+  store
 }) => {
   const isReadOnly = !isEditMode && selectedEvent !== null
 
@@ -52,6 +54,26 @@ const EventForm: React.FC<EventFormProps> = ({
             control={control}
             errors={errors}
             isReadOnly={isReadOnly}
+          />
+        )
+      },
+      {
+        title: 'Attendees & Pricing',
+        component: (
+          <EventAttendeeManagement
+            eventType={values.isRecurring ? 'recurring' : 'singular'}
+            students={students}
+            isReadOnly={isReadOnly}
+            isNewEvent={!store.selectedEvent}
+            initialAttendeeIds={values.expectedAttendees}
+            initialAttendeePrices={values.attendeePrices}
+            defaultPrice={values.price}
+            onAttendeeIdsChange={ids => {
+              setValues(prev => ({ ...prev, expectedAttendees: ids }))
+            }}
+            onAttendeePricesChange={prices => {
+              setValues(prev => ({ ...prev, attendeePrices: prices }))
+            }}
           />
         )
       },

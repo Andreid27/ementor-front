@@ -53,7 +53,8 @@ export const useEventActions = ({
 
         const eventPayload = {
           recurringSeriesDTO,
-          isRecurring: true
+          isRecurring: true,
+          attendeePrices: values.attendeePrices
         }
 
         // Check if this is editing an existing recurring series
@@ -85,7 +86,9 @@ export const useEventActions = ({
           extendedProps: {
             description: values.description.length ? values.description : undefined,
             meetingLink: values.meetingLink,
-            price: values.price
+            price: values.price,
+            expectedAttendees: values.expectedAttendees,
+            attendeePrices: values.attendeePrices
           }
         }
 
