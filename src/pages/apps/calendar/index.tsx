@@ -104,21 +104,22 @@ const AppCalendar = () => {
   // ** Profile Picture Processing Function
   const processStudentAvatars = useCallback(async (events: EventOccurrenceDTO[], users: any[]) => {
     let uniqueStudents = Array.from(new Set(students))
-    let processedUsersList = []
+    let processedUsersList: any[] = []
 
+    // First, process all users to extract profile picture information
     for (const studentUser of uniqueStudents) {
-      const user = users.find(user => user.id === studentUser.id)
+      const user = users.find((user: any) => user.id === (studentUser as any).id)
       if (user) {
         const processedUser = extractProfilePicture(user)
         processedUsersList.push(processedUser)
       }
     }
 
-    const result = await Promise.all(
-      processedUsersList.map(async profilePicture => {
+    // Download/process the profile pictures from processedUsersList
+    const usersWithProfilePictures = await Promise.all(
+      processedUsersList.map(async (profilePicture: any) => {
         if (profilePicture.type === 'API') {
           const avatar = await profilePictureDownloader(profilePicture.url, profilePicture.userId)
-
           return { ...profilePicture, avatar: avatar || null }
         } else if (profilePicture.type === 'EXTERNAL') {
           return { ...profilePicture, avatar: profilePicture.url }
@@ -128,10 +129,17 @@ const AppCalendar = () => {
       })
     )
 
-    const studentsWithAvatars = uniqueStudents.map((row: any) => {
-      const user = result.find(u => u.userId === row.id)
+    // Map the processed users with profile pictures back to the student data
+    // This ensures compatibility with all profile picture field formats
+    const studentsWithAvatars = uniqueStudents.map((student: any) => {
+      const userWithPicture = usersWithProfilePictures.find((u: any) => u.userId === student.id)
 
-      return { ...row, avatar: user?.avatar }
+      return {
+        ...student,
+        avatar: userWithPicture?.avatar,
+        picture: userWithPicture?.avatar, // Add UserDTO compatible field
+        profilePicture: userWithPicture?.avatar // Add legacy compatible field
+      }
     })
 
     return studentsWithAvatars

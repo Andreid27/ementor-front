@@ -16,6 +16,9 @@ import { SidebarHeaderProps } from '../types'
 // ** Constants
 import { EVENT_DISPLAY_MODES } from '../constants'
 
+// ** Components
+import EventTypeIndicator from './EventTypeIndicator'
+
 interface ActionButton {
   icon: string
   onClick: () => void
@@ -30,7 +33,8 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({
   onDelete,
   onCancel,
   onClose,
-  isDaySummary = false
+  isDaySummary = false,
+  eventTypeInfo
 }) => {
   const theme = useTheme()
 
@@ -115,34 +119,43 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({
   }
 
   return (
-    <Box className='sidebar-header' sx={headerStyles}>
-      <Typography variant='h5' sx={{ fontWeight: 600, color: 'text.primary' }}>
-        {title}
-      </Typography>
+    <>
+      <Box className='sidebar-header' sx={headerStyles}>
+        <Typography variant='h5' sx={{ fontWeight: 600, color: 'text.primary' }}>
+          {title}
+        </Typography>
 
-      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        {actionButtons.map((button, index) => (
-          <IconButton
-            key={index}
-            size='small'
-            onClick={button.onClick}
-            sx={{
-              color: button.color || 'text.primary',
-              mr: 1,
-              '&:hover': {
-                backgroundColor: 'action.hover'
-              }
-            }}
-          >
-            <Icon icon={button.icon} fontSize='1.25rem' />
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          {actionButtons.map((button, index) => (
+            <IconButton
+              key={index}
+              size='small'
+              onClick={button.onClick}
+              sx={{
+                color: button.color || 'text.primary',
+                mr: 1,
+                '&:hover': {
+                  backgroundColor: 'action.hover'
+                }
+              }}
+            >
+              <Icon icon={button.icon} fontSize='1.25rem' />
+            </IconButton>
+          ))}
+
+          <IconButton size='small' onClick={onClose} sx={closeButtonStyles}>
+            <Icon icon='tabler:x' fontSize='1.25rem' />
           </IconButton>
-        ))}
-
-        <IconButton size='small' onClick={onClose} sx={closeButtonStyles}>
-          <Icon icon='tabler:x' fontSize='1.25rem' />
-        </IconButton>
+        </Box>
       </Box>
-    </Box>
+
+      {/* Event Type Indicator - show when we have an existing event */}
+      {selectedEvent && eventTypeInfo && !isDaySummary && (
+        <Box sx={{ px: 6, pt: 2 }}>
+          <EventTypeIndicator eventTypeInfo={eventTypeInfo} event={selectedEvent} isEditMode={isEditMode} />
+        </Box>
+      )}
+    </>
   )
 }
 

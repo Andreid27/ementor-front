@@ -14,12 +14,11 @@ Name | Type | Description | Notes
 **price** | **number** |  | [optional] [default to undefined]
 **meetingLink** | **string** |  | [optional] [default to undefined]
 **endRecurrence** | **string** |  | [optional] [default to undefined]
-**expectedAttendees** | **Array&lt;string&gt;** |  | [optional] [default to undefined]
+**eventAttendees** | [**Array&lt;EventAttendeeDTO&gt;**](EventAttendeeDTO.md) |  | [optional] [default to undefined]
 **professorId** | **string** |  | [optional] [default to undefined]
 **professorName** | **string** |  | [optional] [default to undefined]
 **creation** | **string** |  | [optional] [default to undefined]
 **modified** | **string** |  | [optional] [default to undefined]
-**attendeePrices** | **{ [key: string]: number; }** |  | [optional] [default to undefined]
 
 ## Example
 
@@ -36,12 +35,11 @@ const instance: RecurringSeriesDTO = {
     price,
     meetingLink,
     endRecurrence,
-    expectedAttendees,
+    eventAttendees,
     professorId,
     professorName,
     creation,
     modified,
-    attendeePrices,
 };
 ```
 

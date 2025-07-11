@@ -10,6 +10,8 @@ import DaySummaryView from './DaySummaryView'
 import { transformEventForSidebar, createBlankEvent } from '../utils/eventTransforms'
 
 // ** Types
+import { EventTypeInfo, EditingScope } from '../utils/eventTypeUtils'
+
 interface SidebarContentContainerProps {
   store: any
   dispatch: any
@@ -29,6 +31,10 @@ interface SidebarContentContainerProps {
   control: any
   handleSubmit: any
   errors: any
+  // Event type and editing scope
+  eventTypeInfo?: EventTypeInfo | null
+  editingScope?: EditingScope
+  onEditingScopeChange?: (scope: EditingScope) => void
 }
 
 enum SidebarMode {
@@ -55,7 +61,11 @@ const SidebarContentContainer: React.FC<SidebarContentContainerProps> = ({
   setValues,
   control,
   handleSubmit,
-  errors
+  errors,
+  // Event type and editing scope props
+  eventTypeInfo,
+  editingScope = 'occurrence',
+  onEditingScopeChange
 }) => {
   // Determine the current sidebar mode
   const sidebarMode = useMemo((): SidebarMode => {
@@ -112,6 +122,9 @@ const SidebarContentContainer: React.FC<SidebarContentContainerProps> = ({
           control={control}
           errors={errors}
           store={store}
+          eventTypeInfo={eventTypeInfo}
+          editingScope={editingScope}
+          onEditingScopeChange={onEditingScopeChange}
         />
       )
 

@@ -3,6 +3,7 @@ import { CalendarStore } from 'src/pages/apps/calendar'
 import { EventOccurrenceDTO, RecurringSeriesDTO } from 'src/generated/profile-service'
 import { CalendarApi } from '@fullcalendar/core'
 import { Dispatch } from '@reduxjs/toolkit'
+import { EventTypeInfo, EditingScope } from './utils/eventTypeUtils'
 
 export interface EventFormValues {
   recurringSeriesDTO?: RecurringSeriesDTO
@@ -82,6 +83,9 @@ export interface EventFormProps {
   control: any
   errors: any
   store: any
+  eventTypeInfo?: EventTypeInfo | null
+  editingScope?: EditingScope
+  onEditingScopeChange?: (scope: EditingScope) => void
 }
 
 export interface SidebarHeaderProps {
@@ -93,6 +97,7 @@ export interface SidebarHeaderProps {
   onCancel: () => void
   onClose: () => void
   isDaySummary?: boolean
+  eventTypeInfo?: EventTypeInfo | null
 }
 
 export interface SidebarFooterProps {

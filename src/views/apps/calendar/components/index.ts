@@ -21,3 +21,7 @@ export { default as EventFormFields } from './EventFormFields'
 export { default as RecurringEventFields } from './RecurringEventFields'
 
 export { default as SidebarContentContainer } from './SidebarContentContainer'
+
+export { default as EventTypeIndicator } from './EventTypeIndicator'
+
+export { default as EditingScopeToggle } from './EditingScopeToggle'

@@ -20,7 +20,6 @@ Name | Type | Description | Notes
 **actualEndTime** | **string** |  | [optional] [default to undefined]
 **price** | **number** |  | [optional] [default to undefined]
 **meetingLink** | **string** |  | [optional] [default to undefined]
-**attendance** | **Array&lt;string&gt;** |  | [optional] [default to undefined]
 **cancelled** | **boolean** |  | [optional] [default to undefined]
 
 ## Example
@@ -44,7 +43,6 @@ const instance: EventOccurrence = {
     actualEndTime,
     price,
     meetingLink,
-    attendance,
     cancelled,
 };
 ```

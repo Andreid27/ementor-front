@@ -12,7 +12,7 @@ Name | Type | Description | Notes
 **duration** | [**SingularEventDTODuration**](SingularEventDTODuration.md) |  | [optional] [default to undefined]
 **price** | **number** |  | [optional] [default to undefined]
 **meetingLink** | **string** |  | [optional] [default to undefined]
-**expectedAttendees** | **Array&lt;string&gt;** |  | [optional] [default to undefined]
+**eventAttendees** | [**Array&lt;EventAttendeeDTO&gt;**](EventAttendeeDTO.md) |  | [optional] [default to undefined]
 **professorId** | **string** |  | [optional] [default to undefined]
 **professorName** | **string** |  | [optional] [default to undefined]
 **creation** | **string** |  | [optional] [default to undefined]
@@ -31,7 +31,7 @@ const instance: SingularEventDTO = {
     duration,
     price,
     meetingLink,
-    expectedAttendees,
+    eventAttendees,
     professorId,
     professorName,
     creation,

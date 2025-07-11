@@ -2,6 +2,7 @@ import { useCallback } from 'react'
 import { useAuth } from 'src/hooks/useAuth'
 import { RecurringSeriesDTO } from 'src/generated/profile-service'
 import { EventFormValues, FormData } from '../types'
+import { EventTypeInfo, EditingScope, getEditingScopeConfig } from '../utils/eventTypeUtils'
 
 interface UseEventActionsProps {
   values: EventFormValues
@@ -12,6 +13,8 @@ interface UseEventActionsProps {
   deleteEvent: (id: string | number) => void
   calendarApi: any
   onClose: () => void
+  eventTypeInfo?: EventTypeInfo | null
+  editingScope?: EditingScope
 }
 
 export const useEventActions = ({
@@ -22,7 +25,9 @@ export const useEventActions = ({
   updateEvent,
   deleteEvent,
   calendarApi,
-  onClose
+  onClose,
+  eventTypeInfo,
+  editingScope = 'occurrence'
 }: UseEventActionsProps) => {
   const auth = useAuth()
 

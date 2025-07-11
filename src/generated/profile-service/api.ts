@@ -518,6 +518,49 @@ export interface EventAttendee {
 /**
  * 
  * @export
+ * @interface EventAttendeeDTO
+ */
+export interface EventAttendeeDTO {
+    /**
+     * 
+     * @type {string}
+     * @memberof EventAttendeeDTO
+     */
+    'id'?: string;
+    /**
+     * User ID of the attendee
+     * @type {string}
+     * @memberof EventAttendeeDTO
+     */
+    'attendeeId'?: string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof EventAttendeeDTO
+     */
+    'hasCustomPricing'?: boolean;
+    /**
+     * 
+     * @type {number}
+     * @memberof EventAttendeeDTO
+     */
+    'customPrice'?: number;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof EventAttendeeDTO
+     */
+    'expected'?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof EventAttendeeDTO
+     */
+    'attended'?: boolean;
+}
+/**
+ * 
+ * @export
  * @interface EventOccurrence
  */
 export interface EventOccurrence {
@@ -613,12 +656,6 @@ export interface EventOccurrence {
     'meetingLink'?: string;
     /**
      * 
-     * @type {Array<string>}
-     * @memberof EventOccurrence
-     */
-    'attendance'?: Array<string>;
-    /**
-     * 
      * @type {boolean}
      * @memberof EventOccurrence
      */
@@ -692,18 +729,6 @@ export interface EventOccurrenceDTO {
     'meetingLink'?: string;
     /**
      * 
-     * @type {Array<string>}
-     * @memberof EventOccurrenceDTO
-     */
-    'attendance'?: Array<string>;
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof EventOccurrenceDTO
-     */
-    'expectedAttendeeIds'?: Array<string>;
-    /**
-     * 
      * @type {number}
      * @memberof EventOccurrenceDTO
      */
@@ -734,10 +759,10 @@ export interface EventOccurrenceDTO {
     'modified'?: string;
     /**
      * 
-     * @type {{ [key: string]: number; }}
+     * @type {Array<EventAttendeeDTO>}
      * @memberof EventOccurrenceDTO
      */
-    'attendeePrices'?: { [key: string]: number; };
+    'eventAttendees'?: Array<EventAttendeeDTO>;
     /**
      * 
      * @type {boolean}
@@ -1068,6 +1093,61 @@ export interface GroupDTO {
 /**
  * 
  * @export
+ * @interface HostFile
+ */
+export interface HostFile {
+    /**
+     * 
+     * @type {string}
+     * @memberof HostFile
+     */
+    'fileName'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof HostFile
+     */
+    'fileType'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof HostFile
+     */
+    'fileLocation'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof HostFile
+     */
+    'createdBy'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof HostFile
+     */
+    'id'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof HostFile
+     */
+    'creation'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof HostFile
+     */
+    'expires'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof HostFile
+     */
+    'modified'?: string;
+}
+/**
+ * 
+ * @export
  * @interface Location
  */
 export interface Location {
@@ -1391,12 +1471,6 @@ export interface ProfessorProfile {
     'about'?: string;
     /**
      * 
-     * @type {Array<StudentProfessorRelationship>}
-     * @memberof ProfessorProfile
-     */
-    'studentRelationships'?: Array<StudentProfessorRelationship>;
-    /**
-     * 
      * @type {Array<BankAccount>}
      * @memberof ProfessorProfile
      */
@@ -1580,10 +1654,16 @@ export interface ProfilePicture {
     'size'?: number;
     /**
      * 
-     * @type {Array<string>}
+     * @type {string}
      * @memberof ProfilePicture
      */
-    'fileData'?: Array<string>;
+    'hostFileId'?: string;
+    /**
+     * 
+     * @type {HostFile}
+     * @memberof ProfilePicture
+     */
+    'hostFile'?: HostFile;
     /**
      * 
      * @type {string}
@@ -1779,10 +1859,10 @@ export interface RecurringSeriesDTO {
     'endRecurrence'?: string;
     /**
      * 
-     * @type {Array<string>}
+     * @type {Array<EventAttendeeDTO>}
      * @memberof RecurringSeriesDTO
      */
-    'expectedAttendees'?: Array<string>;
+    'eventAttendees'?: Array<EventAttendeeDTO>;
     /**
      * 
      * @type {string}
@@ -1807,12 +1887,6 @@ export interface RecurringSeriesDTO {
      * @memberof RecurringSeriesDTO
      */
     'modified'?: string;
-    /**
-     * 
-     * @type {{ [key: string]: number; }}
-     * @memberof RecurringSeriesDTO
-     */
-    'attendeePrices'?: { [key: string]: number; };
 }
 
 export const RecurringSeriesDTOPatternEnum = {
@@ -1874,10 +1948,10 @@ export interface SingularEventDTO {
     'meetingLink'?: string;
     /**
      * 
-     * @type {Array<string>}
+     * @type {Array<EventAttendeeDTO>}
      * @memberof SingularEventDTO
      */
-    'expectedAttendees'?: Array<string>;
+    'eventAttendees'?: Array<EventAttendeeDTO>;
     /**
      * 
      * @type {string}
@@ -2100,246 +2174,70 @@ export interface SpecialityDTO {
 /**
  * 
  * @export
- * @interface StudentProfessorRelationship
+ * @interface StudentProfessorRelationshipDTO
  */
-export interface StudentProfessorRelationship {
+export interface StudentProfessorRelationshipDTO {
     /**
      * 
      * @type {string}
-     * @memberof StudentProfessorRelationship
+     * @memberof StudentProfessorRelationshipDTO
      */
     'id'?: string;
     /**
      * 
-     * @type {StudentProfile}
-     * @memberof StudentProfessorRelationship
+     * @type {string}
+     * @memberof StudentProfessorRelationshipDTO
      */
-    'student'?: StudentProfile;
+    'studentId'?: string;
     /**
      * 
-     * @type {ProfessorProfile}
-     * @memberof StudentProfessorRelationship
+     * @type {string}
+     * @memberof StudentProfessorRelationshipDTO
      */
-    'professor'?: ProfessorProfile;
+    'studentUserId'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof StudentProfessorRelationshipDTO
+     */
+    'studentName'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof StudentProfessorRelationshipDTO
+     */
+    'professorId'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof StudentProfessorRelationshipDTO
+     */
+    'professorName'?: string;
     /**
      * 
      * @type {number}
-     * @memberof StudentProfessorRelationship
+     * @memberof StudentProfessorRelationshipDTO
      */
     'defaultPricePerSession'?: number;
     /**
      * 
      * @type {string}
-     * @memberof StudentProfessorRelationship
+     * @memberof StudentProfessorRelationshipDTO
+     */
+    'status'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof StudentProfessorRelationshipDTO
      */
     'createdAt'?: string;
     /**
      * 
      * @type {string}
-     * @memberof StudentProfessorRelationship
+     * @memberof StudentProfessorRelationshipDTO
      */
     'modifiedAt'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof StudentProfessorRelationship
-     */
-    'status'?: StudentProfessorRelationshipStatusEnum;
 }
-
-export const StudentProfessorRelationshipStatusEnum = {
-    Active: 'ACTIVE',
-    Inactive: 'INACTIVE',
-    Suspended: 'SUSPENDED'
-} as const;
-
-export type StudentProfessorRelationshipStatusEnum = typeof StudentProfessorRelationshipStatusEnum[keyof typeof StudentProfessorRelationshipStatusEnum];
-
-/**
- * 
- * @export
- * @interface StudentProfile
- */
-export interface StudentProfile {
-    /**
-     * 
-     * @type {string}
-     * @memberof StudentProfile
-     */
-    'id'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof StudentProfile
-     */
-    'creation'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof StudentProfile
-     */
-    'expires'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof StudentProfile
-     */
-    'modified'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof StudentProfile
-     */
-    'userId'?: string;
-    /**
-     * 
-     * @type {ProfilePicture}
-     * @memberof StudentProfile
-     */
-    'picture'?: ProfilePicture;
-    /**
-     * 
-     * @type {Address}
-     * @memberof StudentProfile
-     */
-    'address'?: Address;
-    /**
-     * 
-     * @type {string}
-     * @memberof StudentProfile
-     */
-    'desiredExamDate'?: string;
-    /**
-     * 
-     * @type {University}
-     * @memberof StudentProfile
-     */
-    'desiredUniversity'?: University;
-    /**
-     * 
-     * @type {Speciality}
-     * @memberof StudentProfile
-     */
-    'desiredSpeciality'?: Speciality;
-    /**
-     * 
-     * @type {string}
-     * @memberof StudentProfile
-     */
-    'school'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof StudentProfile
-     */
-    'schoolDomain'?: StudentProfileSchoolDomainEnum;
-    /**
-     * 
-     * @type {string}
-     * @memberof StudentProfile
-     */
-    'schoolSpeciality'?: StudentProfileSchoolSpecialityEnum;
-    /**
-     * 
-     * @type {number}
-     * @memberof StudentProfile
-     */
-    'schoolGrade'?: number;
-    /**
-     * 
-     * @type {Array<StudentProfessorRelationship>}
-     * @memberof StudentProfile
-     */
-    'professorRelationships'?: Array<StudentProfessorRelationship>;
-    /**
-     * 
-     * @type {string}
-     * @memberof StudentProfile
-     */
-    'pictureUrl'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof StudentProfile
-     */
-    'phone'?: string;
-    /**
-     * 
-     * @type {number}
-     * @memberof StudentProfile
-     * @deprecated
-     */
-    'defaultPricePerSession'?: number;
-}
-
-export const StudentProfileSchoolDomainEnum = {
-    VisualAndPlasticArts: 'VISUAL_AND_PLASTIC_ARTS',
-    Artistic: 'ARTISTIC',
-    Music: 'MUSIC',
-    Real: 'REAL',
-    NaturalResourcesAndEnvironmentalProtection: 'NATURAL_RESOURCES_AND_ENVIRONMENTAL_PROTECTION',
-    Services: 'SERVICES',
-    Sports: 'SPORTS',
-    Technical: 'TECHNICAL',
-    Theological: 'THEOLOGICAL',
-    Humanist: 'HUMANIST',
-    Pedagogical: 'PEDAGOGICAL',
-    Military: 'MILITARY'
-} as const;
-
-export type StudentProfileSchoolDomainEnum = typeof StudentProfileSchoolDomainEnum[keyof typeof StudentProfileSchoolDomainEnum];
-export const StudentProfileSchoolSpecialityEnum = {
-    Agriculture: 'AGRICULTURE',
-    Architecture: 'ARCHITECTURE',
-    ArchitectureAmbientArtsAndDesign: 'ARCHITECTURE_AMBIENT_ARTS_AND_DESIGN',
-    ActorArt: 'ACTOR_ART',
-    PlasticArts: 'PLASTIC_ARTS',
-    PlasticAndDecorativeArts: 'PLASTIC_AND_DECORATIVE_ARTS',
-    VisualArts: 'VISUAL_ARTS',
-    LibrarianDocumentalist: 'LIBRARIAN_DOCUMENTALIST',
-    IndustrialChemistry: 'INDUSTRIAL_CHEMISTRY',
-    Commerce: 'COMMERCE',
-    ConstructionInstallationsAndPublicWorks: 'CONSTRUCTION_INSTALLATIONS_AND_PUBLIC_WORKS',
-    Choreography: 'CHOREOGRAPHY',
-    Economic: 'ECONOMIC',
-    Educator: 'EDUCATOR',
-    Electric: 'ELECTRIC',
-    Electromechanics: 'ELECTROMECHANICS',
-    ElectronicsAutomations: 'ELECTRONICS_AUTOMATIONS',
-    AestheticsAndHumanBodyHygiene: 'AESTHETICS_AND_HUMAN_BODY_HYGIENE',
-    WoodProductsManufacturing: 'WOOD_PRODUCTS_MANUFACTURING',
-    Philology: 'PHILOLOGY',
-    CatholicReligiousTourismGuide: 'CATHOLIC_RELIGIOUS_TOURISM_GUIDE',
-    OrthodoxReligiousTourismGuide: 'ORTHODOX_RELIGIOUS_TOURISM_GUIDE',
-    FoodIndustry: 'FOOD_INDUSTRY',
-    TextileAndLeatherIndustry: 'TEXTILE_AND_LEATHER_INDUSTRY',
-    ExtraschoolEducationInstructor: 'EXTRASCHOOL_EDUCATION_INSTRUCTOR',
-    MathematicsInformatics: 'MATHEMATICS_INFORMATICS',
-    BuildingMaterials: 'BUILDING_MATERIALS',
-    ProductionMedia: 'PRODUCTION_MEDIA',
-    EnvironmentProtection: 'ENVIRONMENT_PROTECTION',
-    Forestry: 'FORESTRY',
-    Sports: 'SPORTS',
-    NaturalSciences: 'NATURAL_SCIENCES',
-    SocialSciences: 'SOCIAL_SCIENCES',
-    PolygraphicTechniques: 'POLYGRAPHIC_TECHNIQUES',
-    AdventistTheology: 'ADVENTIST_THEOLOGY',
-    BaptistTheology: 'BAPTIST_THEOLOGY',
-    GreekCatholicTheology: 'GREEK_CATHOLIC_THEOLOGY',
-    MuslimTheology: 'MUSLIM_THEOLOGY',
-    OrthodoxTheology: 'ORTHODOX_THEOLOGY',
-    PentecostalTheology: 'PENTECOSTAL_THEOLOGY',
-    ReformedTheology: 'REFORMED_THEOLOGY',
-    RomanCatholic: 'ROMAN_CATHOLIC',
-    TheologyUnitarian: 'THEOLOGY_UNITARIAN',
-    TheologyRealSpecGermanHuman: 'THEOLOGY_REAL_SPEC_GERMAN_HUMAN',
-    SpecGerman: 'SPEC_GERMAN',
-    TourismAndFood: 'TOURISM_AND_FOOD',
-    WaldorfPhilology: 'WALDORF_PHILOLOGY'
-} as const;
-
-export type StudentProfileSchoolSpecialityEnum = typeof StudentProfileSchoolSpecialityEnum[keyof typeof StudentProfileSchoolSpecialityEnum];
-
 /**
  * 
  * @export
@@ -3390,11 +3288,12 @@ export const EventsControllerApiAxiosParamCreator = function (configuration?: Co
          * @param {string} originalStartTime 
          * @param {string} actualStartTime 
          * @param {string} actualEndTime 
-         * @param {Array<string>} requestBody 
+         * @param {Array<EventAttendeeDTO>} eventAttendeeDTO 
+         * @param {string} [description] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        completeEventOccurrence: async (seriesId: string, originalStartTime: string, actualStartTime: string, actualEndTime: string, requestBody: Array<string>, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        completeEventOccurrence: async (seriesId: string, originalStartTime: string, actualStartTime: string, actualEndTime: string, eventAttendeeDTO: Array<EventAttendeeDTO>, description?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'seriesId' is not null or undefined
             assertParamExists('completeEventOccurrence', 'seriesId', seriesId)
             // verify required parameter 'originalStartTime' is not null or undefined
@@ -3403,8 +3302,8 @@ export const EventsControllerApiAxiosParamCreator = function (configuration?: Co
             assertParamExists('completeEventOccurrence', 'actualStartTime', actualStartTime)
             // verify required parameter 'actualEndTime' is not null or undefined
             assertParamExists('completeEventOccurrence', 'actualEndTime', actualEndTime)
-            // verify required parameter 'requestBody' is not null or undefined
-            assertParamExists('completeEventOccurrence', 'requestBody', requestBody)
+            // verify required parameter 'eventAttendeeDTO' is not null or undefined
+            assertParamExists('completeEventOccurrence', 'eventAttendeeDTO', eventAttendeeDTO)
             const localVarPath = `/events/occurrence/complete`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -3443,6 +3342,10 @@ export const EventsControllerApiAxiosParamCreator = function (configuration?: Co
                     actualEndTime;
             }
 
+            if (description !== undefined) {
+                localVarQueryParameter['description'] = description;
+            }
+
 
     
             localVarHeaderParameter['Content-Type'] = 'application/json';
@@ -3450,7 +3353,7 @@ export const EventsControllerApiAxiosParamCreator = function (configuration?: Co
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(requestBody, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(eventAttendeeDTO, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -3893,21 +3796,22 @@ export const EventsControllerApiAxiosParamCreator = function (configuration?: Co
          * @param {string} seriesId 
          * @param {string} originalStartTime 
          * @param {string} newStartTime 
-         * @param {string} newEndTime 
+         * @param {Array<EventAttendeeDTO>} eventAttendeeDTO 
+         * @param {string} [duration] 
          * @param {number} [newPrice] 
          * @param {string} [newMeetingLink] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        modifyEventOccurrence: async (seriesId: string, originalStartTime: string, newStartTime: string, newEndTime: string, newPrice?: number, newMeetingLink?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        modifyEventOccurrence: async (seriesId: string, originalStartTime: string, newStartTime: string, eventAttendeeDTO: Array<EventAttendeeDTO>, duration?: string, newPrice?: number, newMeetingLink?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'seriesId' is not null or undefined
             assertParamExists('modifyEventOccurrence', 'seriesId', seriesId)
             // verify required parameter 'originalStartTime' is not null or undefined
             assertParamExists('modifyEventOccurrence', 'originalStartTime', originalStartTime)
             // verify required parameter 'newStartTime' is not null or undefined
             assertParamExists('modifyEventOccurrence', 'newStartTime', newStartTime)
-            // verify required parameter 'newEndTime' is not null or undefined
-            assertParamExists('modifyEventOccurrence', 'newEndTime', newEndTime)
+            // verify required parameter 'eventAttendeeDTO' is not null or undefined
+            assertParamExists('modifyEventOccurrence', 'eventAttendeeDTO', eventAttendeeDTO)
             const localVarPath = `/events/occurrence/modify`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -3940,10 +3844,8 @@ export const EventsControllerApiAxiosParamCreator = function (configuration?: Co
                     newStartTime;
             }
 
-            if (newEndTime !== undefined) {
-                localVarQueryParameter['newEndTime'] = (newEndTime as any instanceof Date) ?
-                    (newEndTime as any).toISOString() :
-                    newEndTime;
+            if (duration !== undefined) {
+                localVarQueryParameter['duration'] = duration;
             }
 
             if (newPrice !== undefined) {
@@ -3956,9 +3858,12 @@ export const EventsControllerApiAxiosParamCreator = function (configuration?: Co
 
 
     
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(eventAttendeeDTO, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -4234,12 +4139,13 @@ export const EventsControllerApiFp = function(configuration?: Configuration) {
          * @param {string} originalStartTime 
          * @param {string} actualStartTime 
          * @param {string} actualEndTime 
-         * @param {Array<string>} requestBody 
+         * @param {Array<EventAttendeeDTO>} eventAttendeeDTO 
+         * @param {string} [description] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async completeEventOccurrence(seriesId: string, originalStartTime: string, actualStartTime: string, actualEndTime: string, requestBody: Array<string>, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<EventOccurrenceDTO>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.completeEventOccurrence(seriesId, originalStartTime, actualStartTime, actualEndTime, requestBody, options);
+        async completeEventOccurrence(seriesId: string, originalStartTime: string, actualStartTime: string, actualEndTime: string, eventAttendeeDTO: Array<EventAttendeeDTO>, description?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<EventOccurrenceDTO>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.completeEventOccurrence(seriesId, originalStartTime, actualStartTime, actualEndTime, eventAttendeeDTO, description, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['EventsControllerApi.completeEventOccurrence']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -4375,14 +4281,15 @@ export const EventsControllerApiFp = function(configuration?: Configuration) {
          * @param {string} seriesId 
          * @param {string} originalStartTime 
          * @param {string} newStartTime 
-         * @param {string} newEndTime 
+         * @param {Array<EventAttendeeDTO>} eventAttendeeDTO 
+         * @param {string} [duration] 
          * @param {number} [newPrice] 
          * @param {string} [newMeetingLink] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async modifyEventOccurrence(seriesId: string, originalStartTime: string, newStartTime: string, newEndTime: string, newPrice?: number, newMeetingLink?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<EventOccurrenceDTO>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.modifyEventOccurrence(seriesId, originalStartTime, newStartTime, newEndTime, newPrice, newMeetingLink, options);
+        async modifyEventOccurrence(seriesId: string, originalStartTime: string, newStartTime: string, eventAttendeeDTO: Array<EventAttendeeDTO>, duration?: string, newPrice?: number, newMeetingLink?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<EventOccurrenceDTO>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.modifyEventOccurrence(seriesId, originalStartTime, newStartTime, eventAttendeeDTO, duration, newPrice, newMeetingLink, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['EventsControllerApi.modifyEventOccurrence']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -4488,7 +4395,7 @@ export const EventsControllerApiFactory = function (configuration?: Configuratio
          * @throws {RequiredError}
          */
         completeEventOccurrence(requestParameters: EventsControllerApiCompleteEventOccurrenceRequest, options?: RawAxiosRequestConfig): AxiosPromise<EventOccurrenceDTO> {
-            return localVarFp.completeEventOccurrence(requestParameters.seriesId, requestParameters.originalStartTime, requestParameters.actualStartTime, requestParameters.actualEndTime, requestParameters.requestBody, options).then((request) => request(axios, basePath));
+            return localVarFp.completeEventOccurrence(requestParameters.seriesId, requestParameters.originalStartTime, requestParameters.actualStartTime, requestParameters.actualEndTime, requestParameters.eventAttendeeDTO, requestParameters.description, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -4588,7 +4495,7 @@ export const EventsControllerApiFactory = function (configuration?: Configuratio
          * @throws {RequiredError}
          */
         modifyEventOccurrence(requestParameters: EventsControllerApiModifyEventOccurrenceRequest, options?: RawAxiosRequestConfig): AxiosPromise<EventOccurrenceDTO> {
-            return localVarFp.modifyEventOccurrence(requestParameters.seriesId, requestParameters.originalStartTime, requestParameters.newStartTime, requestParameters.newEndTime, requestParameters.newPrice, requestParameters.newMeetingLink, options).then((request) => request(axios, basePath));
+            return localVarFp.modifyEventOccurrence(requestParameters.seriesId, requestParameters.originalStartTime, requestParameters.newStartTime, requestParameters.eventAttendeeDTO, requestParameters.duration, requestParameters.newPrice, requestParameters.newMeetingLink, options).then((request) => request(axios, basePath));
         },
         /**
          * Sets or updates the price for a specific attendee in an event occurrence. Uses transaction-safe operations. Requires PROFESSOR or ADMIN role.
@@ -4878,10 +4785,17 @@ export interface EventsControllerApiCompleteEventOccurrenceRequest {
 
     /**
      * 
-     * @type {Array<string>}
+     * @type {Array<EventAttendeeDTO>}
      * @memberof EventsControllerApiCompleteEventOccurrence
      */
-    readonly requestBody: Array<string>
+    readonly eventAttendeeDTO: Array<EventAttendeeDTO>
+
+    /**
+     * 
+     * @type {string}
+     * @memberof EventsControllerApiCompleteEventOccurrence
+     */
+    readonly description?: string
 }
 
 /**
@@ -5095,10 +5009,17 @@ export interface EventsControllerApiModifyEventOccurrenceRequest {
 
     /**
      * 
+     * @type {Array<EventAttendeeDTO>}
+     * @memberof EventsControllerApiModifyEventOccurrence
+     */
+    readonly eventAttendeeDTO: Array<EventAttendeeDTO>
+
+    /**
+     * 
      * @type {string}
      * @memberof EventsControllerApiModifyEventOccurrence
      */
-    readonly newEndTime: string
+    readonly duration?: string
 
     /**
      * 
@@ -5269,7 +5190,7 @@ export class EventsControllerApi extends BaseAPI implements EventsControllerApiI
      * @memberof EventsControllerApi
      */
     public completeEventOccurrence(requestParameters: EventsControllerApiCompleteEventOccurrenceRequest, options?: RawAxiosRequestConfig) {
-        return EventsControllerApiFp(this.configuration).completeEventOccurrence(requestParameters.seriesId, requestParameters.originalStartTime, requestParameters.actualStartTime, requestParameters.actualEndTime, requestParameters.requestBody, options).then((request) => request(this.axios, this.basePath));
+        return EventsControllerApiFp(this.configuration).completeEventOccurrence(requestParameters.seriesId, requestParameters.originalStartTime, requestParameters.actualStartTime, requestParameters.actualEndTime, requestParameters.eventAttendeeDTO, requestParameters.description, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -5389,7 +5310,7 @@ export class EventsControllerApi extends BaseAPI implements EventsControllerApiI
      * @memberof EventsControllerApi
      */
     public modifyEventOccurrence(requestParameters: EventsControllerApiModifyEventOccurrenceRequest, options?: RawAxiosRequestConfig) {
-        return EventsControllerApiFp(this.configuration).modifyEventOccurrence(requestParameters.seriesId, requestParameters.originalStartTime, requestParameters.newStartTime, requestParameters.newEndTime, requestParameters.newPrice, requestParameters.newMeetingLink, options).then((request) => request(this.axios, this.basePath));
+        return EventsControllerApiFp(this.configuration).modifyEventOccurrence(requestParameters.seriesId, requestParameters.originalStartTime, requestParameters.newStartTime, requestParameters.eventAttendeeDTO, requestParameters.duration, requestParameters.newPrice, requestParameters.newMeetingLink, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -5450,6 +5371,351 @@ export class EventsControllerApi extends BaseAPI implements EventsControllerApiI
      */
     public updateSingularEvent(requestParameters: EventsControllerApiUpdateSingularEventRequest, options?: RawAxiosRequestConfig) {
         return EventsControllerApiFp(this.configuration).updateSingularEvent(requestParameters.eventId, requestParameters.singularEventDTO, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+
+/**
+ * HostFileControllerApi - axios parameter creator
+ * @export
+ */
+export const HostFileControllerApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @summary Delete a speciality by ID.
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        delete2: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('delete2', 'id', id)
+            const localVarPath = `/host-file/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OIDC Authentication required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OIDC Authentication", [], configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Download file
+         * @param {string} fileId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        download3: async (fileId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'fileId' is not null or undefined
+            assertParamExists('download3', 'fileId', fileId)
+            const localVarPath = `/host-file/download/{fileId}`
+                .replace(`{${"fileId"}}`, encodeURIComponent(String(fileId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OIDC Authentication required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OIDC Authentication", [], configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Upload a document
+         * @param {File} file 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        upload1: async (file: File, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'file' is not null or undefined
+            assertParamExists('upload1', 'file', file)
+            const localVarPath = `/host-file/upload`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+            const localVarFormParams = new ((configuration && configuration.formDataCtor) || FormData)();
+
+            // authentication OIDC Authentication required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OIDC Authentication", [], configuration)
+
+
+            if (file !== undefined) { 
+                localVarFormParams.append('file', file as any);
+            }
+    
+    
+            localVarHeaderParameter['Content-Type'] = 'multipart/form-data';
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = localVarFormParams;
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * HostFileControllerApi - functional programming interface
+ * @export
+ */
+export const HostFileControllerApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = HostFileControllerApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @summary Delete a speciality by ID.
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async delete2(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.delete2(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['HostFileControllerApi.delete2']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Download file
+         * @param {string} fileId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async download3(fileId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<File>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.download3(fileId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['HostFileControllerApi.download3']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Upload a document
+         * @param {File} file 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async upload1(file: File, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.upload1(file, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['HostFileControllerApi.upload1']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * HostFileControllerApi - factory interface
+ * @export
+ */
+export const HostFileControllerApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = HostFileControllerApiFp(configuration)
+    return {
+        /**
+         * 
+         * @summary Delete a speciality by ID.
+         * @param {HostFileControllerApiDelete2Request} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        delete2(requestParameters: HostFileControllerApiDelete2Request, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.delete2(requestParameters.id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Download file
+         * @param {HostFileControllerApiDownload3Request} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        download3(requestParameters: HostFileControllerApiDownload3Request, options?: RawAxiosRequestConfig): AxiosPromise<File> {
+            return localVarFp.download3(requestParameters.fileId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Upload a document
+         * @param {HostFileControllerApiUpload1Request} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        upload1(requestParameters: HostFileControllerApiUpload1Request, options?: RawAxiosRequestConfig): AxiosPromise<string> {
+            return localVarFp.upload1(requestParameters.file, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * HostFileControllerApi - interface
+ * @export
+ * @interface HostFileControllerApi
+ */
+export interface HostFileControllerApiInterface {
+    /**
+     * 
+     * @summary Delete a speciality by ID.
+     * @param {HostFileControllerApiDelete2Request} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof HostFileControllerApiInterface
+     */
+    delete2(requestParameters: HostFileControllerApiDelete2Request, options?: RawAxiosRequestConfig): AxiosPromise<void>;
+
+    /**
+     * 
+     * @summary Download file
+     * @param {HostFileControllerApiDownload3Request} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof HostFileControllerApiInterface
+     */
+    download3(requestParameters: HostFileControllerApiDownload3Request, options?: RawAxiosRequestConfig): AxiosPromise<File>;
+
+    /**
+     * 
+     * @summary Upload a document
+     * @param {HostFileControllerApiUpload1Request} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof HostFileControllerApiInterface
+     */
+    upload1(requestParameters: HostFileControllerApiUpload1Request, options?: RawAxiosRequestConfig): AxiosPromise<string>;
+
+}
+
+/**
+ * Request parameters for delete2 operation in HostFileControllerApi.
+ * @export
+ * @interface HostFileControllerApiDelete2Request
+ */
+export interface HostFileControllerApiDelete2Request {
+    /**
+     * 
+     * @type {string}
+     * @memberof HostFileControllerApiDelete2
+     */
+    readonly id: string
+}
+
+/**
+ * Request parameters for download3 operation in HostFileControllerApi.
+ * @export
+ * @interface HostFileControllerApiDownload3Request
+ */
+export interface HostFileControllerApiDownload3Request {
+    /**
+     * 
+     * @type {string}
+     * @memberof HostFileControllerApiDownload3
+     */
+    readonly fileId: string
+}
+
+/**
+ * Request parameters for upload1 operation in HostFileControllerApi.
+ * @export
+ * @interface HostFileControllerApiUpload1Request
+ */
+export interface HostFileControllerApiUpload1Request {
+    /**
+     * 
+     * @type {File}
+     * @memberof HostFileControllerApiUpload1
+     */
+    readonly file: File
+}
+
+/**
+ * HostFileControllerApi - object-oriented interface
+ * @export
+ * @class HostFileControllerApi
+ * @extends {BaseAPI}
+ */
+export class HostFileControllerApi extends BaseAPI implements HostFileControllerApiInterface {
+    /**
+     * 
+     * @summary Delete a speciality by ID.
+     * @param {HostFileControllerApiDelete2Request} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof HostFileControllerApi
+     */
+    public delete2(requestParameters: HostFileControllerApiDelete2Request, options?: RawAxiosRequestConfig) {
+        return HostFileControllerApiFp(this.configuration).delete2(requestParameters.id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Download file
+     * @param {HostFileControllerApiDownload3Request} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof HostFileControllerApi
+     */
+    public download3(requestParameters: HostFileControllerApiDownload3Request, options?: RawAxiosRequestConfig) {
+        return HostFileControllerApiFp(this.configuration).download3(requestParameters.fileId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Upload a document
+     * @param {HostFileControllerApiUpload1Request} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof HostFileControllerApi
+     */
+    public upload1(requestParameters: HostFileControllerApiUpload1Request, options?: RawAxiosRequestConfig) {
+        return HostFileControllerApiFp(this.configuration).upload1(requestParameters.file, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
@@ -6989,15 +7255,15 @@ export const StudentProfessorRelationshipControllerApiAxiosParamCreator = functi
         /**
          * Creates a new relationship with optional default pricing. Requires PROFESSOR or ADMIN role. Uses serializable transaction isolation.
          * @summary Create a new student-professor relationship
-         * @param {string} studentId 
+         * @param {string} studentUserId 
          * @param {string} professorId 
          * @param {number} [defaultPrice] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createRelationship: async (studentId: string, professorId: string, defaultPrice?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'studentId' is not null or undefined
-            assertParamExists('createRelationship', 'studentId', studentId)
+        createRelationship: async (studentUserId: string, professorId: string, defaultPrice?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'studentUserId' is not null or undefined
+            assertParamExists('createRelationship', 'studentUserId', studentUserId)
             // verify required parameter 'professorId' is not null or undefined
             assertParamExists('createRelationship', 'professorId', professorId)
             const localVarPath = `/student-professor-relationships`;
@@ -7016,8 +7282,8 @@ export const StudentProfessorRelationshipControllerApiAxiosParamCreator = functi
             // oauth required
             await setOAuthToObject(localVarHeaderParameter, "OIDC Authentication", [], configuration)
 
-            if (studentId !== undefined) {
-                localVarQueryParameter['studentId'] = studentId;
+            if (studentUserId !== undefined) {
+                localVarQueryParameter['studentUserId'] = studentUserId;
             }
 
             if (professorId !== undefined) {
@@ -7042,18 +7308,18 @@ export const StudentProfessorRelationshipControllerApiAxiosParamCreator = functi
         /**
          * Deactivates (soft delete) a student-professor relationship. Uses serializable transaction isolation. Requires PROFESSOR or ADMIN role.
          * @summary Deactivate student-professor relationship
-         * @param {string} studentId 
+         * @param {string} studentUserId 
          * @param {string} professorId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        deactivateRelationship: async (studentId: string, professorId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'studentId' is not null or undefined
-            assertParamExists('deactivateRelationship', 'studentId', studentId)
+        deactivateRelationship: async (studentUserId: string, professorId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'studentUserId' is not null or undefined
+            assertParamExists('deactivateRelationship', 'studentUserId', studentUserId)
             // verify required parameter 'professorId' is not null or undefined
             assertParamExists('deactivateRelationship', 'professorId', professorId)
-            const localVarPath = `/student-professor-relationships/{studentId}/{professorId}`
-                .replace(`{${"studentId"}}`, encodeURIComponent(String(studentId)))
+            const localVarPath = `/student-professor-relationships/{studentUserId}/{professorId}`
+                .replace(`{${"studentUserId"}}`, encodeURIComponent(String(studentUserId)))
                 .replace(`{${"professorId"}}`, encodeURIComponent(String(professorId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -7084,15 +7350,49 @@ export const StudentProfessorRelationshipControllerApiAxiosParamCreator = functi
         /**
          * Retrieves all active professor relationships for a specific student.
          * @summary Get all active professors for a student
-         * @param {string} studentId 
+         * @param {string} studentUserId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getActiveProfessorsForStudent: async (studentId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'studentId' is not null or undefined
-            assertParamExists('getActiveProfessorsForStudent', 'studentId', studentId)
-            const localVarPath = `/student-professor-relationships/student/{studentId}/professors`
-                .replace(`{${"studentId"}}`, encodeURIComponent(String(studentId)));
+        getActiveProfessorsForStudent: async (studentUserId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'studentUserId' is not null or undefined
+            assertParamExists('getActiveProfessorsForStudent', 'studentUserId', studentUserId)
+            const localVarPath = `/student-professor-relationships/student/{studentUserId}/professors`
+                .replace(`{${"studentUserId"}}`, encodeURIComponent(String(studentUserId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OIDC Authentication required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OIDC Authentication", [], configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Retrieves all active student relationships for a specific professor.
+         * @summary Get all active students for current professor
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getActiveStudentsForCurrentProfessor: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/student-professor-relationships/students`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -7160,18 +7460,18 @@ export const StudentProfessorRelationshipControllerApiAxiosParamCreator = functi
         /**
          * Retrieves the default price per session for a specific relationship.
          * @summary Get default price for student-professor relationship
-         * @param {string} studentId 
+         * @param {string} studentUserId 
          * @param {string} professorId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getDefaultPrice: async (studentId: string, professorId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'studentId' is not null or undefined
-            assertParamExists('getDefaultPrice', 'studentId', studentId)
+        getDefaultPrice: async (studentUserId: string, professorId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'studentUserId' is not null or undefined
+            assertParamExists('getDefaultPrice', 'studentUserId', studentUserId)
             // verify required parameter 'professorId' is not null or undefined
             assertParamExists('getDefaultPrice', 'professorId', professorId)
-            const localVarPath = `/student-professor-relationships/{studentId}/{professorId}/price`
-                .replace(`{${"studentId"}}`, encodeURIComponent(String(studentId)))
+            const localVarPath = `/student-professor-relationships/{studentUserId}/{professorId}/price`
+                .replace(`{${"studentUserId"}}`, encodeURIComponent(String(studentUserId)))
                 .replace(`{${"professorId"}}`, encodeURIComponent(String(professorId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -7202,19 +7502,19 @@ export const StudentProfessorRelationshipControllerApiAxiosParamCreator = functi
         /**
          * Gets the effective price using fallback logic: 1. Relationship price, 2. Event default price, 3. Error if none available
          * @summary Get price with fallback logic
-         * @param {string} studentId 
+         * @param {string} studentUserId 
          * @param {string} professorId 
          * @param {number} [eventDefaultPrice] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getPriceWithFallback: async (studentId: string, professorId: string, eventDefaultPrice?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'studentId' is not null or undefined
-            assertParamExists('getPriceWithFallback', 'studentId', studentId)
+        getPriceWithFallback: async (studentUserId: string, professorId: string, eventDefaultPrice?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'studentUserId' is not null or undefined
+            assertParamExists('getPriceWithFallback', 'studentUserId', studentUserId)
             // verify required parameter 'professorId' is not null or undefined
             assertParamExists('getPriceWithFallback', 'professorId', professorId)
-            const localVarPath = `/student-professor-relationships/{studentId}/{professorId}/price-with-fallback`
-                .replace(`{${"studentId"}}`, encodeURIComponent(String(studentId)))
+            const localVarPath = `/student-professor-relationships/{studentUserId}/{professorId}/price-with-fallback`
+                .replace(`{${"studentUserId"}}`, encodeURIComponent(String(studentUserId)))
                 .replace(`{${"professorId"}}`, encodeURIComponent(String(professorId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -7249,18 +7549,18 @@ export const StudentProfessorRelationshipControllerApiAxiosParamCreator = functi
         /**
          * Checks if an active relationship exists between student and professor.
          * @summary Check if active relationship exists
-         * @param {string} studentId 
+         * @param {string} studentUserId 
          * @param {string} professorId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        hasActiveRelationship: async (studentId: string, professorId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'studentId' is not null or undefined
-            assertParamExists('hasActiveRelationship', 'studentId', studentId)
+        hasActiveRelationship: async (studentUserId: string, professorId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'studentUserId' is not null or undefined
+            assertParamExists('hasActiveRelationship', 'studentUserId', studentUserId)
             // verify required parameter 'professorId' is not null or undefined
             assertParamExists('hasActiveRelationship', 'professorId', professorId)
-            const localVarPath = `/student-professor-relationships/{studentId}/{professorId}/exists`
-                .replace(`{${"studentId"}}`, encodeURIComponent(String(studentId)))
+            const localVarPath = `/student-professor-relationships/{studentUserId}/{professorId}/exists`
+                .replace(`{${"studentUserId"}}`, encodeURIComponent(String(studentUserId)))
                 .replace(`{${"professorId"}}`, encodeURIComponent(String(professorId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -7291,21 +7591,21 @@ export const StudentProfessorRelationshipControllerApiAxiosParamCreator = functi
         /**
          * Updates the default price per session for a specific relationship. Uses atomic update for transaction safety. Requires PROFESSOR or ADMIN role.
          * @summary Update default price for student-professor relationship
-         * @param {string} studentId 
+         * @param {string} studentUserId 
          * @param {string} professorId 
          * @param {number} defaultPrice 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        updateDefaultPrice: async (studentId: string, professorId: string, defaultPrice: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'studentId' is not null or undefined
-            assertParamExists('updateDefaultPrice', 'studentId', studentId)
+        updateDefaultPrice: async (studentUserId: string, professorId: string, defaultPrice: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'studentUserId' is not null or undefined
+            assertParamExists('updateDefaultPrice', 'studentUserId', studentUserId)
             // verify required parameter 'professorId' is not null or undefined
             assertParamExists('updateDefaultPrice', 'professorId', professorId)
             // verify required parameter 'defaultPrice' is not null or undefined
             assertParamExists('updateDefaultPrice', 'defaultPrice', defaultPrice)
-            const localVarPath = `/student-professor-relationships/{studentId}/{professorId}/price`
-                .replace(`{${"studentId"}}`, encodeURIComponent(String(studentId)))
+            const localVarPath = `/student-professor-relationships/{studentUserId}/{professorId}/price`
+                .replace(`{${"studentUserId"}}`, encodeURIComponent(String(studentUserId)))
                 .replace(`{${"professorId"}}`, encodeURIComponent(String(professorId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -7350,14 +7650,14 @@ export const StudentProfessorRelationshipControllerApiFp = function(configuratio
         /**
          * Creates a new relationship with optional default pricing. Requires PROFESSOR or ADMIN role. Uses serializable transaction isolation.
          * @summary Create a new student-professor relationship
-         * @param {string} studentId 
+         * @param {string} studentUserId 
          * @param {string} professorId 
          * @param {number} [defaultPrice] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async createRelationship(studentId: string, professorId: string, defaultPrice?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StudentProfessorRelationship>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.createRelationship(studentId, professorId, defaultPrice, options);
+        async createRelationship(studentUserId: string, professorId: string, defaultPrice?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<StudentProfessorRelationshipDTO>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.createRelationship(studentUserId, professorId, defaultPrice, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['StudentProfessorRelationshipControllerApi.createRelationship']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -7365,13 +7665,13 @@ export const StudentProfessorRelationshipControllerApiFp = function(configuratio
         /**
          * Deactivates (soft delete) a student-professor relationship. Uses serializable transaction isolation. Requires PROFESSOR or ADMIN role.
          * @summary Deactivate student-professor relationship
-         * @param {string} studentId 
+         * @param {string} studentUserId 
          * @param {string} professorId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async deactivateRelationship(studentId: string, professorId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.deactivateRelationship(studentId, professorId, options);
+        async deactivateRelationship(studentUserId: string, professorId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.deactivateRelationship(studentUserId, professorId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['StudentProfessorRelationshipControllerApi.deactivateRelationship']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -7379,14 +7679,26 @@ export const StudentProfessorRelationshipControllerApiFp = function(configuratio
         /**
          * Retrieves all active professor relationships for a specific student.
          * @summary Get all active professors for a student
-         * @param {string} studentId 
+         * @param {string} studentUserId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getActiveProfessorsForStudent(studentId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<StudentProfessorRelationship>>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.getActiveProfessorsForStudent(studentId, options);
+        async getActiveProfessorsForStudent(studentUserId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<StudentProfessorRelationshipDTO>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getActiveProfessorsForStudent(studentUserId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['StudentProfessorRelationshipControllerApi.getActiveProfessorsForStudent']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Retrieves all active student relationships for a specific professor.
+         * @summary Get all active students for current professor
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getActiveStudentsForCurrentProfessor(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<StudentProfessorRelationshipDTO>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getActiveStudentsForCurrentProfessor(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['StudentProfessorRelationshipControllerApi.getActiveStudentsForCurrentProfessor']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -7396,7 +7708,7 @@ export const StudentProfessorRelationshipControllerApiFp = function(configuratio
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getActiveStudentsForProfessor(professorId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<StudentProfessorRelationship>>> {
+        async getActiveStudentsForProfessor(professorId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<StudentProfessorRelationshipDTO>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getActiveStudentsForProfessor(professorId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['StudentProfessorRelationshipControllerApi.getActiveStudentsForProfessor']?.[localVarOperationServerIndex]?.url;
@@ -7405,13 +7717,13 @@ export const StudentProfessorRelationshipControllerApiFp = function(configuratio
         /**
          * Retrieves the default price per session for a specific relationship.
          * @summary Get default price for student-professor relationship
-         * @param {string} studentId 
+         * @param {string} studentUserId 
          * @param {string} professorId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getDefaultPrice(studentId: string, professorId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<number>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.getDefaultPrice(studentId, professorId, options);
+        async getDefaultPrice(studentUserId: string, professorId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<number>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getDefaultPrice(studentUserId, professorId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['StudentProfessorRelationshipControllerApi.getDefaultPrice']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -7419,14 +7731,14 @@ export const StudentProfessorRelationshipControllerApiFp = function(configuratio
         /**
          * Gets the effective price using fallback logic: 1. Relationship price, 2. Event default price, 3. Error if none available
          * @summary Get price with fallback logic
-         * @param {string} studentId 
+         * @param {string} studentUserId 
          * @param {string} professorId 
          * @param {number} [eventDefaultPrice] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getPriceWithFallback(studentId: string, professorId: string, eventDefaultPrice?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<number>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.getPriceWithFallback(studentId, professorId, eventDefaultPrice, options);
+        async getPriceWithFallback(studentUserId: string, professorId: string, eventDefaultPrice?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<number>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getPriceWithFallback(studentUserId, professorId, eventDefaultPrice, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['StudentProfessorRelationshipControllerApi.getPriceWithFallback']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -7434,13 +7746,13 @@ export const StudentProfessorRelationshipControllerApiFp = function(configuratio
         /**
          * Checks if an active relationship exists between student and professor.
          * @summary Check if active relationship exists
-         * @param {string} studentId 
+         * @param {string} studentUserId 
          * @param {string} professorId 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async hasActiveRelationship(studentId: string, professorId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<boolean>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.hasActiveRelationship(studentId, professorId, options);
+        async hasActiveRelationship(studentUserId: string, professorId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<boolean>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.hasActiveRelationship(studentUserId, professorId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['StudentProfessorRelationshipControllerApi.hasActiveRelationship']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -7448,14 +7760,14 @@ export const StudentProfessorRelationshipControllerApiFp = function(configuratio
         /**
          * Updates the default price per session for a specific relationship. Uses atomic update for transaction safety. Requires PROFESSOR or ADMIN role.
          * @summary Update default price for student-professor relationship
-         * @param {string} studentId 
+         * @param {string} studentUserId 
          * @param {string} professorId 
          * @param {number} defaultPrice 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async updateDefaultPrice(studentId: string, professorId: string, defaultPrice: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.updateDefaultPrice(studentId, professorId, defaultPrice, options);
+        async updateDefaultPrice(studentUserId: string, professorId: string, defaultPrice: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.updateDefaultPrice(studentUserId, professorId, defaultPrice, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['StudentProfessorRelationshipControllerApi.updateDefaultPrice']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -7477,8 +7789,8 @@ export const StudentProfessorRelationshipControllerApiFactory = function (config
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createRelationship(requestParameters: StudentProfessorRelationshipControllerApiCreateRelationshipRequest, options?: RawAxiosRequestConfig): AxiosPromise<StudentProfessorRelationship> {
-            return localVarFp.createRelationship(requestParameters.studentId, requestParameters.professorId, requestParameters.defaultPrice, options).then((request) => request(axios, basePath));
+        createRelationship(requestParameters: StudentProfessorRelationshipControllerApiCreateRelationshipRequest, options?: RawAxiosRequestConfig): AxiosPromise<StudentProfessorRelationshipDTO> {
+            return localVarFp.createRelationship(requestParameters.studentUserId, requestParameters.professorId, requestParameters.defaultPrice, options).then((request) => request(axios, basePath));
         },
         /**
          * Deactivates (soft delete) a student-professor relationship. Uses serializable transaction isolation. Requires PROFESSOR or ADMIN role.
@@ -7488,7 +7800,7 @@ export const StudentProfessorRelationshipControllerApiFactory = function (config
          * @throws {RequiredError}
          */
         deactivateRelationship(requestParameters: StudentProfessorRelationshipControllerApiDeactivateRelationshipRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.deactivateRelationship(requestParameters.studentId, requestParameters.professorId, options).then((request) => request(axios, basePath));
+            return localVarFp.deactivateRelationship(requestParameters.studentUserId, requestParameters.professorId, options).then((request) => request(axios, basePath));
         },
         /**
          * Retrieves all active professor relationships for a specific student.
@@ -7497,8 +7809,17 @@ export const StudentProfessorRelationshipControllerApiFactory = function (config
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getActiveProfessorsForStudent(requestParameters: StudentProfessorRelationshipControllerApiGetActiveProfessorsForStudentRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<StudentProfessorRelationship>> {
-            return localVarFp.getActiveProfessorsForStudent(requestParameters.studentId, options).then((request) => request(axios, basePath));
+        getActiveProfessorsForStudent(requestParameters: StudentProfessorRelationshipControllerApiGetActiveProfessorsForStudentRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<StudentProfessorRelationshipDTO>> {
+            return localVarFp.getActiveProfessorsForStudent(requestParameters.studentUserId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Retrieves all active student relationships for a specific professor.
+         * @summary Get all active students for current professor
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getActiveStudentsForCurrentProfessor(options?: RawAxiosRequestConfig): AxiosPromise<Array<StudentProfessorRelationshipDTO>> {
+            return localVarFp.getActiveStudentsForCurrentProfessor(options).then((request) => request(axios, basePath));
         },
         /**
          * Retrieves all active student relationships for a specific professor.
@@ -7507,7 +7828,7 @@ export const StudentProfessorRelationshipControllerApiFactory = function (config
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getActiveStudentsForProfessor(requestParameters: StudentProfessorRelationshipControllerApiGetActiveStudentsForProfessorRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<StudentProfessorRelationship>> {
+        getActiveStudentsForProfessor(requestParameters: StudentProfessorRelationshipControllerApiGetActiveStudentsForProfessorRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<StudentProfessorRelationshipDTO>> {
             return localVarFp.getActiveStudentsForProfessor(requestParameters.professorId, options).then((request) => request(axios, basePath));
         },
         /**
@@ -7518,7 +7839,7 @@ export const StudentProfessorRelationshipControllerApiFactory = function (config
          * @throws {RequiredError}
          */
         getDefaultPrice(requestParameters: StudentProfessorRelationshipControllerApiGetDefaultPriceRequest, options?: RawAxiosRequestConfig): AxiosPromise<number> {
-            return localVarFp.getDefaultPrice(requestParameters.studentId, requestParameters.professorId, options).then((request) => request(axios, basePath));
+            return localVarFp.getDefaultPrice(requestParameters.studentUserId, requestParameters.professorId, options).then((request) => request(axios, basePath));
         },
         /**
          * Gets the effective price using fallback logic: 1. Relationship price, 2. Event default price, 3. Error if none available
@@ -7528,7 +7849,7 @@ export const StudentProfessorRelationshipControllerApiFactory = function (config
          * @throws {RequiredError}
          */
         getPriceWithFallback(requestParameters: StudentProfessorRelationshipControllerApiGetPriceWithFallbackRequest, options?: RawAxiosRequestConfig): AxiosPromise<number> {
-            return localVarFp.getPriceWithFallback(requestParameters.studentId, requestParameters.professorId, requestParameters.eventDefaultPrice, options).then((request) => request(axios, basePath));
+            return localVarFp.getPriceWithFallback(requestParameters.studentUserId, requestParameters.professorId, requestParameters.eventDefaultPrice, options).then((request) => request(axios, basePath));
         },
         /**
          * Checks if an active relationship exists between student and professor.
@@ -7538,7 +7859,7 @@ export const StudentProfessorRelationshipControllerApiFactory = function (config
          * @throws {RequiredError}
          */
         hasActiveRelationship(requestParameters: StudentProfessorRelationshipControllerApiHasActiveRelationshipRequest, options?: RawAxiosRequestConfig): AxiosPromise<boolean> {
-            return localVarFp.hasActiveRelationship(requestParameters.studentId, requestParameters.professorId, options).then((request) => request(axios, basePath));
+            return localVarFp.hasActiveRelationship(requestParameters.studentUserId, requestParameters.professorId, options).then((request) => request(axios, basePath));
         },
         /**
          * Updates the default price per session for a specific relationship. Uses atomic update for transaction safety. Requires PROFESSOR or ADMIN role.
@@ -7548,7 +7869,7 @@ export const StudentProfessorRelationshipControllerApiFactory = function (config
          * @throws {RequiredError}
          */
         updateDefaultPrice(requestParameters: StudentProfessorRelationshipControllerApiUpdateDefaultPriceRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
-            return localVarFp.updateDefaultPrice(requestParameters.studentId, requestParameters.professorId, requestParameters.defaultPrice, options).then((request) => request(axios, basePath));
+            return localVarFp.updateDefaultPrice(requestParameters.studentUserId, requestParameters.professorId, requestParameters.defaultPrice, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -7567,7 +7888,7 @@ export interface StudentProfessorRelationshipControllerApiInterface {
      * @throws {RequiredError}
      * @memberof StudentProfessorRelationshipControllerApiInterface
      */
-    createRelationship(requestParameters: StudentProfessorRelationshipControllerApiCreateRelationshipRequest, options?: RawAxiosRequestConfig): AxiosPromise<StudentProfessorRelationship>;
+    createRelationship(requestParameters: StudentProfessorRelationshipControllerApiCreateRelationshipRequest, options?: RawAxiosRequestConfig): AxiosPromise<StudentProfessorRelationshipDTO>;
 
     /**
      * Deactivates (soft delete) a student-professor relationship. Uses serializable transaction isolation. Requires PROFESSOR or ADMIN role.
@@ -7587,7 +7908,16 @@ export interface StudentProfessorRelationshipControllerApiInterface {
      * @throws {RequiredError}
      * @memberof StudentProfessorRelationshipControllerApiInterface
      */
-    getActiveProfessorsForStudent(requestParameters: StudentProfessorRelationshipControllerApiGetActiveProfessorsForStudentRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<StudentProfessorRelationship>>;
+    getActiveProfessorsForStudent(requestParameters: StudentProfessorRelationshipControllerApiGetActiveProfessorsForStudentRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<StudentProfessorRelationshipDTO>>;
+
+    /**
+     * Retrieves all active student relationships for a specific professor.
+     * @summary Get all active students for current professor
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof StudentProfessorRelationshipControllerApiInterface
+     */
+    getActiveStudentsForCurrentProfessor(options?: RawAxiosRequestConfig): AxiosPromise<Array<StudentProfessorRelationshipDTO>>;
 
     /**
      * Retrieves all active student relationships for a specific professor.
@@ -7597,7 +7927,7 @@ export interface StudentProfessorRelationshipControllerApiInterface {
      * @throws {RequiredError}
      * @memberof StudentProfessorRelationshipControllerApiInterface
      */
-    getActiveStudentsForProfessor(requestParameters: StudentProfessorRelationshipControllerApiGetActiveStudentsForProfessorRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<StudentProfessorRelationship>>;
+    getActiveStudentsForProfessor(requestParameters: StudentProfessorRelationshipControllerApiGetActiveStudentsForProfessorRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<StudentProfessorRelationshipDTO>>;
 
     /**
      * Retrieves the default price per session for a specific relationship.
@@ -7652,7 +7982,7 @@ export interface StudentProfessorRelationshipControllerApiCreateRelationshipRequ
      * @type {string}
      * @memberof StudentProfessorRelationshipControllerApiCreateRelationship
      */
-    readonly studentId: string
+    readonly studentUserId: string
 
     /**
      * 
@@ -7680,7 +8010,7 @@ export interface StudentProfessorRelationshipControllerApiDeactivateRelationship
      * @type {string}
      * @memberof StudentProfessorRelationshipControllerApiDeactivateRelationship
      */
-    readonly studentId: string
+    readonly studentUserId: string
 
     /**
      * 
@@ -7701,7 +8031,7 @@ export interface StudentProfessorRelationshipControllerApiGetActiveProfessorsFor
      * @type {string}
      * @memberof StudentProfessorRelationshipControllerApiGetActiveProfessorsForStudent
      */
-    readonly studentId: string
+    readonly studentUserId: string
 }
 
 /**
@@ -7729,7 +8059,7 @@ export interface StudentProfessorRelationshipControllerApiGetDefaultPriceRequest
      * @type {string}
      * @memberof StudentProfessorRelationshipControllerApiGetDefaultPrice
      */
-    readonly studentId: string
+    readonly studentUserId: string
 
     /**
      * 
@@ -7750,7 +8080,7 @@ export interface StudentProfessorRelationshipControllerApiGetPriceWithFallbackRe
      * @type {string}
      * @memberof StudentProfessorRelationshipControllerApiGetPriceWithFallback
      */
-    readonly studentId: string
+    readonly studentUserId: string
 
     /**
      * 
@@ -7778,7 +8108,7 @@ export interface StudentProfessorRelationshipControllerApiHasActiveRelationshipR
      * @type {string}
      * @memberof StudentProfessorRelationshipControllerApiHasActiveRelationship
      */
-    readonly studentId: string
+    readonly studentUserId: string
 
     /**
      * 
@@ -7799,7 +8129,7 @@ export interface StudentProfessorRelationshipControllerApiUpdateDefaultPriceRequ
      * @type {string}
      * @memberof StudentProfessorRelationshipControllerApiUpdateDefaultPrice
      */
-    readonly studentId: string
+    readonly studentUserId: string
 
     /**
      * 
@@ -7832,7 +8162,7 @@ export class StudentProfessorRelationshipControllerApi extends BaseAPI implement
      * @memberof StudentProfessorRelationshipControllerApi
      */
     public createRelationship(requestParameters: StudentProfessorRelationshipControllerApiCreateRelationshipRequest, options?: RawAxiosRequestConfig) {
-        return StudentProfessorRelationshipControllerApiFp(this.configuration).createRelationship(requestParameters.studentId, requestParameters.professorId, requestParameters.defaultPrice, options).then((request) => request(this.axios, this.basePath));
+        return StudentProfessorRelationshipControllerApiFp(this.configuration).createRelationship(requestParameters.studentUserId, requestParameters.professorId, requestParameters.defaultPrice, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -7844,7 +8174,7 @@ export class StudentProfessorRelationshipControllerApi extends BaseAPI implement
      * @memberof StudentProfessorRelationshipControllerApi
      */
     public deactivateRelationship(requestParameters: StudentProfessorRelationshipControllerApiDeactivateRelationshipRequest, options?: RawAxiosRequestConfig) {
-        return StudentProfessorRelationshipControllerApiFp(this.configuration).deactivateRelationship(requestParameters.studentId, requestParameters.professorId, options).then((request) => request(this.axios, this.basePath));
+        return StudentProfessorRelationshipControllerApiFp(this.configuration).deactivateRelationship(requestParameters.studentUserId, requestParameters.professorId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -7856,7 +8186,18 @@ export class StudentProfessorRelationshipControllerApi extends BaseAPI implement
      * @memberof StudentProfessorRelationshipControllerApi
      */
     public getActiveProfessorsForStudent(requestParameters: StudentProfessorRelationshipControllerApiGetActiveProfessorsForStudentRequest, options?: RawAxiosRequestConfig) {
-        return StudentProfessorRelationshipControllerApiFp(this.configuration).getActiveProfessorsForStudent(requestParameters.studentId, options).then((request) => request(this.axios, this.basePath));
+        return StudentProfessorRelationshipControllerApiFp(this.configuration).getActiveProfessorsForStudent(requestParameters.studentUserId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Retrieves all active student relationships for a specific professor.
+     * @summary Get all active students for current professor
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof StudentProfessorRelationshipControllerApi
+     */
+    public getActiveStudentsForCurrentProfessor(options?: RawAxiosRequestConfig) {
+        return StudentProfessorRelationshipControllerApiFp(this.configuration).getActiveStudentsForCurrentProfessor(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -7880,7 +8221,7 @@ export class StudentProfessorRelationshipControllerApi extends BaseAPI implement
      * @memberof StudentProfessorRelationshipControllerApi
      */
     public getDefaultPrice(requestParameters: StudentProfessorRelationshipControllerApiGetDefaultPriceRequest, options?: RawAxiosRequestConfig) {
-        return StudentProfessorRelationshipControllerApiFp(this.configuration).getDefaultPrice(requestParameters.studentId, requestParameters.professorId, options).then((request) => request(this.axios, this.basePath));
+        return StudentProfessorRelationshipControllerApiFp(this.configuration).getDefaultPrice(requestParameters.studentUserId, requestParameters.professorId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -7892,7 +8233,7 @@ export class StudentProfessorRelationshipControllerApi extends BaseAPI implement
      * @memberof StudentProfessorRelationshipControllerApi
      */
     public getPriceWithFallback(requestParameters: StudentProfessorRelationshipControllerApiGetPriceWithFallbackRequest, options?: RawAxiosRequestConfig) {
-        return StudentProfessorRelationshipControllerApiFp(this.configuration).getPriceWithFallback(requestParameters.studentId, requestParameters.professorId, requestParameters.eventDefaultPrice, options).then((request) => request(this.axios, this.basePath));
+        return StudentProfessorRelationshipControllerApiFp(this.configuration).getPriceWithFallback(requestParameters.studentUserId, requestParameters.professorId, requestParameters.eventDefaultPrice, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -7904,7 +8245,7 @@ export class StudentProfessorRelationshipControllerApi extends BaseAPI implement
      * @memberof StudentProfessorRelationshipControllerApi
      */
     public hasActiveRelationship(requestParameters: StudentProfessorRelationshipControllerApiHasActiveRelationshipRequest, options?: RawAxiosRequestConfig) {
-        return StudentProfessorRelationshipControllerApiFp(this.configuration).hasActiveRelationship(requestParameters.studentId, requestParameters.professorId, options).then((request) => request(this.axios, this.basePath));
+        return StudentProfessorRelationshipControllerApiFp(this.configuration).hasActiveRelationship(requestParameters.studentUserId, requestParameters.professorId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -7916,7 +8257,7 @@ export class StudentProfessorRelationshipControllerApi extends BaseAPI implement
      * @memberof StudentProfessorRelationshipControllerApi
      */
     public updateDefaultPrice(requestParameters: StudentProfessorRelationshipControllerApiUpdateDefaultPriceRequest, options?: RawAxiosRequestConfig) {
-        return StudentProfessorRelationshipControllerApiFp(this.configuration).updateDefaultPrice(requestParameters.studentId, requestParameters.professorId, requestParameters.defaultPrice, options).then((request) => request(this.axios, this.basePath));
+        return StudentProfessorRelationshipControllerApiFp(this.configuration).updateDefaultPrice(requestParameters.studentUserId, requestParameters.professorId, requestParameters.defaultPrice, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

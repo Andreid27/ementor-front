@@ -55,7 +55,19 @@ const AddEventSidebar: React.FC<AddEventSidebarProps> = props => {
   }, [dispatch, handleSelectEvent, handleAddEventSidebarToggle])
 
   // Extract event data management logic
-  const { isEditMode, setIsEditMode, resetForm, values, setValues, control, handleSubmit, errors } = useEventData({
+  const {
+    isEditMode,
+    setIsEditMode,
+    resetForm,
+    values,
+    setValues,
+    control,
+    handleSubmit,
+    errors,
+    eventTypeInfo,
+    editingScope,
+    setEditingScope
+  } = useEventData({
     selectedEvent: store.selectedEvent,
     addEventSidebarOpen
   })
@@ -73,7 +85,9 @@ const AddEventSidebar: React.FC<AddEventSidebarProps> = props => {
     updateEvent,
     deleteEvent,
     calendarApi,
-    onClose: handleSidebarClose
+    onClose: handleSidebarClose,
+    eventTypeInfo,
+    editingScope
   })
 
   // Event handlers
@@ -125,6 +139,7 @@ const AddEventSidebar: React.FC<AddEventSidebarProps> = props => {
         onCancel={handleCancel}
         onClose={handleSidebarClose}
         isDaySummary={isDaySummary}
+        eventTypeInfo={eventTypeInfo}
       />
 
       {/* Main Content Area */}
@@ -150,6 +165,10 @@ const AddEventSidebar: React.FC<AddEventSidebarProps> = props => {
               control={control}
               handleSubmit={handleSubmit}
               errors={errors}
+              // Pass event type and editing scope
+              eventTypeInfo={eventTypeInfo}
+              editingScope={editingScope}
+              onEditingScopeChange={setEditingScope}
             />
 
             {/* Footer for form actions - only show in edit mode */}

@@ -1,16 +1,18 @@
 // ** React Imports
-import React, { useMemo, useCallback } from 'react'
+import React, { useMemo } from 'react'
 
 // ** MUI Imports
 import Box from '@mui/material/Box'
-import Switch from '@mui/material/Switch'
-import FormControlLabel from '@mui/material/FormControlLabel'
 import Typography from '@mui/material/Typography'
 
 // ** Components
 import EventFormFields from './EventFormFields'
 import RecurringEventFields from './RecurringEventFields'
 import EventAttendeeManagement from './EventAttendeeManagement'
+import EditingScopeToggle from './EditingScopeToggle'
+
+// ** Utils
+import { shouldShowScopeToggle } from '../utils/eventTypeUtils'
 
 // ** Types
 import { EventFormProps } from '../types'
@@ -23,28 +25,17 @@ const EventForm: React.FC<EventFormProps> = ({
   students,
   control,
   errors,
-  store
+  store,
+  eventTypeInfo,
+  editingScope = 'occurrence',
+  onEditingScopeChange
 }) => {
   const isReadOnly = !isEditMode && selectedEvent !== null
 
-  const handleRecurringToggle = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const isRecurring = event.target.checked
-      setValues(prev => ({
-        ...prev,
-        isRecurring,
-        // Reset duration fields when switching modes
-        durationHours: isRecurring ? Math.max(prev.durationHours, 1) : 1,
-        durationMinutes: isRecurring ? prev.durationMinutes : 0,
-        // Reset pattern if switching to recurring
-        pattern: isRecurring ? prev.pattern || 'WEEKLY' : prev.pattern
-      }))
-    },
-    [setValues]
-  )
+  const showScopeToggle = eventTypeInfo && shouldShowScopeToggle(eventTypeInfo) && isEditMode
 
   const formSections = useMemo(() => {
-    return [
+    const sections = [
       {
         title: 'Basic Information',
         component: (
@@ -56,64 +47,67 @@ const EventForm: React.FC<EventFormProps> = ({
             isReadOnly={isReadOnly}
           />
         )
-      },
-      {
-        title: 'Attendees & Pricing',
-        component: (
-          <EventAttendeeManagement
-            eventType={values.isRecurring ? 'recurring' : 'singular'}
-            students={students}
-            isReadOnly={isReadOnly}
-            isNewEvent={!store.selectedEvent}
-            initialAttendeeIds={values.expectedAttendees}
-            initialAttendeePrices={values.attendeePrices}
-            defaultPrice={values.price}
-            onAttendeeIdsChange={ids => {
-              setValues(prev => ({ ...prev, expectedAttendees: ids }))
-            }}
-            onAttendeePricesChange={prices => {
-              setValues(prev => ({ ...prev, attendeePrices: prices }))
-            }}
-          />
-        )
-      },
-      {
-        title: 'Event Type',
-        component: (
-          <Box sx={{ mb: 4 }}>
-            <FormControlLabel
-              label='Recurring Event'
-              control={<Switch checked={values.isRecurring} onChange={handleRecurringToggle} disabled={isReadOnly} />}
-              sx={{
-                '& .MuiFormControlLabel-label': {
-                  fontSize: '0.875rem',
-                  fontWeight: 500
-                }
-              }}
-            />
-          </Box>
-        )
-      },
-      ...(values.isRecurring
-        ? [
-            {
-              title: 'Recurring Settings',
-              component: (
-                <RecurringEventFields
-                  values={values}
-                  setValues={setValues}
-                  isReadOnly={isReadOnly}
-                  students={students}
-                />
-              )
-            }
-          ]
-        : [])
+      }
     ]
-  }, [values, setValues, control, errors, isReadOnly, students, handleRecurringToggle])
+
+    // Add attendees section
+    sections.push({
+      title: 'Attendees & Pricing',
+      component: (
+        <EventAttendeeManagement
+          eventType={values.isRecurring ? 'recurring' : 'singular'}
+          students={students}
+          isReadOnly={isReadOnly}
+          isNewEvent={!store.selectedEvent}
+          initialAttendeeIds={values.expectedAttendees}
+          initialAttendeePrices={values.attendeePrices}
+          defaultPrice={values.price}
+          onAttendeeIdsChange={ids => {
+            setValues(prev => ({ ...prev, expectedAttendees: ids }))
+          }}
+          onAttendeePricesChange={prices => {
+            setValues(prev => ({ ...prev, attendeePrices: prices }))
+          }}
+        />
+      )
+    })
+
+    // Add recurring settings if needed
+    if (values.isRecurring) {
+      sections.push({
+        title: 'Recurring Settings',
+        component: (
+          <RecurringEventFields values={values} setValues={setValues} isReadOnly={isReadOnly} students={students} />
+        )
+      })
+    }
+
+    return sections
+  }, [
+    values,
+    setValues,
+    control,
+    errors,
+    isReadOnly,
+    students,
+    showScopeToggle,
+    eventTypeInfo,
+    editingScope,
+    onEditingScopeChange
+  ])
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      {/* Editing Scope Toggle - Only for recurring series */}
+      {showScopeToggle && eventTypeInfo && onEditingScopeChange && (
+        <EditingScopeToggle
+          eventTypeInfo={eventTypeInfo}
+          selectedScope={editingScope}
+          onScopeChange={onEditingScopeChange}
+          disabled={isReadOnly}
+        />
+      )}
+
       {formSections.map((section, index) => (
         <Box key={index}>
           <Typography

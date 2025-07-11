@@ -14,6 +14,7 @@ docs/BankAccountDTO.md
 docs/CredentialRepresentation.md
 docs/CredentialRepresentationConfig.md
 docs/EventAttendee.md
+docs/EventAttendeeDTO.md
 docs/EventOccurrence.md
 docs/EventOccurrenceDTO.md
 docs/EventOccurrenceDuration.md
@@ -25,6 +26,8 @@ docs/FederatedIdentityRepresentation.md
 docs/FilterCriteriaObject.md
 docs/FilterOptionObject.md
 docs/GroupDTO.md
+docs/HostFile.md
+docs/HostFileControllerApi.md
 docs/Location.md
 docs/LocationDTO.md
 docs/LocationLevel.md
@@ -48,9 +51,8 @@ docs/SortCriteria.md
 docs/Speciality.md
 docs/SpecialityControllerApi.md
 docs/SpecialityDTO.md
-docs/StudentProfessorRelationship.md
 docs/StudentProfessorRelationshipControllerApi.md
-docs/StudentProfile.md
+docs/StudentProfessorRelationshipDTO.md
 docs/StudentProfileControllerApi.md
 docs/StudentProfileDTO.md
 docs/StudentProfileView.md

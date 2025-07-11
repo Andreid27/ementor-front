@@ -1,20 +1,21 @@
 # StudentProfessorRelationshipControllerApi
 
-All URIs are relative to *https://dev.api.e-mentor.ro//service2*
+All URIs are relative to *https://dev.api.e-mentor.ro/service2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
 |[**createRelationship**](#createrelationship) | **POST** /student-professor-relationships | Create a new student-professor relationship|
-|[**deactivateRelationship**](#deactivaterelationship) | **DELETE** /student-professor-relationships/{studentId}/{professorId} | Deactivate student-professor relationship|
-|[**getActiveProfessorsForStudent**](#getactiveprofessorsforstudent) | **GET** /student-professor-relationships/student/{studentId}/professors | Get all active professors for a student|
+|[**deactivateRelationship**](#deactivaterelationship) | **DELETE** /student-professor-relationships/{studentUserId}/{professorId} | Deactivate student-professor relationship|
+|[**getActiveProfessorsForStudent**](#getactiveprofessorsforstudent) | **GET** /student-professor-relationships/student/{studentUserId}/professors | Get all active professors for a student|
+|[**getActiveStudentsForCurrentProfessor**](#getactivestudentsforcurrentprofessor) | **GET** /student-professor-relationships/students | Get all active students for current professor|
 |[**getActiveStudentsForProfessor**](#getactivestudentsforprofessor) | **GET** /student-professor-relationships/professor/{professorId}/students | Get all active students for a professor|
-|[**getDefaultPrice**](#getdefaultprice) | **GET** /student-professor-relationships/{studentId}/{professorId}/price | Get default price for student-professor relationship|
-|[**getPriceWithFallback**](#getpricewithfallback) | **GET** /student-professor-relationships/{studentId}/{professorId}/price-with-fallback | Get price with fallback logic|
-|[**hasActiveRelationship**](#hasactiverelationship) | **GET** /student-professor-relationships/{studentId}/{professorId}/exists | Check if active relationship exists|
-|[**updateDefaultPrice**](#updatedefaultprice) | **PUT** /student-professor-relationships/{studentId}/{professorId}/price | Update default price for student-professor relationship|
+|[**getDefaultPrice**](#getdefaultprice) | **GET** /student-professor-relationships/{studentUserId}/{professorId}/price | Get default price for student-professor relationship|
+|[**getPriceWithFallback**](#getpricewithfallback) | **GET** /student-professor-relationships/{studentUserId}/{professorId}/price-with-fallback | Get price with fallback logic|
+|[**hasActiveRelationship**](#hasactiverelationship) | **GET** /student-professor-relationships/{studentUserId}/{professorId}/exists | Check if active relationship exists|
+|[**updateDefaultPrice**](#updatedefaultprice) | **PUT** /student-professor-relationships/{studentUserId}/{professorId}/price | Update default price for student-professor relationship|
 
 # **createRelationship**
-> StudentProfessorRelationship createRelationship()
+> StudentProfessorRelationshipDTO createRelationship()
 
 Creates a new relationship with optional default pricing. Requires PROFESSOR or ADMIN role. Uses serializable transaction isolation.
 
@@ -29,12 +30,12 @@ import {
 const configuration = new Configuration();
 const apiInstance = new StudentProfessorRelationshipControllerApi(configuration);
 
-let studentId: string; // (default to undefined)
+let studentUserId: string; // (default to undefined)
 let professorId: string; // (default to undefined)
 let defaultPrice: number; // (optional) (default to undefined)
 
 const { status, data } = await apiInstance.createRelationship(
-    studentId,
+    studentUserId,
     professorId,
     defaultPrice
 );
@@ -44,14 +45,14 @@ const { status, data } = await apiInstance.createRelationship(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **studentId** | [**string**] |  | defaults to undefined|
+| **studentUserId** | [**string**] |  | defaults to undefined|
 | **professorId** | [**string**] |  | defaults to undefined|
 | **defaultPrice** | [**number**] |  | (optional) defaults to undefined|
 
 
 ### Return type
 
-**StudentProfessorRelationship**
+**StudentProfessorRelationshipDTO**
 
 ### Authorization
 
@@ -89,11 +90,11 @@ import {
 const configuration = new Configuration();
 const apiInstance = new StudentProfessorRelationshipControllerApi(configuration);
 
-let studentId: string; // (default to undefined)
+let studentUserId: string; // (default to undefined)
 let professorId: string; // (default to undefined)
 
 const { status, data } = await apiInstance.deactivateRelationship(
-    studentId,
+    studentUserId,
     professorId
 );
 ```
@@ -102,7 +103,7 @@ const { status, data } = await apiInstance.deactivateRelationship(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **studentId** | [**string**] |  | defaults to undefined|
+| **studentUserId** | [**string**] |  | defaults to undefined|
 | **professorId** | [**string**] |  | defaults to undefined|
 
 
@@ -130,7 +131,7 @@ void (empty response body)
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **getActiveProfessorsForStudent**
-> Array<StudentProfessorRelationship> getActiveProfessorsForStudent()
+> Array<StudentProfessorRelationshipDTO> getActiveProfessorsForStudent()
 
 Retrieves all active professor relationships for a specific student.
 
@@ -145,10 +146,10 @@ import {
 const configuration = new Configuration();
 const apiInstance = new StudentProfessorRelationshipControllerApi(configuration);
 
-let studentId: string; // (default to undefined)
+let studentUserId: string; // (default to undefined)
 
 const { status, data } = await apiInstance.getActiveProfessorsForStudent(
-    studentId
+    studentUserId
 );
 ```
 
@@ -156,12 +157,12 @@ const { status, data } = await apiInstance.getActiveProfessorsForStudent(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **studentId** | [**string**] |  | defaults to undefined|
+| **studentUserId** | [**string**] |  | defaults to undefined|
 
 
 ### Return type
 
-**Array<StudentProfessorRelationship>**
+**Array<StudentProfessorRelationshipDTO>**
 
 ### Authorization
 
@@ -181,8 +182,53 @@ const { status, data } = await apiInstance.getActiveProfessorsForStudent(
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **getActiveStudentsForCurrentProfessor**
+> Array<StudentProfessorRelationshipDTO> getActiveStudentsForCurrentProfessor()
+
+Retrieves all active student relationships for a specific professor.
+
+### Example
+
+```typescript
+import {
+    StudentProfessorRelationshipControllerApi,
+    Configuration
+} from 'ementor-api-client';
+
+const configuration = new Configuration();
+const apiInstance = new StudentProfessorRelationshipControllerApi(configuration);
+
+const { status, data } = await apiInstance.getActiveStudentsForCurrentProfessor();
+```
+
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+**Array<StudentProfessorRelationshipDTO>**
+
+### Authorization
+
+[OIDC Authentication](../README.md#OIDC Authentication)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: */*
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**403** | Access denied |  -  |
+|**200** | Students retrieved successfully |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **getActiveStudentsForProfessor**
-> Array<StudentProfessorRelationship> getActiveStudentsForProfessor()
+> Array<StudentProfessorRelationshipDTO> getActiveStudentsForProfessor()
 
 Retrieves all active student relationships for a specific professor.
 
@@ -213,7 +259,7 @@ const { status, data } = await apiInstance.getActiveStudentsForProfessor(
 
 ### Return type
 
-**Array<StudentProfessorRelationship>**
+**Array<StudentProfessorRelationshipDTO>**
 
 ### Authorization
 
@@ -249,11 +295,11 @@ import {
 const configuration = new Configuration();
 const apiInstance = new StudentProfessorRelationshipControllerApi(configuration);
 
-let studentId: string; // (default to undefined)
+let studentUserId: string; // (default to undefined)
 let professorId: string; // (default to undefined)
 
 const { status, data } = await apiInstance.getDefaultPrice(
-    studentId,
+    studentUserId,
     professorId
 );
 ```
@@ -262,7 +308,7 @@ const { status, data } = await apiInstance.getDefaultPrice(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **studentId** | [**string**] |  | defaults to undefined|
+| **studentUserId** | [**string**] |  | defaults to undefined|
 | **professorId** | [**string**] |  | defaults to undefined|
 
 
@@ -304,12 +350,12 @@ import {
 const configuration = new Configuration();
 const apiInstance = new StudentProfessorRelationshipControllerApi(configuration);
 
-let studentId: string; // (default to undefined)
+let studentUserId: string; // (default to undefined)
 let professorId: string; // (default to undefined)
 let eventDefaultPrice: number; // (optional) (default to undefined)
 
 const { status, data } = await apiInstance.getPriceWithFallback(
-    studentId,
+    studentUserId,
     professorId,
     eventDefaultPrice
 );
@@ -319,7 +365,7 @@ const { status, data } = await apiInstance.getPriceWithFallback(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **studentId** | [**string**] |  | defaults to undefined|
+| **studentUserId** | [**string**] |  | defaults to undefined|
 | **professorId** | [**string**] |  | defaults to undefined|
 | **eventDefaultPrice** | [**number**] |  | (optional) defaults to undefined|
 
@@ -362,11 +408,11 @@ import {
 const configuration = new Configuration();
 const apiInstance = new StudentProfessorRelationshipControllerApi(configuration);
 
-let studentId: string; // (default to undefined)
+let studentUserId: string; // (default to undefined)
 let professorId: string; // (default to undefined)
 
 const { status, data } = await apiInstance.hasActiveRelationship(
-    studentId,
+    studentUserId,
     professorId
 );
 ```
@@ -375,7 +421,7 @@ const { status, data } = await apiInstance.hasActiveRelationship(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **studentId** | [**string**] |  | defaults to undefined|
+| **studentUserId** | [**string**] |  | defaults to undefined|
 | **professorId** | [**string**] |  | defaults to undefined|
 
 
@@ -416,12 +462,12 @@ import {
 const configuration = new Configuration();
 const apiInstance = new StudentProfessorRelationshipControllerApi(configuration);
 
-let studentId: string; // (default to undefined)
+let studentUserId: string; // (default to undefined)
 let professorId: string; // (default to undefined)
 let defaultPrice: number; // (default to undefined)
 
 const { status, data } = await apiInstance.updateDefaultPrice(
-    studentId,
+    studentUserId,
     professorId,
     defaultPrice
 );
@@ -431,7 +477,7 @@ const { status, data } = await apiInstance.updateDefaultPrice(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **studentId** | [**string**] |  | defaults to undefined|
+| **studentUserId** | [**string**] |  | defaults to undefined|
 | **professorId** | [**string**] |  | defaults to undefined|
 | **defaultPrice** | [**number**] |  | defaults to undefined|
 

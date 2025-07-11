@@ -12,7 +12,8 @@ Name | Type | Description | Notes
 **fileName** | **string** |  | [optional] [default to undefined]
 **fileType** | **string** |  | [optional] [default to undefined]
 **size** | **number** |  | [optional] [default to undefined]
-**fileData** | **Array&lt;string&gt;** |  | [optional] [default to undefined]
+**hostFileId** | **string** |  | [optional] [default to undefined]
+**hostFile** | [**HostFile**](HostFile.md) |  | [optional] [default to undefined]
 **resolution** | **string** |  | [optional] [default to undefined]
 **createdBy** | **string** |  | [optional] [default to undefined]
 
@@ -29,7 +30,8 @@ const instance: ProfilePicture = {
     fileName,
     fileType,
     size,
-    fileData,
+    hostFileId,
+    hostFile,
     resolution,
     createdBy,
 };

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { EventFormValues, FormData, defaultEventFormState } from '../types'
+import { determineEventType, EventTypeInfo, EditingScope, getDefaultEditingScope } from '../utils/eventTypeUtils'
 
 interface UseEventDataProps {
   selectedEvent: any
@@ -10,6 +11,8 @@ interface UseEventDataProps {
 export const useEventData = ({ selectedEvent, addEventSidebarOpen }: UseEventDataProps) => {
   const [values, setValues] = useState<EventFormValues>(defaultEventFormState)
   const [isEditMode, setIsEditMode] = useState<boolean>(false)
+  const [eventTypeInfo, setEventTypeInfo] = useState<EventTypeInfo | null>(null)
+  const [editingScope, setEditingScope] = useState<EditingScope>('occurrence')
 
   const {
     control,
@@ -22,6 +25,15 @@ export const useEventData = ({ selectedEvent, addEventSidebarOpen }: UseEventDat
   const resetToStoredValues = useCallback(() => {
     if (selectedEvent !== null) {
       const event = selectedEvent as any
+
+      // Determine event type first
+      const typeInfo = determineEventType(event)
+      setEventTypeInfo(typeInfo)
+
+      // Set default editing scope
+      const defaultScope = getDefaultEditingScope(typeInfo)
+      setEditingScope(defaultScope)
+
       setValue('title', event.title || event.seriesTitle || '')
 
       const startDate = event.start
@@ -40,19 +52,12 @@ export const useEventData = ({ selectedEvent, addEventSidebarOpen }: UseEventDat
         ? new Date(event.actualEndTime)
         : new Date(startDate.getTime() + 60 * 60 * 1000)
 
-      // Determine if this is a recurring event based on available properties
-      const isRecurringEvent = !!(
-        event.recurringSeriesId ||
-        event.seriesId ||
-        event.extendedProps?.recurringSeriesId ||
-        event.extendedProps?.seriesId ||
-        event.seriesTitle ||
-        event.seriesDescription ||
-        event.pattern
-      )
+      // Use event type info to determine if this is recurring
+      const isRecurringEvent = typeInfo.type === 'RECURRING_SERIES'
 
       console.log('Event data analysis:', {
         event,
+        eventTypeInfo: typeInfo,
         isRecurringEvent,
         recurringSeriesId: event.recurringSeriesId,
         seriesId: event.seriesId,
@@ -88,11 +93,15 @@ export const useEventData = ({ selectedEvent, addEventSidebarOpen }: UseEventDat
     setValue('title', '')
     setValues(defaultEventFormState)
     setIsEditMode(false)
+    setEventTypeInfo(null)
+    setEditingScope('occurrence') // Reset to default scope
   }, [setValue])
 
   const resetForm = useCallback(() => {
     setValues(defaultEventFormState)
     setIsEditMode(false)
+    setEventTypeInfo(null)
+    setEditingScope('occurrence') // Reset to default scope
     clearErrors()
   }, [clearErrors])
 
@@ -116,6 +125,9 @@ export const useEventData = ({ selectedEvent, addEventSidebarOpen }: UseEventDat
     setValues,
     isEditMode,
     setIsEditMode,
+    eventTypeInfo,
+    editingScope,
+    setEditingScope,
     control,
     setValue,
     clearErrors,

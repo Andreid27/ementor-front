@@ -1,6 +1,6 @@
 # EventsControllerApi
 
-All URIs are relative to *https://dev.api.e-mentor.ro//service2*
+All URIs are relative to *https://dev.api.e-mentor.ro/service2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
@@ -77,7 +77,7 @@ const { status, data } = await apiInstance.cancelEventOccurrence(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **completeEventOccurrence**
-> EventOccurrenceDTO completeEventOccurrence(requestBody)
+> EventOccurrenceDTO completeEventOccurrence(eventAttendeeDTO)
 
 
 ### Example
@@ -95,14 +95,16 @@ let seriesId: string; // (default to undefined)
 let originalStartTime: string; // (default to undefined)
 let actualStartTime: string; // (default to undefined)
 let actualEndTime: string; // (default to undefined)
-let requestBody: Array<string>; //
+let eventAttendeeDTO: Array<EventAttendeeDTO>; //
+let description: string; // (optional) (default to undefined)
 
 const { status, data } = await apiInstance.completeEventOccurrence(
     seriesId,
     originalStartTime,
     actualStartTime,
     actualEndTime,
-    requestBody
+    eventAttendeeDTO,
+    description
 );
 ```
 
@@ -110,11 +112,12 @@ const { status, data } = await apiInstance.completeEventOccurrence(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **requestBody** | **Array<string>**|  | |
+| **eventAttendeeDTO** | **Array<EventAttendeeDTO>**|  | |
 | **seriesId** | [**string**] |  | defaults to undefined|
 | **originalStartTime** | [**string**] |  | defaults to undefined|
 | **actualStartTime** | [**string**] |  | defaults to undefined|
 | **actualEndTime** | [**string**] |  | defaults to undefined|
+| **description** | [**string**] |  | (optional) defaults to undefined|
 
 
 ### Return type
@@ -627,7 +630,7 @@ const { status, data } = await apiInstance.getSingularEventsForProfessor(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **modifyEventOccurrence**
-> EventOccurrenceDTO modifyEventOccurrence()
+> EventOccurrenceDTO modifyEventOccurrence(eventAttendeeDTO)
 
 
 ### Example
@@ -644,7 +647,8 @@ const apiInstance = new EventsControllerApi(configuration);
 let seriesId: string; // (default to undefined)
 let originalStartTime: string; // (default to undefined)
 let newStartTime: string; // (default to undefined)
-let newEndTime: string; // (default to undefined)
+let eventAttendeeDTO: Array<EventAttendeeDTO>; //
+let duration: string; // (optional) (default to undefined)
 let newPrice: number; // (optional) (default to undefined)
 let newMeetingLink: string; // (optional) (default to undefined)
 
@@ -652,7 +656,8 @@ const { status, data } = await apiInstance.modifyEventOccurrence(
     seriesId,
     originalStartTime,
     newStartTime,
-    newEndTime,
+    eventAttendeeDTO,
+    duration,
     newPrice,
     newMeetingLink
 );
@@ -662,10 +667,11 @@ const { status, data } = await apiInstance.modifyEventOccurrence(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
+| **eventAttendeeDTO** | **Array<EventAttendeeDTO>**|  | |
 | **seriesId** | [**string**] |  | defaults to undefined|
 | **originalStartTime** | [**string**] |  | defaults to undefined|
 | **newStartTime** | [**string**] |  | defaults to undefined|
-| **newEndTime** | [**string**] |  | defaults to undefined|
+| **duration** | [**string**] |  | (optional) defaults to undefined|
 | **newPrice** | [**number**] |  | (optional) defaults to undefined|
 | **newMeetingLink** | [**string**] |  | (optional) defaults to undefined|
 
@@ -680,7 +686,7 @@ const { status, data } = await apiInstance.modifyEventOccurrence(
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: */*
 
 

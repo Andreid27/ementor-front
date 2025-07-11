@@ -1,31 +1,83 @@
-# ProfilePictureControllerApi
+# HostFileControllerApi
 
 All URIs are relative to *https://dev.api.e-mentor.ro/service2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**download2**](#download2) | **GET** /profile-image/download/{fileId} | Download file|
-|[**generateAllThumbnails**](#generateallthumbnails) | **GET** /profile-image/generate/all-users | Generate thumbnails for all users|
-|[**upload**](#upload) | **POST** /profile-image/upload | Upload a new image|
+|[**delete2**](#delete2) | **DELETE** /host-file/{id} | Delete a speciality by ID.|
+|[**download3**](#download3) | **GET** /host-file/download/{fileId} | Download file|
+|[**upload1**](#upload1) | **POST** /host-file/upload | Upload a document|
 
-# **download2**
-> File download2()
+# **delete2**
+> delete2()
 
 
 ### Example
 
 ```typescript
 import {
-    ProfilePictureControllerApi,
+    HostFileControllerApi,
     Configuration
 } from 'ementor-api-client';
 
 const configuration = new Configuration();
-const apiInstance = new ProfilePictureControllerApi(configuration);
+const apiInstance = new HostFileControllerApi(configuration);
+
+let id: string; // (default to undefined)
+
+const { status, data } = await apiInstance.delete2(
+    id
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **id** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+[OIDC Authentication](../README.md#OIDC Authentication)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: Not defined
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**404** | Speciality not found |  -  |
+|**204** | Request successful |  -  |
+|**400** | Invalid request |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **download3**
+> File download3()
+
+
+### Example
+
+```typescript
+import {
+    HostFileControllerApi,
+    Configuration
+} from 'ementor-api-client';
+
+const configuration = new Configuration();
+const apiInstance = new HostFileControllerApi(configuration);
 
 let fileId: string; // (default to undefined)
 
-const { status, data } = await apiInstance.download2(
+const { status, data } = await apiInstance.download3(
     fileId
 );
 ```
@@ -48,7 +100,7 @@ const { status, data } = await apiInstance.download2(
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: */*
+ - **Accept**: application/vnd.openxmlformats-officedocument.wordprocessingml.document, */*
 
 
 ### HTTP response details
@@ -59,68 +111,24 @@ const { status, data } = await apiInstance.download2(
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **generateAllThumbnails**
-> string generateAllThumbnails()
+# **upload1**
+> string upload1()
 
 
 ### Example
 
 ```typescript
 import {
-    ProfilePictureControllerApi,
+    HostFileControllerApi,
     Configuration
 } from 'ementor-api-client';
 
 const configuration = new Configuration();
-const apiInstance = new ProfilePictureControllerApi(configuration);
-
-const { status, data } = await apiInstance.generateAllThumbnails();
-```
-
-### Parameters
-This endpoint does not have any parameters.
-
-
-### Return type
-
-**string**
-
-### Authorization
-
-[OIDC Authentication](../README.md#OIDC Authentication)
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: */*
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**404** | Not found |  -  |
-|**200** | Request successful |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **upload**
-> string upload()
-
-
-### Example
-
-```typescript
-import {
-    ProfilePictureControllerApi,
-    Configuration
-} from 'ementor-api-client';
-
-const configuration = new Configuration();
-const apiInstance = new ProfilePictureControllerApi(configuration);
+const apiInstance = new HostFileControllerApi(configuration);
 
 let file: File; // (default to undefined)
 
-const { status, data } = await apiInstance.upload(
+const { status, data } = await apiInstance.upload1(
     file
 );
 ```
@@ -149,7 +157,7 @@ const { status, data } = await apiInstance.upload(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Request successful |  -  |
+|**201** | Request successful |  -  |
 |**400** | Invalid request |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)

@@ -15,14 +15,12 @@ Name | Type | Description | Notes
 **duration** | [**SingularEventDTODuration**](SingularEventDTODuration.md) |  | [optional] [default to undefined]
 **price** | **number** |  | [optional] [default to undefined]
 **meetingLink** | **string** |  | [optional] [default to undefined]
-**attendance** | **Array&lt;string&gt;** |  | [optional] [default to undefined]
-**expectedAttendeeIds** | **Array&lt;string&gt;** |  | [optional] [default to undefined]
 **attendanceCount** | **number** |  | [optional] [default to undefined]
 **professorName** | **string** |  | [optional] [default to undefined]
 **professorId** | **string** |  | [optional] [default to undefined]
 **creation** | **string** |  | [optional] [default to undefined]
 **modified** | **string** |  | [optional] [default to undefined]
-**attendeePrices** | **{ [key: string]: number; }** |  | [optional] [default to undefined]
+**eventAttendees** | [**Array&lt;EventAttendeeDTO&gt;**](EventAttendeeDTO.md) |  | [optional] [default to undefined]
 **virtual** | **boolean** |  | [optional] [default to undefined]
 **cancelled** | **boolean** |  | [optional] [default to undefined]
 **completed** | **boolean** |  | [optional] [default to undefined]
@@ -48,14 +46,12 @@ const instance: EventOccurrenceDTO = {
     duration,
     price,
     meetingLink,
-    attendance,
-    expectedAttendeeIds,
     attendanceCount,
     professorName,
     professorId,
     creation,
     modified,
-    attendeePrices,
+    eventAttendees,
     virtual,
     cancelled,
     completed,
