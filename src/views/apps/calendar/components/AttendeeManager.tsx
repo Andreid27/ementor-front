@@ -16,7 +16,14 @@ import {
   Paper,
   InputAdornment,
   Collapse,
-  Alert
+  Alert,
+  Switch,
+  FormControlLabel,
+  Grid,
+  Card,
+  CardContent,
+  Tooltip,
+  Badge
 } from '@mui/material'
 import {
   Search as SearchIcon,
@@ -25,129 +32,187 @@ import {
   Person as PersonIcon,
   Group as GroupIcon,
   ExpandMore as ExpandMoreIcon,
-  ExpandLess as ExpandLessIcon
+  ExpandLess as ExpandLessIcon,
+  CheckCircle as CheckCircleIcon,
+  RadioButtonUnchecked as RadioButtonUncheckedIcon,
+  AttachMoney as AttachMoneyIcon,
+  EventAvailable as EventAvailableIcon,
+  EventBusy as EventBusyIcon
 } from '@mui/icons-material'
+
+// Import EventAttendeeDTO and utilities
+import { EventAttendeeDTO } from 'src/generated/profile-service'
 import {
-  AttendeeWithPhoto,
-  AttendeeWithPricing,
-  StudentData,
-  getAttendeesFromStudentIds,
-  mergeAttendeesWithPricing,
-  getAttendeeDisplayName,
-  getAttendeeInitials,
-  getAttendeeAvatar,
-  getAttendeeId,
-  filterAttendeesBySearch,
-  sortAttendeesByName,
-  filterAvailableStudents,
-  calculateAttendeeStats,
-  validateAttendeePricing,
-  attendeesToStudentIds,
-  createAttendeePricesMap
-} from '../utils/attendeeUtils'
-import { formatPrice } from '../utils/pricingUtils'
+  studentToEventAttendeeDTO,
+  enrichAttendeesWithStudentData,
+  addAttendee,
+  removeAttendee,
+  updateAttendeePrice,
+  updateAttendanceStatus,
+  calculateTotalRevenue,
+  getExpectedCount,
+  getAttendedCount,
+  getExpectedAttendees,
+  getAttendedAttendees
+} from '../utils/eventAttendeeUtils'
+
+export interface StudentData {
+  id?: string
+  userId?: string
+  firstName?: string
+  lastName?: string
+  email?: string
+  profilePicture?: string
+  [key: string]: any
+}
 
 interface AttendeeManagerProps {
   // Student data
-  students: StudentData[]
+  students?: StudentData[]
 
-  // Current attendees (as student IDs)
-  selectedAttendeeIds: string[]
-  onAttendeeIdsChange: (attendeeIds: string[]) => void
+  // Current attendees using EventAttendeeDTO
+  attendees?: EventAttendeeDTO[]
+  onAttendeesChange: (attendees: EventAttendeeDTO[]) => void
 
-  // Pricing
-  attendeePrices: { [key: string]: number }
-  onAttendeePricesChange: (prices: { [key: string]: number }) => void
+  // Default settings
   defaultPrice: number
+  eventType?: 'singular' | 'recurring' | 'occurrence'
 
   // Display options
   showPricing?: boolean
+  showAttendanceTracking?: boolean
   showStatistics?: boolean
   maxHeight?: number
 
   // States
   isReadOnly?: boolean
   isLoading?: boolean
+  isNewEvent?: boolean
 }
 
 const AttendeeManager: React.FC<AttendeeManagerProps> = ({
   students,
-  selectedAttendeeIds,
-  onAttendeeIdsChange,
-  attendeePrices,
-  onAttendeePricesChange,
+  attendees,
+  onAttendeesChange,
   defaultPrice,
+  eventType = 'singular',
   showPricing = true,
+  showAttendanceTracking = false,
   showStatistics = true,
   maxHeight = 400,
   isReadOnly = false,
-  isLoading = false
+  isLoading = false,
+  isNewEvent = true
 }) => {
   const [searchTerm, setSearchTerm] = useState('')
-  const [showAvailableStudents, setShowAvailableStudents] = useState(false)
   const [expandedSections, setExpandedSections] = useState({
     currentAttendees: true,
     availableStudents: false,
-    statistics: false
+    statistics: true
   })
 
-  // Get current attendees with photos and pricing
-  const currentAttendees = useMemo(() => {
-    const attendeesWithPhotos = getAttendeesFromStudentIds(selectedAttendeeIds, students)
-    return mergeAttendeesWithPricing(attendeesWithPhotos, attendeePrices, defaultPrice)
-  }, [selectedAttendeeIds, students, attendeePrices, defaultPrice])
+  // Enrich attendees with student data for display
+  const enrichedAttendees = useMemo(() => {
+    return enrichAttendeesWithStudentData(attendees || [], students || [])
+  }, [attendees, students])
 
-  // Get available students for selection
+  // Filter available students (not already added)
   const availableStudents = useMemo(() => {
-    const filtered = filterAvailableStudents(students, selectedAttendeeIds)
-    return searchTerm
-      ? filtered.filter(student => {
-          const name = student.fullName || `${student.firstName || ''} ${student.lastName || ''}`.trim()
-          const email = student.email || ''
-          const term = searchTerm.toLowerCase()
-          return name.toLowerCase().includes(term) || email.toLowerCase().includes(term)
-        })
-      : filtered
-  }, [students, selectedAttendeeIds, searchTerm])
+    if (!attendees || !Array.isArray(attendees)) {
+      return students || []
+    }
+
+    const attendeeIds = attendees.map(a => a.attendeeId)
+    return (students || []).filter(student => {
+      const studentId = student.userId || student.id
+      return studentId && !attendeeIds.includes(studentId)
+    })
+  }, [students, attendees])
+
+  // Filter students by search term
+  const filteredAvailableStudents = useMemo(() => {
+    if (!searchTerm) return availableStudents
+    const term = searchTerm.toLowerCase()
+    return availableStudents.filter(student => {
+      const name = `${student.firstName || ''} ${student.lastName || ''}`.toLowerCase()
+      const email = (student.email || '').toLowerCase()
+      return name.includes(term) || email.includes(term)
+    })
+  }, [availableStudents, searchTerm])
 
   // Calculate statistics
-  const stats = useMemo(() => {
-    return calculateAttendeeStats(currentAttendees)
-  }, [currentAttendees])
+  const statistics = useMemo(() => {
+    const safeAttendees = attendees || []
+    const expectedCount = getExpectedCount(safeAttendees)
+    const attendedCount = getAttendedCount(safeAttendees)
+    const totalRevenue = calculateTotalRevenue(safeAttendees, defaultPrice)
+    const expectedAttendees = getExpectedAttendees(safeAttendees)
+    const attendedAttendees = getAttendedAttendees(safeAttendees)
 
-  // Validate pricing
-  const pricingValidation = useMemo(() => {
-    return validateAttendeePricing(currentAttendees)
-  }, [currentAttendees])
-
-  const handleAddAttendee = (studentId: string) => {
-    if (!selectedAttendeeIds.includes(studentId)) {
-      onAttendeeIdsChange([...selectedAttendeeIds, studentId])
+    return {
+      total: safeAttendees.length,
+      expected: expectedCount,
+      attended: attendedCount,
+      expectedRevenue: calculateTotalRevenue(expectedAttendees, defaultPrice),
+      actualRevenue: calculateTotalRevenue(attendedAttendees, defaultPrice),
+      totalRevenue
     }
+  }, [attendees, defaultPrice])
+
+  // Helper functions
+  const getStudentDisplayName = (student: StudentData) => {
+    return student.firstName && student.lastName
+      ? `${student.firstName} ${student.lastName}`
+      : student.firstName || student.lastName || student.email || 'Unknown'
   }
 
-  const handleRemoveAttendee = (studentId: string) => {
-    onAttendeeIdsChange(selectedAttendeeIds.filter(id => id !== studentId))
-
-    // Remove custom price if exists
-    if (attendeePrices[studentId] !== undefined) {
-      const newPrices = { ...attendeePrices }
-      delete newPrices[studentId]
-      onAttendeePricesChange(newPrices)
+  const getStudentInitials = (student: StudentData) => {
+    if (student.firstName && student.lastName) {
+      return `${student.firstName.charAt(0)}${student.lastName.charAt(0)}`.toUpperCase()
     }
+    if (student.firstName) return student.firstName.charAt(0).toUpperCase()
+    if (student.email) return student.email.charAt(0).toUpperCase()
+    return '?'
   }
 
-  const handlePriceChange = (studentId: string, price: number) => {
-    onAttendeePricesChange({
-      ...attendeePrices,
-      [studentId]: price
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount)
+  }
+
+  // Event handlers
+  const handleAddAttendee = (student: StudentData) => {
+    const updatedAttendees = addAttendee(attendees || [], student, {
+      expected: true,
+      customPrice: defaultPrice,
+      defaultPrice: defaultPrice
     })
+    onAttendeesChange(updatedAttendees)
   }
 
-  const handleRemoveCustomPrice = (studentId: string) => {
-    const newPrices = { ...attendeePrices }
-    delete newPrices[studentId]
-    onAttendeePricesChange(newPrices)
+  const handleRemoveAttendee = (attendeeId: string) => {
+    const updatedAttendees = removeAttendee(attendees || [], attendeeId)
+    onAttendeesChange(updatedAttendees)
+  }
+
+  const handleUpdatePrice = (attendeeId: string, price: number) => {
+    const updatedAttendees = updateAttendeePrice(attendees || [], attendeeId, price, defaultPrice)
+    onAttendeesChange(updatedAttendees)
+  }
+
+  const handleToggleExpected = (attendeeId: string, expected: boolean) => {
+    const safeAttendees = attendees || []
+    const updatedAttendees = safeAttendees.map(attendee =>
+      attendee.attendeeId === attendeeId ? { ...attendee, expected } : attendee
+    )
+    onAttendeesChange(updatedAttendees)
+  }
+
+  const handleToggleAttended = (attendeeId: string, attended: boolean) => {
+    const updatedAttendees = updateAttendanceStatus(attendees || [], attendeeId, attended)
+    onAttendeesChange(updatedAttendees)
   }
 
   const toggleSection = (section: keyof typeof expandedSections) => {
@@ -157,88 +222,138 @@ const AttendeeManager: React.FC<AttendeeManagerProps> = ({
     }))
   }
 
-  const renderAttendeeItem = (attendee: AttendeeWithPricing, index: number) => {
-    const attendeeId = getAttendeeId(attendee)
-    const displayName = getAttendeeDisplayName(attendee)
-    const avatar = getAttendeeAvatar(attendee)
-    const initials = getAttendeeInitials(attendee)
+  // Render functions
+  const renderAttendeeItem = (attendee: EventAttendeeDTO, index: number) => {
+    const student = (students || []).find(s => s.userId === attendee.attendeeId || s.id === attendee.attendeeId)
+    if (!student) return null
+
+    const displayName = getStudentDisplayName(student)
+    const initials = getStudentInitials(student)
+    const attendeePrice = attendee.hasCustomPricing ? attendee.customPrice || 0 : defaultPrice
 
     return (
-      <ListItem key={attendeeId || index} divider>
+      <ListItem key={attendee.attendeeId || index} divider>
         <ListItemAvatar>
-          <Avatar src={avatar || undefined} sx={{ width: 40, height: 40 }}>
-            {avatar ? null : initials}
-          </Avatar>
+          <Avatar src={student.profilePicture || student.picture}>{initials}</Avatar>
         </ListItemAvatar>
         <ListItemText
-          primary={displayName}
+          primary={
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant='body1'>{displayName}</Typography>
+              {attendee.expected && (
+                <Tooltip title='Expected to attend'>
+                  <EventAvailableIcon fontSize='small' color='primary' />
+                </Tooltip>
+              )}
+              {attendee.attended && (
+                <Tooltip title='Attended'>
+                  <CheckCircleIcon fontSize='small' color='success' />
+                </Tooltip>
+              )}
+            </Box>
+          }
           secondary={
-            <Box>
-              <Typography variant='body2' color='text.secondary'>
-                {attendee.email || attendee.studentData?.email || 'No email'}
+            <Box sx={{ mt: 1 }}>
+              {/* Student email */}
+              <Typography variant='caption' display='block' color='textSecondary'>
+                {student.email}
               </Typography>
-              {showPricing && (
-                <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Typography variant='body2' color='text.secondary'>
-                    Price: {formatPrice(attendee.price || 0)}
-                  </Typography>
-                  {attendee.hasCustomPrice && <Chip label='Custom' size='small' color='primary' variant='outlined' />}
+
+              {/* Attendance controls */}
+              {showAttendanceTracking && !isReadOnly && (
+                <Box sx={{ mt: 1, display: 'flex', gap: 2, alignItems: 'center' }}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={attendee.expected || false}
+                        onChange={e => handleToggleExpected(attendee.attendeeId!, e.target.checked)}
+                        size='small'
+                      />
+                    }
+                    label='Expected'
+                    sx={{ m: 0 }}
+                  />
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={attendee.attended || false}
+                        onChange={e => handleToggleAttended(attendee.attendeeId!, e.target.checked)}
+                        size='small'
+                      />
+                    }
+                    label='Attended'
+                    sx={{ m: 0 }}
+                  />
                 </Box>
+              )}
+
+              {/* Pricing controls */}
+              {showPricing && !isReadOnly && (
+                <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <TextField
+                    type='number'
+                    value={attendeePrice}
+                    onChange={e => handleUpdatePrice(attendee.attendeeId!, parseFloat(e.target.value) || 0)}
+                    size='small'
+                    sx={{ width: 100 }}
+                    InputProps={{
+                      startAdornment: <InputAdornment position='start'>$</InputAdornment>
+                    }}
+                  />
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={attendee.hasCustomPricing || false}
+                        onChange={e => {
+                          if (!e.target.checked) {
+                            handleUpdatePrice(attendee.attendeeId!, defaultPrice)
+                          }
+                        }}
+                        size='small'
+                      />
+                    }
+                    label='Custom'
+                    sx={{ m: 0 }}
+                  />
+                </Box>
+              )}
+
+              {/* Display pricing if read-only */}
+              {showPricing && isReadOnly && (
+                <Typography variant='caption' color='primary'>
+                  Price: {formatCurrency(attendeePrice)}
+                  {attendee.hasCustomPricing && ' (Custom)'}
+                </Typography>
               )}
             </Box>
           }
         />
-        {!isReadOnly && (
-          <ListItemSecondaryAction>
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              {showPricing && (
-                <TextField
-                  size='small'
-                  type='number'
-                  value={attendee.individualPrice || ''}
-                  onChange={e => {
-                    const value = parseFloat(e.target.value)
-                    if (!isNaN(value) && value >= 0) {
-                      handlePriceChange(attendeeId, value)
-                    } else if (e.target.value === '') {
-                      handleRemoveCustomPrice(attendeeId)
-                    }
-                  }}
-                  placeholder={defaultPrice.toString()}
-                  sx={{ width: 100 }}
-                  InputProps={{
-                    startAdornment: <InputAdornment position='start'>RON</InputAdornment>
-                  }}
-                />
-              )}
-              <IconButton edge='end' onClick={() => handleRemoveAttendee(attendeeId)} color='error' size='small'>
-                <RemoveIcon />
-              </IconButton>
-            </Box>
-          </ListItemSecondaryAction>
-        )}
+        <ListItemSecondaryAction>
+          {!isReadOnly && (
+            <IconButton edge='end' onClick={() => handleRemoveAttendee(attendee.attendeeId!)} color='error'>
+              <RemoveIcon />
+            </IconButton>
+          )}
+        </ListItemSecondaryAction>
       </ListItem>
     )
   }
 
-  const renderStudentItem = (student: StudentData, index: number) => {
-    const studentId = student.id || student.userId || index.toString()
-    const displayName = student.fullName || `${student.firstName || ''} ${student.lastName || ''}`.trim()
-    const initials =
-      student.firstName && student.lastName
-        ? `${student.firstName.charAt(0)}${student.lastName.charAt(0)}`.toUpperCase()
-        : displayName.charAt(0).toUpperCase()
+  const renderAvailableStudentItem = (student: StudentData) => {
+    const studentId = student.userId || student.id
+    if (!studentId) return null
+
+    const displayName = getStudentDisplayName(student)
+    const initials = getStudentInitials(student)
 
     return (
-      <ListItem key={studentId} divider>
+      <ListItem key={studentId} button onClick={() => handleAddAttendee(student)} disabled={isReadOnly}>
         <ListItemAvatar>
-          <Avatar src={student.avatar || undefined} sx={{ width: 32, height: 32 }}>
-            {student.avatar ? null : initials}
-          </Avatar>
+          <Avatar src={student.profilePicture || student.picture}>{initials}</Avatar>
         </ListItemAvatar>
-        <ListItemText primary={displayName} secondary={student.email || 'No email'} />
+        <ListItemText primary={displayName} secondary={student.email} />
         <ListItemSecondaryAction>
-          <IconButton edge='end' onClick={() => handleAddAttendee(studentId)} color='primary' size='small'>
+          <IconButton edge='end' onClick={() => handleAddAttendee(student)} disabled={isReadOnly} color='primary'>
             <AddIcon />
           </IconButton>
         </ListItemSecondaryAction>
@@ -250,43 +365,77 @@ const AttendeeManager: React.FC<AttendeeManagerProps> = ({
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       {/* Statistics */}
       {showStatistics && (
-        <Paper sx={{ p: 2 }}>
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              cursor: 'pointer'
-            }}
-            onClick={() => toggleSection('statistics')}
-          >
-            <Typography variant='h6' sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <GroupIcon />
-              Attendee Statistics
-            </Typography>
-            {expandedSections.statistics ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-          </Box>
-
-          <Collapse in={expandedSections.statistics}>
-            <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-              <Chip label={`${stats.totalAttendees} Total`} color='default' icon={<PersonIcon />} />
-              <Chip label={`${stats.attendeesWithCustomPrice} Custom Price`} color='primary' variant='outlined' />
-              <Chip label={`${stats.attendeesWithDefaultPrice} Default Price`} color='secondary' variant='outlined' />
-              <Chip label={`Total: ${formatPrice(stats.totalRevenue)}`} color='success' variant='outlined' />
+        <Card>
+          <CardContent>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                cursor: 'pointer'
+              }}
+              onClick={() => toggleSection('statistics')}
+            >
+              <Typography variant='h6' sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <GroupIcon />
+                Attendee Statistics
+              </Typography>
+              {expandedSections.statistics ? <ExpandLessIcon /> : <ExpandMoreIcon />}
             </Box>
 
-            {!pricingValidation.isValid && (
-              <Alert severity='warning' sx={{ mt: 2 }}>
-                <Typography variant='body2'>Pricing Issues:</Typography>
-                <ul>
-                  {pricingValidation.errors.map((error, index) => (
-                    <li key={index}>{error}</li>
-                  ))}
-                </ul>
-              </Alert>
-            )}
-          </Collapse>
-        </Paper>
+            <Collapse in={expandedSections.statistics}>
+              <Box sx={{ mt: 2 }}>
+                <Grid container spacing={2}>
+                  <Grid item xs={6} sm={3}>
+                    <Chip
+                      label={`${statistics.total} Total`}
+                      color='primary'
+                      icon={<PersonIcon />}
+                      sx={{ width: '100%' }}
+                    />
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <Chip
+                      label={`${statistics.expected} Expected`}
+                      color='default'
+                      icon={<EventAvailableIcon />}
+                      sx={{ width: '100%' }}
+                    />
+                  </Grid>
+                  {showAttendanceTracking && (
+                    <Grid item xs={6} sm={3}>
+                      <Chip
+                        label={`${statistics.attended} Attended`}
+                        color='success'
+                        icon={<CheckCircleIcon />}
+                        sx={{ width: '100%' }}
+                      />
+                    </Grid>
+                  )}
+                  {showPricing && (
+                    <Grid item xs={6} sm={3}>
+                      <Chip
+                        label={`${formatCurrency(statistics.totalRevenue)} Revenue`}
+                        color='secondary'
+                        icon={<AttachMoneyIcon />}
+                        sx={{ width: '100%' }}
+                      />
+                    </Grid>
+                  )}
+                </Grid>
+
+                {showPricing && showAttendanceTracking && (
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant='body2' color='textSecondary'>
+                      Expected Revenue: {formatCurrency(statistics.expectedRevenue)} | Actual Revenue:{' '}
+                      {formatCurrency(statistics.actualRevenue)}
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
+            </Collapse>
+          </CardContent>
+        </Card>
       )}
 
       {/* Current Attendees */}
@@ -301,19 +450,24 @@ const AttendeeManager: React.FC<AttendeeManagerProps> = ({
           }}
           onClick={() => toggleSection('currentAttendees')}
         >
-          <Typography variant='h6'>Current Attendees ({currentAttendees.length})</Typography>
+          <Typography variant='h6' sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Badge badgeContent={(attendees || []).length} color='primary'>
+              <GroupIcon />
+            </Badge>
+            Current Attendees
+          </Typography>
           {expandedSections.currentAttendees ? <ExpandLessIcon /> : <ExpandMoreIcon />}
         </Box>
 
         <Collapse in={expandedSections.currentAttendees}>
           <Divider />
           <List sx={{ maxHeight: maxHeight / 2, overflowY: 'auto' }}>
-            {currentAttendees.length === 0 ? (
+            {(attendees || []).length === 0 ? (
               <ListItem>
                 <ListItemText primary='No attendees selected' secondary='Add students from the available list below' />
               </ListItem>
             ) : (
-              currentAttendees.map(renderAttendeeItem)
+              (attendees || []).map((attendee, index) => renderAttendeeItem(attendee, index))
             )}
           </List>
         </Collapse>
@@ -327,20 +481,21 @@ const AttendeeManager: React.FC<AttendeeManagerProps> = ({
               p: 2,
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'space-between'
+              justifyContent: 'space-between',
+              cursor: 'pointer'
             }}
+            onClick={() => toggleSection('availableStudents')}
           >
-            <Typography variant='h6'>Available Students ({availableStudents.length})</Typography>
-            <Button
-              variant='text'
-              onClick={() => setShowAvailableStudents(!showAvailableStudents)}
-              startIcon={showAvailableStudents ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-            >
-              {showAvailableStudents ? 'Hide' : 'Show'}
-            </Button>
+            <Typography variant='h6' sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Badge badgeContent={availableStudents.length} color='secondary'>
+                <PersonIcon />
+              </Badge>
+              Available Students
+            </Typography>
+            {expandedSections.availableStudents ? <ExpandLessIcon /> : <ExpandMoreIcon />}
           </Box>
 
-          <Collapse in={showAvailableStudents}>
+          <Collapse in={expandedSections.availableStudents}>
             <Divider />
             <Box sx={{ p: 2 }}>
               <TextField
@@ -359,7 +514,7 @@ const AttendeeManager: React.FC<AttendeeManagerProps> = ({
               />
             </Box>
             <List sx={{ maxHeight: maxHeight / 2, overflowY: 'auto' }}>
-              {availableStudents.length === 0 ? (
+              {filteredAvailableStudents.length === 0 ? (
                 <ListItem>
                   <ListItemText
                     primary='No students available'
@@ -367,12 +522,15 @@ const AttendeeManager: React.FC<AttendeeManagerProps> = ({
                   />
                 </ListItem>
               ) : (
-                availableStudents.map(renderStudentItem)
+                filteredAvailableStudents.map(student => renderAvailableStudentItem(student))
               )}
             </List>
           </Collapse>
         </Paper>
       )}
+
+      {/* Loading and Error States */}
+      {isLoading && <Alert severity='info'>Loading attendee data...</Alert>}
     </Box>
   )
 }

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { EventFormValues, FormData, defaultEventFormState } from '../types'
 import { determineEventType, EventTypeInfo, EditingScope, getDefaultEditingScope } from '../utils/eventTypeUtils'
+import { studentsToEventAttendeeDTOs } from '../utils/eventAttendeeUtils'
 
 interface UseEventDataProps {
   selectedEvent: any
@@ -83,8 +84,14 @@ export const useEventData = ({ selectedEvent, addEventSidebarOpen }: UseEventDat
         pattern: event.pattern || 'WEEKLY',
         durationHours: Math.max(durationHours, 1),
         durationMinutes: Math.max(durationMinutes, 0),
-        expectedAttendees: event.expectedAttendees || event.attendance || event.extendedProps?.expectedAttendees || [],
-        attendeePrices: event.attendeePrices || event.extendedProps?.attendeePrices || {}
+        // Convert legacy attendee data to EventAttendeeDTO format
+        attendees:
+          event.attendees ||
+          studentsToEventAttendeeDTOs(
+            [], // We'll need students context to properly convert
+            event.attendeePrices || event.extendedProps?.attendeePrices || {},
+            event.price || event.extendedProps?.price || 0
+          )
       })
     }
   }, [setValue, selectedEvent])

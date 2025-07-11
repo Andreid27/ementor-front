@@ -13,10 +13,18 @@ import {
   DialogActions
 } from '@mui/material'
 import { Group as GroupIcon, AttachMoney as MoneyIcon, Settings as SettingsIcon } from '@mui/icons-material'
+import { EventAttendeeDTO } from 'src/generated/profile-service'
 import AttendeeManager from './AttendeeManager'
 import AttendeePricingManager from './AttendeePricingManager'
 import useAttendeeManagement from '../hooks/useAttendeeManagement'
 import { formatPrice } from '../utils/pricingUtils'
+import {
+  studentsToEventAttendeeDTOs,
+  eventAttendeeDTOsToStudentIds,
+  extractAttendeePrices,
+  getExpectedCount,
+  calculateTotalRevenue
+} from '../utils/eventAttendeeUtils'
 
 interface EventAttendeeManagementProps {
   // Event data
@@ -25,17 +33,15 @@ interface EventAttendeeManagementProps {
   occurrenceId?: string
   eventType: 'singular' | 'recurring' | 'occurrence'
 
-  // Current event data
-  initialAttendeeIds?: string[]
-  initialAttendeePrices?: { [key: string]: number }
+  // Current event data - Updated to use EventAttendeeDTO
+  initialAttendees?: EventAttendeeDTO[]
   defaultPrice?: number
 
   // Student data
   students: any[]
 
-  // Form integration
-  onAttendeeIdsChange?: (ids: string[]) => void
-  onAttendeePricesChange?: (prices: { [key: string]: number }) => void
+  // Form integration - Updated to use EventAttendeeDTO
+  onAttendeesChange?: (attendees: EventAttendeeDTO[]) => void
 
   // State
   isReadOnly?: boolean
@@ -47,17 +53,19 @@ const EventAttendeeManagement: React.FC<EventAttendeeManagementProps> = ({
   seriesId,
   occurrenceId,
   eventType,
-  initialAttendeeIds = [],
-  initialAttendeePrices = {},
+  initialAttendees = [],
   defaultPrice = 0,
   students,
-  onAttendeeIdsChange,
-  onAttendeePricesChange,
+  onAttendeesChange,
   isReadOnly = false,
   isNewEvent = false
 }) => {
   const [activeTab, setActiveTab] = useState(0)
   const [showPricingHelp, setShowPricingHelp] = useState(false)
+
+  // Convert EventAttendeeDTO to legacy format for existing hook compatibility
+  const initialAttendeeIds = eventAttendeeDTOsToStudentIds(initialAttendees)
+  const initialAttendeePrices = extractAttendeePrices(initialAttendees)
 
   // Use the attendee management hook
   const {
@@ -91,14 +99,15 @@ const EventAttendeeManagement: React.FC<EventAttendeeManagementProps> = ({
     autoFetchAttendees: !isNewEvent
   })
 
-  // Sync changes with parent component
+  // Sync changes with parent component - Convert to EventAttendeeDTO format
   React.useEffect(() => {
-    onAttendeeIdsChange?.(attendeeIds)
-  }, [attendeeIds, onAttendeeIdsChange])
-
-  React.useEffect(() => {
-    onAttendeePricesChange?.(attendeePrices)
-  }, [attendeePrices, onAttendeePricesChange])
+    const currentAttendees = studentsToEventAttendeeDTOs(
+      students.filter(student => attendeeIds.includes(student.userId || student.id)),
+      attendeePrices,
+      defaultPrice
+    )
+    onAttendeesChange?.(currentAttendees)
+  }, [attendeeIds, attendeePrices, students, defaultPrice, onAttendeesChange])
 
   // Auto-save attendee prices for existing events
   React.useEffect(() => {
@@ -197,10 +206,23 @@ const EventAttendeeManagement: React.FC<EventAttendeeManagementProps> = ({
         {activeTab === 0 && (
           <AttendeeManager
             students={students}
-            selectedAttendeeIds={attendeeIds}
-            onAttendeeIdsChange={setAttendeeIds}
-            attendeePrices={attendeePrices}
-            onAttendeePricesChange={setAttendeePrices}
+            attendees={studentsToEventAttendeeDTOs(
+              students.filter(student => attendeeIds.includes(student.userId || student.id)),
+              attendeePrices,
+              defaultPrice
+            )}
+            onAttendeesChange={newAttendees => {
+              // Extract attendee IDs and prices from EventAttendeeDTO format
+              const newAttendeeIds = eventAttendeeDTOsToStudentIds(newAttendees)
+              const newAttendeePrices = extractAttendeePrices(newAttendees)
+
+              // Update the legacy hook state
+              setAttendeeIds(newAttendeeIds)
+              setAttendeePrices(newAttendeePrices)
+
+              // Notify parent component if callback exists
+              onAttendeesChange?.(newAttendees)
+            }}
             defaultPrice={defaultPrice}
             showPricing={true}
             showStatistics={true}

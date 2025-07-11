@@ -68,8 +68,8 @@ export const useEventForm = ({
           pattern: values.pattern,
           price: values.price,
           meetingLink: values.meetingLink,
-          endRecurrence: values.endRecurrence?.toISOString(),
-          expectedAttendees: values.expectedAttendees
+          endRecurrence: values.endRecurrence?.toISOString()
+          // Note: attendees will be handled separately via EventAttendeeDTO
         }
 
         const eventPayload = {
@@ -146,7 +146,7 @@ export const useEventForm = ({
         pattern: 'WEEKLY',
         durationHours: 1,
         durationMinutes: 0,
-        expectedAttendees: []
+        attendees: [] // Use EventAttendeeDTO array instead of expectedAttendees
       })
     }
   }, [setValue, store.selectedEvent])

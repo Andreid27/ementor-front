@@ -12,6 +12,7 @@ export interface StudentData {
   lastName?: string
   email?: string
   avatar?: string | null
+  picture?: string // UserDTO structure uses 'picture' instead of 'avatar'
   role?: string
   [key: string]: any
 }
@@ -178,7 +179,12 @@ export const getAttendeeInitials = (attendee: AttendeeWithPhoto): string => {
  * Get attendee avatar with fallbacks
  */
 export const getAttendeeAvatar = (attendee: AttendeeWithPhoto): string | null => {
-  return attendee.avatar || attendee.studentData?.avatar || null
+  // Handle multiple avatar/picture field formats:
+  // - attendee.avatar (legacy format)
+  // - attendee.picture (UserDTO format)
+  // - attendee.studentData?.avatar (legacy nested format)
+  // - attendee.studentData?.picture (UserDTO nested format)
+  return attendee.avatar || attendee.picture || attendee.studentData?.avatar || attendee.studentData?.picture || null
 }
 
 /**

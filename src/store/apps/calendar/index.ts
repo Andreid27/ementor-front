@@ -7,8 +7,12 @@ import {
   RecurringSeriesDTO,
   SingularEventDTO,
   UserDTO,
-  EventsDTO
+  EventsDTO,
+  EventAttendeeDTO
 } from 'src/generated/profile-service'
+
+// ** EventAttendee Utils
+import { extractAttendeePrices, eventAttendeeDTOsToStudentIds } from 'src/views/apps/calendar/utils/eventAttendeeUtils'
 
 // ** Types
 import { profileServiceClient } from 'src/services'
@@ -78,11 +82,12 @@ export const addEvent = createAsyncThunk<any, any>('appCalendar/addEvent', async
       recurringSeriesDTO: event.recurringSeriesDTO
     })
 
-    // If attendee prices are provided, set them after creation
-    if (event.attendeePrices && Object.keys(event.attendeePrices).length > 0) {
+    // If attendees are provided, set their prices after creation
+    if (event.attendees && event.attendees.length > 0) {
       const seriesId = response.data.id
       if (seriesId) {
-        await setAttendeePricesForSeries(seriesId, event.attendeePrices)
+        const attendeePrices = extractAttendeePrices(event.attendees)
+        await setAttendeePricesForSeries(seriesId, attendeePrices)
       }
     }
 
@@ -101,18 +106,21 @@ export const addEvent = createAsyncThunk<any, any>('appCalendar/addEvent', async
       },
       price: event.extendedProps?.price || 0,
       meetingLink: event.extendedProps?.meetingLink,
-      expectedAttendees: event.extendedProps?.expectedAttendees || []
+      eventAttendees: event.extendedProps?.attendees || []
     }
 
     const response = await profileServiceClient.events.createSingularEvent({
       singularEventDTO
     })
 
-    // If attendee prices are provided, set them after creation
-    if (event.extendedProps?.attendeePrices && Object.keys(event.extendedProps.attendeePrices).length > 0) {
+    // If attendees are provided with custom prices, set them after creation
+    if (event.extendedProps?.attendees && event.extendedProps.attendees.length > 0) {
       const eventId = response.data.id
       if (eventId) {
-        await setAttendeePricesForSingularEvent(eventId, event.extendedProps.attendeePrices)
+        const attendeePrices = extractAttendeePrices(event.extendedProps.attendees)
+        if (Object.keys(attendeePrices).length > 0) {
+          await setAttendeePricesForSingularEvent(eventId, attendeePrices)
+        }
       }
     }
 
@@ -131,8 +139,11 @@ export const updateEvent = createAsyncThunk<any, any>('appCalendar/updateEvent',
     })
 
     // Update attendee prices if provided
-    if (event.attendeePrices && Object.keys(event.attendeePrices).length > 0) {
-      await setAttendeePricesForSeries(event.id, event.attendeePrices)
+    if (event.attendees && event.attendees.length > 0) {
+      const attendeePrices = extractAttendeePrices(event.attendees)
+      if (Object.keys(attendeePrices).length > 0) {
+        await setAttendeePricesForSeries(event.id, attendeePrices)
+      }
     }
 
     await dispatch(fetchEvents())
@@ -150,7 +161,7 @@ export const updateEvent = createAsyncThunk<any, any>('appCalendar/updateEvent',
       },
       price: event.extendedProps?.price || 0,
       meetingLink: event.extendedProps?.meetingLink,
-      expectedAttendees: event.extendedProps?.expectedAttendees || []
+      eventAttendees: event.extendedProps?.attendees || []
     }
 
     const response = await profileServiceClient.events.updateSingularEvent({
@@ -159,8 +170,11 @@ export const updateEvent = createAsyncThunk<any, any>('appCalendar/updateEvent',
     })
 
     // Update attendee prices if provided
-    if (event.extendedProps?.attendeePrices && Object.keys(event.extendedProps.attendeePrices).length > 0) {
-      await setAttendeePricesForSingularEvent(event.id, event.extendedProps.attendeePrices)
+    if (event.extendedProps?.attendees && event.extendedProps.attendees.length > 0) {
+      const attendeePrices = extractAttendeePrices(event.extendedProps.attendees)
+      if (Object.keys(attendeePrices).length > 0) {
+        await setAttendeePricesForSingularEvent(event.id, attendeePrices)
+      }
     }
 
     await dispatch(fetchEvents())

@@ -3,6 +3,7 @@ import { useAuth } from 'src/hooks/useAuth'
 import { RecurringSeriesDTO } from 'src/generated/profile-service'
 import { EventFormValues, FormData } from '../types'
 import { EventTypeInfo, EditingScope, getEditingScopeConfig } from '../utils/eventTypeUtils'
+import { eventAttendeeDTOsToStudentIds } from '../utils/eventAttendeeUtils'
 
 interface UseEventActionsProps {
   values: EventFormValues
@@ -52,14 +53,16 @@ export const useEventActions = ({
           pattern: values.pattern,
           price: values.price,
           meetingLink: values.meetingLink,
-          endRecurrence: values.endRecurrence?.toISOString(),
-          expectedAttendees: values.expectedAttendees
+          endRecurrence: values.endRecurrence?.toISOString()
+          // Note: attendees will be handled separately via EventAttendeeDTO
         }
 
         const eventPayload = {
           recurringSeriesDTO,
           isRecurring: true,
-          attendeePrices: values.attendeePrices
+          // Convert EventAttendeeDTO to expected format for API
+          expectedAttendees: eventAttendeeDTOsToStudentIds(values.attendees),
+          attendees: values.attendees
         }
 
         // Check if this is editing an existing recurring series
@@ -92,8 +95,9 @@ export const useEventActions = ({
             description: values.description.length ? values.description : undefined,
             meetingLink: values.meetingLink,
             price: values.price,
-            expectedAttendees: values.expectedAttendees,
-            attendeePrices: values.attendeePrices
+            // Convert EventAttendeeDTO to expected format for backward compatibility
+            expectedAttendees: eventAttendeeDTOsToStudentIds(values.attendees),
+            attendees: values.attendees
           }
         }
 

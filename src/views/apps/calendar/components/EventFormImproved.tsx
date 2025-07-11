@@ -59,14 +59,10 @@ const EventForm: React.FC<EventFormProps> = ({
           students={students}
           isReadOnly={isReadOnly}
           isNewEvent={!store.selectedEvent}
-          initialAttendeeIds={values.expectedAttendees}
-          initialAttendeePrices={values.attendeePrices}
+          initialAttendees={values.attendees}
           defaultPrice={values.price}
-          onAttendeeIdsChange={ids => {
-            setValues(prev => ({ ...prev, expectedAttendees: ids }))
-          }}
-          onAttendeePricesChange={prices => {
-            setValues(prev => ({ ...prev, attendeePrices: prices }))
+          onAttendeesChange={attendees => {
+            setValues(prev => ({ ...prev, attendees }))
           }}
         />
       )

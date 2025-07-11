@@ -1,6 +1,6 @@
 // ** Types
 import { CalendarStore } from 'src/pages/apps/calendar'
-import { EventOccurrenceDTO, RecurringSeriesDTO } from 'src/generated/profile-service'
+import { EventOccurrenceDTO, RecurringSeriesDTO, EventAttendeeDTO } from 'src/generated/profile-service'
 import { CalendarApi } from '@fullcalendar/core'
 import { Dispatch } from '@reduxjs/toolkit'
 import { EventTypeInfo, EditingScope } from './utils/eventTypeUtils'
@@ -21,9 +21,11 @@ export interface EventFormValues {
   durationHours: number
   durationMinutes: number
   endRecurrence?: Date
-  expectedAttendees: string[]
-  // Per-student pricing
-  attendeePrices: { [key: string]: number }
+  // New: Use EventAttendeeDTO instead of separate arrays
+  attendees: EventAttendeeDTO[]
+  // Deprecated: Remove these in favor of attendees array
+  // expectedAttendees: string[]
+  // attendeePrices: { [key: string]: number }
 }
 
 export const defaultEventFormState: EventFormValues = {
@@ -38,8 +40,7 @@ export const defaultEventFormState: EventFormValues = {
   pattern: 'WEEKLY',
   durationHours: 1,
   durationMinutes: 0,
-  expectedAttendees: [],
-  attendeePrices: {}
+  attendees: []
 }
 
 export interface AddEventSidebarProps {
