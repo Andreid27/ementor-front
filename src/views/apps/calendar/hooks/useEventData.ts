@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { EventFormValues, FormData, defaultEventFormState } from '../types'
 import { determineEventType, EventTypeInfo, EditingScope, getDefaultEditingScope } from '../utils/eventTypeUtils'
-import { studentsToEventAttendeeDTOs } from '../utils/eventAttendeeUtils'
+import { studentsToEventAttendeeDTOs, eventAttendeesToEventAttendeeDTOs } from '../utils/eventAttendeeUtils'
 
 interface UseEventDataProps {
   selectedEvent: any
@@ -56,16 +56,17 @@ export const useEventData = ({ selectedEvent, addEventSidebarOpen }: UseEventDat
       // Use event type info to determine if this is recurring
       const isRecurringEvent = typeInfo.type === 'RECURRING_SERIES'
 
-      console.log('Event data analysis:', {
-        event,
-        eventTypeInfo: typeInfo,
-        isRecurringEvent,
-        recurringSeriesId: event.recurringSeriesId,
-        seriesId: event.seriesId,
-        seriesTitle: event.seriesTitle,
-        seriesDescription: event.seriesDescription,
-        pattern: event.pattern
+      // Get attendees from the original EventOccurrenceDTO
+      const originalEventDTO = event.extendedProps?.originalEventDTO
+      const originalAttendees = originalEventDTO?.eventAttendees || []
+
+      console.log('useEventData using original DTO:', {
+        hasOriginalDTO: !!originalEventDTO,
+        eventAttendees: originalEventDTO?.eventAttendees,
+        attendeesLength: originalAttendees?.length || 0
       })
+
+      const convertedAttendees = eventAttendeesToEventAttendeeDTOs(originalAttendees)
 
       // Calculate duration from start and end times
       const durationMs = endDate.getTime() - startDate.getTime()
@@ -84,14 +85,8 @@ export const useEventData = ({ selectedEvent, addEventSidebarOpen }: UseEventDat
         pattern: event.pattern || 'WEEKLY',
         durationHours: Math.max(durationHours, 1),
         durationMinutes: Math.max(durationMinutes, 0),
-        // Convert legacy attendee data to EventAttendeeDTO format
-        attendees:
-          event.attendees ||
-          studentsToEventAttendeeDTOs(
-            [], // We'll need students context to properly convert
-            event.attendeePrices || event.extendedProps?.attendeePrices || {},
-            event.price || event.extendedProps?.price || 0
-          )
+        // Use attendees from the original EventOccurrenceDTO
+        attendees: convertedAttendees
       })
     }
   }, [setValue, selectedEvent])
@@ -113,11 +108,6 @@ export const useEventData = ({ selectedEvent, addEventSidebarOpen }: UseEventDat
   }, [clearErrors])
 
   useEffect(() => {
-    console.log('Event data effect triggered:', {
-      selectedEvent,
-      addEventSidebarOpen
-    })
-
     if (selectedEvent !== null) {
       resetToStoredValues()
       setIsEditMode(false) // Show view mode for existing events

@@ -51,6 +51,17 @@ const EventForm: React.FC<EventFormProps> = ({
     ]
 
     // Add attendees section
+    // Debug: Log what's being passed to EventAttendeeManagement
+    const isNewEvent = !store.selectedEvent
+    console.log('EventFormImproved passing to EventAttendeeManagement:', {
+      initialAttendees: values.attendees,
+      attendeesCount: values.attendees?.length || 0,
+      isNewEvent,
+      selectedEvent: store.selectedEvent,
+      selectedEventId: store.selectedEvent?.eventId,
+      selectedEventAttendees: store.selectedEvent?.eventAttendees
+    })
+
     sections.push({
       title: 'Attendees & Pricing',
       component: (
@@ -58,10 +69,11 @@ const EventForm: React.FC<EventFormProps> = ({
           eventType={values.isRecurring ? 'recurring' : 'singular'}
           students={students}
           isReadOnly={isReadOnly}
-          isNewEvent={!store.selectedEvent}
+          isNewEvent={isNewEvent}
           initialAttendees={values.attendees}
           defaultPrice={values.price}
           onAttendeesChange={attendees => {
+            console.log('EventFormImproved: Attendees changed:', attendees)
             setValues(prev => ({ ...prev, attendees }))
           }}
         />

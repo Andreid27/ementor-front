@@ -67,6 +67,17 @@ const EventAttendeeManagement: React.FC<EventAttendeeManagementProps> = ({
   const initialAttendeeIds = eventAttendeeDTOsToStudentIds(initialAttendees)
   const initialAttendeePrices = extractAttendeePrices(initialAttendees)
 
+  // Debug: Log what attendees we received
+  console.log('EventAttendeeManagement received:', {
+    initialAttendees,
+    initialAttendeeIds,
+    initialAttendeePrices,
+    isNewEvent,
+    eventId,
+    seriesId,
+    occurrenceId
+  })
+
   // Use the attendee management hook
   const {
     attendees,
@@ -100,35 +111,36 @@ const EventAttendeeManagement: React.FC<EventAttendeeManagementProps> = ({
   })
 
   // Sync changes with parent component - Convert to EventAttendeeDTO format
+  const prevAttendeesRef = React.useRef<EventAttendeeDTO[]>([])
   React.useEffect(() => {
     const currentAttendees = studentsToEventAttendeeDTOs(
       students.filter(student => attendeeIds.includes(student.userId || student.id)),
       attendeePrices,
       defaultPrice
     )
-    onAttendeesChange?.(currentAttendees)
-  }, [attendeeIds, attendeePrices, students, defaultPrice, onAttendeesChange])
 
-  // Auto-save attendee prices for existing events
+    // Only call onAttendeesChange if attendees actually changed
+    const attendeesChanged =
+      currentAttendees.length !== prevAttendeesRef.current.length ||
+      currentAttendees.some(
+        (attendee, index) =>
+          attendee.attendeeId !== prevAttendeesRef.current[index]?.attendeeId ||
+          attendee.customPrice !== prevAttendeesRef.current[index]?.customPrice
+      )
+
+    if (attendeesChanged) {
+      console.log('EventAttendeeManagement: Attendees changed:', currentAttendees)
+      prevAttendeesRef.current = currentAttendees
+      onAttendeesChange?.(currentAttendees)
+    }
+  }, [attendeeIds, attendeePrices, students, defaultPrice])
+
+  // ⚠️ DEPRECATED: Auto-save functionality disabled
+  // We now include all attendee data in the main event DTO, so no need for separate API calls
   React.useEffect(() => {
     if (!isNewEvent && !isReadOnly && attendeePrices && Object.keys(attendeePrices).length > 0) {
-      const autoSavePrices = async () => {
-        try {
-          if (seriesId) {
-            await saveAttendeePricesForSeries(seriesId, attendeePrices)
-          } else if (occurrenceId) {
-            await saveAttendeePricesForOccurrence(occurrenceId, attendeePrices)
-          } else if (eventId) {
-            await saveAttendeePricesForSingularEvent(eventId, attendeePrices)
-          }
-        } catch (error) {
-          console.error('Failed to auto-save attendee prices:', error)
-        }
-      }
-
-      // Debounce the auto-save to avoid too many API calls
-      const timeoutId = setTimeout(autoSavePrices, 1000)
-      return () => clearTimeout(timeoutId)
+      // Auto-save is disabled - all attendee data should be included in main event DTO
+      console.log('Auto-save disabled: attendee data included in main event DTO')
     }
   }, [
     attendeePrices,

@@ -7,6 +7,9 @@
 
 import { EventAttendeeDTO } from 'src/generated/profile-service'
 
+// Add import for EventAttendee from API
+import type { EventAttendee } from 'src/generated/profile-service/api'
+
 export interface StudentData {
   id?: string
   userId?: string
@@ -313,4 +316,29 @@ export const calculateTotalRevenue = (
     const price = attendee.hasCustomPricing && attendee.customPrice !== undefined ? attendee.customPrice : defaultPrice
     return total + price
   }, 0)
+}
+
+/**
+ * Converts EventAttendee (from API) to EventAttendeeDTO (for form)
+ */
+export const eventAttendeeToEventAttendeeDTO = (attendee: EventAttendee): EventAttendeeDTO => {
+  return {
+    id: attendee.id,
+    attendeeId: attendee.attendeeId,
+    hasCustomPricing: attendee.hasCustomPricing,
+    customPrice: attendee.customPrice,
+    expected: attendee.expected,
+    attended: attendee.attended
+  }
+}
+
+/**
+ * Converts an array of EventAttendees (from API) to EventAttendeeDTOs (for form)
+ */
+export const eventAttendeesToEventAttendeeDTOs = (attendees: EventAttendee[]): EventAttendeeDTO[] => {
+  if (!attendees || !Array.isArray(attendees)) {
+    return []
+  }
+
+  return attendees.map(eventAttendeeToEventAttendeeDTO)
 }

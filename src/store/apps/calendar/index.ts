@@ -17,6 +17,23 @@ import { extractAttendeePrices, eventAttendeeDTOsToStudentIds } from 'src/views/
 // ** Types
 import { profileServiceClient } from 'src/services'
 
+/**
+ * ✅ CORRECT API USAGE:
+ *
+ * All event creation and updates should send complete DTO objects that include:
+ * - Basic event info (title, description, startTime, duration, price, meetingLink)
+ * - Complete attendee information with custom pricing (eventAttendees array)
+ *
+ * Use RecurringSeriesDTO or SingularEventDTO/EventOccurrenceDTO structures.
+ * DO NOT make separate API calls to set individual attendee prices during creation/update.
+ *
+ * ❌ WRONG: Create event + separate pricing API calls
+ * ✅ RIGHT: Send complete DTO with all attendee data including pricing
+ *
+ * NOTE: Individual pricing endpoints (setEventOccurrenceAttendeePrice, etc.)
+ * are still used by AttendeePricingManager for managing existing events.
+ */
+
 // ** Types for the store
 export interface CalendarState {
   events: EventOccurrenceDTO[]
@@ -28,45 +45,20 @@ export interface CalendarState {
   error: string | null
 }
 
-// ** Helper functions for setting attendee prices
-const setAttendeePricesForSeries = async (seriesId: string, attendeePrices: { [key: string]: number }) => {
-  const promises = Object.entries(attendeePrices).map(([attendeeId, price]) =>
-    profileServiceClient.events.setRecurringSeriesAttendeePrice({
-      seriesId,
-      attendeeId,
-      price
-    })
-  )
-  await Promise.all(promises)
-}
-
-const setAttendeePricesForSingularEvent = async (eventId: string, attendeePrices: { [key: string]: number }) => {
-  const promises = Object.entries(attendeePrices).map(([attendeeId, price]) =>
-    profileServiceClient.events.setSingularEventAttendeePrice({
-      eventId,
-      attendeeId,
-      price
-    })
-  )
-  await Promise.all(promises)
-}
-
-const setAttendeePricesForOccurrence = async (occurrenceId: string, attendeePrices: { [key: string]: number }) => {
-  const promises = Object.entries(attendeePrices).map(([attendeeId, price]) =>
-    profileServiceClient.events.setEventOccurrenceAttendeePrice({
-      occurrenceId,
-      attendeeId,
-      price
-    })
-  )
-  await Promise.all(promises)
-}
-
 // ** Fetch Events
 export const fetchEvents = createAsyncThunk<EventOccurrenceDTO[]>('appCalendar/fetchEvents', async () => {
   const response = await profileServiceClient.events.getConsolidatedEvents({
     startDate: new Date().toISOString(),
     endDate: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString()
+  })
+
+  // Debug: Log the actual API response structure to understand eventAttendees
+  console.log('fetchEvents API response:', {
+    totalEvents: response.data.length,
+    sampleEvent: response.data[0],
+    sampleEventAttendees: response.data[0]?.eventAttendees,
+    eventAttendeesType: typeof response.data[0]?.eventAttendees,
+    eventAttendeesLength: response.data[0]?.eventAttendees?.length
   })
 
   return response.data
@@ -77,24 +69,21 @@ export const addEvent = createAsyncThunk<any, any>('appCalendar/addEvent', async
   console.log('Adding event:', event)
 
   if (event.isRecurring && event.recurringSeriesDTO) {
-    // Create recurring series
-    const response = await profileServiceClient.events.createRecurringSeries({
-      recurringSeriesDTO: event.recurringSeriesDTO
-    })
-
-    // If attendees are provided, set their prices after creation
-    if (event.attendees && event.attendees.length > 0) {
-      const seriesId = response.data.id
-      if (seriesId) {
-        const attendeePrices = extractAttendeePrices(event.attendees)
-        await setAttendeePricesForSeries(seriesId, attendeePrices)
-      }
+    // Create recurring series with complete attendee information
+    const recurringSeriesDTO: RecurringSeriesDTO = {
+      ...event.recurringSeriesDTO,
+      // Ensure attendees are included with complete pricing information
+      eventAttendees: event.attendees || event.extendedProps?.attendees || []
     }
+
+    const response = await profileServiceClient.events.createRecurringSeries({
+      recurringSeriesDTO
+    })
 
     await dispatch(fetchEvents())
     return response.data
   } else {
-    // Create singular event - convert to SingularEventDTO format
+    // Create singular event with complete attendee information
     const singularEventDTO: SingularEventDTO = {
       title: event.title,
       description: event.extendedProps?.description,
@@ -106,23 +95,13 @@ export const addEvent = createAsyncThunk<any, any>('appCalendar/addEvent', async
       },
       price: event.extendedProps?.price || 0,
       meetingLink: event.extendedProps?.meetingLink,
-      eventAttendees: event.extendedProps?.attendees || []
+      // Include complete attendee information with pricing in the main payload
+      eventAttendees: event.extendedProps?.attendees || event.attendees || []
     }
 
     const response = await profileServiceClient.events.createSingularEvent({
       singularEventDTO
     })
-
-    // If attendees are provided with custom prices, set them after creation
-    if (event.extendedProps?.attendees && event.extendedProps.attendees.length > 0) {
-      const eventId = response.data.id
-      if (eventId) {
-        const attendeePrices = extractAttendeePrices(event.extendedProps.attendees)
-        if (Object.keys(attendeePrices).length > 0) {
-          await setAttendeePricesForSingularEvent(eventId, attendeePrices)
-        }
-      }
-    }
 
     await dispatch(fetchEvents())
     return response.data
@@ -132,24 +111,22 @@ export const addEvent = createAsyncThunk<any, any>('appCalendar/addEvent', async
 // ** Update Event
 export const updateEvent = createAsyncThunk<any, any>('appCalendar/updateEvent', async (event: any, { dispatch }) => {
   if (event.isRecurring && event.recurringSeriesDTO) {
-    // Update recurring series using the new endpoint
+    // Update recurring series with complete attendee information
+    const recurringSeriesDTO: RecurringSeriesDTO = {
+      ...event.recurringSeriesDTO,
+      // Ensure attendees are included with complete pricing information
+      eventAttendees: event.attendees || event.extendedProps?.attendees || []
+    }
+
     const response = await profileServiceClient.events.updateRecurringSeries({
       seriesId: event.id,
-      recurringSeriesDTO: event.recurringSeriesDTO
+      recurringSeriesDTO
     })
-
-    // Update attendee prices if provided
-    if (event.attendees && event.attendees.length > 0) {
-      const attendeePrices = extractAttendeePrices(event.attendees)
-      if (Object.keys(attendeePrices).length > 0) {
-        await setAttendeePricesForSeries(event.id, attendeePrices)
-      }
-    }
 
     await dispatch(fetchEvents())
     return response.data
   } else {
-    // Update singular event
+    // Update singular event with complete attendee information
     const singularEventDTO: SingularEventDTO = {
       title: event.title,
       description: event.extendedProps?.description,
@@ -161,21 +138,14 @@ export const updateEvent = createAsyncThunk<any, any>('appCalendar/updateEvent',
       },
       price: event.extendedProps?.price || 0,
       meetingLink: event.extendedProps?.meetingLink,
-      eventAttendees: event.extendedProps?.attendees || []
+      // Include complete attendee information with pricing in the main payload
+      eventAttendees: event.extendedProps?.attendees || event.attendees || []
     }
 
     const response = await profileServiceClient.events.updateSingularEvent({
       eventId: event.id,
       singularEventDTO
     })
-
-    // Update attendee prices if provided
-    if (event.extendedProps?.attendees && event.extendedProps.attendees.length > 0) {
-      const attendeePrices = extractAttendeePrices(event.extendedProps.attendees)
-      if (Object.keys(attendeePrices).length > 0) {
-        await setAttendeePricesForSingularEvent(event.id, attendeePrices)
-      }
-    }
 
     await dispatch(fetchEvents())
     return response.data
@@ -392,6 +362,11 @@ export const appCalendarSlice = createSlice({
   initialState,
   reducers: {
     handleSelectEvent: (state, action) => {
+      console.log('handleSelectEvent called with:', {
+        payload: action.payload,
+        eventAttendees: action.payload?.eventAttendees,
+        attendeesCount: action.payload?.eventAttendees?.length || 0
+      })
       state.selectedEvent = action.payload
     },
     setLoading: (state, action) => {
@@ -413,6 +388,19 @@ export const appCalendarSlice = createSlice({
     builder.addCase(fetchEvents.fulfilled, (state, action) => {
       state.events = action.payload
       state.loading = false
+      
+      // Update selectedEvent with fresh data if it exists in the new events
+      if (state.selectedEvent) {
+        const selectedEventId = (state.selectedEvent as any).id || (state.selectedEvent as any).eventId
+        const updatedEvent = action.payload.find(event => event.id === selectedEventId)
+        if (updatedEvent) {
+          console.log('Updating selectedEvent with fresh data:', {
+            oldEventAttendees: (state.selectedEvent as any).eventAttendees?.length || 0,
+            newEventAttendees: updatedEvent.eventAttendees?.length || 0
+          })
+          state.selectedEvent = updatedEvent
+        }
+      }
     })
     builder.addCase(fetchEvents.rejected, (state, action) => {
       state.loading = false

@@ -1,11 +1,12 @@
 // ** React Imports
-import { useState, useCallback } from 'react'
+import React, { useState, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 
 // ** Types
 import { CalendarApi } from '@fullcalendar/core'
 import { RecurringSeriesDTO } from 'src/generated/profile-service'
 import { EventFormValues, FormData, defaultEventFormState } from '../types'
+import { eventAttendeesToEventAttendeeDTOs } from '../utils/eventAttendeeUtils'
 
 // ** Hooks
 import { useAuth } from 'src/hooks/useAuth'
@@ -120,6 +121,15 @@ export const useEventForm = ({
   const resetToStoredValues = useCallback(() => {
     if (store.selectedEvent !== null) {
       const event = store.selectedEvent as any
+
+      // Debug: Log the event attendees in resetToStoredValues
+      console.log('resetToStoredValues called with event:', {
+        eventId: event.id,
+        eventAttendees: event.eventAttendees,
+        attendeesCount: event.eventAttendees?.length || 0,
+        eventAttendeesType: typeof event.eventAttendees
+      })
+
       setValue('title', event.title || event.seriesTitle || '')
 
       const startDate = event.start
@@ -134,6 +144,14 @@ export const useEventForm = ({
         ? new Date(event.effectiveEndTime)
         : new Date(startDate.getTime() + 60 * 60 * 1000)
 
+      // Debug: Log what we're converting
+      const convertedAttendees = eventAttendeesToEventAttendeeDTOs(event.eventAttendees || [])
+      console.log('resetToStoredValues converted attendees:', {
+        originalAttendees: event.eventAttendees,
+        convertedAttendees,
+        convertedCount: convertedAttendees.length
+      })
+
       setValues({
         isRecurring: false,
         title: event.title || event.seriesTitle || '',
@@ -146,7 +164,8 @@ export const useEventForm = ({
         pattern: 'WEEKLY',
         durationHours: 1,
         durationMinutes: 0,
-        attendees: [] // Use EventAttendeeDTO array instead of expectedAttendees
+        // Convert API eventAttendees to EventAttendeeDTO format for the form
+        attendees: convertedAttendees
       })
     }
   }, [setValue, store.selectedEvent])

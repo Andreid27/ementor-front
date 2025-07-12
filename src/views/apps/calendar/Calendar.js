@@ -93,7 +93,9 @@ const Calendar = props => {
             missed: eventData.missed,
             rescheduled: eventData.rescheduled,
             recurringSeriesId: eventData.recurringSeriesId,
-            meetingLink: eventData.meetingLink // Store meeting link in extendedProps instead of url
+            meetingLink: eventData.meetingLink, // Store meeting link in extendedProps instead of url
+            // Pass the original EventOccurrenceDTO for direct access to all data including eventAttendees
+            originalEventDTO: eventData
           }
         }
 
@@ -165,6 +167,18 @@ const Calendar = props => {
         // Prevent default URL navigation
         jsEvent.preventDefault()
 
+        // Debug: Log the original FullCalendar event to understand its structure
+        console.log('FullCalendar eventClick - original event:', {
+          clickedEvent,
+          id: clickedEvent.id,
+          title: clickedEvent.title,
+          extendedProps: clickedEvent.extendedProps,
+          allExtendedProps: Object.keys(clickedEvent.extendedProps || {}),
+          eventAttendees: clickedEvent.extendedProps?.eventAttendees,
+          attendees: clickedEvent.extendedProps?.attendees,
+          guests: clickedEvent.extendedProps?.guests
+        })
+
         // Convert FullCalendar event back to expected format for the sidebar
         const convertedEvent = {
           id: clickedEvent.id,
@@ -184,8 +198,26 @@ const Calendar = props => {
           },
 
           // Copy all extendedProps to top level for compatibility
-          ...clickedEvent.extendedProps
+          ...clickedEvent.extendedProps,
+
+          // Explicitly preserve attendee data from multiple sources
+          eventAttendees:
+            clickedEvent.extendedProps?.eventAttendees ||
+            clickedEvent.extendedProps?.attendees ||
+            clickedEvent.extendedProps?.guests ||
+            [],
+          attendees:
+            clickedEvent.extendedProps?.attendees ||
+            clickedEvent.extendedProps?.eventAttendees ||
+            clickedEvent.extendedProps?.guests ||
+            []
         }
+
+        console.log('FullCalendar eventClick - converted event:', {
+          convertedEvent,
+          eventAttendees: convertedEvent.eventAttendees,
+          attendees: convertedEvent.attendees
+        })
 
         dispatch(handleSelectEvent(convertedEvent))
         handleAddEventSidebarToggle()
