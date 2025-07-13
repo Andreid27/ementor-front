@@ -178,10 +178,15 @@ const AddEventSidebar: React.FC<AddEventSidebarProps> = props => {
                 sx={{
                   display: 'flex',
                   justifyContent: 'center',
-                  mt: 3,
+                  mt: 2,
                   pt: 2,
                   borderTop: '1px solid',
-                  borderColor: 'divider'
+                  borderColor: 'divider',
+                  backgroundColor: 'background.paper',
+                  position: 'sticky',
+                  bottom: 0,
+                  mx: -4,
+                  px: 4
                 }}
               >
                 <SidebarFooter

@@ -5,15 +5,21 @@ import React, { forwardRef } from 'react'
 import Box from '@mui/material/Box'
 import MenuItem from '@mui/material/MenuItem'
 import Typography from '@mui/material/Typography'
+import Card from '@mui/material/Card'
+import CardContent from '@mui/material/CardContent'
+import Chip from '@mui/material/Chip'
+import InputAdornment from '@mui/material/InputAdornment'
+
+// ** Icon Imports
+import RepeatIcon from '@mui/icons-material/Repeat'
+import EventIcon from '@mui/icons-material/Event'
+import ScheduleIcon from '@mui/icons-material/Schedule'
 
 // ** Third Party Imports
 import DatePicker from 'react-datepicker'
 
 // ** Custom Component Import
 import CustomTextField from 'src/@core/components/mui/text-field'
-
-// ** Icon Imports
-import Icon from 'src/@core/components/icon'
 
 // ** Types
 import { PickersComponentProps } from '../types'
@@ -37,83 +43,98 @@ const RecurringEventFields: React.FC<RecurringEventFieldsProps> = ({ values, set
 
   PickersComponent.displayName = 'PickersComponent'
 
-  const handleDurationChange =
-    (field: 'durationHours' | 'durationMinutes') => (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = parseInt(e.target.value) || 0
-      setValues({ ...values, [field]: value })
+  const getPatternDescription = (pattern: string) => {
+    switch (pattern) {
+      case 'DAILY':
+        return 'Event repeats every day'
+      case 'WEEKLY':
+        return 'Event repeats every week'
+      case 'BIWEEKLY':
+        return 'Event repeats every 2 weeks'
+      case 'MONTHLY':
+        return 'Event repeats every month'
+      default:
+        return 'Select a recurrence pattern'
     }
+  }
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-      {/* Recurrence Pattern */}
-      {(() => {
-        const TextField = CustomTextField as any
+      {/* Recurrence Pattern Card */}
+      <Card sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
+        <CardContent sx={{ p: 3, '&:last-child': { pb: 3 } }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+            <RepeatIcon color='primary' fontSize='small' />
+            <Typography variant='subtitle2' sx={{ fontWeight: 600, color: 'text.primary' }}>
+              Recurrence Pattern
+            </Typography>
+          </Box>
 
-        return (
-          <TextField
-            select
-            fullWidth
-            label='Recurrence Pattern'
-            value={values.pattern}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setValues({ ...values, pattern: e.target.value })}
-            InputProps={{ readOnly: isReadOnly }}
-          >
-            {Object.entries(RECURRENCE_PATTERNS).map(([key, value]) => (
-              <MenuItem key={key} value={value}>
-                {value}
-              </MenuItem>
-            ))}
-          </TextField>
-        )
-      })()}
+          {(() => {
+            const TextField = CustomTextField as any
 
-      {/* Duration Fields */}
-      <Box sx={{ display: 'flex', gap: 2 }}>
-        {(() => {
-          const TextField = CustomTextField as any
-
-          return (
-            <>
+            return (
               <TextField
-                type='number'
-                label='Hours'
-                value={values.durationHours}
-                onChange={handleDurationChange('durationHours')}
+                select
+                fullWidth
+                label='Pattern'
+                value={values.pattern}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setValues({ ...values, pattern: e.target.value })}
                 InputProps={{
                   readOnly: isReadOnly,
-                  inputProps: { min: 0, max: 23 }
+                  startAdornment: (
+                    <InputAdornment position='start'>
+                      <ScheduleIcon fontSize='small' color='action' />
+                    </InputAdornment>
+                  )
                 }}
-                sx={{ flex: 1 }}
-              />
-              <TextField
-                type='number'
-                label='Minutes'
-                value={values.durationMinutes}
-                onChange={handleDurationChange('durationMinutes')}
-                InputProps={{
-                  readOnly: isReadOnly,
-                  inputProps: { min: 0, max: 59 }
-                }}
-                sx={{ flex: 1 }}
-              />
-            </>
-          )
-        })()}
-      </Box>
+                helperText={getPatternDescription(values.pattern)}
+                size='small'
+              >
+                {Object.entries(RECURRENCE_PATTERNS).map(([key, value]) => (
+                  <MenuItem key={key} value={value}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <RepeatIcon fontSize='small' color='action' />
+                      {value}
+                    </Box>
+                  </MenuItem>
+                ))}
+              </TextField>
+            )
+          })()}
+        </CardContent>
+      </Card>
 
-      {/* End Recurrence Date */}
-      <Box>
-        <DatePicker
-          selected={values.endRecurrence}
-          showTimeSelect={false}
-          dateFormat='MM/dd/yyyy'
-          onChange={(date: Date | null) => setValues({ ...values, endRecurrence: date })}
-          placeholderText='End Recurrence (Optional)'
-          customInput={<PickersComponent label='End Recurrence' />}
-          disabled={isReadOnly}
-          isClearable
-        />
-      </Box>
+      {/* End Date Card */}
+      <Card sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
+        <CardContent sx={{ p: 3, '&:last-child': { pb: 3 } }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+            <EventIcon color='primary' fontSize='small' />
+            <Typography variant='subtitle2' sx={{ fontWeight: 600, color: 'text.primary' }}>
+              End Recurrence
+            </Typography>
+            <Chip label='Optional' size='small' variant='outlined' color='default' sx={{ ml: 'auto' }} />
+          </Box>
+
+          <DatePicker
+            selected={values.endRecurrence}
+            showTimeSelect={false}
+            dateFormat='MM/dd/yyyy'
+            onChange={(date: Date | null) => setValues({ ...values, endRecurrence: date })}
+            placeholderText='Select end date (leave empty for indefinite)'
+            customInput={<PickersComponent label='End Date' />}
+            disabled={isReadOnly}
+            isClearable
+            minDate={new Date()}
+          />
+
+          <Typography variant='caption' color='text.secondary' sx={{ mt: 1, display: 'block' }}>
+            {values.endRecurrence
+              ? `Recurring events will end on ${values.endRecurrence.toLocaleDateString()}`
+              : 'If no end date is set, events will continue indefinitely'}
+          </Typography>
+        </CardContent>
+      </Card>
     </Box>
   )
 }

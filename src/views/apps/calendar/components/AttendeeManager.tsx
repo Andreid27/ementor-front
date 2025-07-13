@@ -107,8 +107,7 @@ const AttendeeManager: React.FC<AttendeeManagerProps> = ({
   const [searchTerm, setSearchTerm] = useState('')
   const [expandedSections, setExpandedSections] = useState({
     currentAttendees: true,
-    availableStudents: false,
-    statistics: true
+    availableStudents: false
   })
 
   // Enrich attendees with student data for display
@@ -139,25 +138,6 @@ const AttendeeManager: React.FC<AttendeeManagerProps> = ({
       return name.includes(term) || email.includes(term)
     })
   }, [availableStudents, searchTerm])
-
-  // Calculate statistics
-  const statistics = useMemo(() => {
-    const safeAttendees = attendees || []
-    const expectedCount = getExpectedCount(safeAttendees)
-    const attendedCount = getAttendedCount(safeAttendees)
-    const totalRevenue = calculateTotalRevenue(safeAttendees, defaultPrice)
-    const expectedAttendees = getExpectedAttendees(safeAttendees)
-    const attendedAttendees = getAttendedAttendees(safeAttendees)
-
-    return {
-      total: safeAttendees.length,
-      expected: expectedCount,
-      attended: attendedCount,
-      expectedRevenue: calculateTotalRevenue(expectedAttendees, defaultPrice),
-      actualRevenue: calculateTotalRevenue(attendedAttendees, defaultPrice),
-      totalRevenue
-    }
-  }, [attendees, defaultPrice])
 
   // Helper functions
   const getStudentDisplayName = (student: StudentData) => {
@@ -384,109 +364,39 @@ const AttendeeManager: React.FC<AttendeeManagerProps> = ({
   }
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      {/* Statistics */}
-      {showStatistics && (
-        <Card>
-          <CardContent>
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                cursor: 'pointer'
-              }}
-              onClick={() => toggleSection('statistics')}
-            >
-              <Typography variant='h6' sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <GroupIcon />
-                Attendee Statistics
-              </Typography>
-              {expandedSections.statistics ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-            </Box>
-
-            <Collapse in={expandedSections.statistics}>
-              <Box sx={{ mt: 2 }}>
-                <Grid container spacing={2}>
-                  <Grid item xs={6} sm={3}>
-                    <Chip
-                      label={`${statistics.total} Total`}
-                      color='primary'
-                      icon={<PersonIcon />}
-                      sx={{ width: '100%' }}
-                    />
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Chip
-                      label={`${statistics.expected} Expected`}
-                      color='default'
-                      icon={<EventAvailableIcon />}
-                      sx={{ width: '100%' }}
-                    />
-                  </Grid>
-                  {showAttendanceTracking && (
-                    <Grid item xs={6} sm={3}>
-                      <Chip
-                        label={`${statistics.attended} Attended`}
-                        color='success'
-                        icon={<CheckCircleIcon />}
-                        sx={{ width: '100%' }}
-                      />
-                    </Grid>
-                  )}
-                  {showPricing && (
-                    <Grid item xs={6} sm={3}>
-                      <Chip
-                        label={`${formatCurrency(statistics.totalRevenue)} Revenue`}
-                        color='secondary'
-                        icon={<AttachMoneyIcon />}
-                        sx={{ width: '100%' }}
-                      />
-                    </Grid>
-                  )}
-                </Grid>
-
-                {showPricing && showAttendanceTracking && (
-                  <Box sx={{ mt: 2 }}>
-                    <Typography variant='body2' color='textSecondary'>
-                      Expected Revenue: {formatCurrency(statistics.expectedRevenue)} | Actual Revenue:{' '}
-                      {formatCurrency(statistics.actualRevenue)}
-                    </Typography>
-                  </Box>
-                )}
-              </Box>
-            </Collapse>
-          </CardContent>
-        </Card>
-      )}
-
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
       {/* Current Attendees */}
-      <Paper sx={{ overflow: 'hidden' }}>
+      <Paper sx={{ overflow: 'hidden', border: '1px solid', borderColor: 'divider' }}>
         <Box
           sx={{
             p: 2,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            bgcolor: 'background.default'
           }}
           onClick={() => toggleSection('currentAttendees')}
         >
-          <Typography variant='h6' sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Badge badgeContent={(attendees || []).length} color='primary'>
-              <GroupIcon />
+          <Typography variant='subtitle1' sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 600 }}>
+            <Badge badgeContent={(attendees || []).length} color='primary' max={99}>
+              <GroupIcon color='primary' />
             </Badge>
             Current Attendees
           </Typography>
-          {expandedSections.currentAttendees ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+          {expandedSections.currentAttendees ? <ExpandLessIcon color='action' /> : <ExpandMoreIcon color='action' />}
         </Box>
 
         <Collapse in={expandedSections.currentAttendees}>
           <Divider />
-          <List sx={{ maxHeight: maxHeight / 2, overflowY: 'auto' }}>
+          <List sx={{ maxHeight: maxHeight / 2, overflowY: 'auto', p: 0 }}>
             {(attendees || []).length === 0 ? (
-              <ListItem>
-                <ListItemText primary='No attendees selected' secondary='Add students from the available list below' />
+              <ListItem sx={{ py: 3 }}>
+                <ListItemText
+                  primary='No attendees selected'
+                  secondary='Add students from the available list below'
+                  sx={{ textAlign: 'center' }}
+                />
               </ListItem>
             ) : (
               (attendees || []).map((attendee, index) => renderAttendeeItem(attendee, index))
@@ -497,50 +407,53 @@ const AttendeeManager: React.FC<AttendeeManagerProps> = ({
 
       {/* Available Students */}
       {!isReadOnly && (
-        <Paper sx={{ overflow: 'hidden' }}>
+        <Paper sx={{ overflow: 'hidden', border: '1px solid', borderColor: 'divider' }}>
           <Box
             sx={{
               p: 2,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              bgcolor: 'background.default'
             }}
             onClick={() => toggleSection('availableStudents')}
           >
-            <Typography variant='h6' sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Badge badgeContent={availableStudents.length} color='secondary'>
-                <PersonIcon />
+            <Typography variant='subtitle1' sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 600 }}>
+              <Badge badgeContent={availableStudents.length} color='secondary' max={99}>
+                <PersonIcon color='action' />
               </Badge>
               Available Students
             </Typography>
-            {expandedSections.availableStudents ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+            {expandedSections.availableStudents ? <ExpandLessIcon color='action' /> : <ExpandMoreIcon color='action' />}
           </Box>
 
           <Collapse in={expandedSections.availableStudents}>
             <Divider />
-            <Box sx={{ p: 2 }}>
+            <Box sx={{ p: 2, pb: 1 }}>
               <TextField
                 fullWidth
                 size='small'
-                placeholder='Search students...'
+                placeholder='Search students by name or email...'
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position='start'>
-                      <SearchIcon />
+                      <SearchIcon fontSize='small' />
                     </InputAdornment>
                   )
                 }}
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
               />
             </Box>
-            <List sx={{ maxHeight: maxHeight / 2, overflowY: 'auto' }}>
+            <List sx={{ maxHeight: maxHeight / 2, overflowY: 'auto', p: 0 }}>
               {filteredAvailableStudents.length === 0 ? (
-                <ListItem>
+                <ListItem sx={{ py: 3 }}>
                   <ListItemText
                     primary='No students available'
                     secondary={searchTerm ? 'No students match your search' : 'All students are already attendees'}
+                    sx={{ textAlign: 'center' }}
                   />
                 </ListItem>
               ) : (

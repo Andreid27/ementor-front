@@ -48,7 +48,9 @@ export const useEventActions = ({
           attendeeId: a.attendeeId,
           expected: a.expected,
           hasCustomPricing: a.hasCustomPricing,
-          customPrice: a.customPrice
+          customPrice: a.customPrice,
+          hasCustomPriceProperty: 'customPrice' in a,
+          allProperties: Object.keys(a)
         }))
       })
 
@@ -69,11 +71,17 @@ export const useEventActions = ({
 
         // Clean up attendee data: remove customPrice if hasCustomPricing is false
         const cleanedAttendees = values.attendees?.map(attendee => {
-          const { customPrice, ...baseAttendee } = attendee
+          // Create base attendee object with only the required fields
+          const baseAttendee = {
+            attendeeId: attendee.attendeeId,
+            expected: attendee.expected,
+            hasCustomPricing: attendee.hasCustomPricing,
+            attended: attendee.attended
+          }
 
           // Only include customPrice if hasCustomPricing is true
-          if (attendee.hasCustomPricing) {
-            return { ...baseAttendee, customPrice }
+          if (attendee.hasCustomPricing && attendee.customPrice !== undefined) {
+            return { ...baseAttendee, customPrice: attendee.customPrice }
           }
 
           return baseAttendee
@@ -90,11 +98,12 @@ export const useEventActions = ({
           payload: eventPayload,
           attendeesWithPricing: values.attendees?.filter(a => a.hasCustomPricing),
           fullPayloadStructure: JSON.stringify(eventPayload, null, 2),
-          attendeesInPayload: eventPayload.attendees?.map(a => ({
+          cleanedAttendeesDebug: eventPayload.attendees?.map(a => ({
             attendeeId: a.attendeeId,
             expected: a.expected,
             hasCustomPricing: a.hasCustomPricing,
-            customPrice: a.hasCustomPricing ? (a as any).customPrice : 'NOT_INCLUDED',
+            customPrice: (a as any).customPrice || 'NOT_INCLUDED',
+            hasCustomPriceField: 'customPrice' in a,
             constraintViolation: a.hasCustomPricing && !a.expected
           }))
         })
@@ -123,11 +132,17 @@ export const useEventActions = ({
       } else {
         // Clean up attendee data: remove customPrice if hasCustomPricing is false
         const cleanedAttendees = values.attendees?.map(attendee => {
-          const { customPrice, ...baseAttendee } = attendee
+          // Create base attendee object with only the required fields
+          const baseAttendee = {
+            attendeeId: attendee.attendeeId,
+            expected: attendee.expected,
+            hasCustomPricing: attendee.hasCustomPricing,
+            attended: attendee.attended
+          }
 
           // Only include customPrice if hasCustomPricing is true
-          if (attendee.hasCustomPricing) {
-            return { ...baseAttendee, customPrice }
+          if (attendee.hasCustomPricing && attendee.customPrice !== undefined) {
+            return { ...baseAttendee, customPrice: attendee.customPrice }
           }
 
           return baseAttendee

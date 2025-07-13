@@ -96,7 +96,7 @@ const AppCalendar = () => {
 
   // ** Vars
   const leftSidebarWidth = 300
-  const addEventSidebarWidth = 600
+  const addEventSidebarWidth = 800
   const { skin, direction } = settings
   const mdAbove = useMediaQuery((theme: Theme) => theme.breakpoints.up('md'))
 

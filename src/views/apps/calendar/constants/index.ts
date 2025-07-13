@@ -26,7 +26,11 @@ export const DRAWER_STYLES = {
 }
 
 export const SIDEBAR_BODY_STYLES = {
-  p: (theme: any) => theme.spacing(0, 6, 6)
+  p: (theme: any) => theme.spacing(3, 4, 4),
+  height: '100%',
+  display: 'flex',
+  flexDirection: 'column',
+  overflow: 'auto'
 }
 
 export const USER_ROLES = {

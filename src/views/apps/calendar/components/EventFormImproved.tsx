@@ -4,6 +4,15 @@ import React, { useMemo } from 'react'
 // ** MUI Imports
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
+import Chip from '@mui/material/Chip'
+
+// ** Icons
+import PersonIcon from '@mui/icons-material/Person'
+import EventAvailableIcon from '@mui/icons-material/EventAvailable'
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney'
+import RepeatIcon from '@mui/icons-material/Repeat'
+import AccessTimeIcon from '@mui/icons-material/AccessTime'
+import EventIcon from '@mui/icons-material/Event'
 
 // ** Components
 import EventFormFields from './EventFormFields'
@@ -13,6 +22,7 @@ import EditingScopeToggle from './EditingScopeToggle'
 
 // ** Utils
 import { shouldShowScopeToggle } from '../utils/eventTypeUtils'
+import { calculateTotalRevenue, getExpectedCount } from '../utils/eventAttendeeUtils'
 
 // ** Types
 import { EventFormProps } from '../types'
@@ -33,6 +43,15 @@ const EventForm: React.FC<EventFormProps> = ({
   const isReadOnly = !isEditMode && selectedEvent !== null
 
   const showScopeToggle = eventTypeInfo && shouldShowScopeToggle(eventTypeInfo) && isEditMode
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount)
+  }
 
   const formSections = useMemo(() => {
     const sections = [
@@ -78,11 +97,28 @@ const EventForm: React.FC<EventFormProps> = ({
           eventType={values.isRecurring ? 'recurring' : 'singular'}
           showPricing={true}
           showAttendanceTracking={false}
-          showStatistics={true}
+          showStatistics={false}
           isReadOnly={isReadOnly}
           isNewEvent={isNewEvent}
         />
-      )
+      ),
+      chips: [
+        {
+          label: `${attendees.length} Total`,
+          color: 'primary' as const,
+          icon: <PersonIcon fontSize='small' />
+        },
+        {
+          label: `${getExpectedCount(attendees)} Expected`,
+          color: 'default' as const,
+          icon: <EventAvailableIcon fontSize='small' />
+        },
+        {
+          label: formatCurrency(calculateTotalRevenue(attendees, values.price)),
+          color: 'secondary' as const,
+          icon: <AttachMoneyIcon fontSize='small' />
+        }
+      ]
     })
 
     // Add recurring settings if needed
@@ -91,7 +127,29 @@ const EventForm: React.FC<EventFormProps> = ({
         title: 'Recurring Settings',
         component: (
           <RecurringEventFields values={values} setValues={setValues} isReadOnly={isReadOnly} students={students} />
-        )
+        ),
+        chips: [
+          {
+            label: values.pattern || 'Not set',
+            color: values.pattern ? 'primary' : ('default' as const),
+            icon: <RepeatIcon fontSize='small' />
+          },
+          ...(values.endRecurrence
+            ? [
+                {
+                  label: 'Has end date',
+                  color: 'success' as const,
+                  icon: <EventIcon fontSize='small' />
+                }
+              ]
+            : [
+                {
+                  label: 'Indefinite',
+                  color: 'warning' as const,
+                  icon: <EventIcon fontSize='small' />
+                }
+              ])
+        ]
       })
     }
 
@@ -106,37 +164,84 @@ const EventForm: React.FC<EventFormProps> = ({
     showScopeToggle,
     eventTypeInfo,
     editingScope,
-    onEditingScopeChange
+    onEditingScopeChange,
+    formatCurrency
   ])
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, flex: 1 }}>
       {/* Editing Scope Toggle - Only for recurring series */}
       {showScopeToggle && eventTypeInfo && onEditingScopeChange && (
-        <EditingScopeToggle
-          eventTypeInfo={eventTypeInfo}
-          selectedScope={editingScope}
-          onScopeChange={onEditingScopeChange}
-          disabled={isReadOnly}
-        />
+        <Box
+          sx={{
+            mb: 1,
+            p: 2,
+            backgroundColor: 'action.hover',
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: 'divider'
+          }}
+        >
+          <EditingScopeToggle
+            eventTypeInfo={eventTypeInfo}
+            selectedScope={editingScope}
+            onScopeChange={onEditingScopeChange}
+            disabled={isReadOnly}
+          />
+        </Box>
       )}
 
       {formSections.map((section, index) => (
-        <Box key={index}>
-          <Typography
-            variant='subtitle1'
+        <Box
+          key={index}
+          sx={{
+            backgroundColor: 'background.paper',
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: 'divider',
+            overflow: 'hidden'
+          }}
+        >
+          <Box
             sx={{
-              mb: 2,
-              fontWeight: 600,
-              color: 'text.primary',
+              px: 3,
+              py: 2,
+              backgroundColor: 'grey.50',
               borderBottom: '1px solid',
               borderColor: 'divider',
-              pb: 1
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 1
             }}
           >
-            {section.title}
-          </Typography>
-          {section.component}
+            <Typography
+              variant='subtitle1'
+              sx={{
+                fontWeight: 600,
+                color: 'text.primary',
+                mb: 0
+              }}
+            >
+              {section.title}
+            </Typography>
+            {(section as any).chips && (
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                {(section as any).chips.map((chip: any, chipIndex: number) => (
+                  <Chip
+                    key={chipIndex}
+                    label={chip.label}
+                    color={chip.color}
+                    icon={chip.icon}
+                    size='small'
+                    variant='outlined'
+                  />
+                ))}
+              </Box>
+            )}
+          </Box>
+          <Box sx={{ p: 3 }}>{section.component}</Box>
         </Box>
       ))}
     </Box>

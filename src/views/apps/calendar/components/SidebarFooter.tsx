@@ -3,6 +3,7 @@ import React, { Fragment } from 'react'
 
 // ** MUI Imports
 import Button from '@mui/material/Button'
+import Box from '@mui/material/Box'
 
 // ** Redux Imports
 import { useSelector } from 'react-redux'
@@ -25,16 +26,15 @@ const SidebarFooter: React.FC<SidebarFooterProps> = ({ isEditMode, onClose, onCa
   if (!isExistingEvent) {
     // New event - show Add button
     return (
-      <Fragment>
+      <Box sx={{ display: 'flex', gap: 2, width: '100%', justifyContent: 'center' }}>
         <Button
           type='submit'
           variant='contained'
           color='primary'
-          size='large'
           sx={{
-            mr: 3,
+            flex: 1,
+            maxWidth: 200,
             py: 1.5,
-            px: 4,
             fontSize: '1rem',
             fontWeight: 600,
             '&:hover': {
@@ -47,12 +47,12 @@ const SidebarFooter: React.FC<SidebarFooterProps> = ({ isEditMode, onClose, onCa
         </Button>
         <Button
           variant='outlined'
-          size='large'
           color='secondary'
           onClick={onReset}
           sx={{
+            flex: 1,
+            maxWidth: 200,
             py: 1.5,
-            px: 4,
             fontSize: '1rem',
             fontWeight: 500,
             '&:hover': {
@@ -63,21 +63,20 @@ const SidebarFooter: React.FC<SidebarFooterProps> = ({ isEditMode, onClose, onCa
         >
           Reset
         </Button>
-      </Fragment>
+      </Box>
     )
   } else if (isEditMode) {
     // Editing existing event - show Update button
     return (
-      <Fragment>
+      <Box sx={{ display: 'flex', gap: 2, width: '100%', justifyContent: 'center' }}>
         <Button
           type='submit'
           variant='contained'
           color='warning'
-          size='large'
           sx={{
-            mr: 3,
+            flex: 1,
+            maxWidth: 200,
             py: 1.5,
-            px: 4,
             fontSize: '1rem',
             fontWeight: 600,
             '&:hover': {
@@ -90,12 +89,12 @@ const SidebarFooter: React.FC<SidebarFooterProps> = ({ isEditMode, onClose, onCa
         </Button>
         <Button
           variant='outlined'
-          size='large'
           color='secondary'
           onClick={onCancel}
           sx={{
+            flex: 1,
+            maxWidth: 200,
             py: 1.5,
-            px: 4,
             fontSize: '1rem',
             fontWeight: 500,
             '&:hover': {
@@ -106,20 +105,20 @@ const SidebarFooter: React.FC<SidebarFooterProps> = ({ isEditMode, onClose, onCa
         >
           Cancel
         </Button>
-      </Fragment>
+      </Box>
     )
   } else {
     // Viewing existing event - show Close button
     return (
-      <Fragment>
+      <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
         <Button
           variant='contained'
           color='inherit'
-          size='large'
           onClick={onClose}
           sx={{
+            flex: 1,
+            maxWidth: 200,
             py: 1.5,
-            px: 4,
             fontSize: '1rem',
             fontWeight: 600,
             '&:hover': {
@@ -130,7 +129,7 @@ const SidebarFooter: React.FC<SidebarFooterProps> = ({ isEditMode, onClose, onCa
         >
           Close
         </Button>
-      </Fragment>
+      </Box>
     )
   }
 }
