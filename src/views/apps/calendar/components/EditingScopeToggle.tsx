@@ -21,7 +21,11 @@ const EditingScopeToggle: React.FC<EditingScopeToggleProps> = ({
     }
   }
 
-  const warningMessage = getScopeWarningMessage(selectedScope)
+  // For event occurrences, only allow "occurrence" scope
+  const isEventOccurrence = eventTypeInfo.type === 'EVENT_OCCURRENCE'
+  const seriesDisabled = disabled || isEventOccurrence
+
+  const warningMessage = getScopeWarningMessage(selectedScope, eventTypeInfo)
 
   return (
     <Box sx={{ mb: 3 }}>
@@ -59,6 +63,7 @@ const EditingScopeToggle: React.FC<EditingScopeToggleProps> = ({
 
         <ToggleButton
           value='series'
+          disabled={seriesDisabled}
           sx={{
             flex: 1,
             '&.Mui-selected': {
@@ -67,12 +72,22 @@ const EditingScopeToggle: React.FC<EditingScopeToggleProps> = ({
               '&:hover': {
                 backgroundColor: 'warning.dark'
               }
+            },
+            '&.Mui-disabled': {
+              opacity: 0.5,
+              backgroundColor: 'grey.100',
+              color: 'text.disabled'
             }
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <span>🔄</span>
             <span>Entire Series</span>
+            {isEventOccurrence && (
+              <Typography variant='caption' sx={{ ml: 1, opacity: 0.7 }}>
+                (Not available)
+              </Typography>
+            )}
           </Box>
         </ToggleButton>
       </ToggleButtonGroup>

@@ -9,6 +9,14 @@ import timeGridPlugin from '@fullcalendar/timegrid'
 import bootstrap5Plugin from '@fullcalendar/bootstrap5'
 import interactionPlugin from '@fullcalendar/interaction'
 
+// ** Event Type Utils
+import {
+  getEventClassification,
+  isSingularEvent,
+  isRecurringSeriesOccurrence,
+  isVirtualRecurringSeries
+} from './utils/eventTypeUtils'
+
 // ** Third Party Style Import
 import 'bootstrap-icons/font/bootstrap-icons.css'
 
@@ -70,14 +78,18 @@ const Calendar = props => {
     const transformed = store.events.map(eventData => {
       const calendarCategory = eventData.recurringSeriesId ? `Series-${eventData.recurringSeriesId}` : 'Standalone'
 
-      // Debug: Check what ID properties are available
-      console.log('Calendar.js - Event ID debugging:', {
+      // Enhanced event classification using utility functions
+      const eventClassification = getEventClassification(eventData)
+      console.log('Calendar.js - Event classification:', {
         eventId: eventData.eventId,
         id: eventData.id,
         recurringSeriesId: eventData.recurringSeriesId,
-        effectiveStartTime: eventData.effectiveStartTime,
-        allKeys: Object.keys(eventData),
-        eventData: eventData
+        virtual: eventData.virtual,
+        classification: eventClassification,
+        isSingular: isSingularEvent(eventData),
+        isOccurrence: isRecurringSeriesOccurrence(eventData),
+        isVirtual: isVirtualRecurringSeries(eventData),
+        effectiveStartTime: eventData.effectiveStartTime
       })
 
       // Create unique ID for each event occurrence
@@ -111,6 +123,12 @@ const Calendar = props => {
           professorName: eventData.professorName,
           professorId: eventData.professorId,
           price: eventData.price,
+
+          // Enhanced event classification information
+          eventClassification,
+          isSingularEvent: isSingularEvent(eventData),
+          isRecurringSeriesOccurrence: isRecurringSeriesOccurrence(eventData),
+          isVirtualRecurringSeries: isVirtualRecurringSeries(eventData),
           attendance: eventData.attendance,
           virtual: eventData.virtual,
           cancelled: eventData.cancelled,

@@ -78,11 +78,6 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({
           icon: 'tabler:trash',
           onClick: onDelete,
           color: theme.palette.error.main
-        },
-        {
-          icon: 'tabler:x',
-          onClick: onCancel,
-          color: theme.palette.text.primary
         }
       ]
     }

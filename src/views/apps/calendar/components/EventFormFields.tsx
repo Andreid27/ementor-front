@@ -25,6 +25,7 @@ import CustomTextField from 'src/@core/components/mui/text-field'
 
 // ** Types
 import { PickersComponentProps } from '../types'
+import { EditingScope } from '../utils/eventTypeUtils'
 
 interface EventFormFieldsProps {
   values: any
@@ -32,9 +33,17 @@ interface EventFormFieldsProps {
   control: any
   errors: any
   isReadOnly: boolean
+  editingScope?: EditingScope
 }
 
-const EventFormFields: React.FC<EventFormFieldsProps> = ({ values, setValues, control, errors, isReadOnly }) => {
+const EventFormFields: React.FC<EventFormFieldsProps> = ({
+  values,
+  setValues,
+  control,
+  errors,
+  isReadOnly,
+  editingScope
+}) => {
   const PickersComponent = forwardRef<HTMLInputElement, PickersComponentProps>(({ ...props }, ref) => {
     const TextField = CustomTextField as any
 
@@ -70,6 +79,8 @@ const EventFormFields: React.FC<EventFormFieldsProps> = ({ values, setValues, co
               rules={{ required: true }}
               render={({ field: { value, onChange } }) => {
                 const TextField = CustomTextField as any
+                // Only make title read-only for specific API limitations, not for UI editing scope
+                const isTitleReadOnly = isReadOnly
 
                 return (
                   <TextField
@@ -80,7 +91,7 @@ const EventFormFields: React.FC<EventFormFieldsProps> = ({ values, setValues, co
                     placeholder='Enter event title'
                     error={Boolean(errors.title)}
                     InputProps={{
-                      readOnly: isReadOnly,
+                      readOnly: isTitleReadOnly,
                       startAdornment: (
                         <InputAdornment position='start'>
                           <TitleIcon fontSize='small' color='action' />
@@ -98,6 +109,8 @@ const EventFormFields: React.FC<EventFormFieldsProps> = ({ values, setValues, co
           <Grid item xs={12}>
             {(() => {
               const TextField = CustomTextField as any
+              // Only make description read-only for actual read-only mode, not for editing scope
+              const isDescriptionReadOnly = isReadOnly
 
               return (
                 <TextField
@@ -111,7 +124,7 @@ const EventFormFields: React.FC<EventFormFieldsProps> = ({ values, setValues, co
                   }
                   placeholder='Add event details or agenda'
                   InputProps={{
-                    readOnly: isReadOnly,
+                    readOnly: isDescriptionReadOnly,
                     startAdornment: (
                       <InputAdornment position='start' sx={{ alignSelf: 'flex-start', mt: 0.5 }}>
                         <DescriptionIcon fontSize='small' color='action' />
@@ -128,40 +141,64 @@ const EventFormFields: React.FC<EventFormFieldsProps> = ({ values, setValues, co
         <Divider />
 
         {/* Date, Time & Duration Row */}
-        <Grid container spacing={2} alignItems='center'>
+        <Grid container spacing={2} alignItems='flex-start'>
           {/* Start Date & Time */}
-          <Grid item xs={12} sm={values.isRecurring ? 6 : 5}>
+          <Grid item xs={12} sm={6}>
+            {editingScope === 'occurrence' && (
+              <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 1 }}>
+                Rescheduling this individual occurrence (original series remains unchanged)
+              </Typography>
+            )}
+            {editingScope === 'series' && (
+              <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 1 }}>
+                Start date cannot be changed when editing the entire series
+              </Typography>
+            )}
             <DatePicker
               selected={values.startDate}
-              showTimeSelect
+              showTimeSelect={!values.allDay}
               timeFormat='HH:mm'
               timeIntervals={15}
-              dateFormat='MM/dd/yyyy h:mm aa'
+              dateFormat={values.allDay ? 'MM/dd/yyyy' : 'MM/dd/yyyy h:mm aa'}
               onChange={handleStartDate}
-              placeholderText='Start date & time'
-              customInput={<PickersComponent label='Start Date & Time' />}
-              disabled={isReadOnly}
+              placeholderText={values.allDay ? 'Start date' : 'Start date & time'}
+              customInput={
+                <PickersComponent
+                  label={editingScope === 'occurrence' ? 'New Start Date & Time' : 'Start Date & Time'}
+                />
+              }
+              disabled={isReadOnly || editingScope === 'series'}
             />
           </Grid>
 
           {/* End Date (only for non-recurring) OR Duration (for recurring) */}
           {!values.isRecurring ? (
-            <Grid item xs={12} sm={5}>
+            <Grid item xs={12} sm={4}>
               <DatePicker
                 selected={values.endDate}
-                showTimeSelect
+                showTimeSelect={!values.allDay}
                 timeFormat='HH:mm'
                 timeIntervals={15}
-                dateFormat='MM/dd/yyyy h:mm aa'
+                dateFormat={values.allDay ? 'MM/dd/yyyy' : 'MM/dd/yyyy h:mm aa'}
                 onChange={(date: Date) => setValues({ ...values, endDate: new Date(date) })}
-                placeholderText='End date & time'
+                placeholderText={values.allDay ? 'End date' : 'End date & time'}
                 customInput={<PickersComponent label='End Date & Time' />}
                 disabled={isReadOnly}
               />
             </Grid>
           ) : (
             <Grid item xs={12} sm={4}>
-              <Box sx={{ display: 'flex', gap: 1 }}>
+              {editingScope === 'occurrence' && (
+                <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 1 }}>
+                  Adjust duration for this occurrence only
+                </Typography>
+              )}
+              {editingScope === 'series' && (
+                <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 1 }}>
+                  Set default duration for all events in series
+                </Typography>
+              )}
+              <Box sx={{ display: 'flex', alignItems: 'flex-end', marginTop: '1.05rem', gap: 1 }}>
                 {(() => {
                   const TextField = CustomTextField as any
 
@@ -178,11 +215,11 @@ const EventFormFields: React.FC<EventFormFieldsProps> = ({ values, setValues, co
                         }}
                         size='small'
                         placeholder='0'
-                        sx={{ width: '70px' }}
+                        sx={{ flex: 1, minWidth: '80px' }}
                       />
                       <TextField
                         type='number'
-                        label='Min'
+                        label='Minutes'
                         value={values.durationMinutes || ''}
                         onChange={handleDurationChange('durationMinutes')}
                         InputProps={{
@@ -191,7 +228,7 @@ const EventFormFields: React.FC<EventFormFieldsProps> = ({ values, setValues, co
                         }}
                         size='small'
                         placeholder='0'
-                        sx={{ width: '70px' }}
+                        sx={{ flex: 1, minWidth: '80px' }}
                       />
                     </>
                   )
@@ -202,35 +239,39 @@ const EventFormFields: React.FC<EventFormFieldsProps> = ({ values, setValues, co
 
           {/* All Day Toggle */}
           <Grid item xs={12} sm={2}>
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                minHeight: '40px',
-                p: 1,
-                border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: 1,
-                bgcolor: values.allDay ? 'primary.50' : 'transparent'
-              }}
-            >
-              <FormControlLabel
-                label={
-                  <Typography variant='caption' sx={{ fontWeight: 500 }}>
-                    All Day
-                  </Typography>
-                }
-                control={
-                  <Switch
-                    checked={values.allDay}
-                    onChange={e => setValues({ ...values, allDay: e.target.checked })}
-                    disabled={isReadOnly}
-                    size='small'
-                  />
-                }
-                sx={{ m: 0 }}
-              />
+            <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  minHeight: '43px',
+                  marginTop: '2.75rem',
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: 1,
+                  bgcolor: values.allDay ? 'primary.50' : 'background.paper',
+                  transition: 'background-color 0.2s ease'
+                }}
+              >
+                <FormControlLabel
+                  label={
+                    <Typography variant='body2' sx={{ fontWeight: 500, fontSize: '0.875rem' }}>
+                      All Day
+                    </Typography>
+                  }
+                  control={
+                    <Switch
+                      checked={values.allDay}
+                      onChange={e => setValues({ ...values, allDay: e.target.checked })}
+                      disabled={isReadOnly}
+                      size='small'
+                      color='primary'
+                    />
+                  }
+                  sx={{ m: 0 }}
+                />
+              </Box>
             </Box>
           </Grid>
         </Grid>

@@ -45,10 +45,22 @@ export const getEventIdentifier = (event: any): EventIdentifier => {
 
 /**
  * Calculate event end time from start time and duration
+ * @param duration Can be either SingularEventDTODuration object or ISO 8601 string
  */
-export const calculateEventEndTime = (startTime: string, duration: SingularEventDTODuration): string => {
+export const calculateEventEndTime = (startTime: string, duration: SingularEventDTODuration | string): string => {
   const startDate = new Date(startTime)
-  const endDate = new Date(startDate.getTime() + (duration.seconds || 0) * 1000)
+
+  let durationSeconds: number
+  if (typeof duration === 'string') {
+    // Convert ISO 8601 to seconds
+    const javaDuration = iso8601ToJavaDuration(duration)
+    durationSeconds = javaDuration.seconds || 0
+  } else {
+    // Java Duration object format
+    durationSeconds = duration.seconds || 0
+  }
+
+  const endDate = new Date(startDate.getTime() + durationSeconds * 1000)
   return endDate.toISOString()
 }
 
@@ -64,9 +76,20 @@ export const calculateEventDuration = (startTime: string, endTime: string): Sing
 
 /**
  * Format event duration for display
+ * @param duration Can be either SingularEventDTODuration object or ISO 8601 string
  */
-export const formatEventDuration = (duration: SingularEventDTODuration): string => {
-  const seconds = duration.seconds || 0
+export const formatEventDuration = (duration: SingularEventDTODuration | string): string => {
+  let seconds: number
+
+  if (typeof duration === 'string') {
+    // Convert ISO 8601 to seconds
+    const javaDuration = iso8601ToJavaDuration(duration)
+    seconds = javaDuration.seconds || 0
+  } else {
+    // Java Duration object format
+    seconds = duration.seconds || 0
+  }
+
   const hours = Math.floor(seconds / 3600)
   const minutes = Math.floor((seconds % 3600) / 60)
 
@@ -79,9 +102,21 @@ export const formatEventDuration = (duration: SingularEventDTODuration): string 
 
 /**
  * Check if event is all-day
+ * @param duration Can be either SingularEventDTODuration object or ISO 8601 string
  */
-export const isAllDayEvent = (duration: SingularEventDTODuration): boolean => {
-  return (duration.seconds || 0) >= 86400 // 24 hours
+export const isAllDayEvent = (duration: SingularEventDTODuration | string): boolean => {
+  let seconds: number
+
+  if (typeof duration === 'string') {
+    // Convert ISO 8601 to seconds
+    const javaDuration = iso8601ToJavaDuration(duration)
+    seconds = javaDuration.seconds || 0
+  } else {
+    // Java Duration object format
+    seconds = duration.seconds || 0
+  }
+
+  return seconds >= 86400 // 24 hours
 }
 
 /**
@@ -254,4 +289,52 @@ export const eventOccurrenceToCalendarEvent = (event: EventOccurrenceDTO) => {
       missed: event.missed
     }
   }
+}
+
+/**
+ * Convert ISO 8601 duration string (e.g., "PT2H30M") to SingularEventDTODuration object
+ */
+export const iso8601ToJavaDuration = (iso8601Duration: string): SingularEventDTODuration => {
+  // Parse ISO 8601 duration format like PT2H30M, PT1H, PT45M, etc.
+  const match = iso8601Duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/)
+
+  if (!match) {
+    return { seconds: 0 }
+  }
+
+  const hours = parseInt(match[1] || '0', 10)
+  const minutes = parseInt(match[2] || '0', 10)
+  const seconds = parseInt(match[3] || '0', 10)
+
+  const totalSeconds = hours * 3600 + minutes * 60 + seconds
+
+  return { seconds: totalSeconds }
+}
+
+/**
+ * Convert SingularEventDTODuration object to ISO 8601 duration string
+ */
+export const javaDurationToIso8601 = (duration: SingularEventDTODuration): string => {
+  const totalSeconds = duration.seconds || 0
+  const hours = Math.floor(totalSeconds / 3600)
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
+  const remainingSeconds = totalSeconds % 60
+
+  let result = 'PT'
+  if (hours > 0) result += `${hours}H`
+  if (minutes > 0) result += `${minutes}M`
+  if (remainingSeconds > 0) result += `${remainingSeconds}S`
+
+  return result || 'PT0M'
+}
+
+/**
+ * Convert duration from hours and minutes to ISO 8601 format
+ */
+export const formatDurationToISO8601 = (hours: number, minutes: number): string => {
+  let duration = 'PT'
+  if (hours > 0) duration += `${hours}H`
+  if (minutes > 0) duration += `${minutes}M`
+
+  return duration || 'PT0M'
 }

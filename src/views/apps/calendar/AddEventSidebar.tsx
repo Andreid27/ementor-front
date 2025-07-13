@@ -42,6 +42,7 @@ const AddEventSidebar: React.FC<AddEventSidebarProps> = props => {
     dispatch,
     addEvent,
     updateEvent,
+    modifyEventOccurrence,
     drawerWidth,
     calendarApi,
     deleteEvent,
@@ -86,6 +87,7 @@ const AddEventSidebar: React.FC<AddEventSidebarProps> = props => {
     dispatch,
     addEvent,
     updateEvent,
+    modifyEventOccurrence,
     deleteEvent,
     onClose: handleSidebarClose,
     eventTypeInfo,
@@ -141,6 +143,7 @@ const AddEventSidebar: React.FC<AddEventSidebarProps> = props => {
         onCancel={handleCancel}
         onClose={handleSidebarClose}
         isDaySummary={isDaySummary}
+        eventTypeInfo={eventTypeInfo}
       />
 
       {/* Main Content Area */}

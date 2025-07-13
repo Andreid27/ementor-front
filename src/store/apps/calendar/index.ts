@@ -90,15 +90,24 @@ export const addEvent = createAsyncThunk<any, any>('appCalendar/addEvent', async
     return response.data
   } else {
     // Create singular event with complete attendee information
+    // Calculate duration in ISO 8601 format to match recurring series format
+    const durationSeconds = event.allDay
+      ? 86400
+      : Math.floor((new Date(event.end).getTime() - new Date(event.start).getTime()) / 1000)
+
+    const durationHours = Math.floor(durationSeconds / 3600)
+    const durationMinutes = Math.floor((durationSeconds % 3600) / 60)
+
+    let durationISO8601 = 'PT'
+    if (durationHours > 0) durationISO8601 += `${durationHours}H`
+    if (durationMinutes > 0) durationISO8601 += `${durationMinutes}M`
+    const finalDuration = durationISO8601 || 'PT0M'
+
     const singularEventDTO: SingularEventDTO = {
       title: event.title,
       description: event.extendedProps?.description,
       startTime: event.start instanceof Date ? event.start.toISOString() : event.start,
-      duration: {
-        seconds: event.allDay
-          ? 86400
-          : Math.floor((new Date(event.end).getTime() - new Date(event.start).getTime()) / 1000)
-      },
+      duration: finalDuration as any, // Use ISO 8601 duration format like recurring series
       price: event.extendedProps?.price || 0,
       meetingLink: event.extendedProps?.meetingLink,
       // Include complete attendee information with pricing in the main payload
@@ -133,15 +142,24 @@ export const updateEvent = createAsyncThunk<any, any>('appCalendar/updateEvent',
     return response.data
   } else {
     // Update singular event with complete attendee information
+    // Calculate duration in ISO 8601 format to match recurring series format
+    const durationSeconds = event.allDay
+      ? 86400
+      : Math.floor((new Date(event.end).getTime() - new Date(event.start).getTime()) / 1000)
+
+    const durationHours = Math.floor(durationSeconds / 3600)
+    const durationMinutes = Math.floor((durationSeconds % 3600) / 60)
+
+    let durationISO8601 = 'PT'
+    if (durationHours > 0) durationISO8601 += `${durationHours}H`
+    if (durationMinutes > 0) durationISO8601 += `${durationMinutes}M`
+    const finalDuration = durationISO8601 || 'PT0M'
+
     const singularEventDTO: SingularEventDTO = {
       title: event.title,
       description: event.extendedProps?.description,
       startTime: event.start instanceof Date ? event.start.toISOString() : event.start,
-      duration: {
-        seconds: event.allDay
-          ? 86400
-          : Math.floor((new Date(event.end).getTime() - new Date(event.start).getTime()) / 1000)
-      },
+      duration: finalDuration as any, // Use ISO 8601 duration format like recurring series
       price: event.extendedProps?.price || 0,
       meetingLink: event.extendedProps?.meetingLink,
       // Include complete attendee information with pricing in the main payload
@@ -158,41 +176,38 @@ export const updateEvent = createAsyncThunk<any, any>('appCalendar/updateEvent',
   }
 })
 
-// ** Update Recurring Series
+// ** Modify Event Occurrence
 export const modifyEventOccurrence = createAsyncThunk<
-  RecurringSeriesDTO,
-  Partial<RecurringSeriesDTO> & {
-    id: string | number
-    newStartTime?: string
-    newEndTime?: string
+  any,
+  {
+    seriesId: string
+    originalStartTime: string
+    newStartTime: string
+    eventAttendeeDTO: EventAttendeeDTO[]
+    duration?: string
     newPrice?: number
     newMeetingLink?: string
+    title?: string
+    description?: string
   }
->(
-  'appCalendar/modifyEventOccurrence',
-  async (
-    event: Partial<RecurringSeriesDTO> & {
-      id: string | number
-      newStartTime?: string
-      newEndTime?: string
-      newPrice?: number
-      newMeetingLink?: string
-    },
-    { dispatch }
-  ) => {
-    const response = await profileServiceClient.events.modifyEventOccurrence({
-      seriesId: event.id,
-      originalStartTime: event.startTime,
-      newStartTime: event.newStartTime,
-      newEndTime: event.newEndTime,
-      newPrice: event.newPrice,
-      newMeetingLink: event.newMeetingLink
-    })
-    await dispatch(fetchEvents())
+>('appCalendar/modifyEventOccurrence', async (payload, { dispatch }) => {
+  console.log('Redux modifyEventOccurrence action called with:', payload)
 
-    return response.data
-  }
-)
+  const response = await profileServiceClient.events.modifyEventOccurrence({
+    seriesId: payload.seriesId,
+    originalStartTime: payload.originalStartTime,
+    newStartTime: payload.newStartTime,
+    eventAttendeeDTO: payload.eventAttendeeDTO,
+    duration: payload.duration,
+    newPrice: payload.newPrice,
+    newMeetingLink: payload.newMeetingLink
+  })
+
+  console.log('Redux modifyEventOccurrence API response:', response.data)
+  await dispatch(fetchEvents())
+
+  return response.data
+})
 
 export const cancelEventOccurrence = createAsyncThunk<
   RecurringSeriesDTO,

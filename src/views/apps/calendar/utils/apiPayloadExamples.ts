@@ -59,7 +59,7 @@ export const CORRECT_SINGULAR_EVENT_PAYLOAD: SingularEventDTO = {
   title: 'Math Tutoring Session',
   description: 'Advanced calculus review',
   startTime: '2025-07-15T14:15:00Z',
-  duration: { seconds: 7200 }, // 2 hours
+  duration: 'PT2H' as any, // ISO 8601 duration format
   price: 100,
   meetingLink: 'https://meet.google.com/abc-defg-hij',
   eventAttendees: [

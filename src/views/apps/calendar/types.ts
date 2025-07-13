@@ -48,6 +48,15 @@ export interface AddEventSidebarProps {
   dispatch: Dispatch<any>
   addEvent: (event: any) => void
   updateEvent: (event: any) => void
+  modifyEventOccurrence: (payload: {
+    seriesId: string
+    originalStartTime: string
+    newStartTime: string
+    eventAttendeeDTO: EventAttendeeDTO[]
+    duration?: string
+    newPrice?: number
+    newMeetingLink?: string
+  }) => Promise<any>
   drawerWidth: number
   calendarApi: CalendarApi | null
   deleteEvent: (id: string | number) => void

@@ -29,6 +29,13 @@ export const useEventData = ({ selectedEvent, addEventSidebarOpen }: UseEventDat
 
       // Determine event type first
       const typeInfo = determineEventType(event)
+      console.log('useEventData - Event type determination result:', {
+        eventId: event.id,
+        recurringSeriesId: event.recurringSeriesId,
+        virtual: event.virtual,
+        typeInfo,
+        classification: typeInfo.displayName
+      })
       setEventTypeInfo(typeInfo)
 
       // Set default editing scope
@@ -53,8 +60,9 @@ export const useEventData = ({ selectedEvent, addEventSidebarOpen }: UseEventDat
         ? new Date(event.actualEndTime)
         : new Date(startDate.getTime() + 60 * 60 * 1000)
 
-      // Use event type info to determine if this is recurring
-      const isRecurringEvent = typeInfo.type === 'RECURRING_SERIES' // Get attendees directly from the Redux store selectedEvent (EventOccurrenceDTO)
+      // Use event type info to determine if this should use recurring series UI
+      // Show duration fields for any event that's part of a recurring series (including occurrences)
+      const isRecurringEvent = typeInfo.type === 'RECURRING_SERIES' || typeInfo.type === 'EVENT_OCCURRENCE' // Get attendees directly from the Redux store selectedEvent (EventOccurrenceDTO)
       const originalAttendees = event.eventAttendees || []
 
       console.log('useEventData using Redux store DTO:', {
@@ -127,6 +135,12 @@ export const useEventData = ({ selectedEvent, addEventSidebarOpen }: UseEventDat
   }, [clearErrors])
 
   useEffect(() => {
+    console.log('useEventData - useEffect triggered:', {
+      selectedEvent: selectedEvent?.id || 'null',
+      addEventSidebarOpen,
+      hasSelectedEvent: selectedEvent !== null
+    })
+
     if (selectedEvent !== null) {
       resetToStoredValues()
       setIsEditMode(false) // Show view mode for existing events
@@ -135,6 +149,29 @@ export const useEventData = ({ selectedEvent, addEventSidebarOpen }: UseEventDat
       setIsEditMode(true) // Show form for new events
     }
   }, [addEventSidebarOpen, resetToStoredValues, resetToEmptyValues, selectedEvent])
+
+  // Separate effect to ensure eventTypeInfo is always set when we have a selectedEvent
+  useEffect(() => {
+    if (selectedEvent !== null && eventTypeInfo === null) {
+      const event = selectedEvent as any
+      const typeInfo = determineEventType(event)
+      console.log('useEventData - Setting missing eventTypeInfo:', {
+        eventId: event.id,
+        recurringSeriesId: event.recurringSeriesId,
+        virtual: event.virtual,
+        typeInfo,
+        classification: typeInfo.displayName,
+        isEditMode
+      })
+      setEventTypeInfo(typeInfo)
+
+      // Also set default editing scope if not set
+      if (!editingScope) {
+        const defaultScope = getDefaultEditingScope(typeInfo)
+        setEditingScope(defaultScope)
+      }
+    }
+  }, [selectedEvent, eventTypeInfo, isEditMode, editingScope])
 
   return {
     values,

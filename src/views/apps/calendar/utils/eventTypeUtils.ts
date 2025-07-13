@@ -40,11 +40,71 @@ export interface EditingScopeConfig {
 }
 
 /**
+ * Utility functions for event type classification based on EventOccurrenceDTO properties
+ */
+
+/**
+ * Determines if an event is a singular event (standalone, not part of any recurring series)
+ * Rule: EventOccurrenceDTO.recurringSeriesId is null AND virtual == false
+ */
+export const isSingularEvent = (event: any): boolean => {
+  return !event.recurringSeriesId && !event.seriesId && event.virtual === false
+}
+
+/**
+ * Determines if an event is an occurrence of a recurring series
+ * Rule: EventOccurrenceDTO.recurringSeriesId is not null AND virtual == false
+ */
+export const isRecurringSeriesOccurrence = (event: any): boolean => {
+  return !!(event.recurringSeriesId || event.seriesId) && event.virtual === false
+}
+
+/**
+ * Determines if an event is a virtual recurring series template
+ * Rule: virtual == true (regardless of recurringSeriesId)
+ */
+export const isVirtualRecurringSeries = (event: any): boolean => {
+  return event.virtual === true
+}
+
+/**
+ * Gets a human-readable classification of the event type
+ */
+export const getEventClassification = (event: any): string => {
+  if (isSingularEvent(event)) {
+    return 'Singular Event'
+  } else if (isRecurringSeriesOccurrence(event)) {
+    return 'Recurring Series Occurrence'
+  } else if (isVirtualRecurringSeries(event)) {
+    return 'Virtual Recurring Series'
+  } else {
+    return 'Unknown Event Type'
+  }
+}
+
+/**
  * Determines the type of event based on its properties
+ *
+ * Key distinction rules:
+ * - Singular Event: recurringSeriesId is null AND virtual == false
+ * - Event Occurrence: recurringSeriesId is not null AND virtual == false
+ * - Virtual Recurring Series: virtual == true (templates for future occurrences)
  */
 export const determineEventType = (event: any): EventTypeInfo => {
-  // Check if this is a singular event (no recurring series)
-  if (!event.recurringSeriesId && !event.seriesId && !event.seriesTitle && !event.virtual) {
+  // Debug logging to understand event classification
+  console.log('determineEventType - Analyzing event:', {
+    id: event.id,
+    recurringSeriesId: event.recurringSeriesId,
+    seriesId: event.seriesId,
+    virtual: event.virtual,
+    allProperties: Object.keys(event || {}),
+    isSingularCheck: isSingularEvent(event),
+    isOccurrenceCheck: isRecurringSeriesOccurrence(event),
+    isVirtualCheck: isVirtualRecurringSeries(event)
+  })
+
+  // Use utility functions for clear event classification
+  if (isSingularEvent(event)) {
     return {
       type: EventType.SINGULAR_EVENT,
       id: event.id || event.eventId,
@@ -55,9 +115,24 @@ export const determineEventType = (event: any): EventTypeInfo => {
     }
   }
 
-  // Check if this is a virtual recurring series event (virtual: true)
-  // These are recurring series templates that can be modified to create occurrences
-  if (event.virtual === true) {
+  // Check if this is an actual occurrence of a recurring series
+  if (isRecurringSeriesOccurrence(event)) {
+    return {
+      type: EventType.EVENT_OCCURRENCE,
+      id: event.id,
+      recurringSeriesId: event.recurringSeriesId || event.seriesId,
+      isEditable: true,
+      editScope: 'occurrence',
+      displayName: 'Event Occurrence',
+      description: 'This is a specific occurrence of a recurring series. Changes will only affect this occurrence.',
+      isVirtual: false,
+      canComplete: true,
+      allowsScopeToggle: false // Event occurrences can only be edited as occurrences, not as series
+    }
+  }
+
+  // Check if this is a virtual recurring series event
+  if (isVirtualRecurringSeries(event)) {
     return {
       type: EventType.RECURRING_SERIES,
       id: event.recurringSeriesId || event.seriesId || event.id,
@@ -96,8 +171,8 @@ export const determineEventType = (event: any): EventTypeInfo => {
     displayName: 'Event Occurrence',
     description: 'This is a specific occurrence of a recurring series. Changes will only affect this occurrence.',
     isVirtual: false,
-    canComplete: true
-    // No allowsScopeToggle for individual occurrences
+    canComplete: true,
+    allowsScopeToggle: false // Event occurrences can only be edited as occurrences, not as series
   }
 }
 
@@ -298,8 +373,11 @@ export const shouldShowCompleteButton = (eventTypeInfo: EventTypeInfo, event?: a
  * Determines if the scope toggle should be shown for this event
  */
 export const shouldShowScopeToggle = (eventTypeInfo: EventTypeInfo): boolean => {
-  // Only show scope toggle for recurring series, not for individual occurrences
-  return eventTypeInfo.allowsScopeToggle === true && eventTypeInfo.type === EventType.RECURRING_SERIES
+  // Show scope toggle for recurring series and for event occurrences that are part of a recurring series
+  return (
+    eventTypeInfo.allowsScopeToggle === true &&
+    (eventTypeInfo.type === EventType.RECURRING_SERIES || eventTypeInfo.type === EventType.EVENT_OCCURRENCE)
+  )
 }
 
 /**
@@ -335,7 +413,12 @@ export const getEditingScopeConfig = (
 /**
  * Gets the scope-specific warning message
  */
-export const getScopeWarningMessage = (scope: EditingScope): string => {
+export const getScopeWarningMessage = (scope: EditingScope, eventTypeInfo?: EventTypeInfo): string => {
+  // Special message for event occurrences
+  if (eventTypeInfo?.type === EventType.EVENT_OCCURRENCE) {
+    return 'This is a specific occurrence of a recurring series. Only this occurrence can be modified.'
+  }
+
   switch (scope) {
     case 'occurrence':
       return 'Changes will only apply to this specific occurrence.'

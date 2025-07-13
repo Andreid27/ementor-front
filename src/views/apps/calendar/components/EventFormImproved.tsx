@@ -19,6 +19,7 @@ import EventFormFields from './EventFormFields'
 import RecurringEventFields from './RecurringEventFields'
 import AttendeeManager from './AttendeeManager'
 import EditingScopeToggle from './EditingScopeToggle'
+import EventTypeSelector from './EventTypeSelector'
 
 // ** Utils
 import { shouldShowScopeToggle } from '../utils/eventTypeUtils'
@@ -26,6 +27,18 @@ import { calculateTotalRevenue, getExpectedCount } from '../utils/eventAttendeeU
 
 // ** Types
 import { EventFormProps } from '../types'
+
+interface FormSectionChip {
+  label: string
+  color: 'primary' | 'secondary' | 'default' | 'error' | 'info' | 'success' | 'warning'
+  icon: React.ReactElement
+}
+
+interface FormSection {
+  title: string
+  component: React.ReactElement
+  chips?: FormSectionChip[]
+}
 
 const EventForm: React.FC<EventFormProps> = ({
   values,
@@ -41,8 +54,17 @@ const EventForm: React.FC<EventFormProps> = ({
   onEditingScopeChange
 }) => {
   const isReadOnly = !isEditMode && selectedEvent !== null
+  const isNewEvent = !store.selectedEvent
 
   const showScopeToggle = eventTypeInfo && shouldShowScopeToggle(eventTypeInfo) && isEditMode
+
+  // Handle event type change for new events
+  const handleEventTypeChange = (type: 'singular' | 'recurring') => {
+    setValues((prev: any) => ({
+      ...prev,
+      isRecurring: type === 'recurring'
+    }))
+  }
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -53,8 +75,8 @@ const EventForm: React.FC<EventFormProps> = ({
     }).format(amount)
   }
 
-  const formSections = useMemo(() => {
-    const sections = [
+  const formSections = useMemo((): FormSection[] => {
+    const sections: FormSection[] = [
       {
         title: 'Basic Information',
         component: (
@@ -64,6 +86,7 @@ const EventForm: React.FC<EventFormProps> = ({
             control={control}
             errors={errors}
             isReadOnly={isReadOnly}
+            editingScope={editingScope}
           />
         )
       }
@@ -122,7 +145,10 @@ const EventForm: React.FC<EventFormProps> = ({
     })
 
     // Add recurring settings if needed
-    if (values.isRecurring) {
+    // Show recurring settings when: 1) It's a new recurring event, OR 2) Editing series scope of existing recurring event
+    const shouldShowRecurringSettings = values.isRecurring && (isNewEvent || editingScope === 'series')
+
+    if (shouldShowRecurringSettings) {
       sections.push({
         title: 'Recurring Settings',
         component: (
@@ -165,11 +191,32 @@ const EventForm: React.FC<EventFormProps> = ({
     eventTypeInfo,
     editingScope,
     onEditingScopeChange,
-    formatCurrency
+    formatCurrency,
+    store.selectedEvent
   ])
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, flex: 1 }}>
+      {/* Event Type Selector - Only for new events */}
+      {isNewEvent && (
+        <Box
+          sx={{
+            mb: 1,
+            p: 2,
+            backgroundColor: 'background.paper',
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: 'divider'
+          }}
+        >
+          <EventTypeSelector
+            selectedType={values.isRecurring ? 'recurring' : 'singular'}
+            onTypeChange={handleEventTypeChange}
+            disabled={isReadOnly}
+          />
+        </Box>
+      )}
+
       {/* Editing Scope Toggle - Only for recurring series */}
       {showScopeToggle && eventTypeInfo && onEditingScopeChange && (
         <Box
@@ -226,9 +273,9 @@ const EventForm: React.FC<EventFormProps> = ({
             >
               {section.title}
             </Typography>
-            {(section as any).chips && (
+            {section.chips && (
               <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                {(section as any).chips.map((chip: any, chipIndex: number) => (
+                {section.chips.map((chip, chipIndex) => (
                   <Chip
                     key={chipIndex}
                     label={chip.label}

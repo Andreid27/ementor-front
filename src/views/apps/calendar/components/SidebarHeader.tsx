@@ -55,9 +55,6 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({
           <IconButton size='small' onClick={onDelete} sx={{ color: 'text.primary', mr: 1 }}>
             <Icon icon='tabler:trash' fontSize='1.25rem' />
           </IconButton>
-          <IconButton size='small' onClick={onCancel} sx={{ color: 'text.primary', mr: 1 }}>
-            <Icon icon='tabler:x' fontSize='1.25rem' />
-          </IconButton>
         </>
       )
     }

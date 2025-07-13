@@ -35,6 +35,10 @@ import {
   // @ts-ignore
 } from 'src/store/apps/calendar'
 
+// Import Redux for creating the action
+import { createAsyncThunk } from '@reduxjs/toolkit'
+import { EventAttendeeDTO } from 'src/generated/profile-service'
+
 // ** Profile Picture Processing
 import extractProfilePicture from 'src/@core/axios/profile-picture-extractor'
 import profilePictureDownloader from 'src/@core/axios/profile-picture-downloader'
@@ -93,6 +97,37 @@ const AppCalendar = () => {
   const store = useSelector((state: any) => state.calendar) as CalendarStore
   const [calendarInfo, setCalendarInfo] = useState<any>(null)
   const students = useSelector(selectAllStudents)
+
+  // ** Create modifyEventOccurrence action locally to match API signature
+  const modifyEventOccurrence = useCallback(
+    async (payload: {
+      seriesId: string
+      originalStartTime: string
+      newStartTime: string
+      eventAttendeeDTO: EventAttendeeDTO[]
+      duration?: string
+      newPrice?: number
+      newMeetingLink?: string
+    }) => {
+      console.log('Local modifyEventOccurrence action called with:', payload)
+
+      const response = await profileServiceClient.events.modifyEventOccurrence({
+        seriesId: payload.seriesId,
+        originalStartTime: payload.originalStartTime,
+        newStartTime: payload.newStartTime,
+        eventAttendeeDTO: payload.eventAttendeeDTO,
+        duration: payload.duration,
+        newPrice: payload.newPrice,
+        newMeetingLink: payload.newMeetingLink
+      })
+
+      console.log('Local modifyEventOccurrence API response:', response.data)
+      await dispatch(fetchEvents())
+
+      return response.data
+    },
+    [dispatch]
+  )
 
   // ** Vars
   const leftSidebarWidth = 300
@@ -277,6 +312,7 @@ const AppCalendar = () => {
         dispatch={dispatch}
         addEvent={addEvent}
         updateEvent={updateEvent}
+        modifyEventOccurrence={modifyEventOccurrence}
         deleteEvent={deleteEvent}
         calendarApi={calendarApi}
         drawerWidth={addEventSidebarWidth}
