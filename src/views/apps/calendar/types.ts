@@ -103,7 +103,6 @@ export interface SidebarHeaderProps {
 
 export interface SidebarFooterProps {
   isEditMode: boolean
-  selectedEvent: any
   onClose: () => void
   onCancel: () => void
   onReset: () => void

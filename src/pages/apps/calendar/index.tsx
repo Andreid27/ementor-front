@@ -91,7 +91,6 @@ const AppCalendar = () => {
   const { settings } = useSettings()
   const dispatch = useDispatch()
   const store = useSelector((state: any) => state.calendar) as CalendarStore
-  const [localStore, setLocalStore] = useState<CalendarStore>(store)
   const [calendarInfo, setCalendarInfo] = useState<any>(null)
   const students = useSelector(selectAllStudents)
 
@@ -188,9 +187,9 @@ const AppCalendar = () => {
   }, [])
 
   useEffect(() => {
+    console.log('Calendar page useEffect - calling fetchEvents')
     // @ts-ignore
     dispatch(fetchEvents())
-    setLocalStore(store)
   }, [])
 
   useEffect(() => {
@@ -205,7 +204,9 @@ const AppCalendar = () => {
         .then(async response => {
           const studentsWithAvatars = await processStudentAvatars(response.data, students)
           setStudentAvatars(studentsWithAvatars)
-          setLocalStore(prevStore => ({ ...prevStore, events: response.data }))
+
+          // Update Redux store instead of local state
+          dispatch(fetchEvents())
 
           // Generate dynamic calendar colors based on event data
           const newDynamicColors = generateDynamicCalendarColors(response.data)
@@ -219,7 +220,7 @@ const AppCalendar = () => {
 
   const handleLeftSidebarToggle = () => setLeftSidebarOpen(!leftSidebarOpen)
   const handleAddEventSidebarToggle = () => setAddEventSidebarOpen(!addEventSidebarOpen)
-  console.log(localStore)
+  console.log('Redux store:', store)
 
   return (
     <CalendarWrapper
@@ -255,7 +256,7 @@ const AppCalendar = () => {
       >
         {/* @ts-ignore */}
         <Calendar
-          store={localStore}
+          store={store}
           dispatch={dispatch}
           direction={direction}
           updateEvent={updateEvent}

@@ -4,11 +4,23 @@ import React, { Fragment } from 'react'
 // ** MUI Imports
 import Button from '@mui/material/Button'
 
-// ** Types
-import { SidebarFooterProps } from '../types'
+// ** Redux Imports
+import { useSelector } from 'react-redux'
+import { selectSelectedEvent } from 'src/store/apps/calendar/index'
 
-const SidebarFooter: React.FC<SidebarFooterProps> = ({ isEditMode, selectedEvent, onClose, onCancel, onReset }) => {
-  const isExistingEvent = selectedEvent !== null && (selectedEvent.title || selectedEvent.seriesTitle)?.length
+// ** Types
+import { EventOccurrenceDTO } from 'src/generated/profile-service'
+
+interface SidebarFooterProps {
+  isEditMode: boolean
+  onClose: () => void
+  onCancel: () => void
+  onReset: () => void
+}
+
+const SidebarFooter: React.FC<SidebarFooterProps> = ({ isEditMode, onClose, onCancel, onReset }) => {
+  const selectedEvent = useSelector(selectSelectedEvent) as EventOccurrenceDTO | null
+  const isExistingEvent = selectedEvent !== null && selectedEvent.seriesTitle?.length
 
   if (!isExistingEvent) {
     // New event - show Add button

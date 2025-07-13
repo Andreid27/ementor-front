@@ -5,14 +5,18 @@ import React from 'react'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 
+// ** Redux Imports
+import { useSelector } from 'react-redux'
+import { selectSelectedEvent } from 'src/store/apps/calendar/index'
+
+// ** Types
+import { EventOccurrenceDTO } from 'src/generated/profile-service'
+
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
 
-interface EventHeroSectionProps {
-  selectedEvent: any
-}
-
-const EventHeroSection: React.FC<EventHeroSectionProps> = ({ selectedEvent }) => {
+const EventHeroSection: React.FC = () => {
+  const selectedEvent = useSelector(selectSelectedEvent) as EventOccurrenceDTO | null
   return (
     <Box
       sx={{
@@ -61,7 +65,7 @@ const EventHeroSection: React.FC<EventHeroSectionProps> = ({ selectedEvent }) =>
             }
           }}
         >
-          {selectedEvent.title || selectedEvent.seriesTitle || 'Untitled Event'}
+          {selectedEvent?.seriesTitle || 'Untitled Event'}
         </Typography>
 
         {/* Event Type Badge */}
@@ -87,11 +91,11 @@ const EventHeroSection: React.FC<EventHeroSectionProps> = ({ selectedEvent }) =>
               }
             }}
           >
-            <Icon icon={selectedEvent.extendedProps?.virtual ? 'tabler:video' : 'tabler:map-pin'} fontSize='1.1rem' />
-            {selectedEvent.extendedProps?.virtual ? 'Virtual' : 'In-Person'}
+            <Icon icon={selectedEvent.virtual ? 'tabler:video' : 'tabler:map-pin'} fontSize='1.1rem' />
+            {selectedEvent.virtual ? 'Virtual' : 'In-Person'}
           </Box>
 
-          {selectedEvent.extendedProps?.recurringSeriesId && (
+          {selectedEvent.recurringSeriesId && (
             <Box
               sx={{
                 display: 'inline-flex',
@@ -118,7 +122,7 @@ const EventHeroSection: React.FC<EventHeroSectionProps> = ({ selectedEvent }) =>
             </Box>
           )}
 
-          {selectedEvent.extendedProps?.price !== undefined && (
+          {selectedEvent.price !== undefined && (
             <Box
               sx={{
                 display: 'inline-flex',
@@ -126,8 +130,7 @@ const EventHeroSection: React.FC<EventHeroSectionProps> = ({ selectedEvent }) =>
                 gap: 0.75,
                 px: 3,
                 py: 1,
-                backgroundColor:
-                  selectedEvent.extendedProps.price === 0 ? 'rgba(76, 175, 80, 0.85)' : 'rgba(255, 193, 7, 0.85)',
+                backgroundColor: selectedEvent.price === 0 ? 'rgba(76, 175, 80, 0.85)' : 'rgba(255, 193, 7, 0.85)',
                 borderRadius: 50,
                 backdropFilter: 'blur(10px)',
                 border: '1px solid rgba(255,255,255,0.4)',
@@ -141,7 +144,7 @@ const EventHeroSection: React.FC<EventHeroSectionProps> = ({ selectedEvent }) =>
                 }
               }}
             >
-              {selectedEvent.extendedProps.price === 0 ? 'Free' : `${selectedEvent.extendedProps.price} RON`}
+              {selectedEvent.price === 0 ? 'Free' : `${selectedEvent.price} RON`}
             </Box>
           )}
         </Box>

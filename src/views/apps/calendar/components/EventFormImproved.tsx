@@ -8,7 +8,7 @@ import Typography from '@mui/material/Typography'
 // ** Components
 import EventFormFields from './EventFormFields'
 import RecurringEventFields from './RecurringEventFields'
-import EventAttendeeManagement from './EventAttendeeManagement'
+import AttendeeManager from './AttendeeManager'
 import EditingScopeToggle from './EditingScopeToggle'
 
 // ** Utils
@@ -50,32 +50,37 @@ const EventForm: React.FC<EventFormProps> = ({
       }
     ]
 
-    // Add attendees section
-    // Debug: Log what's being passed to EventAttendeeManagement
+    // Add attendees section - using AttendeeManager
     const isNewEvent = !store.selectedEvent
-    console.log('EventFormImproved passing to EventAttendeeManagement:', {
-      initialAttendees: values.attendees,
-      attendeesCount: values.attendees?.length || 0,
+    // Ensure attendees is always an array to prevent undefined errors
+    const attendees = values.attendees || []
+
+    console.log('EventFormImproved passing to AttendeeManager:', {
+      attendees: attendees,
+      attendeesCount: attendees.length,
       isNewEvent,
-      selectedEvent: store.selectedEvent,
       selectedEventId: store.selectedEvent?.eventId,
-      selectedEventAttendees: store.selectedEvent?.eventAttendees
+      valuesKeys: Object.keys(values),
+      fullValues: values
     })
 
     sections.push({
       title: 'Attendees & Pricing',
       component: (
-        <EventAttendeeManagement
-          eventType={values.isRecurring ? 'recurring' : 'singular'}
+        <AttendeeManager
           students={students}
+          attendees={attendees}
+          onAttendeesChange={newAttendees => {
+            console.log('EventFormImproved: Attendees changed:', newAttendees)
+            setValues(prev => ({ ...prev, attendees: newAttendees }))
+          }}
+          defaultPrice={values.price}
+          eventType={values.isRecurring ? 'recurring' : 'singular'}
+          showPricing={true}
+          showAttendanceTracking={false}
+          showStatistics={true}
           isReadOnly={isReadOnly}
           isNewEvent={isNewEvent}
-          initialAttendees={values.attendees}
-          defaultPrice={values.price}
-          onAttendeesChange={attendees => {
-            console.log('EventFormImproved: Attendees changed:', attendees)
-            setValues(prev => ({ ...prev, attendees }))
-          }}
         />
       )
     })

@@ -54,19 +54,38 @@ export const useEventData = ({ selectedEvent, addEventSidebarOpen }: UseEventDat
         : new Date(startDate.getTime() + 60 * 60 * 1000)
 
       // Use event type info to determine if this is recurring
-      const isRecurringEvent = typeInfo.type === 'RECURRING_SERIES'
+      const isRecurringEvent = typeInfo.type === 'RECURRING_SERIES' // Get attendees directly from the Redux store selectedEvent (EventOccurrenceDTO)
+      const originalAttendees = event.eventAttendees || []
 
-      // Get attendees from the original EventOccurrenceDTO
-      const originalEventDTO = event.extendedProps?.originalEventDTO
-      const originalAttendees = originalEventDTO?.eventAttendees || []
-
-      console.log('useEventData using original DTO:', {
-        hasOriginalDTO: !!originalEventDTO,
-        eventAttendees: originalEventDTO?.eventAttendees,
+      console.log('useEventData using Redux store DTO:', {
+        eventId: event.eventId,
+        eventAttendees: event.eventAttendees,
         attendeesLength: originalAttendees?.length || 0
       })
 
       const convertedAttendees = eventAttendeesToEventAttendeeDTOs(originalAttendees)
+
+      // Fix any data integrity issues: if hasCustomPricing=true, ensure expected=true
+      // This prevents database constraint violations
+      const validatedAttendees = convertedAttendees.map(attendee => {
+        if (attendee.hasCustomPricing && !attendee.expected) {
+          console.warn('useEventData - Fixing data integrity: Setting expected=true for attendee with custom pricing', {
+            attendeeId: attendee.attendeeId,
+            hasCustomPricing: attendee.hasCustomPricing,
+            expected: attendee.expected,
+            customPrice: attendee.customPrice
+          })
+          return { ...attendee, expected: true }
+        }
+        return attendee
+      })
+
+      console.log('useEventData - Final validated attendees:', {
+        originalCount: convertedAttendees.length,
+        validatedCount: validatedAttendees.length,
+        withCustomPricing: validatedAttendees.filter(a => a.hasCustomPricing),
+        allExpected: validatedAttendees.every(a => !a.hasCustomPricing || a.expected)
+      })
 
       // Calculate duration from start and end times
       const durationMs = endDate.getTime() - startDate.getTime()
@@ -85,8 +104,8 @@ export const useEventData = ({ selectedEvent, addEventSidebarOpen }: UseEventDat
         pattern: event.pattern || 'WEEKLY',
         durationHours: Math.max(durationHours, 1),
         durationMinutes: Math.max(durationMinutes, 0),
-        // Use attendees from the original EventOccurrenceDTO
-        attendees: convertedAttendees
+        // Use attendees from the original EventOccurrenceDTO (with validation)
+        attendees: validatedAttendees
       })
     }
   }, [setValue, selectedEvent])

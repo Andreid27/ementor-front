@@ -14,6 +14,9 @@ import { AddEventSidebarProps } from './types'
 // ** Components
 import { SidebarHeaderImproved, SidebarContentContainer, SidebarFooter } from './components'
 
+// ** Utils
+// import { createBlankEvent } from './utils/eventTransforms' // Used in SidebarContentContainer
+
 // ** Constants
 import { DRAWER_STYLES, SIDEBAR_BODY_STYLES } from './constants'
 
@@ -56,11 +59,11 @@ const AddEventSidebar: React.FC<AddEventSidebarProps> = props => {
 
   // Extract event data management logic
   const {
+    values,
+    setValues,
     isEditMode,
     setIsEditMode,
     resetForm,
-    values,
-    setValues,
     control,
     handleSubmit,
     errors,
@@ -84,7 +87,6 @@ const AddEventSidebar: React.FC<AddEventSidebarProps> = props => {
     addEvent,
     updateEvent,
     deleteEvent,
-    calendarApi,
     onClose: handleSidebarClose,
     eventTypeInfo,
     editingScope
@@ -139,7 +141,6 @@ const AddEventSidebar: React.FC<AddEventSidebarProps> = props => {
         onCancel={handleCancel}
         onClose={handleSidebarClose}
         isDaySummary={isDaySummary}
-        eventTypeInfo={eventTypeInfo}
       />
 
       {/* Main Content Area */}
@@ -157,7 +158,7 @@ const AddEventSidebar: React.FC<AddEventSidebarProps> = props => {
               addEventSidebarOpen={addEventSidebarOpen}
               students={students}
               onClose={handleSidebarClose}
-              // Pass edit mode state to avoid duplication
+              // Pass edit mode state and form data
               isEditMode={isEditMode}
               setIsEditMode={setIsEditMode}
               values={values}
@@ -165,7 +166,7 @@ const AddEventSidebar: React.FC<AddEventSidebarProps> = props => {
               control={control}
               handleSubmit={handleSubmit}
               errors={errors}
-              // Pass event type and editing scope
+              // Event type and editing scope
               eventTypeInfo={eventTypeInfo}
               editingScope={editingScope}
               onEditingScopeChange={setEditingScope}
@@ -185,7 +186,6 @@ const AddEventSidebar: React.FC<AddEventSidebarProps> = props => {
               >
                 <SidebarFooter
                   isEditMode={isEditMode}
-                  selectedEvent={store.selectedEvent}
                   onClose={handleSidebarClose}
                   onCancel={handleCancel}
                   onReset={handleReset}

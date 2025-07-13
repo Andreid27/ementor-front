@@ -1,5 +1,5 @@
 // ** React Import
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useMemo } from 'react'
 
 // ** Full Calendar & it's Plugins
 import FullCalendar from '@fullcalendar/react'
@@ -50,57 +50,200 @@ const Calendar = props => {
       setCalendarApi(calendarRef.current?.getApi())
     }
   }, [calendarApi, setCalendarApi])
+
+  // Memoize transformed events - single source of truth from Redux store
+  const transformedEvents = useMemo(() => {
+    console.log('Calendar.js - Raw store.events:', {
+      eventsLength: store.events?.length || 0,
+      firstEvent: store.events?.[0],
+      allEvents: store.events,
+      storeEventsIsArray: Array.isArray(store.events)
+    })
+
+    // Handle case where store.events might be undefined or not an array
+    if (!store.events || !Array.isArray(store.events)) {
+      console.warn('Calendar.js - store.events is not a valid array:', store.events)
+
+      return []
+    }
+
+    const transformed = store.events.map(eventData => {
+      const calendarCategory = eventData.recurringSeriesId ? `Series-${eventData.recurringSeriesId}` : 'Standalone'
+
+      // Debug: Check what ID properties are available
+      console.log('Calendar.js - Event ID debugging:', {
+        eventId: eventData.eventId,
+        id: eventData.id,
+        recurringSeriesId: eventData.recurringSeriesId,
+        effectiveStartTime: eventData.effectiveStartTime,
+        allKeys: Object.keys(eventData),
+        eventData: eventData
+      })
+
+      // Create unique ID for each event occurrence
+      // First check if event has its own unique ID
+      let eventId
+      if (eventData.eventId || eventData.id) {
+        // Use existing unique ID if available
+        eventId = eventData.eventId || eventData.id
+      } else if (eventData.recurringSeriesId && eventData.effectiveStartTime) {
+        // For virtual recurring occurrences, create unique ID: seriesId-startTime
+        eventId = `${eventData.recurringSeriesId}-${eventData.effectiveStartTime}`
+      } else {
+        // Fallback: generate a unique ID
+        eventId = eventData.recurringSeriesId || `event-${Date.now()}-${Math.random()}`
+      }
+
+      console.log('Calendar.js - Generated unique eventId:', eventId)
+
+      const transformedEvent = {
+        id: eventId, // Use the actual event ID
+        title: eventData.seriesTitle || eventData.title || 'Untitled Event',
+        start: eventData.effectiveStartTime || eventData.start,
+        end: eventData.effectiveEndTime || eventData.end,
+        allDay: eventData.allDay || false,
+        url: '', // Prevent automatic navigation
+        extendedProps: {
+          calendar: calendarCategory,
+          description: eventData.seriesDescription || eventData.description || '',
+          location: eventData.virtual ? 'Virtual Meeting' : '',
+          guests: [],
+          professorName: eventData.professorName,
+          professorId: eventData.professorId,
+          price: eventData.price,
+          attendance: eventData.attendance,
+          virtual: eventData.virtual,
+          cancelled: eventData.cancelled,
+          completed: eventData.completed,
+          upcoming: eventData.upcoming,
+          missed: eventData.missed,
+          rescheduled: eventData.rescheduled,
+          recurringSeriesId: eventData.recurringSeriesId,
+          meetingLink: eventData.meetingLink,
+
+          // Store the original event data for lookup
+          eventId: eventId,
+          originalEventId: eventData.eventId,
+          originalId: eventData.id,
+          originalRecurringSeriesId: eventData.recurringSeriesId,
+          originalEffectiveStartTime: eventData.effectiveStartTime
+        }
+      }
+
+      // Debug: Check if dates are valid
+      console.log('Calendar.js - Event date validation:', {
+        eventId: eventId,
+        title: transformedEvent.title,
+        start: transformedEvent.start,
+        startType: typeof transformedEvent.start,
+        startValid: transformedEvent.start && !isNaN(new Date(transformedEvent.start)),
+        end: transformedEvent.end,
+        endType: typeof transformedEvent.end,
+        endValid: transformedEvent.end && !isNaN(new Date(transformedEvent.end)),
+        originalStart: eventData.effectiveStartTime,
+        originalEnd: eventData.effectiveEndTime
+      })
+
+      // Check for common FullCalendar issues
+      if (!transformedEvent.start) {
+        console.error('Calendar.js - Event missing start time:', eventData)
+
+        return null // Skip invalid events
+      }
+
+      // Ensure dates are valid Date objects or ISO strings
+      const startDateCheck = new Date(transformedEvent.start)
+      const endDateCheck = new Date(transformedEvent.end)
+
+      if (isNaN(startDateCheck.getTime())) {
+        console.error('Calendar.js - Invalid start date:', {
+          eventId: eventId,
+          start: transformedEvent.start,
+          originalStart: eventData.effectiveStartTime || eventData.start
+        })
+
+        return null // Skip events with invalid dates
+      }
+
+      if (transformedEvent.end && isNaN(endDateCheck.getTime())) {
+        console.error('Calendar.js - Invalid end date:', {
+          eventId: eventId,
+          end: transformedEvent.end,
+          originalEnd: eventData.effectiveEndTime || eventData.end
+        })
+
+        // Use start + 1 hour as fallback
+        transformedEvent.end = new Date(startDateCheck.getTime() + 60 * 60 * 1000).toISOString()
+      }
+
+      // Debug: Check for date formatting issues
+      const startDate = new Date(transformedEvent.start)
+      const endDate = new Date(transformedEvent.end)
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        console.error('Calendar.js - Invalid date format detected:', {
+          eventId: eventId,
+          originalStart: eventData.effectiveStartTime || eventData.start,
+          originalEnd: eventData.effectiveEndTime || eventData.end,
+          transformedStart: transformedEvent.start,
+          transformedEnd: transformedEvent.end,
+          startValid: !isNaN(startDate.getTime()),
+          endValid: !isNaN(endDate.getTime())
+        })
+      }
+
+      console.log('Calendar.js - Transformed event:', {
+        original: eventData,
+        transformed: transformedEvent,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString()
+      })
+
+      return transformedEvent
+    })
+
+    console.log('Calendar.js - All transformed events:', transformed)
+
+    // Filter out any null events (from invalid dates)
+    const validEvents = transformed.filter(event => event !== null)
+
+    console.log('Calendar.js - Valid events after filtering:', {
+      totalTransformed: transformed.length,
+      validEvents: validEvents.length,
+      filteredOut: transformed.length - validEvents.length,
+      events: validEvents
+    })
+
+    return validEvents
+  }, [store.events])
   if (store) {
+    console.log('Calendar.js - About to create calendarOptions with transformedEvents:', {
+      transformedEventsLength: transformedEvents?.length || 0,
+      transformedEvents: transformedEvents
+    })
+
     // ** calendarOptions(Props)
     const calendarOptions = {
-      events: store.events.length ? store.events : [],
-      eventDataTransform: eventData => {
-        // Transform EventOccurrenceDTO to FullCalendar event format
-        // Create unique ID using recurringSeriesId + start time to avoid duplicates
-        const uniqueId = eventData.recurringSeriesId
-          ? `${eventData.recurringSeriesId}-${eventData.effectiveStartTime}`
-          : eventData.id || `event-${eventData.effectiveStartTime || Date.now()}`
+      events: transformedEvents,
 
-        // Determine calendar category based on event data
-        const calendarCategory = eventData.recurringSeriesId
-          ? `Series-${eventData.recurringSeriesId}`
-          : eventData.virtual
-          ? 'Virtual-Meetings'
-          : eventData.professorName
-          ? `Professor-${eventData.professorName.replace(/\s+/g, '-')}`
-          : 'General-Events'
-
-        const transformedEvent = {
-          id: uniqueId,
-          title: eventData.seriesTitle || eventData.title || 'Untitled Event',
-          start: eventData.effectiveStartTime || eventData.start,
-          end: eventData.effectiveEndTime || eventData.end,
-          allDay: eventData.allDay || false,
-          url: '', // Remove direct URL to prevent automatic redirection
-          extendedProps: {
-            calendar: calendarCategory,
-            description: eventData.seriesDescription || eventData.description || '',
-            location: eventData.virtual ? 'Virtual Meeting' : '',
-            guests: [],
-            professorName: eventData.professorName,
-            professorId: eventData.professorId,
-            price: eventData.price,
-            attendance: eventData.attendance,
-            virtual: eventData.virtual,
-            cancelled: eventData.cancelled,
-            completed: eventData.completed,
-            upcoming: eventData.upcoming,
-            missed: eventData.missed,
-            rescheduled: eventData.rescheduled,
-            recurringSeriesId: eventData.recurringSeriesId,
-            meetingLink: eventData.meetingLink, // Store meeting link in extendedProps instead of url
-            // Pass the original EventOccurrenceDTO for direct access to all data including eventAttendees
-            originalEventDTO: eventData
-          }
-        }
-
-        return transformedEvent // This was missing!
+      // Debug FullCalendar event loading
+      eventDidMount(info) {
+        console.log('FullCalendar - Event mounted:', {
+          event: info.event,
+          id: info.event.id,
+          title: info.event.title,
+          start: info.event.start,
+          end: info.event.end
+        })
       },
+
+      eventWillUnmount(info) {
+        console.log('FullCalendar - Event will unmount:', {
+          event: info.event,
+          id: info.event.id,
+          title: info.event.title
+        })
+      },
+
       plugins: [interactionPlugin, dayGridPlugin, timeGridPlugin, listPlugin, bootstrap5Plugin],
       initialView: 'dayGridMonth',
       headerToolbar: {
@@ -167,65 +310,121 @@ const Calendar = props => {
         // Prevent default URL navigation
         jsEvent.preventDefault()
 
-        // Debug: Log the original FullCalendar event to understand its structure
-        console.log('FullCalendar eventClick - original event:', {
-          clickedEvent,
-          id: clickedEvent.id,
-          title: clickedEvent.title,
+        console.log('Calendar.js - Event clicked:', {
+          clickedEventId: clickedEvent.id,
           extendedProps: clickedEvent.extendedProps,
-          allExtendedProps: Object.keys(clickedEvent.extendedProps || {}),
-          eventAttendees: clickedEvent.extendedProps?.eventAttendees,
-          attendees: clickedEvent.extendedProps?.attendees,
-          guests: clickedEvent.extendedProps?.guests
+          allStoreEvents: store.events.map(e => ({
+            eventId: e.eventId,
+            id: e.id,
+            recurringSeriesId: e.recurringSeriesId,
+            effectiveStartTime: e.effectiveStartTime,
+            seriesTitle: e.seriesTitle,
+            title: e.title
+          }))
         })
 
-        // Convert FullCalendar event back to expected format for the sidebar
-        const convertedEvent = {
-          id: clickedEvent.id,
-          title: clickedEvent.title,
-          seriesTitle: clickedEvent.title,
-          start: clickedEvent.start,
-          end: clickedEvent.end,
-          effectiveStartTime: clickedEvent.start,
-          effectiveEndTime: clickedEvent.end,
-          allDay: clickedEvent.allDay,
-          url: clickedEvent.extendedProps?.meetingLink || '',
-          description: clickedEvent.extendedProps?.description || '',
-          seriesDescription: clickedEvent.extendedProps?.description || '',
-          extendedProps: {
-            ...clickedEvent.extendedProps,
-            meetingLink: clickedEvent.extendedProps?.meetingLink
-          },
+        // Get the original EventOccurrenceDTO from Redux store
+        // For events with unique IDs, use direct lookup
+        // For virtual recurring occurrences, match by generated ID or find by other properties
+        let originalEvent = null
 
-          // Copy all extendedProps to top level for compatibility
-          ...clickedEvent.extendedProps,
-
-          // Explicitly preserve attendee data from multiple sources
-          eventAttendees:
-            clickedEvent.extendedProps?.eventAttendees ||
-            clickedEvent.extendedProps?.attendees ||
-            clickedEvent.extendedProps?.guests ||
-            [],
-          attendees:
-            clickedEvent.extendedProps?.attendees ||
-            clickedEvent.extendedProps?.eventAttendees ||
-            clickedEvent.extendedProps?.guests ||
-            []
+        // First try to find by actual eventId stored in extendedProps (for events with real IDs)
+        if (clickedEvent.extendedProps?.eventId) {
+          console.log('Calendar.js - Searching by extendedProps.eventId:', clickedEvent.extendedProps.eventId)
+          originalEvent = store.events.find(
+            event =>
+              event.eventId === clickedEvent.extendedProps.eventId || event.id === clickedEvent.extendedProps.eventId
+          )
+          console.log('Calendar.js - Found by eventId:', originalEvent)
         }
 
-        console.log('FullCalendar eventClick - converted event:', {
-          convertedEvent,
-          eventAttendees: convertedEvent.eventAttendees,
-          attendees: convertedEvent.attendees
+        // If not found and this is a generated ID (format: seriesId-timestamp), parse and find
+        if (!originalEvent && clickedEvent.id.includes('-')) {
+          // Parse the generated ID: recurringSeriesId-effectiveStartTime
+          const idParts = clickedEvent.id.split('-')
+          console.log('Calendar.js - Parsing generated ID parts:', idParts)
+
+          // For UUIDs, the series ID is the first 5 parts joined by '-'
+          // e.g., "1ccededd-1555-461d-9970-59666ae099b5-2025-07-15T14:15:00Z"
+          // Split at the last '-' that starts with a year (2025)
+          const lastDashIndex = clickedEvent.id.lastIndexOf('-2025')
+          if (lastDashIndex !== -1) {
+            const possibleSeriesId = clickedEvent.id.substring(0, lastDashIndex)
+            const timestampPart = clickedEvent.id.substring(lastDashIndex + 1)
+
+            console.log('Calendar.js - Parsed UUID format:', {
+              possibleSeriesId,
+              timestampPart,
+              clickedStart: clickedEvent.start?.toISOString()
+            })
+
+            originalEvent = store.events.find(event => {
+              const eventStart = event.effectiveStartTime || event.start
+              console.log('Calendar.js - Comparing event:', {
+                eventSeriesId: event.recurringSeriesId,
+                eventStart,
+                matches: event.recurringSeriesId === possibleSeriesId && eventStart === timestampPart
+              })
+
+              return event.recurringSeriesId === possibleSeriesId && eventStart === timestampPart
+            })
+          }
+
+          if (!originalEvent) {
+            // Fallback: try first part as series ID
+            const possibleSeriesId = idParts[0]
+            const clickedStart = clickedEvent.start?.toISOString()
+
+            console.log('Calendar.js - Fallback search:', {
+              possibleSeriesId,
+              clickedStart,
+              clickedTitle: clickedEvent.title
+            })
+
+            originalEvent = store.events.find(event => {
+              const eventStart = event.effectiveStartTime || event.start
+
+              return (
+                (event.recurringSeriesId === possibleSeriesId && eventStart === clickedStart) ||
+                // Fallback: match by start time and title
+                (eventStart === clickedStart && (event.seriesTitle || event.title) === clickedEvent.title)
+              )
+            })
+          }
+        }
+
+        // Final fallback: find by start time and title
+        if (!originalEvent) {
+          const clickedStart = clickedEvent.start?.toISOString()
+          console.log('Calendar.js - Final fallback search by time and title:', {
+            clickedStart,
+            clickedTitle: clickedEvent.title
+          })
+
+          originalEvent = store.events.find(event => {
+            const eventStart = event.effectiveStartTime || event.start
+
+            return eventStart === clickedStart && (event.seriesTitle || event.title) === clickedEvent.title
+          })
+        }
+
+        console.log('Calendar.js - Found original event:', {
+          clickedEventId: clickedEvent.id,
+          foundEvent: originalEvent,
+          searchCriteria: {
+            extendedPropsEventId: clickedEvent.extendedProps?.eventId,
+            clickedStart: clickedEvent.start?.toISOString(),
+            clickedTitle: clickedEvent.title
+          }
         })
 
-        dispatch(handleSelectEvent(convertedEvent))
-        handleAddEventSidebarToggle()
-
-        // * Only grab required field otherwise it goes in infinity loop
-        // ! Always grab all fields rendered by form (even if it get `undefined`) otherwise due to Vue3/Composition API you might get: "object is not extensible"
-        // event.value = grabEventDataFromEventApi(clickedEvent)
-        // isAddNewEventSidebarActive.value = true
+        if (originalEvent) {
+          // Use the original DTO directly from Redux store
+          dispatch(handleSelectEvent(originalEvent))
+          handleAddEventSidebarToggle()
+        } else {
+          console.error('Calendar.js - Could not find original event for clicked event:', clickedEvent)
+        }
       },
       customButtons: {
         sidebarToggle: {

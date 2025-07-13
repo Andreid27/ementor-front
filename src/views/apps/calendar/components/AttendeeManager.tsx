@@ -204,6 +204,17 @@ const AttendeeManager: React.FC<AttendeeManagerProps> = ({
 
   const handleToggleExpected = (attendeeId: string, expected: boolean) => {
     const safeAttendees = attendees || []
+
+    // Find the attendee to check if they have custom pricing
+    const attendee = safeAttendees.find(a => a.attendeeId === attendeeId)
+
+    // Prevent unchecking "Expected" if attendee has custom pricing
+    // This is required by database constraint: event_attendees_pricing_check
+    if (!expected && attendee?.hasCustomPricing) {
+      console.warn('Cannot set expected=false for attendee with custom pricing due to database constraint')
+      return // Don't allow the change
+    }
+
     const updatedAttendees = safeAttendees.map(attendee =>
       attendee.attendeeId === attendeeId ? { ...attendee, expected } : attendee
     )
@@ -268,9 +279,20 @@ const AttendeeManager: React.FC<AttendeeManagerProps> = ({
                         checked={attendee.expected || false}
                         onChange={e => handleToggleExpected(attendee.attendeeId!, e.target.checked)}
                         size='small'
+                        // Disable if attendee has custom pricing (database constraint requirement)
+                        disabled={attendee.hasCustomPricing || false}
                       />
                     }
-                    label='Expected'
+                    label={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        Expected
+                        {attendee.hasCustomPricing && (
+                          <Tooltip title='Cannot be disabled when attendee has custom pricing'>
+                            <AttachMoneyIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
+                          </Tooltip>
+                        )}
+                      </Box>
+                    }
                     sx={{ m: 0 }}
                   />
                   <FormControlLabel

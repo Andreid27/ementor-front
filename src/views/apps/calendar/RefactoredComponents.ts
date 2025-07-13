@@ -1,7 +1,7 @@
 // ** Example Usage of Refactored Calendar Sidebar Components
 
 // ** Main Sidebar Component (Drop-in replacement)
-import AddEventSidebarRefactored from './AddEventSidebarRefactored'
+import AddEventSidebar from './AddEventSidebar'
 
 // ** Individual Improved Components
 import {
@@ -14,7 +14,7 @@ import {
 } from './components'
 
 // ** Custom Hooks for Business Logic
-import { useEventData, useEventActions, useEventForm, useEventTransform, useSidebarState } from './hooks'
+import { useEventData, useEventActions } from './hooks'
 
 // ** Utilities for Data Transformation
 import { transformEventForSidebar, createBlankEvent, formatDurationToISO8601 } from './utils/eventTransforms'
@@ -55,7 +55,7 @@ import {
 
 export {
   // Main component
-  AddEventSidebarRefactored,
+  AddEventSidebar,
 
   // Improved components
   SidebarHeaderImproved,
@@ -68,9 +68,6 @@ export {
   // Custom hooks
   useEventData,
   useEventActions,
-  useEventForm,
-  useEventTransform,
-  useSidebarState,
 
   // Utilities
   transformEventForSidebar,

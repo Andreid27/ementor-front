@@ -1,5 +1,6 @@
 // ** React Imports
 import React, { useMemo } from 'react'
+import { useSelector } from 'react-redux'
 
 // ** MUI Imports
 import Box from '@mui/material/Box'
@@ -18,8 +19,8 @@ import EventHeroSection from './EventHeroSection'
 import EventMeetingLink from './EventMeetingLink'
 import SidebarFooter from './SidebarFooter'
 
-// ** Types
-import { EventViewProps } from '../types'
+// ** Redux Selectors
+import { selectSelectedEvent } from 'src/store/apps/calendar/index'
 
 // ** Utils
 import { format } from 'date-fns'
@@ -31,24 +32,29 @@ interface EventDetailItem {
   color?: string
 }
 
-const EventViewImproved: React.FC<EventViewProps> = ({ selectedEvent, onClose }) => {
+interface EventViewImprovedProps {
+  onClose: () => void
+}
+
+const EventViewImproved: React.FC<EventViewImprovedProps> = ({ onClose }) => {
   const theme = useTheme()
-  const meetingLink = selectedEvent?.extendedProps?.meetingLink || selectedEvent?.url
+  const selectedEvent = useSelector(selectSelectedEvent)
+  const meetingLink = selectedEvent?.meetingLink
 
   const eventDetails = useMemo((): EventDetailItem[] => {
     const details: EventDetailItem[] = []
 
     // Date and Time
-    if (selectedEvent?.start) {
-      const startDate = new Date(selectedEvent.start)
-      const endDate = selectedEvent.end ? new Date(selectedEvent.end) : null
+    if (selectedEvent?.effectiveStartTime) {
+      const startDate = new Date(selectedEvent.effectiveStartTime)
+      const endDate = selectedEvent.effectiveEndTime ? new Date(selectedEvent.effectiveEndTime) : null
 
       details.push({
         icon: 'tabler:calendar',
         label: 'Date & Time',
-        value: selectedEvent.allDay
-          ? `${format(startDate, 'MMMM d, yyyy')} (All Day)`
-          : `${format(startDate, 'MMMM d, yyyy h:mm a')}${endDate ? ` - ${format(endDate, 'h:mm a')}` : ''}`,
+        value: endDate
+          ? `${format(startDate, 'MMMM d, yyyy h:mm a')} - ${format(endDate, 'h:mm a')}`
+          : format(startDate, 'MMMM d, yyyy h:mm a'),
         color: theme.palette.primary.main
       })
     }
@@ -83,33 +89,6 @@ const EventViewImproved: React.FC<EventViewProps> = ({ selectedEvent, onClose })
       })
     }
 
-    // Attendance Status
-    if (selectedEvent?.attendance) {
-      const attendanceColor =
-        selectedEvent.attendance === 'CONFIRMED'
-          ? theme.palette.success.main
-          : selectedEvent.attendance === 'CANCELLED'
-          ? theme.palette.error.main
-          : theme.palette.warning.main
-
-      details.push({
-        icon: 'tabler:check',
-        label: 'Attendance',
-        value: (
-          <Chip
-            label={selectedEvent.attendance}
-            size='small'
-            sx={{
-              bgcolor: attendanceColor,
-              color: 'white',
-              fontWeight: 600
-            }}
-          />
-        ),
-        color: attendanceColor
-      })
-    }
-
     return details
   }, [selectedEvent, theme])
 
@@ -128,7 +107,7 @@ const EventViewImproved: React.FC<EventViewProps> = ({ selectedEvent, onClose })
   return (
     <Box sx={{ height: '100%', overflow: 'auto' }}>
       {/* Hero Section */}
-      <EventHeroSection selectedEvent={selectedEvent} />
+      <EventHeroSection />
 
       {/* Status Chips */}
       {eventStatus.length > 0 && (
@@ -188,7 +167,7 @@ const EventViewImproved: React.FC<EventViewProps> = ({ selectedEvent, onClose })
       </Box>
 
       {/* Description */}
-      {(selectedEvent?.description || selectedEvent?.seriesDescription) && (
+      {selectedEvent?.seriesDescription && (
         <Card sx={{ mb: 3 }}>
           <CardContent>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
@@ -198,7 +177,7 @@ const EventViewImproved: React.FC<EventViewProps> = ({ selectedEvent, onClose })
               </Typography>
             </Box>
             <Typography variant='body2' color='text.secondary' sx={{ lineHeight: 1.6 }}>
-              {selectedEvent?.description || selectedEvent?.seriesDescription}
+              {selectedEvent?.seriesDescription}
             </Typography>
           </CardContent>
         </Card>
@@ -208,13 +187,7 @@ const EventViewImproved: React.FC<EventViewProps> = ({ selectedEvent, onClose })
 
       {/* Footer */}
       <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-        <SidebarFooter
-          isEditMode={false}
-          selectedEvent={selectedEvent}
-          onClose={onClose}
-          onCancel={() => {}}
-          onReset={() => {}}
-        />
+        <SidebarFooter isEditMode={false} onClose={onClose} onCancel={() => {}} onReset={() => {}} />
       </Box>
     </Box>
   )

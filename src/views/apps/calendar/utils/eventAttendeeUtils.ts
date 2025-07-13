@@ -161,7 +161,9 @@ export const updateAttendeePrice = (
       return {
         ...attendee,
         customPrice: hasCustomPricing ? newPrice : undefined,
-        hasCustomPricing
+        hasCustomPricing,
+        // Database constraint requires expected=true when hasCustomPricing=true
+        expected: hasCustomPricing ? true : attendee.expected
       }
     }
     return attendee

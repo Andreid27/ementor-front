@@ -47,21 +47,27 @@ export interface CalendarState {
 
 // ** Fetch Events
 export const fetchEvents = createAsyncThunk<EventOccurrenceDTO[]>('appCalendar/fetchEvents', async () => {
-  const response = await profileServiceClient.events.getConsolidatedEvents({
-    startDate: new Date().toISOString(),
-    endDate: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString()
-  })
+  console.log('fetchEvents action started - making API call...')
 
-  // Debug: Log the actual API response structure to understand eventAttendees
-  console.log('fetchEvents API response:', {
-    totalEvents: response.data.length,
-    sampleEvent: response.data[0],
-    sampleEventAttendees: response.data[0]?.eventAttendees,
-    eventAttendeesType: typeof response.data[0]?.eventAttendees,
-    eventAttendeesLength: response.data[0]?.eventAttendees?.length
-  })
+  try {
+    const response = await profileServiceClient.events.getConsolidatedEvents({
+      startDate: new Date().toISOString(),
+      endDate: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString()
+    })
 
-  return response.data
+    console.log('fetchEvents API response:', {
+      totalEvents: response.data.length,
+      sampleEvent: response.data[0],
+      sampleEventAttendees: response.data[0]?.eventAttendees,
+      eventAttendeesType: typeof response.data[0]?.eventAttendees,
+      eventAttendeesLength: response.data[0]?.eventAttendees?.length
+    })
+
+    return response.data
+  } catch (error) {
+    console.error('fetchEvents API error:', error)
+    throw error
+  }
 })
 
 // ** Add Event
@@ -388,19 +394,6 @@ export const appCalendarSlice = createSlice({
     builder.addCase(fetchEvents.fulfilled, (state, action) => {
       state.events = action.payload
       state.loading = false
-      
-      // Update selectedEvent with fresh data if it exists in the new events
-      if (state.selectedEvent) {
-        const selectedEventId = (state.selectedEvent as any).id || (state.selectedEvent as any).eventId
-        const updatedEvent = action.payload.find(event => event.id === selectedEventId)
-        if (updatedEvent) {
-          console.log('Updating selectedEvent with fresh data:', {
-            oldEventAttendees: (state.selectedEvent as any).eventAttendees?.length || 0,
-            newEventAttendees: updatedEvent.eventAttendees?.length || 0
-          })
-          state.selectedEvent = updatedEvent
-        }
-      }
     })
     builder.addCase(fetchEvents.rejected, (state, action) => {
       state.loading = false
@@ -420,6 +413,33 @@ export const appCalendarSlice = createSlice({
     // Get My Singular Events
     builder.addCase(getMySingularEvents.fulfilled, (state, action) => {
       state.mySingularEvents = action.payload
+    })
+
+    // Update Event - refresh selected event if it was updated
+    builder.addCase(updateEvent.fulfilled, (state, action) => {
+      // After an event is updated, if there's a selected event,
+      // try to find the updated version in the refreshed events
+      if (state.selectedEvent) {
+        const updatedEvent = state.events.find(event => {
+          // For recurring events, match by series ID and occurrence time
+          if (state.selectedEvent.recurringSeriesId) {
+            return (
+              event.recurringSeriesId === state.selectedEvent.recurringSeriesId &&
+              event.effectiveStartTime === state.selectedEvent.effectiveStartTime
+            )
+          }
+          // For single events, match by ID
+          return event.id === state.selectedEvent.id
+        })
+
+        if (updatedEvent) {
+          console.log('Redux store - Updating selected event with fresh data:', {
+            oldEvent: state.selectedEvent,
+            newEvent: updatedEvent
+          })
+          state.selectedEvent = updatedEvent
+        }
+      }
     })
 
     // Handle loading states for async actions

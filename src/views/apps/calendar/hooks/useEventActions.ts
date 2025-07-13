@@ -1,9 +1,9 @@
 import { useCallback } from 'react'
 import { useAuth } from 'src/hooks/useAuth'
+import { useSelector } from 'react-redux'
 import { RecurringSeriesDTO } from 'src/generated/profile-service'
 import { EventFormValues, FormData } from '../types'
 import { EventTypeInfo, EditingScope, getEditingScopeConfig } from '../utils/eventTypeUtils'
-import { eventAttendeeDTOsToStudentIds } from '../utils/eventAttendeeUtils'
 
 interface UseEventActionsProps {
   values: EventFormValues
@@ -12,7 +12,6 @@ interface UseEventActionsProps {
   addEvent: (event: any) => void
   updateEvent: (event: any) => void
   deleteEvent: (id: string | number) => void
-  calendarApi: any
   onClose: () => void
   eventTypeInfo?: EventTypeInfo | null
   editingScope?: EditingScope
@@ -25,7 +24,6 @@ export const useEventActions = ({
   addEvent,
   updateEvent,
   deleteEvent,
-  calendarApi,
   onClose,
   eventTypeInfo,
   editingScope = 'occurrence'
@@ -41,7 +39,19 @@ export const useEventActions = ({
   }, [])
 
   const handleSubmit = useCallback(
-    (data: FormData) => {
+    async (data: FormData) => {
+      console.log('useEventActions - handleSubmit called with:', {
+        formData: data,
+        values: values,
+        attendees: values.attendees,
+        attendeesDetailed: values.attendees?.map(a => ({
+          attendeeId: a.attendeeId,
+          expected: a.expected,
+          hasCustomPricing: a.hasCustomPricing,
+          customPrice: a.customPrice
+        }))
+      })
+
       if (values.isRecurring) {
         const durationISO8601 = formatDurationToISO8601(values.durationHours, values.durationMinutes)
 
@@ -57,13 +67,37 @@ export const useEventActions = ({
           // Note: attendees will be handled separately via EventAttendeeDTO
         }
 
+        // Clean up attendee data: remove customPrice if hasCustomPricing is false
+        const cleanedAttendees = values.attendees?.map(attendee => {
+          const { customPrice, ...baseAttendee } = attendee
+
+          // Only include customPrice if hasCustomPricing is true
+          if (attendee.hasCustomPricing) {
+            return { ...baseAttendee, customPrice }
+          }
+
+          return baseAttendee
+        })
+
         const eventPayload = {
           recurringSeriesDTO,
           isRecurring: true,
-          // Convert EventAttendeeDTO to expected format for API
-          expectedAttendees: eventAttendeeDTOsToStudentIds(values.attendees),
-          attendees: values.attendees
+          // Use only EventAttendeeDTO format with cleaned data
+          attendees: cleanedAttendees
         }
+
+        console.log('useEventActions - About to dispatch recurring event:', {
+          payload: eventPayload,
+          attendeesWithPricing: values.attendees?.filter(a => a.hasCustomPricing),
+          fullPayloadStructure: JSON.stringify(eventPayload, null, 2),
+          attendeesInPayload: eventPayload.attendees?.map(a => ({
+            attendeeId: a.attendeeId,
+            expected: a.expected,
+            hasCustomPricing: a.hasCustomPricing,
+            customPrice: a.hasCustomPricing ? (a as any).customPrice : 'NOT_INCLUDED',
+            constraintViolation: a.hasCustomPricing && !a.expected
+          }))
+        })
 
         // Check if this is editing an existing recurring series
         const isEditingRecurring =
@@ -79,12 +113,26 @@ export const useEventActions = ({
             store.selectedEvent.recurringSeriesId ||
             store.selectedEvent.extendedProps?.recurringSeriesId ||
             store.selectedEvent.id
-          dispatch(updateEvent({ id: seriesId, ...eventPayload }))
+
+          await dispatch(updateEvent({ id: seriesId, ...eventPayload }))
+          // Redux store automatically handles data refresh and selectedEvent update
         } else {
           // Creating new recurring series
           dispatch(addEvent(eventPayload))
         }
       } else {
+        // Clean up attendee data: remove customPrice if hasCustomPricing is false
+        const cleanedAttendees = values.attendees?.map(attendee => {
+          const { customPrice, ...baseAttendee } = attendee
+
+          // Only include customPrice if hasCustomPricing is true
+          if (attendee.hasCustomPricing) {
+            return { ...baseAttendee, customPrice }
+          }
+
+          return baseAttendee
+        })
+
         const modifiedEvent = {
           display: 'block',
           title: data.title,
@@ -95,9 +143,8 @@ export const useEventActions = ({
             description: values.description.length ? values.description : undefined,
             meetingLink: values.meetingLink,
             price: values.price,
-            // Convert EventAttendeeDTO to expected format for backward compatibility
-            expectedAttendees: eventAttendeeDTOsToStudentIds(values.attendees),
-            attendees: values.attendees
+            // Use only EventAttendeeDTO format with cleaned data
+            attendees: cleanedAttendees
           }
         }
 
@@ -107,17 +154,17 @@ export const useEventActions = ({
 
         if (isEditingSingleEvent) {
           // Update existing single event
-          dispatch(updateEvent({ id: store.selectedEvent.id, ...modifiedEvent }))
+          await dispatch(updateEvent({ id: store.selectedEvent.id, ...modifiedEvent }))
+          // Redux store automatically handles data refresh and selectedEvent update
         } else {
           // Create new single event
           dispatch(addEvent(modifiedEvent))
         }
       }
 
-      calendarApi?.refetchEvents()
       onClose()
     },
-    [values, store.selectedEvent, dispatch, addEvent, updateEvent, calendarApi, onClose, formatDurationToISO8601]
+    [values, store.selectedEvent, dispatch, addEvent, updateEvent, onClose, formatDurationToISO8601]
   )
 
   const handleDelete = useCallback(() => {

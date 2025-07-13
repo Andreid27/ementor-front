@@ -5,7 +5,7 @@ import React from 'react'
 import Box from '@mui/material/Box'
 
 // ** Components
-import EventForm from './EventForm'
+import EventFormImproved from './EventFormImproved'
 import SidebarFooter from './SidebarFooter'
 
 interface EventFormContainerProps {
@@ -39,7 +39,7 @@ const EventFormContainer: React.FC<EventFormContainerProps> = ({
 }) => {
   return (
     <form onSubmit={handleSubmit(onSubmit)} autoComplete='off'>
-      <EventForm
+      <EventFormImproved
         values={values}
         setValues={setValues}
         isEditMode={isEditMode}
@@ -50,13 +50,7 @@ const EventFormContainer: React.FC<EventFormContainerProps> = ({
       />
 
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        <SidebarFooter
-          isEditMode={isEditMode}
-          selectedEvent={selectedEvent}
-          onClose={onClose}
-          onCancel={onCancel}
-          onReset={onReset}
-        />
+        <SidebarFooter isEditMode={isEditMode} onClose={onClose} onCancel={onCancel} onReset={onReset} />
       </Box>
     </form>
   )
