@@ -97,15 +97,6 @@ const EventForm: React.FC<EventFormProps> = ({
     // Ensure attendees is always an array to prevent undefined errors
     const attendees = values.attendees || []
 
-    console.log('EventFormImproved passing to AttendeeManager:', {
-      attendees: attendees,
-      attendeesCount: attendees.length,
-      isNewEvent,
-      selectedEventId: store.selectedEvent?.eventId,
-      valuesKeys: Object.keys(values),
-      fullValues: values
-    })
-
     sections.push({
       title: 'Attendees & Pricing',
       component: (

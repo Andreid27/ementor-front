@@ -91,18 +91,6 @@ export const getEventClassification = (event: any): string => {
  * - Virtual Recurring Series: virtual == true (templates for future occurrences)
  */
 export const determineEventType = (event: any): EventTypeInfo => {
-  // Debug logging to understand event classification
-  console.log('determineEventType - Analyzing event:', {
-    id: event.id,
-    recurringSeriesId: event.recurringSeriesId,
-    seriesId: event.seriesId,
-    virtual: event.virtual,
-    allProperties: Object.keys(event || {}),
-    isSingularCheck: isSingularEvent(event),
-    isOccurrenceCheck: isRecurringSeriesOccurrence(event),
-    isVirtualCheck: isVirtualRecurringSeries(event)
-  })
-
   // Use utility functions for clear event classification
   if (isSingularEvent(event)) {
     return {

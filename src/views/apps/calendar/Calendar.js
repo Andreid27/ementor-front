@@ -61,13 +61,6 @@ const Calendar = props => {
 
   // Memoize transformed events - single source of truth from Redux store
   const transformedEvents = useMemo(() => {
-    console.log('Calendar.js - Raw store.events:', {
-      eventsLength: store.events?.length || 0,
-      firstEvent: store.events?.[0],
-      allEvents: store.events,
-      storeEventsIsArray: Array.isArray(store.events)
-    })
-
     // Handle case where store.events might be undefined or not an array
     if (!store.events || !Array.isArray(store.events)) {
       console.warn('Calendar.js - store.events is not a valid array:', store.events)
@@ -80,17 +73,6 @@ const Calendar = props => {
 
       // Enhanced event classification using utility functions
       const eventClassification = getEventClassification(eventData)
-      console.log('Calendar.js - Event classification:', {
-        eventId: eventData.eventId,
-        id: eventData.id,
-        recurringSeriesId: eventData.recurringSeriesId,
-        virtual: eventData.virtual,
-        classification: eventClassification,
-        isSingular: isSingularEvent(eventData),
-        isOccurrence: isRecurringSeriesOccurrence(eventData),
-        isVirtual: isVirtualRecurringSeries(eventData),
-        effectiveStartTime: eventData.effectiveStartTime
-      })
 
       // Create unique ID for each event occurrence
       // First check if event has its own unique ID
@@ -105,8 +87,6 @@ const Calendar = props => {
         // Fallback: generate a unique ID
         eventId = eventData.recurringSeriesId || `event-${Date.now()}-${Math.random()}`
       }
-
-      console.log('Calendar.js - Generated unique eventId:', eventId)
 
       const transformedEvent = {
         id: eventId, // Use the actual event ID
@@ -147,20 +127,6 @@ const Calendar = props => {
           originalEffectiveStartTime: eventData.effectiveStartTime
         }
       }
-
-      // Debug: Check if dates are valid
-      console.log('Calendar.js - Event date validation:', {
-        eventId: eventId,
-        title: transformedEvent.title,
-        start: transformedEvent.start,
-        startType: typeof transformedEvent.start,
-        startValid: transformedEvent.start && !isNaN(new Date(transformedEvent.start)),
-        end: transformedEvent.end,
-        endType: typeof transformedEvent.end,
-        endValid: transformedEvent.end && !isNaN(new Date(transformedEvent.end)),
-        originalStart: eventData.effectiveStartTime,
-        originalEnd: eventData.effectiveEndTime
-      })
 
       // Check for common FullCalendar issues
       if (!transformedEvent.start) {
@@ -209,58 +175,18 @@ const Calendar = props => {
         })
       }
 
-      console.log('Calendar.js - Transformed event:', {
-        original: eventData,
-        transformed: transformedEvent,
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString()
-      })
-
       return transformedEvent
     })
-
-    console.log('Calendar.js - All transformed events:', transformed)
 
     // Filter out any null events (from invalid dates)
     const validEvents = transformed.filter(event => event !== null)
 
-    console.log('Calendar.js - Valid events after filtering:', {
-      totalTransformed: transformed.length,
-      validEvents: validEvents.length,
-      filteredOut: transformed.length - validEvents.length,
-      events: validEvents
-    })
-
     return validEvents
   }, [store.events])
   if (store) {
-    console.log('Calendar.js - About to create calendarOptions with transformedEvents:', {
-      transformedEventsLength: transformedEvents?.length || 0,
-      transformedEvents: transformedEvents
-    })
-
     // ** calendarOptions(Props)
     const calendarOptions = {
       events: transformedEvents,
-
-      // Debug FullCalendar event loading
-      eventDidMount(info) {
-        console.log('FullCalendar - Event mounted:', {
-          event: info.event,
-          id: info.event.id,
-          title: info.event.title,
-          start: info.event.start,
-          end: info.event.end
-        })
-      },
-
-      eventWillUnmount(info) {
-        console.log('FullCalendar - Event will unmount:', {
-          event: info.event,
-          id: info.event.id,
-          title: info.event.title
-        })
-      },
 
       plugins: [interactionPlugin, dayGridPlugin, timeGridPlugin, listPlugin, bootstrap5Plugin],
       initialView: 'dayGridMonth',
@@ -328,19 +254,6 @@ const Calendar = props => {
         // Prevent default URL navigation
         jsEvent.preventDefault()
 
-        console.log('Calendar.js - Event clicked:', {
-          clickedEventId: clickedEvent.id,
-          extendedProps: clickedEvent.extendedProps,
-          allStoreEvents: store.events.map(e => ({
-            eventId: e.eventId,
-            id: e.id,
-            recurringSeriesId: e.recurringSeriesId,
-            effectiveStartTime: e.effectiveStartTime,
-            seriesTitle: e.seriesTitle,
-            title: e.title
-          }))
-        })
-
         // Get the original EventOccurrenceDTO from Redux store
         // For events with unique IDs, use direct lookup
         // For virtual recurring occurrences, match by generated ID or find by other properties
@@ -348,12 +261,10 @@ const Calendar = props => {
 
         // First try to find by actual eventId stored in extendedProps (for events with real IDs)
         if (clickedEvent.extendedProps?.eventId) {
-          console.log('Calendar.js - Searching by extendedProps.eventId:', clickedEvent.extendedProps.eventId)
           originalEvent = store.events.find(
             event =>
               event.eventId === clickedEvent.extendedProps.eventId || event.id === clickedEvent.extendedProps.eventId
           )
-          console.log('Calendar.js - Found by eventId:', originalEvent)
         }
 
         // If not found and this is a generated ID (format: seriesId-timestamp), parse and find
@@ -425,16 +336,6 @@ const Calendar = props => {
             return eventStart === clickedStart && (event.seriesTitle || event.title) === clickedEvent.title
           })
         }
-
-        console.log('Calendar.js - Found original event:', {
-          clickedEventId: clickedEvent.id,
-          foundEvent: originalEvent,
-          searchCriteria: {
-            extendedPropsEventId: clickedEvent.extendedProps?.eventId,
-            clickedStart: clickedEvent.start?.toISOString(),
-            clickedTitle: clickedEvent.title
-          }
-        })
 
         if (originalEvent) {
           // Use the original DTO directly from Redux store

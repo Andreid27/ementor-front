@@ -29,13 +29,6 @@ export const useEventData = ({ selectedEvent, addEventSidebarOpen }: UseEventDat
 
       // Determine event type first
       const typeInfo = determineEventType(event)
-      console.log('useEventData - Event type determination result:', {
-        eventId: event.id,
-        recurringSeriesId: event.recurringSeriesId,
-        virtual: event.virtual,
-        typeInfo,
-        classification: typeInfo.displayName
-      })
       setEventTypeInfo(typeInfo)
 
       // Set default editing scope
@@ -65,12 +58,6 @@ export const useEventData = ({ selectedEvent, addEventSidebarOpen }: UseEventDat
       const isRecurringEvent = typeInfo.type === 'RECURRING_SERIES' || typeInfo.type === 'EVENT_OCCURRENCE' // Get attendees directly from the Redux store selectedEvent (EventOccurrenceDTO)
       const originalAttendees = event.eventAttendees || []
 
-      console.log('useEventData using Redux store DTO:', {
-        eventId: event.eventId,
-        eventAttendees: event.eventAttendees,
-        attendeesLength: originalAttendees?.length || 0
-      })
-
       const convertedAttendees = eventAttendeesToEventAttendeeDTOs(originalAttendees)
 
       // Fix any data integrity issues: if hasCustomPricing=true, ensure expected=true
@@ -86,13 +73,6 @@ export const useEventData = ({ selectedEvent, addEventSidebarOpen }: UseEventDat
           return { ...attendee, expected: true }
         }
         return attendee
-      })
-
-      console.log('useEventData - Final validated attendees:', {
-        originalCount: convertedAttendees.length,
-        validatedCount: validatedAttendees.length,
-        withCustomPricing: validatedAttendees.filter(a => a.hasCustomPricing),
-        allExpected: validatedAttendees.every(a => !a.hasCustomPricing || a.expected)
       })
 
       // Calculate duration from start and end times
@@ -135,12 +115,6 @@ export const useEventData = ({ selectedEvent, addEventSidebarOpen }: UseEventDat
   }, [clearErrors])
 
   useEffect(() => {
-    console.log('useEventData - useEffect triggered:', {
-      selectedEvent: selectedEvent?.id || 'null',
-      addEventSidebarOpen,
-      hasSelectedEvent: selectedEvent !== null
-    })
-
     if (selectedEvent !== null) {
       resetToStoredValues()
       setIsEditMode(false) // Show view mode for existing events
@@ -155,14 +129,6 @@ export const useEventData = ({ selectedEvent, addEventSidebarOpen }: UseEventDat
     if (selectedEvent !== null && eventTypeInfo === null) {
       const event = selectedEvent as any
       const typeInfo = determineEventType(event)
-      console.log('useEventData - Setting missing eventTypeInfo:', {
-        eventId: event.id,
-        recurringSeriesId: event.recurringSeriesId,
-        virtual: event.virtual,
-        typeInfo,
-        classification: typeInfo.displayName,
-        isEditMode
-      })
       setEventTypeInfo(typeInfo)
 
       // Also set default editing scope if not set

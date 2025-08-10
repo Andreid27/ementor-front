@@ -228,7 +228,6 @@ const AppCalendar = () => {
   }, [])
 
   useEffect(() => {
-    console.log('Local store updated:', calendarInfo)
     if (calendarInfo) {
       profileServiceClient.events
         .getConsolidatedEvents({
@@ -255,7 +254,6 @@ const AppCalendar = () => {
 
   const handleLeftSidebarToggle = () => setLeftSidebarOpen(!leftSidebarOpen)
   const handleAddEventSidebarToggle = () => setAddEventSidebarOpen(!addEventSidebarOpen)
-  console.log('Redux store:', store)
 
   return (
     <CalendarWrapper

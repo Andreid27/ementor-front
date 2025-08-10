@@ -47,20 +47,10 @@ export interface CalendarState {
 
 // ** Fetch Events
 export const fetchEvents = createAsyncThunk<EventOccurrenceDTO[]>('appCalendar/fetchEvents', async () => {
-  console.log('fetchEvents action started - making API call...')
-
   try {
     const response = await profileServiceClient.events.getConsolidatedEvents({
       startDate: new Date().toISOString(),
       endDate: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString()
-    })
-
-    console.log('fetchEvents API response:', {
-      totalEvents: response.data.length,
-      sampleEvent: response.data[0],
-      sampleEventAttendees: response.data[0]?.eventAttendees,
-      eventAttendeesType: typeof response.data[0]?.eventAttendees,
-      eventAttendeesLength: response.data[0]?.eventAttendees?.length
     })
 
     return response.data
@@ -443,11 +433,6 @@ export const appCalendarSlice = createSlice({
   initialState,
   reducers: {
     handleSelectEvent: (state, action) => {
-      console.log('handleSelectEvent called with:', {
-        payload: action.payload,
-        eventAttendees: action.payload?.eventAttendees,
-        attendeesCount: action.payload?.eventAttendees?.length || 0
-      })
       state.selectedEvent = action.payload
     },
     setLoading: (state, action) => {
