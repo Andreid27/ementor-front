@@ -72,7 +72,7 @@ const SidebarFooter: React.FC<SidebarFooterProps> = ({ isEditMode, onClose, onCa
         <Button
           type='submit'
           variant='contained'
-          color='warning'
+          color='primary'
           sx={{
             flex: 1,
             maxWidth: 200,
