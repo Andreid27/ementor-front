@@ -124,57 +124,117 @@ export const addEvent = createAsyncThunk<any, any>('appCalendar/addEvent', async
 })
 
 // ** Update Event
-export const updateEvent = createAsyncThunk<any, any>('appCalendar/updateEvent', async (event: any, { dispatch }) => {
-  if (event.isRecurring && event.recurringSeriesDTO) {
-    // Update recurring series with complete attendee information
-    const recurringSeriesDTO: RecurringSeriesDTO = {
-      ...event.recurringSeriesDTO,
-      // Ensure attendees are included with complete pricing information
-      eventAttendees: event.attendees || event.extendedProps?.attendees || []
-    }
-
-    const response = await profileServiceClient.events.updateRecurringSeries({
-      seriesId: event.id,
-      recurringSeriesDTO
-    })
-
-    await dispatch(fetchEvents())
-    return response.data
-  } else {
-    // Update singular event with complete attendee information
-    // Calculate duration in ISO 8601 format to match recurring series format
-    const durationSeconds = event.allDay
-      ? 86400
-      : Math.floor((new Date(event.end).getTime() - new Date(event.start).getTime()) / 1000)
-
-    const durationHours = Math.floor(durationSeconds / 3600)
-    const durationMinutes = Math.floor((durationSeconds % 3600) / 60)
-
-    let durationISO8601 = 'PT'
-    if (durationHours > 0) durationISO8601 += `${durationHours}H`
-    if (durationMinutes > 0) durationISO8601 += `${durationMinutes}M`
-    const finalDuration = durationISO8601 || 'PT0M'
-
-    const singularEventDTO: SingularEventDTO = {
-      title: event.title,
-      description: event.extendedProps?.description,
-      startTime: event.start instanceof Date ? event.start.toISOString() : event.start,
-      duration: finalDuration as any, // Use ISO 8601 duration format like recurring series
-      price: event.extendedProps?.price || 0,
-      meetingLink: event.extendedProps?.meetingLink,
-      // Include complete attendee information with pricing in the main payload
-      eventAttendees: event.extendedProps?.attendees || event.attendees || []
-    }
-
-    const response = await profileServiceClient.events.updateSingularEvent({
+export const updateEvent = createAsyncThunk<any, any>(
+  'appCalendar/updateEvent',
+  async (event: any, { dispatch, getState }) => {
+    console.log('🏪 Store updateEvent called with:', {
+      event,
       eventId: event.id,
-      singularEventDTO
+      isRecurring: event.isRecurring,
+      hasRecurringSeriesDTO: !!event.recurringSeriesDTO,
+      pathToTake: event.isRecurring && event.recurringSeriesDTO ? 'RECURRING_SERIES' : 'SINGULAR_EVENT'
     })
 
-    await dispatch(fetchEvents())
-    return response.data
+    if (event.isRecurring && event.recurringSeriesDTO) {
+      // Update recurring series with complete attendee information
+      const recurringSeriesDTO: RecurringSeriesDTO = {
+        ...event.recurringSeriesDTO,
+        // Ensure attendees are included with complete pricing information
+        eventAttendees: event.attendees || event.extendedProps?.attendees || []
+      }
+
+      const response = await profileServiceClient.events.updateRecurringSeries({
+        seriesId: event.id,
+        recurringSeriesDTO
+      })
+
+      await dispatch(fetchEvents())
+      return response.data
+    } else {
+      // Update singular event with complete attendee information
+      // Calculate duration in ISO 8601 format to match recurring series format
+      const durationSeconds = event.allDay
+        ? 86400
+        : Math.floor((new Date(event.end).getTime() - new Date(event.start).getTime()) / 1000)
+
+      const durationHours = Math.floor(durationSeconds / 3600)
+      const durationMinutes = Math.floor((durationSeconds % 3600) / 60)
+
+      let durationISO8601 = 'PT'
+      if (durationHours > 0) durationISO8601 += `${durationHours}H`
+      if (durationMinutes > 0) durationISO8601 += `${durationMinutes}M`
+      const finalDuration = durationISO8601 || 'PT0M'
+
+      const singularEventDTO: SingularEventDTO = {
+        title: event.title,
+        description: event.extendedProps?.description,
+        startTime: event.start instanceof Date ? event.start.toISOString() : event.start,
+        duration: finalDuration as any, // Use ISO 8601 duration format like recurring series
+        price: event.extendedProps?.price || 0,
+        meetingLink: event.extendedProps?.meetingLink,
+        // Include complete attendee information with pricing in the main payload
+        eventAttendees: event.extendedProps?.attendees || event.attendees || []
+      }
+
+      // ⚠️ CRITICAL: For singular events, ALWAYS use Redux selectedEvent as single source of truth
+      const state = getState() as any
+      const selectedEvent = state.calendar?.selectedEvent
+
+      // For singular events, prioritize the selectedEvent ID from Redux store
+      let eventIdToUse: string | null = null
+
+      if (selectedEvent && !selectedEvent.recurringSeriesId) {
+        // This is a singular event - use the Redux store ID as single source of truth
+        eventIdToUse = selectedEvent.id
+        console.log('🏪 Using Redux selectedEvent.id as single source of truth:', selectedEvent.id)
+      } else {
+        // Fallback to event.id if provided
+        eventIdToUse = event.id || null
+        console.log('🏪 Using event.id as fallback:', event.id)
+      }
+
+      console.log('🏪 Store DETAILED ID ANALYSIS:', {
+        'selectedEvent exists': !!selectedEvent,
+        'selectedEvent.id': selectedEvent?.id,
+        'selectedEvent.recurringSeriesId': selectedEvent?.recurringSeriesId,
+        'event.id (raw)': event.id,
+        'eventIdToUse (final)': eventIdToUse,
+        decision: selectedEvent && !selectedEvent.recurringSeriesId ? 'USING_REDUX_STORE' : 'USING_EVENT_PAYLOAD'
+      })
+
+      const hasEventId = Boolean(eventIdToUse)
+
+      console.log('🏪 Store singular event decision:', {
+        eventId: eventIdToUse,
+        hasEventId,
+        action: hasEventId ? 'UPDATE (PUT /events/singular/{id})' : 'ERROR - NO ID AVAILABLE',
+        singularEventDTO
+      })
+
+      if (hasEventId) {
+        // UPDATE existing singular event
+        console.log('📝 Store updating singular event:', {
+          eventId: eventIdToUse,
+          endpoint: 'PUT /events/singular/{eventId}',
+          singularEventDTO
+        })
+
+        const response = await profileServiceClient.events.updateSingularEvent({
+          eventId: eventIdToUse.toString(),
+          singularEventDTO
+        })
+
+        await dispatch(fetchEvents())
+        return response.data
+      } else {
+        // This should never happen for updateEvent
+        throw new Error(
+          '❌ CRITICAL ERROR: updateEvent called but no event ID found anywhere! Cannot update without ID.'
+        )
+      }
+    }
   }
-})
+)
 
 // ** Modify Event Occurrence
 export const modifyEventOccurrence = createAsyncThunk<

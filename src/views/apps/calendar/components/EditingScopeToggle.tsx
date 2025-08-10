@@ -21,9 +21,9 @@ const EditingScopeToggle: React.FC<EditingScopeToggleProps> = ({
     }
   }
 
-  // For event occurrences, only allow "occurrence" scope
+  // For event occurrences, allow both occurrence and series scope
   const isEventOccurrence = eventTypeInfo.type === 'EVENT_OCCURRENCE'
-  const seriesDisabled = disabled || isEventOccurrence
+  const seriesDisabled = disabled // Remove the isEventOccurrence condition
 
   const warningMessage = getScopeWarningMessage(selectedScope, eventTypeInfo)
 
@@ -83,11 +83,6 @@ const EditingScopeToggle: React.FC<EditingScopeToggleProps> = ({
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <span>🔄</span>
             <span>Entire Series</span>
-            {isEventOccurrence && (
-              <Typography variant='caption' sx={{ ml: 1, opacity: 0.7 }}>
-                (Not available)
-              </Typography>
-            )}
           </Box>
         </ToggleButton>
       </ToggleButtonGroup>

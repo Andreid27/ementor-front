@@ -127,7 +127,7 @@ export const determineEventType = (event: any): EventTypeInfo => {
       description: 'This is a specific occurrence of a recurring series. Changes will only affect this occurrence.',
       isVirtual: false,
       canComplete: true,
-      allowsScopeToggle: false // Event occurrences can only be edited as occurrences, not as series
+      allowsScopeToggle: true // Allow user to choose between editing this occurrence or the entire series
     }
   }
 
@@ -414,9 +414,16 @@ export const getEditingScopeConfig = (
  * Gets the scope-specific warning message
  */
 export const getScopeWarningMessage = (scope: EditingScope, eventTypeInfo?: EventTypeInfo): string => {
-  // Special message for event occurrences
+  // For event occurrences, provide scope-specific guidance
   if (eventTypeInfo?.type === EventType.EVENT_OCCURRENCE) {
-    return 'This is a specific occurrence of a recurring series. Only this occurrence can be modified.'
+    switch (scope) {
+      case 'occurrence':
+        return 'Changes will only affect this specific occurrence in the series.'
+      case 'series':
+        return 'Changes will affect this occurrence and all future events in the recurring series.'
+      default:
+        return ''
+    }
   }
 
   switch (scope) {

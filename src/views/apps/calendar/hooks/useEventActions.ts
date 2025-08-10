@@ -274,15 +274,34 @@ export const useEventActions = ({
         }
 
         // Check if this is editing an existing single event
-        const isEditingSingleEvent =
-          store.selectedEvent !== null && !store.selectedEvent.recurringSeriesId && !store.selectedEvent.seriesTitle
+        // For singular events: recurringSeriesId should be null/undefined
+        // Note: seriesTitle can be present even for singular events (it's just the event title)
+        const isEditingSingleEvent = store.selectedEvent !== null && !store.selectedEvent.recurringSeriesId
+
+        console.log('🔍 Singular event action decision:', {
+          selectedEvent: store.selectedEvent,
+          selectedEventId: store.selectedEvent?.id,
+          'selectedEvent.id type': typeof store.selectedEvent?.id,
+          'selectedEvent.id toString()': store.selectedEvent?.id ? store.selectedEvent.id.toString() : 'N/A',
+          hasRecurringSeriesId: !!store.selectedEvent?.recurringSeriesId,
+          hasSeriesTitle: !!store.selectedEvent?.seriesTitle,
+          isEditingSingleEvent,
+          actionToTake: isEditingSingleEvent ? 'UPDATE (dispatch updateEvent)' : 'CREATE (dispatch addEvent)',
+          modifiedEvent
+        })
 
         if (isEditingSingleEvent) {
-          // Update existing single event
+          // Update existing single event - ALWAYS use the Redux store as single source of truth
+          console.log('📝 Calling updateEvent for singular event:', {
+            selectedEventId: store.selectedEvent.id,
+            modifiedEvent,
+            payloadToSend: { id: store.selectedEvent.id, ...modifiedEvent }
+          })
           await dispatch(updateEvent({ id: store.selectedEvent.id, ...modifiedEvent }))
           // Redux store automatically handles data refresh and selectedEvent update
         } else {
           // Create new single event
+          console.log('🆕 Calling addEvent for new singular event:', modifiedEvent)
           dispatch(addEvent(modifiedEvent))
         }
       }
