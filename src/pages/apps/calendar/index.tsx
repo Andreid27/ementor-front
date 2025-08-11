@@ -31,7 +31,8 @@ import {
   updateEvent,
   handleSelectEvent,
   handleAllCalendars,
-  handleCalendarsUpdate
+  handleCalendarsUpdate,
+  setPeriod
   // @ts-ignore
 } from 'src/store/apps/calendar'
 
@@ -47,6 +48,7 @@ import profilePictureDownloader from 'src/@core/axios/profile-picture-downloader
 import { CalendarApi } from '@fullcalendar/core'
 import { EventOccurrenceDTO, profileServiceClient } from 'src/services'
 import { selectAllStudents } from 'src/store/apps/user'
+import { ca } from 'date-fns/locale'
 
 // ** Types
 export interface CalendarEvent {
@@ -67,7 +69,7 @@ export interface CalendarEvent {
 export type CalendarLabel = string // Make it dynamic instead of fixed types
 
 export type CalendarColors = {
-  [key: string]: 'error' | 'primary' | 'warning' | 'success' | 'info'
+  [key: string]: 'error' | 'primary' | 'warning' | 'success' | 'info' | 'secondary'
 }
 
 export interface CalendarStore {
@@ -78,9 +80,7 @@ export interface CalendarStore {
 
 // ** Dynamic CalendarColors - will be populated based on actual event data
 const calendarsColor: CalendarColors = {
-  'Virtual-Meetings': 'success',
-  'General-Events': 'primary'
-  // Series and Professor colors will be added dynamically
+  // All colors will be dynamically assigned based on series UUID
 }
 
 const AppCalendar = () => {
@@ -179,77 +179,81 @@ const AppCalendar = () => {
     return studentsWithAvatars
   }, [])
 
-  // ** Function to dynamically generate calendar colors based on event data
+  // ** Function to dynamically generate calendar colors based on series UUID
   const generateDynamicCalendarColors = useCallback((events: EventOccurrenceDTO[]) => {
     const dynamicColors: CalendarColors = { ...calendarsColor }
 
-    const colorOptions: Array<'error' | 'primary' | 'warning' | 'success' | 'info'> = [
-      'primary',
-      'info',
-      'warning',
-      'error',
-      'success'
+    // 6 distinct MUI colors - we'll cycle through these
+    const colorOptions: Array<'error' | 'primary' | 'warning' | 'success' | 'info' | 'secondary'> = [
+      'primary', // Blue
+      'secondary', // Purple/Gray
+      'success', // Green
+      'info', // Light Blue
+      'warning', // Orange/Yellow
+      'error' // Red
     ]
 
-    let colorIndex = 0
-
-    events.forEach(event => {
-      // Generate category name
-      const calendarCategory = event.recurringSeriesId
-        ? `Series-${event.seriesTitle}`
-        : event.virtual
-        ? 'Virtual-Meetings'
-        : event.professorName
-        ? `Professor-${event.professorName.replace(/\s+/g, '-')}`
-        : 'General-Events'
-
-      // Assign color if not already assigned
-      if (!dynamicColors[calendarCategory]) {
-        if (calendarCategory.startsWith('Series-')) {
-          dynamicColors[calendarCategory] = 'info'
-        } else if (calendarCategory === 'Virtual-Meetings') {
-          dynamicColors[calendarCategory] = 'success'
-        } else if (calendarCategory.startsWith('Professor-')) {
-          dynamicColors[calendarCategory] = 'warning'
-        } else {
-          dynamicColors[calendarCategory] = colorOptions[colorIndex % colorOptions.length]
-          colorIndex++
-        }
+    // Improved hash function with better distribution
+    const hashWithSeed = (str: string, seed: number = 42): number => {
+      let hash = seed
+      for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i)
+        hash = (hash << 5) - hash + char
+        hash = Math.imul(hash, 0x5bd1e995) // Better mixing
+        hash ^= hash >>> 15
       }
+      return Math.abs(hash)
+    }
+
+    // Collect all unique series IDs
+    const uniqueSeriesIds = Array.from(
+      new Set(events.filter(event => event.recurringSeriesId).map(event => event.recurringSeriesId!))
+    )
+
+    // Assign colors using improved hash function for better distribution
+    uniqueSeriesIds.forEach(seriesId => {
+      const seriesCategory = `Series-${seriesId}`
+
+      // Use hash of the series ID with seed for consistent color assignment
+      const hash = hashWithSeed(seriesId, 42)
+      const colorIndex = hash % colorOptions.length
+      dynamicColors[seriesCategory] = colorOptions[colorIndex]
+
+      const event = events.find(e => e.recurringSeriesId === seriesId)
+      console.log(
+        `Assigned color ${colorOptions[colorIndex]} (hash: ${hash}, index: ${colorIndex}) to series: ${event?.seriesTitle} (${seriesId})`
+      )
     })
 
     return dynamicColors
   }, [])
 
   useEffect(() => {
-    console.log('Calendar page useEffect - calling fetchEvents')
-    // @ts-ignore
-    dispatch(fetchEvents())
-  }, [])
+    const fetchAndProcessEvents = async () => {
+      if (calendarInfo) {
+        // Step 1: Set the period and wait for completion
+        await dispatch(setPeriod({ startDate: calendarInfo.start, endDate: calendarInfo.end }))
 
-  useEffect(() => {
-    if (calendarInfo) {
-      profileServiceClient.events
-        .getConsolidatedEvents({
-          startDate: calendarInfo?.start?.toISOString() || new Date().toISOString(),
-          endDate:
-            calendarInfo?.end?.toISOString() || new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString()
-        })
-        .then(async response => {
-          const studentsWithAvatars = await processStudentAvatars(response.data, students)
-          setStudentAvatars(studentsWithAvatars)
+        // Step 2: Fetch events and wait for completion
+        const fetchResult = await dispatch(fetchEvents())
+        const response = fetchResult?.payload
 
-          // Update Redux store instead of local state
-          dispatch(fetchEvents())
+        if (!response) {
+          console.error('Failed to fetch events - no response payload', response)
+          return
+        }
 
-          // Generate dynamic calendar colors based on event data
-          const newDynamicColors = generateDynamicCalendarColors(response.data)
-          setDynamicCalendarsColor(newDynamicColors)
-        })
-        .catch(error => {
-          console.error('Error fetching events:', error)
-        })
+        // Step 3: Process student avatars and wait for completion
+        const studentsWithAvatars = await processStudentAvatars(response, students)
+        setStudentAvatars(studentsWithAvatars)
+
+        // Step 4: Generate dynamic calendar colors (synchronous)
+        const newDynamicColors = generateDynamicCalendarColors(response)
+        console.log('Generated dynamic colors:', newDynamicColors)
+        setDynamicCalendarsColor(newDynamicColors)
+      }
     }
+    fetchAndProcessEvents()
   }, [calendarInfo, processStudentAvatars, students, generateDynamicCalendarColors])
 
   const handleLeftSidebarToggle = () => setLeftSidebarOpen(!leftSidebarOpen)

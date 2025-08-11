@@ -63,4 +63,5 @@ declare module 'src/store/apps/calendar' {
   export const handleSelectEvent: any
   export const handleAllCalendars: any
   export const handleCalendarsUpdate: any
+  export const setPeriod: any
 }

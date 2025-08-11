@@ -231,19 +231,10 @@ const Calendar = props => {
       navLinks: true,
       eventClassNames({ event: calendarEvent }) {
         // @ts-ignore
-        const calendarType = calendarEvent._def.extendedProps.calendar || 'General-Events'
+        const calendarType = calendarEvent._def.extendedProps.calendar || 'Standalone'
 
-        // Determine color based on calendar type
-        let colorName = 'primary'
-        if (calendarType.startsWith('Series-')) {
-          colorName = 'info'
-        } else if (calendarType === 'Virtual-Meetings') {
-          colorName = 'success'
-        } else if (calendarType.startsWith('Professor-')) {
-          colorName = 'warning'
-        } else {
-          colorName = calendarsColor[calendarType] || 'primary'
-        }
+        // Get color from the dynamic calendarsColor mapping
+        const colorName = calendarsColor[calendarType] || 'primary'
 
         return [
           // Background Color
@@ -271,29 +262,17 @@ const Calendar = props => {
         if (!originalEvent && clickedEvent.id.includes('-')) {
           // Parse the generated ID: recurringSeriesId-effectiveStartTime
           const idParts = clickedEvent.id.split('-')
-          console.log('Calendar.js - Parsing generated ID parts:', idParts)
 
-          // For UUIDs, the series ID is the first 5 parts joined by '-'
-          // e.g., "1ccededd-1555-461d-9970-59666ae099b5-2025-07-15T14:15:00Z"
-          // Split at the last '-' that starts with a year (2025)
-          const lastDashIndex = clickedEvent.id.lastIndexOf('-2025')
-          if (lastDashIndex !== -1) {
+          const yearMatches = [...clickedEvent.id.matchAll(/-202\d/g)]
+
+          if (yearMatches.length > 0) {
+            const lastYearMatch = yearMatches[yearMatches.length - 1]
+            const lastDashIndex = lastYearMatch.index
             const possibleSeriesId = clickedEvent.id.substring(0, lastDashIndex)
             const timestampPart = clickedEvent.id.substring(lastDashIndex + 1)
 
-            console.log('Calendar.js - Parsed UUID format:', {
-              possibleSeriesId,
-              timestampPart,
-              clickedStart: clickedEvent.start?.toISOString()
-            })
-
             originalEvent = store.events.find(event => {
               const eventStart = event.effectiveStartTime || event.start
-              console.log('Calendar.js - Comparing event:', {
-                eventSeriesId: event.recurringSeriesId,
-                eventStart,
-                matches: event.recurringSeriesId === possibleSeriesId && eventStart === timestampPart
-              })
 
               return event.recurringSeriesId === possibleSeriesId && eventStart === timestampPart
             })

@@ -53,7 +53,12 @@ interface EventViewImprovedProps {
   onClose: () => void
 }
 
-const EventViewImproved: React.FC<EventViewImprovedProps> = ({ selectedEvent: propSelectedEvent, values, students = [], onClose }) => {
+const EventViewImproved: React.FC<EventViewImprovedProps> = ({
+  selectedEvent: propSelectedEvent,
+  values,
+  students = [],
+  onClose
+}) => {
   const theme = useTheme()
   const selectedEventFromStore = useSelector(selectSelectedEvent)
   // Use prop selectedEvent if available, otherwise fall back to store
@@ -106,7 +111,7 @@ const EventViewImproved: React.FC<EventViewImprovedProps> = ({ selectedEvent: pr
     if (selectedEvent?.effectiveStartTime) {
       const startTime = formatDateTime(selectedEvent.effectiveStartTime)
       const endTime = selectedEvent.effectiveEndTime ? formatTimeOnly(selectedEvent.effectiveEndTime) : null
-      
+
       details.push({
         icon: 'tabler:calendar',
         label: 'Date & Time',
@@ -140,11 +145,11 @@ const EventViewImproved: React.FC<EventViewImprovedProps> = ({ selectedEvent: pr
       const totalMinutes = Math.floor(selectedEvent.duration.seconds / 60)
       const hours = Math.floor(totalMinutes / 60)
       const minutes = totalMinutes % 60
-      
+
       const duration = []
       if (hours > 0) duration.push(`${hours}h`)
       if (minutes > 0) duration.push(`${minutes}m`)
-      
+
       if (duration.length > 0) {
         details.push({
           icon: 'tabler:clock',
@@ -208,26 +213,26 @@ const EventViewImproved: React.FC<EventViewImprovedProps> = ({ selectedEvent: pr
                 Event Information
               </Typography>
             </Box>
-            
+
             {selectedEvent.seriesTitle && (
               <Typography variant='subtitle1' sx={{ fontWeight: 600, mb: 1 }}>
                 {selectedEvent.seriesTitle}
               </Typography>
             )}
-            
+
             <Stack direction='row' spacing={1} flexWrap='wrap' useFlexGap>
               {selectedEvent.id && (
-                <Chip 
-                  label={`ID: ${selectedEvent.id}`} 
-                  size='small' 
+                <Chip
+                  label={`ID: ${selectedEvent.id}`}
+                  size='small'
                   variant='outlined'
                   sx={{ fontFamily: 'monospace' }}
                 />
               )}
               {selectedEvent.recurringSeriesId && (
-                <Chip 
-                  label={`Series: ${selectedEvent.recurringSeriesId}`} 
-                  size='small' 
+                <Chip
+                  label={`Series: ${selectedEvent.recurringSeriesId}`}
+                  size='small'
                   variant='outlined'
                   color='primary'
                   sx={{ fontFamily: 'monospace' }}
@@ -242,13 +247,13 @@ const EventViewImproved: React.FC<EventViewImprovedProps> = ({ selectedEvent: pr
       {eventStatus.length > 0 && (
         <Box sx={{ mb: 3, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
           {eventStatus.map((status, index) => (
-            <Chip 
-              key={index} 
+            <Chip
+              key={index}
               icon={<Icon icon={status.icon} />}
-              label={status.label} 
-              color={status.color as any} 
-              size='small' 
-              sx={{ fontWeight: 600 }} 
+              label={status.label}
+              color={status.color as any}
+              size='small'
+              sx={{ fontWeight: 600 }}
             />
           ))}
         </Box>
@@ -303,7 +308,7 @@ const EventViewImproved: React.FC<EventViewImprovedProps> = ({ selectedEvent: pr
       </Box>
 
       {/* Original vs Actual Times */}
-      {(selectedEvent?.originalStartTime && selectedEvent.originalStartTime !== selectedEvent.effectiveStartTime) && (
+      {selectedEvent?.originalStartTime && selectedEvent.originalStartTime !== selectedEvent.effectiveStartTime && (
         <Card sx={{ mb: 3 }}>
           <CardContent>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
@@ -338,7 +343,9 @@ const EventViewImproved: React.FC<EventViewImprovedProps> = ({ selectedEvent: pr
             <Stack direction='row' spacing={1} flexWrap='wrap' useFlexGap>
               {enrichedAttendees.slice(0, 8).map((enrichedAttendee: any, index: number) => {
                 const student = enrichedAttendee.student
-                const displayName = student ? getStudentDisplayName(student) : enrichedAttendee.displayName || `Attendee ${index + 1}`
+                const displayName = student
+                  ? getStudentDisplayName(student)
+                  : enrichedAttendee.displayName || `Attendee ${index + 1}`
                 const initials = student ? getStudentInitials(student) : (displayName[0] || 'A').toUpperCase()
                 const profilePicture = student?.profilePicture || student?.picture
 
@@ -349,10 +356,7 @@ const EventViewImproved: React.FC<EventViewImprovedProps> = ({ selectedEvent: pr
                     size='small'
                     variant='outlined'
                     avatar={
-                      <Avatar 
-                        sx={{ width: 24, height: 24 }} 
-                        src={profilePicture}
-                      >
+                      <Avatar sx={{ width: 24, height: 24 }} src={profilePicture}>
                         {initials}
                       </Avatar>
                     }
@@ -367,12 +371,7 @@ const EventViewImproved: React.FC<EventViewImprovedProps> = ({ selectedEvent: pr
                 )
               })}
               {enrichedAttendees.length > 8 && (
-                <Chip
-                  label={`+${enrichedAttendees.length - 8} more`}
-                  size='small'
-                  variant='outlined'
-                  color='primary'
-                />
+                <Chip label={`+${enrichedAttendees.length - 8} more`} size='small' variant='outlined' color='primary' />
               )}
             </Stack>
           </CardContent>

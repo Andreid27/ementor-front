@@ -43,22 +43,30 @@ export interface CalendarState {
   mySingularEvents: SingularEventDTO[]
   loading: boolean
   error: string | null
+  periodStart: Date
+  periodEnd: Date
 }
 
 // ** Fetch Events
-export const fetchEvents = createAsyncThunk<EventOccurrenceDTO[]>('appCalendar/fetchEvents', async () => {
-  try {
-    const response = await profileServiceClient.events.getConsolidatedEvents({
-      startDate: new Date().toISOString(),
-      endDate: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString()
-    })
+export const fetchEvents = createAsyncThunk<EventOccurrenceDTO[]>(
+  'appCalendar/fetchEvents',
+  async (_, { getState }) => {
+    try {
+      const state = getState() as any
+      const { periodStart, periodEnd } = state.calendar
 
-    return response.data
-  } catch (error) {
-    console.error('fetchEvents API error:', error)
-    throw error
+      const response = await profileServiceClient.events.getConsolidatedEvents({
+        startDate: periodStart.toISOString(),
+        endDate: periodEnd.toISOString()
+      })
+
+      return response.data
+    } catch (error) {
+      console.error('fetchEvents API error:', error)
+      throw error
+    }
   }
-})
+)
 
 // ** Add Event
 export const addEvent = createAsyncThunk<any, any>('appCalendar/addEvent', async (event: any, { dispatch }) => {
@@ -417,7 +425,9 @@ const initialState: CalendarState = {
   myEvents: null,
   mySingularEvents: [],
   loading: false,
-  error: null
+  error: null,
+  periodStart: new Date(),
+  periodEnd: new Date(new Date().setMonth(new Date().getMonth() + 1))
 }
 
 export const selectCalendarEvents = (state: { calendar: CalendarState }) => state.calendar.events
@@ -443,6 +453,11 @@ export const appCalendarSlice = createSlice({
     },
     clearError: state => {
       state.error = null
+    },
+    setPeriod: (state, action) => {
+      const { startDate, endDate } = action.payload
+      state.periodStart = new Date(startDate)
+      state.periodEnd = new Date(endDate)
     }
   },
   extraReducers: builder => {
@@ -526,7 +541,7 @@ export const appCalendarSlice = createSlice({
   }
 })
 
-export const { handleSelectEvent, setLoading, setError, clearError } = appCalendarSlice.actions
+export const { handleSelectEvent, setLoading, setError, clearError, setPeriod } = appCalendarSlice.actions
 
 // Export utility functions
 export * from 'src/views/apps/calendar/utils'

@@ -109,7 +109,9 @@ const SidebarContentContainer: React.FC<SidebarContentContainerProps> = ({
       )
 
     case SidebarMode.EVENT_VIEW:
-      return <EventViewImproved selectedEvent={store.selectedEvent} values={values} students={students} onClose={onClose} />
+      return (
+        <EventViewImproved selectedEvent={store.selectedEvent} values={values} students={students} onClose={onClose} />
+      )
 
     case SidebarMode.EVENT_FORM:
       return (

@@ -106,23 +106,18 @@ const EventDetailsCards: React.FC<EventDetailsCardsProps> = ({ selectedEvent, va
               <Typography variant='body2' sx={{ color: 'text.secondary', mb: 0.5 }}>
                 Event ID
               </Typography>
-              <Chip 
-                label={selectedEvent.id} 
-                size='small' 
-                variant='outlined'
-                sx={{ fontFamily: 'monospace' }}
-              />
+              <Chip label={selectedEvent.id} size='small' variant='outlined' sx={{ fontFamily: 'monospace' }} />
             </Box>
           )}
-          
+
           {selectedEvent.recurringSeriesId && (
             <Box>
               <Typography variant='body2' sx={{ color: 'text.secondary', mb: 0.5 }}>
                 Series ID
               </Typography>
-              <Chip 
-                label={selectedEvent.recurringSeriesId} 
-                size='small' 
+              <Chip
+                label={selectedEvent.recurringSeriesId}
+                size='small'
                 variant='outlined'
                 color='primary'
                 sx={{ fontFamily: 'monospace' }}
@@ -176,9 +171,7 @@ const EventDetailsCards: React.FC<EventDetailsCardsProps> = ({ selectedEvent, va
             </Typography>
             <Typography variant='body1' sx={{ fontWeight: 500, mb: 1 }}>
               {formatDateTime(selectedEvent.effectiveStartTime)}
-              {selectedEvent.effectiveEndTime && 
-                ` - ${formatTimeOnly(selectedEvent.effectiveEndTime)}`
-              }
+              {selectedEvent.effectiveEndTime && ` - ${formatTimeOnly(selectedEvent.effectiveEndTime)}`}
             </Typography>
           </Box>
         )}
@@ -203,9 +196,7 @@ const EventDetailsCards: React.FC<EventDetailsCardsProps> = ({ selectedEvent, va
             </Typography>
             <Typography variant='body1' sx={{ fontWeight: 500, color: 'success.main' }}>
               {formatDateTime(selectedEvent.actualStartTime)}
-              {selectedEvent.actualEndTime && 
-                ` - ${formatTimeOnly(selectedEvent.actualEndTime)}`
-              }
+              {selectedEvent.actualEndTime && ` - ${formatTimeOnly(selectedEvent.actualEndTime)}`}
             </Typography>
           </Box>
         )}
@@ -287,10 +278,10 @@ const EventDetailsCards: React.FC<EventDetailsCardsProps> = ({ selectedEvent, va
             <Typography variant='body2' sx={{ color: 'text.secondary', mb: 0.5 }}>
               Meeting Link
             </Typography>
-            <Typography 
-              variant='body2' 
-              sx={{ 
-                fontFamily: 'monospace', 
+            <Typography
+              variant='body2'
+              sx={{
+                fontFamily: 'monospace',
                 color: 'primary.main',
                 wordBreak: 'break-all'
               }}
@@ -465,44 +456,18 @@ const EventDetailsCards: React.FC<EventDetailsCardsProps> = ({ selectedEvent, va
         </Box>
 
         <Stack direction='row' spacing={1} flexWrap='wrap' useFlexGap>
-          {selectedEvent.upcoming && (
-            <Chip
-              icon={<Icon icon='tabler:clock' />}
-              label='Upcoming'
-              color='primary'
-            />
-          )}
+          {selectedEvent.upcoming && <Chip icon={<Icon icon='tabler:clock' />} label='Upcoming' color='primary' />}
 
           {selectedEvent.completed && (
-            <Chip
-              icon={<Icon icon='tabler:check-circle' />}
-              label='Completed'
-              color='success'
-            />
+            <Chip icon={<Icon icon='tabler:check-circle' />} label='Completed' color='success' />
           )}
 
-          {selectedEvent.cancelled && (
-            <Chip
-              icon={<Icon icon='tabler:x-circle' />}
-              label='Cancelled'
-              color='error'
-            />
-          )}
+          {selectedEvent.cancelled && <Chip icon={<Icon icon='tabler:x-circle' />} label='Cancelled' color='error' />}
 
-          {selectedEvent.missed && (
-            <Chip
-              icon={<Icon icon='tabler:clock-x' />}
-              label='Missed'
-              color='warning'
-            />
-          )}
+          {selectedEvent.missed && <Chip icon={<Icon icon='tabler:clock-x' />} label='Missed' color='warning' />}
 
           {selectedEvent.rescheduled && (
-            <Chip
-              icon={<Icon icon='tabler:calendar-time' />}
-              label='Rescheduled'
-              color='info'
-            />
+            <Chip icon={<Icon icon='tabler:calendar-time' />} label='Rescheduled' color='info' />
           )}
         </Stack>
       </Box>
