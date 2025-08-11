@@ -129,6 +129,73 @@ const AppCalendar = () => {
     [dispatch]
   )
 
+  // ** Create cancelEventOccurrence action locally
+  const cancelEventOccurrence = useCallback(
+    async (payload: { seriesId: string | number; occurrenceStartTime: string }) => {
+      console.log('Local cancelEventOccurrence action called with:', payload)
+
+      const response = await profileServiceClient.events.cancelEventOccurrence({
+        seriesId: payload.seriesId.toString(),
+        originalStartTime: payload.occurrenceStartTime
+      })
+
+      console.log('Local cancelEventOccurrence API response:', response.data)
+      await dispatch(fetchEvents())
+
+      return response.data
+    },
+    [dispatch]
+  )
+
+  // ** Create completeEventOccurrence action locally
+  const completeEventOccurrence = useCallback(
+    async (payload: {
+      seriesId: string
+      originalStartTime: string
+      actualStartTime: string
+      actualEndTime: string
+      eventAttendeeDTO?: EventAttendeeDTO[]
+      attendeeIds?: string[]
+      description?: string
+    }) => {
+      console.log('Local completeEventOccurrence action called with:', payload)
+
+      let eventAttendeeDTO: EventAttendeeDTO[]
+
+      if (payload.eventAttendeeDTO) {
+        // New format: EventAttendeeDTO objects already provided (from wizard)
+        eventAttendeeDTO = payload.eventAttendeeDTO
+      } else if (payload.attendeeIds) {
+        // Legacy format: Convert attendeeIds to EventAttendeeDTO format
+        eventAttendeeDTO = payload.attendeeIds.map(attendeeId => ({
+          attendeeId,
+          hasCustomPricing: false,
+          customPrice: 0,
+          expected: true,
+          attended: true // Mark as attended since we're completing the event
+        }))
+      } else {
+        console.error('completeEventOccurrence: No attendee data provided')
+        return
+      }
+
+      const response = await profileServiceClient.events.completeEventOccurrence({
+        seriesId: payload.seriesId,
+        originalStartTime: payload.originalStartTime,
+        actualStartTime: payload.actualStartTime,
+        actualEndTime: payload.actualEndTime,
+        eventAttendeeDTO,
+        description: payload.description
+      })
+
+      console.log('Local completeEventOccurrence API response:', response.data)
+      await dispatch(fetchEvents())
+
+      return response.data
+    },
+    [dispatch]
+  )
+
   // ** Vars
   const leftSidebarWidth = 300
   const addEventSidebarWidth = 800
@@ -321,6 +388,8 @@ const AppCalendar = () => {
         addEvent={addEvent}
         updateEvent={updateEvent}
         modifyEventOccurrence={modifyEventOccurrence}
+        cancelEventOccurrence={cancelEventOccurrence}
+        completeEventOccurrence={completeEventOccurrence}
         deleteEvent={deleteEvent}
         calendarApi={calendarApi}
         drawerWidth={addEventSidebarWidth}

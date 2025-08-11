@@ -5,6 +5,7 @@ import React, { useMemo } from 'react'
 import EventViewImproved from './EventViewImproved'
 import EventFormImproved from './EventFormImproved'
 import DaySummaryView from './DaySummaryView'
+import EventCompletionWizard from './EventCompletionWizard'
 
 // ** Utils
 import { transformEventForSidebar, createBlankEvent } from '../utils/eventTransforms'
@@ -35,12 +36,18 @@ interface SidebarContentContainerProps {
   eventTypeInfo?: EventTypeInfo | null
   editingScope?: EditingScope
   onEditingScopeChange?: (scope: EditingScope) => void
+  // Completion wizard props
+  isCompletionMode?: boolean
+  onCompleteEvent?: (completionData: any) => Promise<void>
+  onCancelCompletion?: () => void
+  completionLoading?: boolean
 }
 
 enum SidebarMode {
   DAY_SUMMARY = 'DAY_SUMMARY',
   EVENT_VIEW = 'EVENT_VIEW',
-  EVENT_FORM = 'EVENT_FORM'
+  EVENT_FORM = 'EVENT_FORM',
+  COMPLETION_WIZARD = 'COMPLETION_WIZARD'
 }
 
 const SidebarContentContainer: React.FC<SidebarContentContainerProps> = ({
@@ -65,7 +72,12 @@ const SidebarContentContainer: React.FC<SidebarContentContainerProps> = ({
   // Event type and editing scope props
   eventTypeInfo,
   editingScope = 'occurrence',
-  onEditingScopeChange
+  onEditingScopeChange,
+  // Completion wizard props
+  isCompletionMode = false,
+  onCompleteEvent,
+  onCancelCompletion,
+  completionLoading = false
 }) => {
   // Determine the current sidebar mode
   const sidebarMode = useMemo((): SidebarMode => {
@@ -75,12 +87,16 @@ const SidebarContentContainer: React.FC<SidebarContentContainerProps> = ({
       return SidebarMode.DAY_SUMMARY
     }
 
+    if (isCompletionMode) {
+      return SidebarMode.COMPLETION_WIZARD
+    }
+
     if (isEditMode || store.selectedEvent === null) {
       return SidebarMode.EVENT_FORM
     }
 
     return SidebarMode.EVENT_VIEW
-  }, [store.selectedEvent, isEditMode])
+  }, [store.selectedEvent, isEditMode, isCompletionMode])
 
   // Event handlers
   const handleDaySummaryEventClick = (event: any) => {
@@ -105,6 +121,17 @@ const SidebarContentContainer: React.FC<SidebarContentContainerProps> = ({
           onEventClick={handleDaySummaryEventClick}
           onAddNewEvent={handleAddNewEventForDay}
           onClose={onClose}
+        />
+      )
+
+    case SidebarMode.COMPLETION_WIZARD:
+      return (
+        <EventCompletionWizard
+          selectedEvent={store.selectedEvent}
+          students={students}
+          onComplete={onCompleteEvent!}
+          onCancel={onCancelCompletion || onClose}
+          isLoading={completionLoading}
         />
       )
 

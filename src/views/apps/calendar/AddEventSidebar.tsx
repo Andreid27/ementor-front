@@ -13,6 +13,7 @@ import { AddEventSidebarProps } from './types'
 
 // ** Components
 import { SidebarHeaderImproved, SidebarContentContainer, SidebarFooter } from './components'
+import EventActionConfirmDialog from './components/EventActionConfirmDialog'
 
 // ** Utils
 // import { createBlankEvent } from './utils/eventTransforms' // Used in SidebarContentContainer
@@ -43,6 +44,8 @@ const AddEventSidebar: React.FC<AddEventSidebarProps> = props => {
     addEvent,
     updateEvent,
     modifyEventOccurrence,
+    cancelEventOccurrence,
+    completeEventOccurrence,
     drawerWidth,
     calendarApi,
     deleteEvent,
@@ -52,11 +55,23 @@ const AddEventSidebar: React.FC<AddEventSidebarProps> = props => {
     students
   } = props
 
+  // Dialog states
+  const [confirmDialogOpen, setConfirmDialogOpen] = React.useState(false)
+  const [confirmDialogAction, setConfirmDialogAction] = React.useState<'cancel' | 'complete'>('cancel')
+  const [actionLoading, setActionLoading] = React.useState(false)
+  const [isCompletionMode, setIsCompletionMode] = React.useState(false)
+
   // Handle sidebar close with proper cleanup
   const handleSidebarClose = React.useCallback(async () => {
+    // If in completion mode, exit completion mode first
+    if (isCompletionMode) {
+      setIsCompletionMode(false)
+      return
+    }
+
     dispatch(handleSelectEvent(null))
     handleAddEventSidebarToggle()
-  }, [dispatch, handleSelectEvent, handleAddEventSidebarToggle])
+  }, [dispatch, handleSelectEvent, handleAddEventSidebarToggle, isCompletionMode])
 
   // Extract event data management logic
   const {
@@ -108,6 +123,82 @@ const AddEventSidebar: React.FC<AddEventSidebarProps> = props => {
     resetForm()
   }, [resetForm])
 
+  // Handle cancel event action
+  const handleCancelEvent = React.useCallback(() => {
+    setConfirmDialogAction('cancel')
+    setConfirmDialogOpen(true)
+  }, [])
+
+  // Handle complete event action - now opens wizard instead of dialog
+  const handleCompleteEvent = React.useCallback(() => {
+    setIsCompletionMode(true)
+  }, [])
+
+  // Handle wizard completion
+  const handleWizardComplete = React.useCallback(
+    async (completionData: any) => {
+      if (!store.selectedEvent || !completeEventOccurrence) return
+
+      setActionLoading(true)
+
+      try {
+        const event = store.selectedEvent as any // Cast to access EventOccurrenceDTO properties
+
+        const payload = {
+          seriesId: event.recurringSeriesId || event.id,
+          originalStartTime: event.effectiveStartTime || event.originalStartTime || event.start,
+          actualStartTime: completionData.actualStartTime,
+          actualEndTime: completionData.actualEndTime,
+          eventAttendeeDTO: completionData.eventAttendees,
+          description: completionData.description
+        }
+
+        await completeEventOccurrence(payload)
+
+        setIsCompletionMode(false)
+        handleSidebarClose()
+      } catch (error) {
+        console.error('AddEventSidebar - Error completing event:', error)
+      } finally {
+        setActionLoading(false)
+      }
+    },
+    [store.selectedEvent, completeEventOccurrence, handleSidebarClose]
+  )
+
+  // Handle wizard cancellation
+  const handleCancelCompletion = React.useCallback(() => {
+    setIsCompletionMode(false)
+  }, [])
+
+  // Handle cancel confirmation dialog
+  const handleConfirmAction = React.useCallback(async () => {
+    if (!store.selectedEvent || !cancelEventOccurrence) return
+
+    setActionLoading(true)
+
+    try {
+      const event = store.selectedEvent as any // Cast to access EventOccurrenceDTO properties
+
+      await cancelEventOccurrence({
+        seriesId: event.recurringSeriesId || event.id,
+        occurrenceStartTime: event.effectiveStartTime || event.originalStartTime || event.start
+      })
+
+      setConfirmDialogOpen(false)
+      handleSidebarClose()
+    } catch (error) {
+      console.error('Error canceling event:', error)
+    } finally {
+      setActionLoading(false)
+    }
+  }, [store.selectedEvent, cancelEventOccurrence, handleSidebarClose])
+
+  // Handle dialog close
+  const handleDialogClose = React.useCallback(() => {
+    setConfirmDialogOpen(false)
+  }, [])
+
   // Determine if this is a day summary view
   const isDaySummary = React.useMemo(() => {
     return (store.selectedEvent as any)?.isDaySummary
@@ -142,8 +233,11 @@ const AddEventSidebar: React.FC<AddEventSidebarProps> = props => {
         onDelete={handleDelete}
         onCancel={handleCancel}
         onClose={handleSidebarClose}
+        onCancelEvent={handleCancelEvent}
+        onCompleteEvent={handleCompleteEvent}
         isDaySummary={isDaySummary}
         eventTypeInfo={eventTypeInfo}
+        isCompletionMode={isCompletionMode}
       />
 
       {/* Main Content Area */}
@@ -173,6 +267,11 @@ const AddEventSidebar: React.FC<AddEventSidebarProps> = props => {
               eventTypeInfo={eventTypeInfo}
               editingScope={editingScope}
               onEditingScopeChange={setEditingScope}
+              // Completion wizard props
+              isCompletionMode={isCompletionMode}
+              onCompleteEvent={handleWizardComplete}
+              onCancelCompletion={handleCancelCompletion}
+              completionLoading={actionLoading}
             />
 
             {/* Footer for form actions - only show in edit mode */}
@@ -203,6 +302,36 @@ const AddEventSidebar: React.FC<AddEventSidebarProps> = props => {
           </form>
         </DatePickerWrapper>
       </Box>
+
+      {/* Event Action Confirmation Dialog */}
+      {store.selectedEvent && (
+        <EventActionConfirmDialog
+          open={confirmDialogOpen}
+          onClose={handleDialogClose}
+          onConfirm={handleConfirmAction}
+          action={confirmDialogAction}
+          eventTitle={
+            (store.selectedEvent as any)?.seriesTitle || (store.selectedEvent as any)?.title || 'Untitled Event'
+          }
+          eventDate={new Date(
+            (store.selectedEvent as any)?.effectiveStartTime || (store.selectedEvent as any)?.start || new Date()
+          ).toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          })}
+          isRecurring={!!(store.selectedEvent as any)?.recurringSeriesId}
+          isFutureEvent={
+            (store.selectedEvent as any)?.effectiveStartTime
+              ? new Date((store.selectedEvent as any).effectiveStartTime) > new Date()
+              : false
+          }
+          loading={actionLoading}
+        />
+      )}
     </Drawer>
   )
 }

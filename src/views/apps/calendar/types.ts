@@ -57,6 +57,15 @@ export interface AddEventSidebarProps {
     newPrice?: number
     newMeetingLink?: string
   }) => Promise<any>
+  cancelEventOccurrence?: (payload: { seriesId: string | number; occurrenceStartTime: string }) => Promise<any>
+  completeEventOccurrence?: (payload: {
+    seriesId: string
+    originalStartTime: string
+    actualStartTime: string
+    actualEndTime: string
+    eventAttendeeDTO: EventAttendeeDTO[]
+    description?: string
+  }) => Promise<any>
   drawerWidth: number
   calendarApi: CalendarApi | null
   deleteEvent: (id: string | number) => void
@@ -106,6 +115,8 @@ export interface SidebarHeaderProps {
   onDelete: () => void
   onCancel: () => void
   onClose: () => void
+  onCancelEvent?: () => void
+  onCompleteEvent?: () => void
   isDaySummary?: boolean
   eventTypeInfo?: EventTypeInfo | null
 }

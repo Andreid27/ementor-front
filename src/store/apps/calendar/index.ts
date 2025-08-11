@@ -367,17 +367,22 @@ export const completeEventOccurrence = createAsyncThunk<
     originalStartTime: string
     actualStartTime: string
     actualEndTime: string
-    attendeeIds: string[]
+    eventAttendeeDTO: EventAttendeeDTO[]
+    description?: string
   }
 >(
   'appCalendar/completeEventOccurrence',
-  async ({ seriesId, originalStartTime, actualStartTime, actualEndTime, attendeeIds }, { dispatch }) => {
+  async (
+    { seriesId, originalStartTime, actualStartTime, actualEndTime, eventAttendeeDTO, description },
+    { dispatch }
+  ) => {
     const response = await profileServiceClient.events.completeEventOccurrence({
-      requestBody: attendeeIds,
       seriesId,
       originalStartTime,
       actualStartTime,
-      actualEndTime
+      actualEndTime,
+      eventAttendeeDTO,
+      description
     })
     await dispatch(fetchEvents())
 
