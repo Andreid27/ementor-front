@@ -45,6 +45,7 @@ export interface CalendarState {
   error: string | null
   periodStart: Date
   periodEnd: Date
+  selectedCalendars: string[]
 }
 
 // ** Fetch Events
@@ -427,7 +428,8 @@ const initialState: CalendarState = {
   loading: false,
   error: null,
   periodStart: new Date(),
-  periodEnd: new Date(new Date().setMonth(new Date().getMonth() + 1))
+  periodEnd: new Date(new Date().setMonth(new Date().getMonth() + 1)),
+  selectedCalendars: []
 }
 
 export const selectCalendarEvents = (state: { calendar: CalendarState }) => state.calendar.events
@@ -458,6 +460,22 @@ export const appCalendarSlice = createSlice({
       const { startDate, endDate } = action.payload
       state.periodStart = new Date(startDate)
       state.periodEnd = new Date(endDate)
+    },
+    handleAllCalendars: (state, action) => {
+      const { calendarsColor } = action.payload
+      if (calendarsColor) {
+        const calendarNames = Object.keys(calendarsColor)
+        state.selectedCalendars = action.payload.value ? calendarNames : []
+      }
+    },
+    handleCalendarsUpdate: (state, action) => {
+      const calendarName = action.payload
+      const index = state.selectedCalendars.indexOf(calendarName)
+      if (index === -1) {
+        state.selectedCalendars.push(calendarName)
+      } else {
+        state.selectedCalendars.splice(index, 1)
+      }
     }
   },
   extraReducers: builder => {
@@ -541,7 +559,15 @@ export const appCalendarSlice = createSlice({
   }
 })
 
-export const { handleSelectEvent, setLoading, setError, clearError, setPeriod } = appCalendarSlice.actions
+export const {
+  handleSelectEvent,
+  setLoading,
+  setError,
+  clearError,
+  setPeriod,
+  handleAllCalendars,
+  handleCalendarsUpdate
+} = appCalendarSlice.actions
 
 // Export utility functions
 export * from 'src/views/apps/calendar/utils'

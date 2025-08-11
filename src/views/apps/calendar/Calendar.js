@@ -181,8 +181,22 @@ const Calendar = props => {
     // Filter out any null events (from invalid dates)
     const validEvents = transformed.filter(event => event !== null)
 
-    return validEvents
-  }, [store.events])
+    // Filter events based on selected calendars
+    const filteredEvents = validEvents.filter(event => {
+      const calendarCategory = event.extendedProps?.calendar
+
+      // If no calendars are selected, show all events
+      // If selectedCalendars is not available, show all events
+      if (!store.selectedCalendars || store.selectedCalendars.length === 0) {
+        return true
+      }
+
+      // Show event if its calendar category is selected
+      return store.selectedCalendars.includes(calendarCategory)
+    })
+
+    return filteredEvents
+  }, [store.events, store.selectedCalendars])
   if (store) {
     // ** calendarOptions(Props)
     const calendarOptions = {

@@ -251,6 +251,12 @@ const AppCalendar = () => {
         const newDynamicColors = generateDynamicCalendarColors(response)
         console.log('Generated dynamic colors:', newDynamicColors)
         setDynamicCalendarsColor(newDynamicColors)
+
+        // Step 5: Initialize selected calendars with all available calendars (show all by default)
+        const allCalendarNames = Object.keys(newDynamicColors)
+        if (allCalendarNames.length > 0) {
+          dispatch(handleAllCalendars({ calendarsColor: newDynamicColors, value: true }))
+        }
       }
     }
     fetchAndProcessEvents()
