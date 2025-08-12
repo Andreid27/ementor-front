@@ -146,7 +146,7 @@ const AddEventSidebar: React.FC<AddEventSidebarProps> = props => {
 
         const payload = {
           seriesId: event.recurringSeriesId || event.id,
-          originalStartTime: event.effectiveStartTime || event.originalStartTime || event.start,
+          originalStartTime: event.originalStartTime || event.effectiveStartTime || event.start,
           actualStartTime: completionData.actualStartTime,
           actualEndTime: completionData.actualEndTime,
           eventAttendeeDTO: completionData.eventAttendees,

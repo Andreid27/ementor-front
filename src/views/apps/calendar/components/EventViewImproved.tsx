@@ -162,12 +162,25 @@ const EventViewImproved: React.FC<EventViewImprovedProps> = ({
 
     // Attendance Count
     if (selectedEvent?.attendanceCount !== undefined) {
-      details.push({
-        icon: 'tabler:users',
-        label: 'Attendees',
-        value: `${selectedEvent.attendanceCount} registered`,
-        color: theme.palette.info.main
-      })
+      if (selectedEvent?.completed && enrichedAttendees?.length > 0) {
+        // For completed events, show attended vs total count
+        const attendedCount = enrichedAttendees.filter((attendee: any) => attendee.attended === true).length
+        const totalCount = enrichedAttendees.length
+        details.push({
+          icon: 'tabler:users',
+          label: 'Attendance',
+          value: `${attendedCount}/${totalCount} attended`,
+          color: attendedCount === totalCount ? theme.palette.success.main : theme.palette.warning.main
+        })
+      } else {
+        // For non-completed events, show registered count
+        details.push({
+          icon: 'tabler:users',
+          label: 'Attendees',
+          value: `${selectedEvent.attendanceCount} registered`,
+          color: theme.palette.info.main
+        })
+      }
     }
 
     return details
@@ -337,7 +350,9 @@ const EventViewImproved: React.FC<EventViewImprovedProps> = ({
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <Icon icon='tabler:users' fontSize='1.25rem' color='info.main' />
               <Typography variant='subtitle2' sx={{ fontWeight: 600 }}>
-                Registered Attendees ({enrichedAttendees.length})
+                {selectedEvent?.completed
+                  ? `Attendees (${enrichedAttendees.length})`
+                  : `Registered Attendees (${enrichedAttendees.length})`}
               </Typography>
             </Box>
             <Stack direction='row' spacing={1} flexWrap='wrap' useFlexGap>
@@ -348,24 +363,33 @@ const EventViewImproved: React.FC<EventViewImprovedProps> = ({
                   : enrichedAttendee.displayName || `Attendee ${index + 1}`
                 const initials = student ? getStudentInitials(student) : (displayName[0] || 'A').toUpperCase()
                 const profilePicture = student?.profilePicture || student?.picture
+                const isAttended = enrichedAttendee.attended === true
+                const isCompleted = selectedEvent?.completed
 
                 return (
                   <Chip
                     key={enrichedAttendee.attendeeId || index}
                     label={displayName}
                     size='small'
-                    variant='outlined'
+                    variant={isCompleted ? (isAttended ? 'filled' : 'outlined') : 'outlined'}
+                    color={isCompleted ? (isAttended ? 'success' : 'default') : 'default'}
                     avatar={
                       <Avatar sx={{ width: 24, height: 24 }} src={profilePicture}>
                         {initials}
                       </Avatar>
                     }
+                    icon={isCompleted && isAttended ? <Icon icon='tabler:check' fontSize='0.875rem' /> : undefined}
                     sx={{
                       '& .MuiChip-avatar': {
                         width: 24,
                         height: 24,
                         fontSize: '0.75rem'
-                      }
+                      },
+                      '& .MuiChip-icon': {
+                        fontSize: '0.875rem',
+                        marginLeft: '4px'
+                      },
+                      opacity: isCompleted && !isAttended ? 0.6 : 1
                     }}
                   />
                 )

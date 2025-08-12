@@ -202,6 +202,14 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
     }
 
     return eventAttendees.map(attendee => {
+      // If user has manually set a custom price (indicated by userSetCustomPrice), respect it
+      if ((attendee as any).userSetCustomPrice) {
+        return {
+          ...attendee,
+          hasCustomPricing: true
+        }
+      }
+
       // Use original price for adjustment calculation, not the current customPrice
       // This prevents compounding adjustments when toggling attended status
       const originalPrice =
@@ -280,22 +288,25 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
         if (onlyAttendanceChanged) {
           return {
             ...updatedAttendee,
-            originalPrice: (existingAttendee as any).originalPrice
+            originalPrice: (existingAttendee as any).originalPrice,
+            userSetCustomPrice: (existingAttendee as any).userSetCustomPrice
           }
         }
 
-        // If price was manually changed, update original price to the new value
+        // If price was manually changed, mark it as user-set and update original price
         if (existingAttendee.customPrice !== updatedAttendee.customPrice) {
           return {
             ...updatedAttendee,
-            originalPrice: updatedAttendee.customPrice
+            originalPrice: updatedAttendee.customPrice,
+            userSetCustomPrice: true // Mark as manually set by user
           }
         }
 
-        // Default: preserve original price
+        // Default: preserve original price and user-set flag
         return {
           ...updatedAttendee,
-          originalPrice: (existingAttendee as any).originalPrice
+          originalPrice: (existingAttendee as any).originalPrice,
+          userSetCustomPrice: (existingAttendee as any).userSetCustomPrice
         }
       }
 

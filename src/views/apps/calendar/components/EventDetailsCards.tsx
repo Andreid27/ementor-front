@@ -332,30 +332,62 @@ const EventDetailsCards: React.FC<EventDetailsCardsProps> = ({ selectedEvent, va
           {selectedEvent.attendanceCount !== undefined && (
             <Box sx={{ mb: 1 }}>
               <Typography variant='body2' sx={{ color: 'text.secondary', mb: 0.5 }}>
-                Attendance Count
+                {selectedEvent?.completed ? 'Attendance' : 'Attendance Count'}
               </Typography>
-              <Chip
-                label={`${selectedEvent.attendanceCount} attendees`}
-                color='info'
-                icon={<Icon icon='tabler:users' />}
-              />
+              {selectedEvent?.completed && selectedEvent.eventAttendees?.length > 0 ? (
+                (() => {
+                  const attendedCount = selectedEvent.eventAttendees.filter(
+                    (attendee: any) => attendee.attended === true
+                  ).length
+                  const totalCount = selectedEvent.eventAttendees.length
+                  return (
+                    <Chip
+                      label={`${attendedCount}/${totalCount} attended`}
+                      color={attendedCount === totalCount ? 'success' : 'warning'}
+                      icon={<Icon icon='tabler:users' />}
+                    />
+                  )
+                })()
+              ) : (
+                <Chip
+                  label={`${selectedEvent.attendanceCount} attendees`}
+                  color='info'
+                  icon={<Icon icon='tabler:users' />}
+                />
+              )}
             </Box>
           )}
 
           {selectedEvent.eventAttendees?.length > 0 && (
             <Box sx={{ mt: 2 }}>
               <Typography variant='body2' sx={{ color: 'text.secondary', mb: 1 }}>
-                Registered Attendees ({selectedEvent.eventAttendees.length})
+                {selectedEvent?.completed
+                  ? `Attendees (${selectedEvent.eventAttendees.length})`
+                  : `Registered Attendees (${selectedEvent.eventAttendees.length})`}
               </Typography>
               <Stack direction='row' spacing={1} flexWrap='wrap' useFlexGap>
-                {selectedEvent.eventAttendees.slice(0, 5).map((attendee: any, index: number) => (
-                  <Chip
-                    key={index}
-                    label={attendee.studentName || `Attendee ${index + 1}`}
-                    size='small'
-                    variant='outlined'
-                  />
-                ))}
+                {selectedEvent.eventAttendees.slice(0, 5).map((attendee: any, index: number) => {
+                  const isAttended = attendee.attended === true
+                  const isCompleted = selectedEvent?.completed
+
+                  return (
+                    <Chip
+                      key={index}
+                      label={attendee.studentName || `Attendee ${index + 1}`}
+                      size='small'
+                      variant={isCompleted ? (isAttended ? 'filled' : 'outlined') : 'outlined'}
+                      color={isCompleted ? (isAttended ? 'success' : 'default') : 'default'}
+                      icon={isCompleted && isAttended ? <Icon icon='tabler:check' fontSize='0.875rem' /> : undefined}
+                      sx={{
+                        opacity: isCompleted && !isAttended ? 0.6 : 1,
+                        '& .MuiChip-icon': {
+                          fontSize: '0.875rem',
+                          marginLeft: '4px'
+                        }
+                      }}
+                    />
+                  )
+                })}
                 {selectedEvent.eventAttendees.length > 5 && (
                   <Chip
                     label={`+${selectedEvent.eventAttendees.length - 5} more`}
