@@ -1,8 +1,6 @@
 // ** Component Exports
 export { default as EventHeroSection } from './EventHeroSection'
 
-export { default as EventDetailsCards } from './EventDetailsCards'
-
 export { default as EventMeetingLink } from './EventMeetingLink'
 
 export { default as SidebarFooter } from './SidebarFooter'
