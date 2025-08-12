@@ -25,6 +25,8 @@ import { useTheme } from '@mui/material/styles'
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
+import { roRO } from '@mui/x-date-pickers/locales'
+import 'dayjs/locale/ro'
 
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
@@ -375,7 +377,11 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <LocalizationProvider
+                dateAdapter={AdapterDayjs}
+                adapterLocale='ro'
+                localeText={roRO.components.MuiLocalizationProvider.defaultProps.localeText}
+              >
                 <DateTimePicker
                   label='Ora Reală de Început'
                   value={actualStartTime}
@@ -391,7 +397,11 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <LocalizationProvider
+                dateAdapter={AdapterDayjs}
+                adapterLocale='ro'
+                localeText={roRO.components.MuiLocalizationProvider.defaultProps.localeText}
+              >
                 <DateTimePicker
                   label='Ora Reală de Sfârșit'
                   value={actualEndTime}

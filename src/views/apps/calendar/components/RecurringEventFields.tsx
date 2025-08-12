@@ -16,7 +16,11 @@ import EventIcon from '@mui/icons-material/Event'
 import ScheduleIcon from '@mui/icons-material/Schedule'
 
 // ** Third Party Imports
-import DatePicker from 'react-datepicker'
+import DatePicker, { registerLocale } from 'react-datepicker'
+import ro from 'date-fns/locale/ro'
+
+// Register Romanian locale for DatePicker
+registerLocale('ro', ro)
 
 // ** Custom Component Import
 import CustomTextField from 'src/@core/components/mui/text-field'
@@ -46,15 +50,15 @@ const RecurringEventFields: React.FC<RecurringEventFieldsProps> = ({ values, set
   const getPatternDescription = (pattern: string) => {
     switch (pattern) {
       case 'DAILY':
-        return 'Event repeats every day'
+        return 'Evenimentul se repetă în fiecare zi'
       case 'WEEKLY':
-        return 'Event repeats every week'
+        return 'Evenimentul se repetă în fiecare săptămână'
       case 'BIWEEKLY':
-        return 'Event repeats every 2 weeks'
+        return 'Evenimentul se repetă la fiecare 2 săptămâni'
       case 'MONTHLY':
-        return 'Event repeats every month'
+        return 'Evenimentul se repetă în fiecare lună'
       default:
-        return 'Select a recurrence pattern'
+        return 'Selectați un model de recurență'
     }
   }
 
@@ -66,7 +70,7 @@ const RecurringEventFields: React.FC<RecurringEventFieldsProps> = ({ values, set
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
             <RepeatIcon color='primary' fontSize='small' />
             <Typography variant='subtitle2' sx={{ fontWeight: 600, color: 'text.primary' }}>
-              Recurrence Pattern
+              Model de Recurență
             </Typography>
           </Box>
 
@@ -77,7 +81,7 @@ const RecurringEventFields: React.FC<RecurringEventFieldsProps> = ({ values, set
               <TextField
                 select
                 fullWidth
-                label='Pattern'
+                label='Model'
                 value={values.pattern}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setValues({ ...values, pattern: e.target.value })}
                 InputProps={{
@@ -111,18 +115,19 @@ const RecurringEventFields: React.FC<RecurringEventFieldsProps> = ({ values, set
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
             <EventIcon color='primary' fontSize='small' />
             <Typography variant='subtitle2' sx={{ fontWeight: 600, color: 'text.primary' }}>
-              End Recurrence
+              Sfârșitul Recurenței
             </Typography>
-            <Chip label='Optional' size='small' variant='outlined' color='default' sx={{ ml: 'auto' }} />
+            <Chip label='Opțional' size='small' variant='outlined' color='default' sx={{ ml: 'auto' }} />
           </Box>
 
           <DatePicker
             selected={values.endRecurrence}
             showTimeSelect={false}
-            dateFormat='MM/dd/yyyy'
+            dateFormat='dd/MM/yyyy'
             onChange={(date: Date | null) => setValues({ ...values, endRecurrence: date })}
-            placeholderText='Select end date (leave empty for indefinite)'
-            customInput={<PickersComponent label='End Date' />}
+            placeholderText='Selectați data de sfârșit (lăsați gol pentru nedefinit)'
+            locale='ro'
+            customInput={<PickersComponent label='Data de Sfârșit' />}
             disabled={isReadOnly}
             isClearable
             minDate={new Date()}
@@ -130,8 +135,8 @@ const RecurringEventFields: React.FC<RecurringEventFieldsProps> = ({ values, set
 
           <Typography variant='caption' color='text.secondary' sx={{ mt: 1, display: 'block' }}>
             {values.endRecurrence
-              ? `Recurring events will end on ${values.endRecurrence.toLocaleDateString()}`
-              : 'If no end date is set, events will continue indefinitely'}
+              ? `Evenimentele recurente se vor termina pe ${values.endRecurrence.toLocaleDateString('ro-RO')}`
+              : 'Dacă nu este setată o dată de sfârșit, evenimentele vor continua la nesfârșit'}
           </Typography>
         </CardContent>
       </Card>

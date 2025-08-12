@@ -17,8 +17,12 @@ import LinkIcon from '@mui/icons-material/Link'
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney'
 
 // ** Third Party Imports
-import DatePicker from 'react-datepicker'
+import DatePicker, { registerLocale } from 'react-datepicker'
 import { Controller } from 'react-hook-form'
+import ro from 'date-fns/locale/ro'
+
+// Register Romanian locale for DatePicker
+registerLocale('ro', ro)
 
 // ** Custom Component Import
 import CustomTextField from 'src/@core/components/mui/text-field'
@@ -159,9 +163,10 @@ const EventFormFields: React.FC<EventFormFieldsProps> = ({
               showTimeSelect={!values.allDay}
               timeFormat='HH:mm'
               timeIntervals={15}
-              dateFormat={values.allDay ? 'MM/dd/yyyy' : 'MM/dd/yyyy h:mm aa'}
+              dateFormat={values.allDay ? 'dd/MM/yyyy' : 'dd/MM/yyyy HH:mm'}
               onChange={handleStartDate}
               placeholderText={values.allDay ? 'Data de început' : 'Data și ora de început'}
+              locale='ro'
               customInput={
                 <PickersComponent
                   label={editingScope === 'occurrence' ? 'Nouă Dată și Oră de Început' : 'Data și Ora de Început'}
@@ -179,9 +184,10 @@ const EventFormFields: React.FC<EventFormFieldsProps> = ({
                 showTimeSelect={!values.allDay}
                 timeFormat='HH:mm'
                 timeIntervals={15}
-                dateFormat={values.allDay ? 'MM/dd/yyyy' : 'MM/dd/yyyy h:mm aa'}
+                dateFormat={values.allDay ? 'dd/MM/yyyy' : 'dd/MM/yyyy HH:mm'}
                 onChange={(date: Date) => setValues({ ...values, endDate: new Date(date) })}
                 placeholderText={values.allDay ? 'Data de sfârșit' : 'Data și ora de sfârșit'}
+                locale='ro'
                 customInput={<PickersComponent label='Data și Ora de Sfârșit' />}
                 disabled={isReadOnly}
               />
