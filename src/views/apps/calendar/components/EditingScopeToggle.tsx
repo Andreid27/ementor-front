@@ -30,7 +30,7 @@ const EditingScopeToggle: React.FC<EditingScopeToggleProps> = ({
   return (
     <Box sx={{ mb: 3 }}>
       <Typography variant='subtitle2' sx={{ mb: 1, fontWeight: 600 }}>
-        Editing Scope
+        Sfera de Editare
       </Typography>
 
       <ToggleButtonGroup
@@ -57,7 +57,7 @@ const EditingScopeToggle: React.FC<EditingScopeToggleProps> = ({
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <span>📅</span>
-            <span>This Occurrence</span>
+            <span>Această Apariție</span>
           </Box>
         </ToggleButton>
 
@@ -82,7 +82,7 @@ const EditingScopeToggle: React.FC<EditingScopeToggleProps> = ({
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <span>🔄</span>
-            <span>Entire Series</span>
+            <span>Întreaga Serie</span>
           </Box>
         </ToggleButton>
       </ToggleButtonGroup>
@@ -105,14 +105,14 @@ const EditingScopeToggle: React.FC<EditingScopeToggleProps> = ({
       <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
         <Chip
           size='small'
-          label={selectedScope === 'occurrence' ? 'Single Event' : 'All Future Events'}
+          label={selectedScope === 'occurrence' ? 'Eveniment Singular' : 'Toate Evenimentele Viitoare'}
           color={selectedScope === 'occurrence' ? 'primary' : 'warning'}
           variant='outlined'
         />
         <Typography variant='caption' color='text.secondary'>
           {selectedScope === 'occurrence'
-            ? 'Changes will not affect other events in the series'
-            : 'Changes will affect all future recurring events'}
+            ? 'Modificările nu vor afecta alte evenimente din serie'
+            : 'Modificările vor afecta toate evenimentele recurente viitoare'}
         </Typography>
       </Box>
     </Box>

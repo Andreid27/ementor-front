@@ -8,6 +8,7 @@ import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import bootstrap5Plugin from '@fullcalendar/bootstrap5'
 import interactionPlugin from '@fullcalendar/interaction'
+import roLocale from '@fullcalendar/core/locales/ro'
 
 // ** Event Type Utils
 import {
@@ -90,7 +91,7 @@ const Calendar = props => {
 
       const transformedEvent = {
         id: eventId, // Use the actual event ID
-        title: eventData.seriesTitle || eventData.title || 'Untitled Event',
+        title: eventData.seriesTitle || eventData.title || 'Eveniment fără titlu',
         start: eventData.effectiveStartTime || eventData.start,
         end: eventData.effectiveEndTime || eventData.end,
         allDay: eventData.allDay || false,
@@ -201,6 +202,7 @@ const Calendar = props => {
     // ** calendarOptions(Props)
     const calendarOptions = {
       events: transformedEvents,
+      locale: roLocale,
 
       plugins: [interactionPlugin, dayGridPlugin, timeGridPlugin, listPlugin, bootstrap5Plugin],
       initialView: 'dayGridMonth',
@@ -362,7 +364,7 @@ const Calendar = props => {
             isDaySummary: true,
             selectedDate: clickedDate,
             eventsForDay: eventsForDay,
-            title: `Events for ${clickedDate.toLocaleDateString('en-US', {
+            title: `Evenimente pentru ${clickedDate.toLocaleDateString('ro-RO', {
               weekday: 'long',
               year: 'numeric',
               month: 'long',

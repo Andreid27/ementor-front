@@ -43,7 +43,7 @@ const SidebarFooter: React.FC<SidebarFooterProps> = ({ isEditMode, onClose, onCa
             transition: 'all 0.3s ease'
           }}
         >
-          Add Event
+          Update Event
         </Button>
         <Button
           variant='outlined'
@@ -61,7 +61,7 @@ const SidebarFooter: React.FC<SidebarFooterProps> = ({ isEditMode, onClose, onCa
             transition: 'all 0.3s ease'
           }}
         >
-          Reset
+          Cancel
         </Button>
       </Box>
     )
@@ -85,7 +85,7 @@ const SidebarFooter: React.FC<SidebarFooterProps> = ({ isEditMode, onClose, onCa
             transition: 'all 0.3s ease'
           }}
         >
-          Update Event
+          Actualizează Eveniment
         </Button>
         <Button
           variant='outlined'
@@ -103,7 +103,7 @@ const SidebarFooter: React.FC<SidebarFooterProps> = ({ isEditMode, onClose, onCa
             transition: 'all 0.3s ease'
           }}
         >
-          Cancel
+          Anulează
         </Button>
       </Box>
     )
@@ -127,7 +127,7 @@ const SidebarFooter: React.FC<SidebarFooterProps> = ({ isEditMode, onClose, onCa
             transition: 'all 0.3s ease'
           }}
         >
-          Close
+          Închide
         </Button>
       </Box>
     )

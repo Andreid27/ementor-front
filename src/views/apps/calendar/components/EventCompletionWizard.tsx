@@ -317,24 +317,24 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
   } // Steps configuration
   const steps = [
     {
-      label: 'Actual Times & Duration',
+      label: 'Ore Reale & Durata',
       icon: 'tabler:clock',
-      description: 'Set the actual start and end times for this event'
+      description: 'Setează orele reale de început și sfârșit pentru acest eveniment'
     },
     {
-      label: 'Event Description',
+      label: 'Descrierea Evenimentului',
       icon: 'tabler:notes',
-      description: 'Add an optional description or notes about the event'
+      description: 'Adaugă o descriere opțională sau notițe despre eveniment'
     },
     {
-      label: 'Price Adjustment',
+      label: 'Ajustarea Prețurilor',
       icon: 'tabler:currency-dollar',
-      description: 'Choose whether to adjust prices based on actual duration'
+      description: 'Alege dacă să ajustezi prețurile în funcție de durata reală'
     },
     {
-      label: 'Manage Attendees',
+      label: 'Gestionează Participanții',
       icon: 'tabler:users',
-      description: 'Confirm attendance and customize pricing for each attendee'
+      description: 'Confirmă prezența și personalizează prețurile pentru fiecare participant'
     }
   ]
 
@@ -348,24 +348,24 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
                 <CardContent>
                   <Typography variant='h6' gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Icon icon='tabler:info-circle' />
-                    Event Information
+                    Informații Eveniment
                   </Typography>
                   <Typography variant='body2' color='textSecondary' gutterBottom>
-                    {selectedEvent?.seriesTitle || selectedEvent?.title || 'Event'}
+                    {selectedEvent?.seriesTitle || selectedEvent?.title || 'Eveniment'}
                   </Typography>
                   <Typography variant='caption' color='textSecondary' display='block' gutterBottom>
-                    Scheduled: {actualStartTime && actualStartTime.format('MMM DD, YYYY [at] HH:mm')} →{' '}
+                    Programat: {actualStartTime && actualStartTime.format('DD MMM, YYYY [la] HH:mm')} →{' '}
                     {actualStartTime && actualStartTime.add(plannedDuration, 'minutes').format('HH:mm')}
                   </Typography>
                   <Stack direction='row' spacing={1} sx={{ mt: 1 }} flexWrap='wrap' useFlexGap>
-                    <Chip label={`Planned Duration: ${plannedDurationText}`} variant='outlined' size='small' />
+                    <Chip label={`Durată Planificată: ${plannedDurationText}`} variant='outlined' size='small' />
                     <Chip
-                      label={`Base Price: $${selectedEvent?.seriesPrice || selectedEvent?.price || 0}`}
+                      label={`Preț de Bază: ${selectedEvent?.seriesPrice || selectedEvent?.price || 0} LEI`}
                       variant='outlined'
                       size='small'
                     />
                     <Chip
-                      label={`Attendees: ${selectedEvent?.eventAttendees?.length || 0}`}
+                      label={`Participanți: ${selectedEvent?.eventAttendees?.length || 0}`}
                       variant='outlined'
                       size='small'
                     />
@@ -377,13 +377,13 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
             <Grid item xs={12} md={6}>
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DateTimePicker
-                  label='Actual Start Time'
+                  label='Ora Reală de Început'
                   value={actualStartTime}
                   onChange={newValue => setActualStartTime(newValue)}
                   slotProps={{
                     textField: {
                       fullWidth: true,
-                      helperText: 'When did the event actually start?'
+                      helperText: 'Când a început efectiv evenimentul?'
                     }
                   }}
                 />
@@ -393,14 +393,14 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
             <Grid item xs={12} md={6}>
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DateTimePicker
-                  label='Actual End Time'
+                  label='Ora Reală de Sfârșit'
                   value={actualEndTime}
                   onChange={newValue => setActualEndTime(newValue)}
                   minDateTime={actualStartTime}
                   slotProps={{
                     textField: {
                       fullWidth: true,
-                      helperText: 'When did the event actually end?'
+                      helperText: 'Când s-a terminat efectiv evenimentul?'
                     }
                   }}
                 />
@@ -414,20 +414,20 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
                   sx={{ mt: 2 }}
                 >
                   <Typography variant='body2'>
-                    <strong>Duration Analysis:</strong> The actual event duration is{' '}
+                    <strong>Analiza Duratei:</strong> Durata reală a evenimentului este{' '}
                     {formatDurationMinutes(Math.round(durationInfo.actualDurationMinutes))}
                     {durationInfo.durationDifference !== 0 && (
                       <>
                         {' '}
                         ({durationInfo.isLonger ? '+' : ''}
                         {formatDurationMinutes(Math.abs(Math.round(durationInfo.durationDifference)))}{' '}
-                        {durationInfo.isLonger ? 'longer' : 'shorter'} than planned)
+                        {durationInfo.isLonger ? 'mai lung' : 'mai scurt'} decât planificat)
                       </>
                     )}
                   </Typography>
                   {durationInfo.durationDifference !== 0 && (
                     <Typography variant='caption' display='block' sx={{ mt: 0.5 }}>
-                      This represents {Math.round(durationInfo.durationPercentage)}% of the planned duration.
+                      Aceasta reprezintă {Math.round(durationInfo.durationPercentage)}% din durata planificată.
                     </Typography>
                   )}
                 </Alert>
@@ -443,26 +443,26 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
               fullWidth
               multiline
               rows={4}
-              label='Event Description'
-              placeholder='Add any notes about how the event went, key topics covered, or other relevant information...'
+              label='Descrierea Evenimentului'
+              placeholder='Adaugă notițe despre cum a decurs evenimentul, subiectele cheie abordate sau alte informații relevante...'
               value={description}
               onChange={e => setDescription(e.target.value)}
-              helperText='This description is optional but can be helpful for future reference'
+              helperText='Această descriere este opțională, dar poate fi utilă pentru referințe viitoare'
               sx={{ mb: 2 }}
             />
             <Alert severity='info' sx={{ mt: 2 }}>
               <Typography variant='body2'>
-                💡 <strong>Tip:</strong> Consider adding information about:
+                💡 <strong>Sugestie:</strong> Consideră să adaugi informații despre:
               </Typography>
               <Typography variant='body2' component='div' sx={{ mt: 1, ml: 2 }}>
-                • Key topics covered
+                • Subiectele cheie acoperite
                 <br />
-                • Student engagement level
+                • Nivelul de implicare al elevilor
                 <br />
-                • Any technical issues
+                • Probleme tehnice întâlnite
                 <br />
-                • Homework assigned
-                <br />• Next session preparation notes
+                • Temele pentru acasă date
+                <br />• Notițe pentru pregătirea următoarei sesiuni
               </Typography>
             </Alert>
           </Box>
@@ -479,7 +479,7 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
                   color='primary'
                 />
               }
-              label='Adjust prices proportionally based on actual duration'
+              label='Ajustează prețurile proporțional în funcție de durata reală'
               sx={{ mb: 3 }}
             />
 
@@ -487,19 +487,19 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
               <Card variant='outlined' sx={{ mb: 3 }}>
                 <CardContent>
                   <Typography variant='h6' gutterBottom>
-                    Price Adjustment Preview
+                    Previzualizarea Ajustării Prețurilor
                   </Typography>
 
                   <Grid container spacing={2}>
                     <Grid item xs={12} md={4}>
                       <Typography variant='body2' color='textSecondary'>
-                        Planned Duration
+                        Durata Planificată
                       </Typography>
                       <Typography variant='h6'>{formatDurationMinutes(durationInfo.plannedDurationMinutes)}</Typography>
                     </Grid>
                     <Grid item xs={12} md={4}>
                       <Typography variant='body2' color='textSecondary'>
-                        Actual Duration
+                        Durata Reală
                       </Typography>
                       <Typography variant='h6'>
                         {formatDurationMinutes(Math.round(durationInfo.actualDurationMinutes))}
@@ -507,7 +507,7 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
                     </Grid>
                     <Grid item xs={12} md={4}>
                       <Typography variant='body2' color='textSecondary'>
-                        Duration Factor
+                        Factor de Durată
                       </Typography>
                       <Typography variant='h6'>{Math.round(durationInfo.durationPercentage)}%</Typography>
                     </Grid>
@@ -516,8 +516,8 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
                   {adjustPricesWithDuration && (
                     <Alert severity='info' sx={{ mt: 2 }}>
                       <Typography variant='body2'>
-                        Prices will be adjusted to {Math.round(durationInfo.durationPercentage)}% of the original price
-                        for all attendees (unless they already have custom pricing).
+                        Prețurile vor fi ajustate la {Math.round(durationInfo.durationPercentage)}% din prețul original
+                        pentru toți participanții (cu excepția celor care au deja prețuri personalizate).
                       </Typography>
                     </Alert>
                   )}
@@ -529,13 +529,14 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
               <Typography variant='body2'>
                 {adjustPricesWithDuration ? (
                   <>
-                    <strong>Price adjustment enabled:</strong> All attendee prices will be adjusted based on the actual
-                    event duration. You can still customize individual prices in the next step.
+                    <strong>Ajustarea prețurilor activată:</strong> Toate prețurile participanților vor fi ajustate în
+                    funcție de durata reală a evenimentului. Încă poți personaliza prețurile individuale în pasul
+                    următor.
                   </>
                 ) : (
                   <>
-                    <strong>No price adjustment:</strong> Attendee prices will remain as originally set. You can still
-                    customize individual prices in the next step.
+                    <strong>Fără ajustarea prețurilor:</strong> Prețurile participanților vor rămâne ca au fost
+                    stabilite inițial. Încă poți personaliza prețurile individuale în pasul următor.
                   </>
                 )}
               </Typography>
@@ -548,12 +549,12 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
           <Box>
             <Typography variant='h6' gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Icon icon='tabler:users' />
-              Manage Event Attendees
+              Gestionează Participanții la Eveniment
             </Typography>
 
             <Typography variant='body2' color='textSecondary' paragraph>
-              Review and confirm the attendees for this event. You can mark who actually attended and customize pricing
-              for individual students if needed.
+              Verifică și confirmă participanții la acest eveniment. Poți marca cine a fost efectiv prezent și
+              personaliza prețurile pentru individual studenții dacă este necesar.
             </Typography>
 
             <AttendeeManager
@@ -574,7 +575,8 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
             {adjustedAttendees.length === 0 && (
               <Alert severity='warning' sx={{ mt: 2 }}>
                 <Typography variant='body2'>
-                  <strong>No attendees selected:</strong> You need to have at least one attendee to complete the event.
+                  <strong>Niciun participant selectat:</strong> Trebuie să ai cel puțin un participant pentru a finaliza
+                  evenimentul.
                 </Typography>
               </Alert>
             )}
@@ -590,14 +592,14 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
     <Box sx={{ p: 3 }}>
       <Typography variant='h5' gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
         <Icon icon='tabler:flag-check' />
-        Complete Event: {selectedEvent?.seriesTitle || 'Untitled Event'}
+        Finalizează Eveniment: {selectedEvent?.seriesTitle || 'Eveniment Fără Titlu'}
       </Typography>
 
       <Stepper activeStep={activeStep} orientation='vertical'>
         {steps.map((step, index) => (
           <Step key={step.label}>
             <StepLabel
-              optional={index === 1 ? <Typography variant='caption'>Optional</Typography> : null}
+              optional={index === 1 ? <Typography variant='caption'>Opțional</Typography> : null}
               onClick={() => handleStepClick(index)}
               sx={{
                 cursor: 'pointer',
@@ -642,7 +644,7 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
               <Box sx={{ display: 'flex', gap: 2 }}>
                 {index > 0 && (
                   <Button onClick={handleBack} variant='outlined'>
-                    Back
+                    Înapoi
                   </Button>
                 )}
                 {index < steps.length - 1 ? (
@@ -652,7 +654,7 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
                     disabled={!canProceedToStep(index)}
                     startIcon={<Icon icon='tabler:arrow-right' />}
                   >
-                    Next
+                    Următorul
                   </Button>
                 ) : (
                   <Button
@@ -662,7 +664,7 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
                     disabled={!canProceedToStep(index) || isLoading}
                     startIcon={<Icon icon='tabler:check' />}
                   >
-                    {isLoading ? 'Completing...' : 'Complete Event'}
+                    {isLoading ? 'Se Finalizează...' : 'Finalizează Eveniment'}
                   </Button>
                 )}
               </Box>
@@ -674,9 +676,9 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
       {activeStep === steps.length && (
         <Paper square elevation={0} sx={{ p: 3, mt: 3 }}>
           <Typography variant='h6' gutterBottom>
-            Event completion in progress...
+            Finalizarea evenimentului în curs...
           </Typography>
-          <Typography variant='body2'>Please wait while we process the event completion.</Typography>
+          <Typography variant='body2'>Te rog să aștepți în timp ce procesăm finalizarea evenimentului.</Typography>
         </Paper>
       )}
 
@@ -688,7 +690,7 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
           disabled={isLoading}
           startIcon={<Icon icon='tabler:x' />}
         >
-          Cancel
+          Anulează
         </Button>
       </Box>
     </Box>

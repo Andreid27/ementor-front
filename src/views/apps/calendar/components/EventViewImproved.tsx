@@ -134,8 +134,8 @@ const EventViewImproved: React.FC<EventViewImprovedProps> = ({
     if (selectedEvent?.virtual !== undefined) {
       details.push({
         icon: selectedEvent.virtual ? 'tabler:video' : 'tabler:map-pin',
-        label: 'Type',
-        value: selectedEvent.virtual ? 'Virtual Meeting' : 'In-Person',
+        label: 'Tip',
+        value: selectedEvent.virtual ? 'Întâlnire Virtuală' : 'În Persoană',
         color: selectedEvent.virtual ? theme.palette.secondary.main : theme.palette.warning.main
       })
     }
@@ -153,7 +153,7 @@ const EventViewImproved: React.FC<EventViewImprovedProps> = ({
       if (duration.length > 0) {
         details.push({
           icon: 'tabler:clock',
-          label: 'Duration',
+          label: 'Durată',
           value: duration.join(' '),
           color: theme.palette.success.main
         })
@@ -168,16 +168,16 @@ const EventViewImproved: React.FC<EventViewImprovedProps> = ({
         const totalCount = enrichedAttendees.length
         details.push({
           icon: 'tabler:users',
-          label: 'Attendance',
-          value: `${attendedCount}/${totalCount} attended`,
+          label: 'Prezență',
+          value: `${attendedCount}/${totalCount} prezenți`,
           color: attendedCount === totalCount ? theme.palette.success.main : theme.palette.warning.main
         })
       } else {
         // For non-completed events, show registered count
         details.push({
           icon: 'tabler:users',
-          label: 'Attendees',
-          value: `${selectedEvent.attendanceCount} registered`,
+          label: 'Participanți',
+          value: `${selectedEvent.attendanceCount} înregistrați`,
           color: theme.palette.info.main
         })
       }
@@ -189,11 +189,11 @@ const EventViewImproved: React.FC<EventViewImprovedProps> = ({
   const eventStatus = useMemo(() => {
     const statuses = []
 
-    if (selectedEvent?.completed) statuses.push({ label: 'Completed', color: 'success', icon: 'tabler:check-circle' })
-    if (selectedEvent?.cancelled) statuses.push({ label: 'Cancelled', color: 'error', icon: 'tabler:x-circle' })
-    if (selectedEvent?.missed) statuses.push({ label: 'Missed', color: 'warning', icon: 'tabler:clock-x' })
-    if (selectedEvent?.rescheduled) statuses.push({ label: 'Rescheduled', color: 'info', icon: 'tabler:calendar-time' })
-    if (selectedEvent?.upcoming) statuses.push({ label: 'Upcoming', color: 'primary', icon: 'tabler:clock' })
+    if (selectedEvent?.completed) statuses.push({ label: 'Finalizat', color: 'success', icon: 'tabler:check-circle' })
+    if (selectedEvent?.cancelled) statuses.push({ label: 'Anulat', color: 'error', icon: 'tabler:x-circle' })
+    if (selectedEvent?.missed) statuses.push({ label: 'Ratat', color: 'warning', icon: 'tabler:clock-x' })
+    if (selectedEvent?.rescheduled) statuses.push({ label: 'Reprogramat', color: 'info', icon: 'tabler:calendar-time' })
+    if (selectedEvent?.upcoming) statuses.push({ label: 'Viitor', color: 'primary', icon: 'tabler:clock' })
 
     return statuses
   }, [selectedEvent])
@@ -223,7 +223,7 @@ const EventViewImproved: React.FC<EventViewImprovedProps> = ({
                 <Icon icon='tabler:info-circle' fontSize='1.25rem' />
               </Box>
               <Typography variant='h6' sx={{ fontWeight: 600 }}>
-                Event Information
+                Informații Eveniment
               </Typography>
             </Box>
 
@@ -327,15 +327,15 @@ const EventViewImproved: React.FC<EventViewImprovedProps> = ({
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <Icon icon='tabler:calendar-time' fontSize='1.25rem' color='warning.main' />
               <Typography variant='subtitle2' sx={{ fontWeight: 600 }}>
-                Schedule Changes
+                Modificări Program
               </Typography>
             </Box>
             <Typography variant='body2' color='text.secondary' sx={{ mb: 1 }}>
-              Originally scheduled: {formatDateTime(selectedEvent.originalStartTime)}
+              Programat inițial: {formatDateTime(selectedEvent.originalStartTime)}
             </Typography>
             {selectedEvent.actualStartTime && selectedEvent.actualStartTime !== selectedEvent.effectiveStartTime && (
               <Typography variant='body2' color='success.main'>
-                Actually occurred: {formatDateTime(selectedEvent.actualStartTime)}
+                S-a desfășurat efectiv: {formatDateTime(selectedEvent.actualStartTime)}
                 {selectedEvent.actualEndTime && ` - ${formatTimeOnly(selectedEvent.actualEndTime)}`}
               </Typography>
             )}
@@ -351,8 +351,8 @@ const EventViewImproved: React.FC<EventViewImprovedProps> = ({
               <Icon icon='tabler:users' fontSize='1.25rem' color='info.main' />
               <Typography variant='subtitle2' sx={{ fontWeight: 600 }}>
                 {selectedEvent?.completed
-                  ? `Attendees (${enrichedAttendees.length})`
-                  : `Registered Attendees (${enrichedAttendees.length})`}
+                  ? `Participanți (${enrichedAttendees.length})`
+                  : `Participanți Înregistrați (${enrichedAttendees.length})`}
               </Typography>
             </Box>
             <Stack direction='row' spacing={1} flexWrap='wrap' useFlexGap>
@@ -395,7 +395,12 @@ const EventViewImproved: React.FC<EventViewImprovedProps> = ({
                 )
               })}
               {enrichedAttendees.length > 8 && (
-                <Chip label={`+${enrichedAttendees.length - 8} more`} size='small' variant='outlined' color='primary' />
+                <Chip
+                  label={`+${enrichedAttendees.length - 8} mai mulți`}
+                  size='small'
+                  variant='outlined'
+                  color='primary'
+                />
               )}
             </Stack>
           </CardContent>
@@ -409,7 +414,7 @@ const EventViewImproved: React.FC<EventViewImprovedProps> = ({
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <Icon icon='tabler:file-text' fontSize='1.25rem' color='text.secondary' />
               <Typography variant='subtitle2' sx={{ fontWeight: 600 }}>
-                Description
+                Descriere
               </Typography>
             </Box>
             <Typography variant='body2' color='text.secondary' sx={{ lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>

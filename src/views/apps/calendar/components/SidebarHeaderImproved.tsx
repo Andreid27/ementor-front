@@ -57,12 +57,12 @@ const SidebarHeader: React.FC<SidebarHeaderProps & { isCompletionMode?: boolean 
   const title = useMemo(() => {
     switch (displayMode) {
       case EVENT_DISPLAY_MODES.DAY_SUMMARY:
-        return 'Day Overview'
+        return 'Prezentare Generală Zi'
       case EVENT_DISPLAY_MODES.EDIT:
-        return isExistingEvent ? 'Edit Event' : 'Add Event'
+        return isExistingEvent ? 'Editează Eveniment' : 'Adaugă Eveniment'
       case EVENT_DISPLAY_MODES.VIEW:
       default:
-        return 'Event Details'
+        return 'Detalii Eveniment'
     }
   }, [displayMode, isExistingEvent])
 
@@ -205,7 +205,7 @@ const SidebarHeader: React.FC<SidebarHeaderProps & { isCompletionMode?: boolean 
                     }
                   }}
                 >
-                  Complete
+                  Finalizează
                 </Button>
               )
             }
@@ -224,7 +224,7 @@ const SidebarHeader: React.FC<SidebarHeaderProps & { isCompletionMode?: boolean 
                     transform: 'scale(1.1)'
                   }
                 }}
-                title={isCancelButton ? 'Cancel Event' : isEditButton ? 'Edit Event' : ''}
+                title={isCancelButton ? 'Anulează Eveniment' : isEditButton ? 'Editează Eveniment' : ''}
               >
                 <Icon icon={button.icon} fontSize='1.25rem' />
               </IconButton>

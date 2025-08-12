@@ -311,7 +311,7 @@ const AddEventSidebar: React.FC<AddEventSidebarProps> = props => {
           onConfirm={handleConfirmAction}
           action={confirmDialogAction}
           eventTitle={
-            (store.selectedEvent as any)?.seriesTitle || (store.selectedEvent as any)?.title || 'Untitled Event'
+            (store.selectedEvent as any)?.seriesTitle || (store.selectedEvent as any)?.title || 'Eveniment fără titlu'
           }
           eventDate={new Date(
             (store.selectedEvent as any)?.effectiveStartTime || (store.selectedEvent as any)?.start || new Date()

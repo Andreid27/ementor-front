@@ -78,7 +78,7 @@ const EventForm: React.FC<EventFormProps> = ({
   const formSections = useMemo((): FormSection[] => {
     const sections: FormSection[] = [
       {
-        title: 'Basic Information',
+        title: 'Informații de Bază',
         component: (
           <EventFormFields
             values={values}
@@ -98,7 +98,7 @@ const EventForm: React.FC<EventFormProps> = ({
     const attendees = values.attendees || []
 
     sections.push({
-      title: 'Attendees & Pricing',
+      title: 'Participanți și Prețuri',
       component: (
         <AttendeeManager
           students={students}
@@ -123,7 +123,7 @@ const EventForm: React.FC<EventFormProps> = ({
           icon: <PersonIcon fontSize='small' />
         },
         {
-          label: `${getExpectedCount(attendees)} Expected`,
+          label: `${getExpectedCount(attendees)} Așteptați`,
           color: 'default' as const,
           icon: <EventAvailableIcon fontSize='small' />
         },
@@ -141,27 +141,27 @@ const EventForm: React.FC<EventFormProps> = ({
 
     if (shouldShowRecurringSettings) {
       sections.push({
-        title: 'Recurring Settings',
+        title: 'Setări Recurență',
         component: (
           <RecurringEventFields values={values} setValues={setValues} isReadOnly={isReadOnly} students={students} />
         ),
         chips: [
           {
-            label: values.pattern || 'Not set',
+            label: values.pattern || 'Nesetat',
             color: values.pattern ? 'primary' : ('default' as const),
             icon: <RepeatIcon fontSize='small' />
           },
           ...(values.endRecurrence
             ? [
                 {
-                  label: 'Has end date',
+                  label: 'Are dată de sfârșit',
                   color: 'success' as const,
                   icon: <EventIcon fontSize='small' />
                 }
               ]
             : [
                 {
-                  label: 'Indefinite',
+                  label: 'Nedefinit',
                   color: 'warning' as const,
                   icon: <EventIcon fontSize='small' />
                 }

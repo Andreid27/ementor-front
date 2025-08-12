@@ -72,13 +72,13 @@ export const isVirtualRecurringSeries = (event: any): boolean => {
  */
 export const getEventClassification = (event: any): string => {
   if (isSingularEvent(event)) {
-    return 'Singular Event'
+    return 'Eveniment Singular'
   } else if (isRecurringSeriesOccurrence(event)) {
-    return 'Recurring Series Occurrence'
+    return 'Apariție Serie Recurentă'
   } else if (isVirtualRecurringSeries(event)) {
-    return 'Virtual Recurring Series'
+    return 'Serie Recurentă Virtuală'
   } else {
-    return 'Unknown Event Type'
+    return 'Tip Eveniment Necunoscut'
   }
 }
 
@@ -98,8 +98,8 @@ export const determineEventType = (event: any): EventTypeInfo => {
       id: event.id || event.eventId,
       isEditable: true,
       editScope: 'single',
-      displayName: 'One-time Event',
-      description: 'This is a standalone event that occurs only once.'
+      displayName: 'Eveniment Unic',
+      description: 'Acesta este un eveniment de sine stătător care are loc o singură dată.'
     }
   }
 
@@ -111,8 +111,9 @@ export const determineEventType = (event: any): EventTypeInfo => {
       recurringSeriesId: event.recurringSeriesId || event.seriesId,
       isEditable: true,
       editScope: 'occurrence',
-      displayName: 'Event Occurrence',
-      description: 'This is a specific occurrence of a recurring series. Changes will only affect this occurrence.',
+      displayName: 'Apariție Eveniment',
+      description:
+        'Aceasta este o apariție specifică a unei serii recurente. Modificările vor afecta doar această apariție.',
       isVirtual: false,
       canComplete: true,
       allowsScopeToggle: true // Allow user to choose between editing this occurrence or the entire series
@@ -127,8 +128,8 @@ export const determineEventType = (event: any): EventTypeInfo => {
       recurringSeriesId: event.recurringSeriesId || event.seriesId || event.id,
       isEditable: true,
       editScope: 'occurrence', // Default to occurrence scope
-      displayName: 'Recurring Series (Virtual)',
-      description: 'This is a virtual recurring event. Modifying it will create a specific occurrence.',
+      displayName: 'Serie Recurentă (Virtuală)',
+      description: 'Acesta este un eveniment recurent virtual. Modificarea acestuia va crea o apariție specifică.',
       isVirtual: true,
       canComplete: true,
       allowsScopeToggle: true // Allow user to toggle between occurrence and series editing
@@ -143,8 +144,8 @@ export const determineEventType = (event: any): EventTypeInfo => {
       recurringSeriesId: event.recurringSeriesId || event.seriesId,
       isEditable: true,
       editScope: 'occurrence', // Default to occurrence scope
-      displayName: 'Recurring Series',
-      description: 'Editing this will affect all future events in the series.',
+      displayName: 'Serie Recurentă',
+      description: 'Editarea acesteia va afecta toate evenimentele viitoare din serie.',
       allowsScopeToggle: true // Allow user to toggle between occurrence and series editing
     }
   }
@@ -156,8 +157,9 @@ export const determineEventType = (event: any): EventTypeInfo => {
     recurringSeriesId: event.recurringSeriesId || event.seriesId,
     isEditable: true,
     editScope: 'occurrence', // Default to occurrence scope
-    displayName: 'Event Occurrence',
-    description: 'This is a specific occurrence of a recurring series. Changes will only affect this occurrence.',
+    displayName: 'Apariție Eveniment',
+    description:
+      'Aceasta este o apariție specifică a unei serii recurente. Modificările vor afecta doar această apariție.',
     isVirtual: false,
     canComplete: true,
     allowsScopeToggle: false // Event occurrences can only be edited as occurrences, not as series
@@ -242,11 +244,11 @@ export const getEditWarningMessage = (eventTypeInfo: EventTypeInfo, event?: any)
   switch (eventTypeInfo.type) {
     case EventType.RECURRING_SERIES:
       if (event?.virtual === true) {
-        return 'Note: Modifying this virtual recurring event will create a specific occurrence for this date.'
+        return 'Notă: Modificarea acestui eveniment recurent virtual va crea o apariție specifică pentru această dată.'
       }
-      return 'Warning: Changes will apply to all future events in this recurring series.'
+      return 'Avertisment: Modificările se vor aplica tuturor evenimentelor viitoare din această serie recurentă.'
     case EventType.EVENT_OCCURRENCE:
-      return 'Note: Changes will only apply to this specific occurrence of the recurring series.'
+      return 'Notă: Modificările se vor aplica doar acestei apariții specifice a seriei recurente.'
     case EventType.SINGULAR_EVENT:
       return null // No warning needed
     default:
@@ -260,13 +262,13 @@ export const getEditWarningMessage = (eventTypeInfo: EventTypeInfo, event?: any)
 export const getDeleteConfirmationMessage = (eventTypeInfo: EventTypeInfo): string => {
   switch (eventTypeInfo.type) {
     case EventType.SINGULAR_EVENT:
-      return 'Are you sure you want to delete this event?'
+      return 'Ești sigur că vrei să ștergi acest eveniment?'
     case EventType.RECURRING_SERIES:
-      return 'Are you sure you want to delete this entire recurring series? This will remove all future events.'
+      return 'Ești sigur că vrei să ștergi întreaga serie recurentă? Aceasta va elimina toate evenimentele viitoare.'
     case EventType.EVENT_OCCURRENCE:
-      return 'Are you sure you want to cancel this occurrence? The recurring series will remain active.'
+      return 'Ești sigur că vrei să anulezi această apariție? Seria recurentă va rămâne activă.'
     default:
-      return 'Are you sure you want to delete this event?'
+      return 'Ești sigur că vrei să ștergi acest eveniment?'
   }
 }
 
@@ -274,7 +276,7 @@ export const getDeleteConfirmationMessage = (eventTypeInfo: EventTypeInfo): stri
  * Formats the event title with type indicator
  */
 export const formatEventTitle = (event: any, eventTypeInfo: EventTypeInfo): string => {
-  const baseTitle = event.title || event.seriesTitle || 'Untitled Event'
+  const baseTitle = event.title || event.seriesTitle || 'Eveniment fără titlu'
 
   switch (eventTypeInfo.type) {
     case EventType.SINGULAR_EVENT:
@@ -297,7 +299,7 @@ const formatOccurrenceDate = (event: any): string => {
     const date = new Date(startTime)
     return date.toLocaleDateString()
   }
-  return 'Occurrence'
+  return 'Apariție'
 }
 
 /**
@@ -337,16 +339,16 @@ export const canCompleteOccurrence = (eventTypeInfo: EventTypeInfo, event?: any)
 export const getEventActionButtonText = (eventTypeInfo: EventTypeInfo, event?: any): string => {
   switch (eventTypeInfo.type) {
     case EventType.SINGULAR_EVENT:
-      return 'Save Event'
+      return 'Salvează Eveniment'
     case EventType.RECURRING_SERIES:
       if (event?.virtual === true) {
-        return 'Create Occurrence'
+        return 'Creează Apariție'
       }
-      return 'Update Series'
+      return 'Actualizează Serie'
     case EventType.EVENT_OCCURRENCE:
-      return 'Update Occurrence'
+      return 'Actualizează Apariție'
     default:
-      return 'Save'
+      return 'Salvează'
   }
 }
 
@@ -406,9 +408,9 @@ export const getScopeWarningMessage = (scope: EditingScope, eventTypeInfo?: Even
   if (eventTypeInfo?.type === EventType.EVENT_OCCURRENCE) {
     switch (scope) {
       case 'occurrence':
-        return 'Changes will only affect this specific occurrence in the series.'
+        return 'Modificările vor afecta doar această apariție specifică din serie.'
       case 'series':
-        return 'Changes will affect this occurrence and all future events in the recurring series.'
+        return 'Modificările vor afecta această apariție și toate evenimentele viitoare din seria recurentă.'
       default:
         return ''
     }
@@ -416,9 +418,9 @@ export const getScopeWarningMessage = (scope: EditingScope, eventTypeInfo?: Even
 
   switch (scope) {
     case 'occurrence':
-      return 'Changes will only apply to this specific occurrence.'
+      return 'Modificările se vor aplica doar acestei apariții specifice.'
     case 'series':
-      return 'Warning: Changes will apply to all future events in this recurring series.'
+      return 'Avertisment: Modificările se vor aplica tuturor evenimentelor viitoare din această serie recurentă.'
     default:
       return ''
   }
@@ -430,11 +432,11 @@ export const getScopeWarningMessage = (scope: EditingScope, eventTypeInfo?: Even
 export const getScopeButtonText = (scope: EditingScope): string => {
   switch (scope) {
     case 'occurrence':
-      return 'Update This Occurrence'
+      return 'Actualizează Această Apariție'
     case 'series':
-      return 'Update Entire Series'
+      return 'Actualizează Întreaga Serie'
     default:
-      return 'Update'
+      return 'Actualizează'
   }
 }
 

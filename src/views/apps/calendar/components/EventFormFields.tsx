@@ -85,10 +85,10 @@ const EventFormFields: React.FC<EventFormFieldsProps> = ({
                 return (
                   <TextField
                     fullWidth
-                    label='Event Title'
+                    label='Titlu Eveniment'
                     value={value}
                     onChange={onChange}
-                    placeholder='Enter event title'
+                    placeholder='Introdu titlul evenimentului'
                     error={Boolean(errors.title)}
                     InputProps={{
                       readOnly: isTitleReadOnly,
@@ -98,7 +98,7 @@ const EventFormFields: React.FC<EventFormFieldsProps> = ({
                         </InputAdornment>
                       )
                     }}
-                    {...(errors.title && { helperText: 'This field is required' })}
+                    {...(errors.title && { helperText: 'Acest câmp este obligatoriu' })}
                     size='small'
                   />
                 )
@@ -117,12 +117,12 @@ const EventFormFields: React.FC<EventFormFieldsProps> = ({
                   fullWidth
                   multiline
                   rows={2}
-                  label='Description (Optional)'
+                  label='Descriere (Opțional)'
                   value={values.description}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setValues({ ...values, description: e.target.value })
                   }
-                  placeholder='Add event details or agenda'
+                  placeholder='Adaugă detalii sau agenda evenimentului'
                   InputProps={{
                     readOnly: isDescriptionReadOnly,
                     startAdornment: (
@@ -146,12 +146,12 @@ const EventFormFields: React.FC<EventFormFieldsProps> = ({
           <Grid item xs={12} sm={6}>
             {editingScope === 'occurrence' && (
               <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 1 }}>
-                Rescheduling this individual occurrence (original series remains unchanged)
+                Reprogramarea acestei apariții individuale (seria originală rămâne neschimbată)
               </Typography>
             )}
             {editingScope === 'series' && (
               <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 1 }}>
-                Start date cannot be changed when editing the entire series
+                Data de început nu poate fi modificată când editezi întreaga serie
               </Typography>
             )}
             <DatePicker
@@ -161,10 +161,10 @@ const EventFormFields: React.FC<EventFormFieldsProps> = ({
               timeIntervals={15}
               dateFormat={values.allDay ? 'MM/dd/yyyy' : 'MM/dd/yyyy h:mm aa'}
               onChange={handleStartDate}
-              placeholderText={values.allDay ? 'Start date' : 'Start date & time'}
+              placeholderText={values.allDay ? 'Data de început' : 'Data și ora de început'}
               customInput={
                 <PickersComponent
-                  label={editingScope === 'occurrence' ? 'New Start Date & Time' : 'Start Date & Time'}
+                  label={editingScope === 'occurrence' ? 'Nouă Dată și Oră de Început' : 'Data și Ora de Început'}
                 />
               }
               disabled={isReadOnly || editingScope === 'series'}
@@ -181,8 +181,8 @@ const EventFormFields: React.FC<EventFormFieldsProps> = ({
                 timeIntervals={15}
                 dateFormat={values.allDay ? 'MM/dd/yyyy' : 'MM/dd/yyyy h:mm aa'}
                 onChange={(date: Date) => setValues({ ...values, endDate: new Date(date) })}
-                placeholderText={values.allDay ? 'End date' : 'End date & time'}
-                customInput={<PickersComponent label='End Date & Time' />}
+                placeholderText={values.allDay ? 'Data de sfârșit' : 'Data și ora de sfârșit'}
+                customInput={<PickersComponent label='Data și Ora de Sfârșit' />}
                 disabled={isReadOnly}
               />
             </Grid>
@@ -190,12 +190,12 @@ const EventFormFields: React.FC<EventFormFieldsProps> = ({
             <Grid item xs={12} sm={4}>
               {editingScope === 'occurrence' && (
                 <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 1 }}>
-                  Adjust duration for this occurrence only
+                  Ajustează durata doar pentru această apariție
                 </Typography>
               )}
               {editingScope === 'series' && (
                 <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 1 }}>
-                  Set default duration for all events in series
+                  Setează durata implicită pentru toate evenimentele din serie
                 </Typography>
               )}
               <Box sx={{ display: 'flex', alignItems: 'flex-end', marginTop: '1.05rem', gap: 1 }}>
@@ -206,7 +206,7 @@ const EventFormFields: React.FC<EventFormFieldsProps> = ({
                     <>
                       <TextField
                         type='number'
-                        label='Hours'
+                        label='Ore'
                         value={values.durationHours || ''}
                         onChange={handleDurationChange('durationHours')}
                         InputProps={{
@@ -219,7 +219,7 @@ const EventFormFields: React.FC<EventFormFieldsProps> = ({
                       />
                       <TextField
                         type='number'
-                        label='Minutes'
+                        label='minute'
                         value={values.durationMinutes || ''}
                         onChange={handleDurationChange('durationMinutes')}
                         InputProps={{
@@ -257,7 +257,7 @@ const EventFormFields: React.FC<EventFormFieldsProps> = ({
                 <FormControlLabel
                   label={
                     <Typography variant='body2' sx={{ fontWeight: 500, fontSize: '0.875rem' }}>
-                      All Day
+                      Toată Ziua
                     </Typography>
                   }
                   control={
@@ -287,7 +287,7 @@ const EventFormFields: React.FC<EventFormFieldsProps> = ({
               return (
                 <TextField
                   fullWidth
-                  label='Meeting Link (Optional)'
+                  label='Link Întâlnire (Opțional)'
                   value={values.meetingLink}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setValues({ ...values, meetingLink: e.target.value })
@@ -315,7 +315,7 @@ const EventFormFields: React.FC<EventFormFieldsProps> = ({
                 <TextField
                   fullWidth
                   type='number'
-                  label='Price (RON)'
+                  label='Preț (RON)'
                   value={values.price}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setValues({ ...values, price: parseFloat(e.target.value) || 0 })

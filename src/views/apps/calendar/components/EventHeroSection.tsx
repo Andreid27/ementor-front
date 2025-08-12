@@ -65,7 +65,7 @@ const EventHeroSection: React.FC = () => {
             }
           }}
         >
-          {selectedEvent?.seriesTitle || 'Untitled Event'}
+          {selectedEvent?.seriesTitle || 'Eveniment fără titlu'}
         </Typography>
 
         {/* Event Type Badge */}
@@ -92,7 +92,7 @@ const EventHeroSection: React.FC = () => {
             }}
           >
             <Icon icon={selectedEvent.virtual ? 'tabler:video' : 'tabler:map-pin'} fontSize='1.1rem' />
-            {selectedEvent.virtual ? 'Virtual' : 'In-Person'}
+            {selectedEvent.virtual ? 'Virtual' : 'În Persoană'}
           </Box>
 
           {selectedEvent.recurringSeriesId && (
@@ -118,7 +118,7 @@ const EventHeroSection: React.FC = () => {
               }}
             >
               <Icon icon='tabler:repeat' fontSize='1.1rem' />
-              Recurring
+              Recurent
             </Box>
           )}
 
@@ -144,7 +144,7 @@ const EventHeroSection: React.FC = () => {
                 }
               }}
             >
-              {selectedEvent.price === 0 ? 'Free' : `${selectedEvent.price} RON`}
+              {selectedEvent.price === 0 ? 'Gratuit' : `${selectedEvent.price} RON`}
             </Box>
           )}
         </Box>

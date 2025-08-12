@@ -32,26 +32,26 @@ const EventActionConfirmDialog: React.FC<EventActionConfirmDialogProps> = ({
 }) => {
   const actionConfig = {
     cancel: {
-      title: 'Cancel Event',
+      title: 'Anulează Eveniment',
       icon: 'tabler:ban',
       color: 'warning' as const,
-      confirmText: 'Cancel Event',
+      confirmText: 'Anulează Eveniment',
       message: isRecurring
-        ? 'This will cancel this specific occurrence of the recurring event.'
-        : 'This event will be permanently cancelled and removed from the calendar.',
+        ? 'Aceasta va anula această apariție specifică a evenimentului recurent.'
+        : 'Acest eveniment va fi anulat permanent și eliminat din calendar.',
       warningText: isFutureEvent
-        ? 'This action will cancel a future event occurrence.'
-        : 'This action cannot be undone.'
+        ? 'Această acțiune va anula o apariție a evenimentului din viitor.'
+        : 'Această acțiune nu poate fi anulată.'
     },
     complete: {
-      title: 'Complete Event',
+      title: 'Finalizează Eveniment',
       icon: 'tabler:check-circle',
       color: 'success' as const,
-      confirmText: 'Mark as Complete',
-      message: 'Mark this event as completed and record attendance.',
+      confirmText: 'Marchează ca Finalizat',
+      message: 'Marchează acest eveniment ca finalizat și înregistrează prezența.',
       warningText: isFutureEvent
-        ? 'You are marking a future event as complete.'
-        : 'This will mark the event as completed in your records.'
+        ? 'Marchezi un eveniment din viitor ca finalizat.'
+        : 'Aceasta va marca evenimentul ca finalizat în înregistrările tale.'
     }
   }
 
@@ -104,8 +104,8 @@ const EventActionConfirmDialog: React.FC<EventActionConfirmDialogProps> = ({
         {isRecurring && (
           <Alert severity='info' sx={{ mt: 2 }}>
             <Typography variant='body2'>
-              <strong>Note:</strong> This action only affects this specific occurrence. The recurring series will
-              continue with other scheduled events.
+              <strong>Notă:</strong> Această acțiune afectează doar această apariție specifică. Seria recurentă va
+              continua cu alte evenimente programate.
             </Typography>
           </Alert>
         )}
@@ -113,7 +113,7 @@ const EventActionConfirmDialog: React.FC<EventActionConfirmDialogProps> = ({
 
       <DialogActions sx={{ p: 3, pt: 0 }}>
         <Button onClick={onClose} disabled={loading} variant='outlined' color='inherit'>
-          Cancel
+          Anulează
         </Button>
         <Button
           onClick={onConfirm}
@@ -122,7 +122,7 @@ const EventActionConfirmDialog: React.FC<EventActionConfirmDialogProps> = ({
           color={config.color}
           startIcon={loading ? <Icon icon='tabler:loader' className='animate-spin' /> : <Icon icon={config.icon} />}
         >
-          {loading ? 'Processing...' : config.confirmText}
+          {loading ? 'Se procesează...' : config.confirmText}
         </Button>
       </DialogActions>
     </Dialog>

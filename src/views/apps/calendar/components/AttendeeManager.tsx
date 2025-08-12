@@ -232,12 +232,12 @@ const AttendeeManager: React.FC<AttendeeManagerProps> = ({
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Typography variant='body1'>{displayName}</Typography>
               {attendee.expected && (
-                <Tooltip title='Expected to attend'>
+                <Tooltip title='Se așteaptă să participe'>
                   <EventAvailableIcon fontSize='small' color='primary' />
                 </Tooltip>
               )}
               {attendee.attended && (
-                <Tooltip title='Attended'>
+                <Tooltip title='A Participat'>
                   <CheckCircleIcon fontSize='small' color='success' />
                 </Tooltip>
               )}
@@ -283,7 +283,7 @@ const AttendeeManager: React.FC<AttendeeManagerProps> = ({
                         size='small'
                       />
                     }
-                    label='Attended'
+                    label='A Participat'
                     sx={{ m: 0 }}
                   />
                 </Box>
@@ -382,7 +382,7 @@ const AttendeeManager: React.FC<AttendeeManagerProps> = ({
             <Badge badgeContent={(attendees || []).length} color='primary' max={99}>
               <GroupIcon color='primary' />
             </Badge>
-            Current Attendees
+            Participanți Curenti
           </Typography>
           {expandedSections.currentAttendees ? <ExpandLessIcon color='action' /> : <ExpandMoreIcon color='action' />}
         </Box>
@@ -393,8 +393,8 @@ const AttendeeManager: React.FC<AttendeeManagerProps> = ({
             {(attendees || []).length === 0 ? (
               <ListItem sx={{ py: 3 }}>
                 <ListItemText
-                  primary='No attendees selected'
-                  secondary='Add students from the available list below'
+                  primary='Nu s-au selectat participanți'
+                  secondary='Adaugă elevi din lista disponibilă de mai jos'
                   sx={{ textAlign: 'center' }}
                 />
               </ListItem>
@@ -423,7 +423,7 @@ const AttendeeManager: React.FC<AttendeeManagerProps> = ({
               <Badge badgeContent={availableStudents.length} color='secondary' max={99}>
                 <PersonIcon color='action' />
               </Badge>
-              Available Students
+              Elevi Disponibili
             </Typography>
             {expandedSections.availableStudents ? <ExpandLessIcon color='action' /> : <ExpandMoreIcon color='action' />}
           </Box>
@@ -434,7 +434,7 @@ const AttendeeManager: React.FC<AttendeeManagerProps> = ({
               <TextField
                 fullWidth
                 size='small'
-                placeholder='Search students by name or email...'
+                placeholder='Caută elevi după nume sau email...'
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
                 InputProps={{

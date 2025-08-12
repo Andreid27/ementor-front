@@ -49,7 +49,7 @@ const EventMeetingLink: React.FC<EventMeetingLinkProps> = ({ meetingLink }) => {
           transition: 'all 0.3s ease'
         }}
       >
-        Join Meeting
+        Alătură-te Întâlnirii
       </Button>
       <Typography
         variant='caption'
