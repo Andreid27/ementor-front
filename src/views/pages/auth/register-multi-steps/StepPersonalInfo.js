@@ -28,7 +28,6 @@ import schoolDomains from './schoolDomains.json'
 import countryCodes from './countryCodes.json'
 import { useAuth } from 'src/hooks/useAuth'
 
-
 const StepPersonalDetails = ({ handleNext, initPrerequire, setInitPrerequire, setCounties, profile, setProfile }) => {
   const user = useSelector(selectUser)
   const [file, setFile] = useState()
@@ -148,8 +147,7 @@ const StepPersonalDetails = ({ handleNext, initPrerequire, setInitPrerequire, se
         <Grid container spacing={5}>
           <Grid item xs={12} sm={6}>
             <Card className={'bro'} sx={{ width: 300, height: 300, '& .MuiCardHeader-action': { lineHeight: 0.8 } }}>
-
-              {user && !user.profilePicture ?
+              {user && !user.profilePicture ? (
                 <>
                   <CardHeader title={'Încarcă fotografia ta aici'} />
                   <CardContent sx={{ position: 'relative', '& pre': { m: '0 !important', maxHeight: 300 } }}>
@@ -169,10 +167,15 @@ const StepPersonalDetails = ({ handleNext, initPrerequire, setInitPrerequire, se
                     </Box>
                   </CardContent>
                 </>
-                : <Avatar alt={user.name} src={user.profilePicture.replace('s96-c', 's300-c')}
+              ) : (
+                <Avatar
+                  alt={user.name}
+                  src={user.profilePicture.replace('s96-c', 's300-c')}
                   sx={{ width: 300, height: 300 }}
-                  imgProps={{ referrerPolicy: 'no-referrer' }} variant="square" />
-              }
+                  imgProps={{ referrerPolicy: 'no-referrer' }}
+                  variant='square'
+                />
+              )}
             </Card>
 
             {imageValidationError && (
@@ -411,29 +414,83 @@ const StepPersonalDetails = ({ handleNext, initPrerequire, setInitPrerequire, se
               control={control}
               rules={{
                 required: true,
-                pattern: {
-                  value: /^\d([.,]\d{1,2})?$/,
-                  message: 'Acest număr de telefonu este valid.'
+                validate: value => {
+                  if (!value) return 'Acest câmp este obligatoriu.'
+
+                  // Normalize the input by replacing commas and spaces with dots
+                  const normalizedValue = value.toString().replace(/[,\s]/g, '.')
+
+                  // Check if it's a valid number format
+                  const numberRegex = /^\d+(\.\d{1,2})?$/
+                  if (!numberRegex.test(normalizedValue)) {
+                    return 'Introduceți o notă validă (ex: 8.91, 8,91, sau 8).'
+                  }
+
+                  const numValue = parseFloat(normalizedValue)
+                  if (numValue < 1 || numValue > 10) {
+                    return 'Nota trebuie să fie între 1 și 10.'
+                  }
+
+                  return true
                 }
               }}
               render={({ field: { value, onChange } }) => (
                 <CustomTextField
                   fullWidth
-                  value={value}
+                  value={value || ''}
                   label='Media generală / Nota de la BAC'
-                  onChange={onChange}
+                  onChange={e => {
+                    let inputValue = e.target.value
+
+                    // Allow only digits, commas, dots, and spaces during typing
+                    if (!/^[\d.,\s]*$/.test(inputValue)) {
+                      return
+                    }
+
+                    onChange(inputValue)
+                  }}
+                  onBlur={e => {
+                    if (!e.target.value) return
+
+                    // Normalize the value when user finishes editing
+                    let normalizedValue = e.target.value.replace(/[,\s]/g, '.')
+
+                    // Remove multiple consecutive dots
+                    normalizedValue = normalizedValue.replace(/\.+/g, '.')
+
+                    // If it ends with a dot, remove it
+                    if (normalizedValue.endsWith('.')) {
+                      normalizedValue = normalizedValue.slice(0, -1)
+                    }
+
+                    // Convert to float and back to string to ensure consistent format
+                    const floatValue = parseFloat(normalizedValue)
+                    if (!isNaN(floatValue)) {
+                      normalizedValue = floatValue.toString()
+                    }
+
+                    console.log('Normalized value on blur:', normalizedValue) // Debug log
+                    onChange(normalizedValue)
+                  }}
                   placeholder='9.99'
                   error={Boolean(errors.schoolGrade)}
                   aria-describedby='validation-async-last-name'
-                  {...(errors.schoolGrade && { helperText: 'Acest câmp este obligatoriu.' })}
+                  {...(errors.schoolGrade && {
+                    helperText: errors.schoolGrade.message || 'Acest câmp este obligatoriu.'
+                  })}
                 />
               )}
             />
           </Grid>
 
           <Grid item xs={6}>
-            <Button variant='text' sx={{ marginBottom: '30px' }}
-              onClick={() => { auth.logout() }}>
+            <Button
+              variant='text'
+              sx={{ marginBottom: '30px' }}
+              onClick={() => {
+                auth.logout()
+              }}
+            >
               Sign Out
             </Button>
           </Grid>
