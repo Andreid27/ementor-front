@@ -78,6 +78,13 @@ const navigation = () => {
       path: '/student-results'
     },
     {
+      title: 'User',
+      icon: 'tabler:user',
+      subject: 'professor-pages',
+      path: '/apps/user/list',
+      action: 'read'
+    },
+    {
       sectionTitle: 'Administrativ',
       action: 'read',
       subject: 'professor-pages'
