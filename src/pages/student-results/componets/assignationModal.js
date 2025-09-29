@@ -97,9 +97,7 @@ const AssignationModal = props => {
   return (
     <>
       {loading ? (
-        <>
-          <LinearProgress />
-        </>
+        <></>
       ) : (
         <Fragment>
           <Button sx={{ margin: '2em', marginLeft: '0em' }} variant='contained' size='large' onClick={handleClickOpen}>
