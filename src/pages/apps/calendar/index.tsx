@@ -150,6 +150,7 @@ const AppCalendar = () => {
   // ** Create completeEventOccurrence action locally
   const completeEventOccurrence = useCallback(
     async (payload: {
+      singularEventId: string
       seriesId: string
       originalStartTime: string
       actualStartTime: string
@@ -180,6 +181,7 @@ const AppCalendar = () => {
       }
 
       const response = await profileServiceClient.events.completeEventOccurrence({
+        singularEventId: payload.singularEventId,
         seriesId: payload.seriesId,
         originalStartTime: payload.originalStartTime,
         actualStartTime: payload.actualStartTime,
@@ -248,16 +250,20 @@ const AppCalendar = () => {
 
   // ** Function to dynamically generate calendar colors based on series UUID
   const generateDynamicCalendarColors = useCallback((events: EventOccurrenceDTO[]) => {
-    const dynamicColors: CalendarColors = { ...calendarsColor }
+    const dynamicColors: CalendarColors = {
+      ...calendarsColor,
+      // Always include Personal category for singular events
+      Personal: 'primary'
+    }
 
     // 6 distinct MUI colors - we'll cycle through these
     const colorOptions: Array<'error' | 'primary' | 'warning' | 'success' | 'info' | 'secondary'> = [
-      'primary', // Blue
-      'secondary', // Purple/Gray
+      'secondary', // Purple/Gray (start with secondary since Personal uses primary)
       'success', // Green
       'info', // Light Blue
       'warning', // Orange/Yellow
-      'error' // Red
+      'error', // Red
+      'primary' // Blue (will be used if we have more than 5 series)
     ]
 
     // Improved hash function with better distribution

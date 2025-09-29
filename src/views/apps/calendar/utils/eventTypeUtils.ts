@@ -45,18 +45,18 @@ export interface EditingScopeConfig {
 
 /**
  * Determines if an event is a singular event (standalone, not part of any recurring series)
- * Rule: EventOccurrenceDTO.recurringSeriesId is null AND virtual == false
+ * Rule: EventOccurrenceDTO.recurringSeriesId is null AND not virtual
  */
 export const isSingularEvent = (event: any): boolean => {
-  return !event.recurringSeriesId && !event.seriesId && event.virtual === false
+  return !event.recurringSeriesId && !event.seriesId && !event.virtual
 }
 
 /**
  * Determines if an event is an occurrence of a recurring series
- * Rule: EventOccurrenceDTO.recurringSeriesId is not null AND virtual == false
+ * Rule: EventOccurrenceDTO.recurringSeriesId is not null AND not virtual
  */
 export const isRecurringSeriesOccurrence = (event: any): boolean => {
-  return !!(event.recurringSeriesId || event.seriesId) && event.virtual === false
+  return !!(event.recurringSeriesId || event.seriesId) && !event.virtual
 }
 
 /**

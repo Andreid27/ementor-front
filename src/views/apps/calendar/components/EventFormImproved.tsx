@@ -101,19 +101,15 @@ const EventForm: React.FC<EventFormProps> = ({
       title: 'Participanți și Prețuri',
       component: (
         <AttendeeManager
+          eventType={values?.isRecurring ? 'recurring' : 'singular'}
           students={students}
-          attendees={attendees}
-          onAttendeesChange={newAttendees => {
-            console.log('EventFormImproved: Attendees changed:', newAttendees)
-            setValues(prev => ({ ...prev, attendees: newAttendees }))
-          }}
-          defaultPrice={values.price}
-          eventType={values.isRecurring ? 'recurring' : 'singular'}
-          showPricing={true}
-          showAttendanceTracking={false}
-          showStatistics={false}
           isReadOnly={isReadOnly}
-          isNewEvent={isNewEvent}
+          isNewEvent={!store.selectedEvent}
+          attendees={values?.attendees || []}
+          defaultPrice={values?.price || 0}
+          onAttendeesChange={attendees => {
+            setValues(prev => ({ ...prev, attendees }))
+          }}
         />
       ),
       chips: [

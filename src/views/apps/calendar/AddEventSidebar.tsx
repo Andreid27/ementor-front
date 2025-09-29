@@ -145,7 +145,8 @@ const AddEventSidebar: React.FC<AddEventSidebarProps> = props => {
         const event = store.selectedEvent as any // Cast to access EventOccurrenceDTO properties
 
         const payload = {
-          seriesId: event.recurringSeriesId || event.id,
+          singularEventId: event.id,
+          seriesId: event.recurringSeriesId,
           originalStartTime: event.originalStartTime || event.effectiveStartTime || event.start,
           actualStartTime: completionData.actualStartTime,
           actualEndTime: completionData.actualEndTime,
