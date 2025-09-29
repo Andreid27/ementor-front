@@ -135,35 +135,50 @@ const EnhancedTable = props => {
   const getSorters = () => {
     let sorters = [{ key: 'quizCreation', direction: 'DESC' }]
     if (orderBy === 'chapterTitles') {
-      sorters = [{
-        key: 'chapterTitles',
-        direction: order.toUpperCase()
-      }, ...sorters]
+      sorters = [
+        {
+          key: 'chapterTitles',
+          direction: order.toUpperCase()
+        },
+        ...sorters
+      ]
     }
     if (orderBy === 'title') {
-      sorters = [{
-        key: 'title',
-        direction: order.toUpperCase()
-      }, ...sorters]
+      sorters = [
+        {
+          key: 'title',
+          direction: order.toUpperCase()
+        },
+        ...sorters
+      ]
     }
     if (orderBy === 'maxTime') {
-      sorters = [{
-        key: 'maxTime',
-        direction: order.toUpperCase()
-      }, ...sorters]
+      sorters = [
+        {
+          key: 'maxTime',
+          direction: order.toUpperCase()
+        },
+        ...sorters
+      ]
     }
     if (orderBy === 'difficultyLevel') {
-      sorters = [{
-        key: 'difficultyLevel',
-        direction: order.toUpperCase()
-      }, ...sorters]
+      sorters = [
+        {
+          key: 'difficultyLevel',
+          direction: order.toUpperCase()
+        },
+        ...sorters
+      ]
     }
     if (orderBy === 'quizCreation') {
       sorters = sorters.filter(sorter => sorter.key !== 'quizCreation')
-      sorters = [{
-        key: 'quizCreation',
-        direction: order.toUpperCase()
-      }, ...sorters]
+      sorters = [
+        {
+          key: 'quizCreation',
+          direction: order.toUpperCase()
+        },
+        ...sorters
+      ]
     }
 
     return sorters

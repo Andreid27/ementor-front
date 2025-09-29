@@ -110,7 +110,7 @@ const StudentsLessonsTable = () => {
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Button
               className={classes.button}
-              sx={{ "&:hover": { backgroundColor: "transparent" } }}
+              sx={{ '&:hover': { backgroundColor: 'transparent' } }}
               color='secondary'
               onClick={event => handleOpenDialog(params.row, event, 'PROFILE')}
             >
@@ -172,13 +172,13 @@ const StudentsLessonsTable = () => {
             <Box sx={{ fontWeight: 'bold' }}>
               {params.row.firstRead
                 ? new Date(params.row.firstRead).toLocaleString('ro-RO', {
-                  timeZone: 'UTC',
-                  day: '2-digit',
-                  month: '2-digit',
-                  year: '2-digit',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })
+                    timeZone: 'UTC',
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })
                 : 'N/A'}
             </Box>
           </Box>
@@ -280,7 +280,7 @@ const StudentsLessonsTable = () => {
     const fetchData = async () => {
       try {
         const [userServiceResponse, lessonServiceResponse] = await Promise.all([
-          apiClient.get("service3/users/role/STUDENT"),
+          apiClient.get('service3/users/role/STUDENT'),
           apiClient.post(apiSpec.LESSON_SERVICE + '/lesson/assigned-paginated', {
             filters: [],
             sorters: getSorters(),
@@ -290,7 +290,7 @@ const StudentsLessonsTable = () => {
         ])
         dispatch(updateAllStudents(userServiceResponse.data))
         setUsers(userServiceResponse.data)
-        const processedData = await processStudentLessonsData(lessonServiceResponse.data.data, userServiceResponse.data);
+        const processedData = await processStudentLessonsData(lessonServiceResponse.data.data, userServiceResponse.data)
         setData(processedData)
         setTotalCount(lessonServiceResponse.data.totalCount)
         setLoading(false)
@@ -317,7 +317,7 @@ const StudentsLessonsTable = () => {
         pageSize: paginationModel.pageSize
       })
       .then(async response => {
-        const processedData = await processStudentLessonsData(response.data.data, users);
+        const processedData = await processStudentLessonsData(response.data.data, users)
         setData(processedData)
         setTotalCount(response.data.totalCount)
       })
@@ -337,7 +337,7 @@ const StudentsLessonsTable = () => {
 
   const processStudentLessonsData = async (data, users) => {
     const usersOnPage = data.map(row => row.userId)
-    let uniqueUsers = [...new Set(usersOnPage)];
+    let uniqueUsers = [...new Set(usersOnPage)]
     let processedUsersList = []
     for (const userId of uniqueUsers) {
       const user = users.find(user => user.id === userId)
@@ -350,17 +350,16 @@ const StudentsLessonsTable = () => {
     const result = await Promise.all(
       processedUsersList.map(async profilePicture => {
         if (profilePicture.type === 'API') {
-          const avatar = await profilePictureDownloader(profilePicture.url, profilePicture.userId);
+          const avatar = await profilePictureDownloader(profilePicture.url, profilePicture.userId)
 
-          return { ...profilePicture, avatar: avatar || null };
+          return { ...profilePicture, avatar: avatar || null }
+        } else if (profilePicture.type === 'EXTERNAL') {
+          return { ...profilePicture, avatar: profilePicture.url }
+        } else {
+          return { ...profilePicture, avatar: null }
         }
-        else if (profilePicture.type === 'EXTERNAL') {
-          return { ...profilePicture, avatar: profilePicture.url };
-        }
-        else {
-          return { ...profilePicture, avatar: null };
-        }
-      }));
+      })
+    )
 
     return data.map(row => {
       const user = result.find(user => user.userId === row.userId)
@@ -376,7 +375,11 @@ const StudentsLessonsTable = () => {
   const handleOpenDialog = (row, event, dialogType) => {
     event.stopPropagation()
     if (dialogType === 'DELETE') {
-      setDialogOpenRow({ id: row.lessonStudentId, title: row.title, student: users.find(user => user.id === row.userId) })
+      setDialogOpenRow({
+        id: row.lessonStudentId,
+        title: row.title,
+        student: users.find(user => user.id === row.userId)
+      })
       setDialogOpen(true)
     } else if (dialogType === 'PROFILE') {
       setSelectedStudentId(row.userId)
@@ -432,7 +435,12 @@ const StudentsLessonsTable = () => {
               />
             )}
             {profileDrawerOpen && (
-              <UserViewDrawer open={profileDrawerOpen} onClose={handleCloseDialog} userId={selectedStudentId} tab="account" />
+              <UserViewDrawer
+                open={profileDrawerOpen}
+                onClose={handleCloseDialog}
+                userId={selectedStudentId}
+                tab='account'
+              />
             )}
             <DataGrid
               autoHeight

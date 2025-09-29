@@ -110,7 +110,7 @@ const StudentsResultsTable = () => {
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Button
               className={classes.button}
-              sx={{ "&:hover": { backgroundColor: "transparent" } }}
+              sx={{ '&:hover': { backgroundColor: 'transparent' } }}
               onClick={event => handleOpenDialog(params.row, event, 'PROFILE')}
             >
               {renderClient(params, user)}
@@ -251,7 +251,7 @@ const StudentsResultsTable = () => {
     const fetchData = async () => {
       try {
         const [userServiceResponse, quizServiceResponse] = await Promise.all([
-          apiClient.get("service3/users/role/STUDENT"),
+          apiClient.get('service3/users/role/STUDENT'),
           apiClient.post(apiSpec.QUIZ_SERVICE + '/assigned-paginated', {
             filters: [],
             sorters: getSorters(),
@@ -261,7 +261,7 @@ const StudentsResultsTable = () => {
         ])
         dispatch(updateAllStudents(userServiceResponse.data))
         setUsers(userServiceResponse.data)
-        const processedData = await processStudentQuizzesData(quizServiceResponse.data.data, userServiceResponse.data);
+        const processedData = await processStudentQuizzesData(quizServiceResponse.data.data, userServiceResponse.data)
         setData(processedData)
         setTotalCount(quizServiceResponse.data.totalCount)
         setLoading(false)
@@ -275,9 +275,9 @@ const StudentsResultsTable = () => {
 
   useEffect(() => {
     if (isInitialRender.current) {
-      isInitialRender.current = false;
+      isInitialRender.current = false
 
-      return;
+      return
     }
 
     // Define the async function
@@ -287,23 +287,23 @@ const StudentsResultsTable = () => {
           filters: [],
           sorters: getSorters(),
           page: paginationModel.page,
-          pageSize: paginationModel.pageSize,
-        });
+          pageSize: paginationModel.pageSize
+        })
 
         // Await the processing of student quizzes data
-        const processedData = await processStudentQuizzesData(response.data.data, users);
+        const processedData = await processStudentQuizzesData(response.data.data, users)
 
         // Set the processed data to the state
-        setData(processedData);
-        setTotalCount(response.data.totalCount);
+        setData(processedData)
+        setTotalCount(response.data.totalCount)
       } catch (error) {
-        console.log(error);
+        console.log(error)
       }
-    };
+    }
 
     // Call the async function
-    fetchAndProcessData();
-  }, [paginationModel, filteredData, sortModel]);
+    fetchAndProcessData()
+  }, [paginationModel, filteredData, sortModel])
 
   const getSorters = () => {
     const apiSortingConfig = sortModel.map(sortItem => ({
@@ -316,7 +316,7 @@ const StudentsResultsTable = () => {
 
   const processStudentQuizzesData = async (data, users) => {
     const usersOnPage = data.map(row => row.studentId)
-    let uniqueUsers = [...new Set(usersOnPage)];
+    let uniqueUsers = [...new Set(usersOnPage)]
     let processedUsersList = []
     for (const userId of uniqueUsers) {
       const user = users.find(user => user.id === userId)
@@ -329,17 +329,16 @@ const StudentsResultsTable = () => {
     const result = await Promise.all(
       processedUsersList.map(async profilePicture => {
         if (profilePicture.type === 'API') {
-          const avatar = await profilePictureDownloader(profilePicture.url, profilePicture.userId);
+          const avatar = await profilePictureDownloader(profilePicture.url, profilePicture.userId)
 
-          return { ...profilePicture, avatar: avatar || null };
+          return { ...profilePicture, avatar: avatar || null }
+        } else if (profilePicture.type === 'EXTERNAL') {
+          return { ...profilePicture, avatar: profilePicture.url }
+        } else {
+          return { ...profilePicture, avatar: null }
         }
-        else if (profilePicture.type === 'EXTERNAL') {
-          return { ...profilePicture, avatar: profilePicture.url };
-        }
-        else {
-          return { ...profilePicture, avatar: null };
-        }
-      }));
+      })
+    )
 
     return data.map(row => {
       const user = result.find(user => user.userId === row.studentId)
@@ -389,7 +388,11 @@ const StudentsResultsTable = () => {
 
   return (
     <>
-      <AssignationModal users={users} buttonSx={{ margin: '2em', marginLeft: '1em', marginTop: '0em' }} buttonSize={'large'} />
+      <AssignationModal
+        users={users}
+        buttonSx={{ margin: '2em', marginLeft: '1em', marginTop: '0em' }}
+        buttonSize={'large'}
+      />
       <Card>
         <CardHeader title='Rezultate studenți' />
         <Box sx={{ px: 3, pb: 3, pl: '1.7%' }}>
@@ -413,7 +416,12 @@ const StudentsResultsTable = () => {
             )}
 
             {profileDrawerOpen && (
-              <UserViewDrawer open={profileDrawerOpen} onClose={handleCloseDialog} userId={selectedStudentId} tab="account" />
+              <UserViewDrawer
+                open={profileDrawerOpen}
+                onClose={handleCloseDialog}
+                userId={selectedStudentId}
+                tab='account'
+              />
             )}
             <DataGrid
               autoHeight
