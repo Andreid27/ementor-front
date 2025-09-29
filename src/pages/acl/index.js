@@ -14,6 +14,7 @@ import { fetchNotifications } from 'src/store/apps/notifications'
 import * as apiSpec from '../../apiSpec'
 import profilePictureDownloader from 'src/@core/axios/profile-picture-downloader'
 import extractProfilePicture from 'src/@core/axios/profile-picture-extractor'
+import PaymentTimeline from './components/PaymentTimeline'
 
 const ACLPage = () => {
   const dispatch = useDispatch()
@@ -21,19 +22,18 @@ const ACLPage = () => {
   const [loading, setLoading] = useState(true)
   const [quizzesData, setQuizzesData] = useState([])
 
-  const quizServiceRequestParams =
-  {
+  const quizServiceRequestParams = {
     filters: [
       {
-        "key": "startedAt",
-        "operation": "GREATER",
-        "value": "2000-01-01T00:00:00.00Z"
+        key: 'startedAt',
+        operation: 'GREATER',
+        value: '2000-01-01T00:00:00.00Z'
       }
     ],
     sorters: [
       {
-        "key": "startedAt",
-        "direction": "DESC"
+        key: 'startedAt',
+        direction: 'DESC'
       }
     ]
   }
@@ -42,7 +42,7 @@ const ACLPage = () => {
     const fetchData = async () => {
       try {
         const [userServiceResponse, quizServiceResponse] = await Promise.all([
-          apiClient.get("service3/users/role/STUDENT"),
+          apiClient.get('service3/users/role/STUDENT'),
           apiClient.post(apiSpec.QUIZ_SERVICE + '/assigned-paginated', {
             filters: quizServiceRequestParams.filters,
             sorters: quizServiceRequestParams.sorters,
@@ -52,7 +52,7 @@ const ACLPage = () => {
         ])
         dispatch(updateAllStudents(userServiceResponse.data))
         setUsers(userServiceResponse.data)
-        const processedData = await processStudentQuizzesData(quizServiceResponse.data.data, userServiceResponse.data);
+        const processedData = await processStudentQuizzesData(quizServiceResponse.data.data, userServiceResponse.data)
         setQuizzesData(processedData)
         dispatch(fetchNotifications())
         setLoading(false)
@@ -66,7 +66,7 @@ const ACLPage = () => {
 
   const processStudentQuizzesData = async (data, users) => {
     const usersOnPage = data.map(row => row.studentId)
-    let uniqueUsers = [...new Set(usersOnPage)];
+    let uniqueUsers = [...new Set(usersOnPage)]
     let processedUsersList = []
     for (const userId of uniqueUsers) {
       const user = users.find(user => user.id === userId)
@@ -79,17 +79,16 @@ const ACLPage = () => {
     const result = await Promise.all(
       processedUsersList.map(async profilePicture => {
         if (profilePicture.type === 'API') {
-          const avatar = await profilePictureDownloader(profilePicture.url, profilePicture.userId);
+          const avatar = await profilePictureDownloader(profilePicture.url, profilePicture.userId)
 
-          return { ...profilePicture, avatar: avatar || null };
+          return { ...profilePicture, avatar: avatar || null }
+        } else if (profilePicture.type === 'EXTERNAL') {
+          return { ...profilePicture, avatar: profilePicture.url }
+        } else {
+          return { ...profilePicture, avatar: null }
         }
-        else if (profilePicture.type === 'EXTERNAL') {
-          return { ...profilePicture, avatar: profilePicture.url };
-        }
-        else {
-          return { ...profilePicture, avatar: null };
-        }
-      }));
+      })
+    )
 
     return data.map(row => {
       const user = result.find(user => user.userId === row.studentId)
@@ -102,6 +101,9 @@ const ACLPage = () => {
     <Grid container spacing={6}>
       <Grid item md={6} xs={12}>
         <CardActivityTimeline quizzesData={quizzesData} users={users} loading={loading} />
+      </Grid>
+      <Grid item md={6} xs={12}>
+        <PaymentTimeline users={users} loading={loading} />
       </Grid>
     </Grid>
   )
