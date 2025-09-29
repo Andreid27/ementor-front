@@ -17,6 +17,7 @@ Name | Type | Description | Notes
 **fullName** | **string** |  | [optional] [default to undefined]
 **about** | **string** |  | [optional] [default to undefined]
 **bankAccounts** | [**Array&lt;BankAccount&gt;**](BankAccount.md) |  | [optional] [default to undefined]
+**platformIntegration** | [**Array&lt;ProfessorPlatformIntegration&gt;**](ProfessorPlatformIntegration.md) |  | [optional] [default to undefined]
 
 ## Example
 
@@ -36,6 +37,7 @@ const instance: ProfessorProfile = {
     fullName,
     about,
     bankAccounts,
+    platformIntegration,
 };
 ```
 

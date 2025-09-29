@@ -6,6 +6,8 @@ export * from './api-examples'
 
 export * from './profile-service-examples'
 
+export * from './payment-service'
+
 // Import generated profile service client
 export { profileServiceClient } from '../generated/profile-service-client'
 

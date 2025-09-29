@@ -64,3 +64,42 @@ declare module 'src/store/apps/calendar' {
   export const handleAllCalendars: any
   export const handleCalendarsUpdate: any
 }
+
+// ** MUI Module Augmentation for custom variants
+declare module '@mui/material/Button' {
+  interface ButtonPropsVariantOverrides {
+    tonal: true
+  }
+}
+
+declare module 'src/@core/components/mui/text-field' {
+  import { TextFieldProps } from '@mui/material/TextField'
+  import { ForwardRefExoticComponent, RefAttributes } from 'react'
+
+  interface CustomTextFieldProps extends Omit<TextFieldProps, 'variant'> {
+    variant?: 'filled' | 'outlined' | 'standard'
+  }
+
+  const CustomTextField: ForwardRefExoticComponent<CustomTextFieldProps & RefAttributes<HTMLDivElement>>
+  export default CustomTextField
+}
+
+// ** Component ACL types
+declare namespace React {
+  interface FunctionComponent<P = {}> {
+    acl?: {
+      action: string
+      subject: string
+    }
+  }
+}
+
+// ** Next.js page types with ACL
+declare module 'next' {
+  interface NextPage {
+    acl?: {
+      action: string
+      subject: string
+    }
+  }
+}

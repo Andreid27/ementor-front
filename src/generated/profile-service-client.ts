@@ -9,7 +9,9 @@ import {
   StudentProfileControllerApi,
   ThumbnailControllerApi,
   UniversityControllerApi,
-  UserControllerApi
+  UserControllerApi,
+  PaymentControllerApi,
+  WalletControllerApi
 } from './profile-service/api'
 
 // Import our custom axios instance
@@ -38,7 +40,7 @@ const apiClient = createProfileServiceAxios()
 // Create configuration with our custom axios instance
 const createProfileServiceConfig = () =>
   new Configuration({
-    basePath: process.env.NEXT_PUBLIC_PROD_HOST + '/service2',
+    basePath: 'http://localhost:49202',
     baseOptions: {
       // Any additional axios configuration can go here
     }
@@ -96,6 +98,16 @@ export class ProfileServiceClient {
   get user() {
     return new UserControllerApi(this.config, undefined, apiClient)
   }
+
+  // Payment APIs
+  get payment() {
+    return new PaymentControllerApi(this.config, undefined, apiClient)
+  }
+
+  // Wallet APIs
+  get wallet() {
+    return new WalletControllerApi(this.config, undefined, apiClient)
+  }
 }
 
 // Export singleton instance
@@ -111,7 +123,9 @@ export {
   StudentProfileControllerApi,
   ThumbnailControllerApi,
   UniversityControllerApi,
-  UserControllerApi
+  UserControllerApi,
+  PaymentControllerApi,
+  WalletControllerApi
 }
 
 // Export types

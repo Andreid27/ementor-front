@@ -18,8 +18,8 @@ Name | Type | Description | Notes
 **attended** | **boolean** |  | [optional] [default to undefined]
 **customPricing** | **number** |  | [optional] [default to undefined]
 **effectiveCustomPrice** | **number** |  | [optional] [default to undefined]
-**recurringSeriesAttendee** | **boolean** |  | [optional] [default to undefined]
 **eventOccurrenceAttendee** | **boolean** |  | [optional] [default to undefined]
+**recurringSeriesAttendee** | **boolean** |  | [optional] [default to undefined]
 **effectiveEventId** | **string** |  | [optional] [default to undefined]
 
 ## Example
@@ -41,8 +41,8 @@ const instance: EventAttendee = {
     attended,
     customPricing,
     effectiveCustomPrice,
-    recurringSeriesAttendee,
     eventOccurrenceAttendee,
+    recurringSeriesAttendee,
     effectiveEventId,
 };
 ```

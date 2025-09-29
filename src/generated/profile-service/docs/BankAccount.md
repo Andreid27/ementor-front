@@ -15,6 +15,8 @@ Name | Type | Description | Notes
 **swiftCode** | **string** |  | [optional] [default to undefined]
 **isPrimary** | **boolean** |  | [optional] [default to undefined]
 **professor** | [**ProfessorProfile**](ProfessorProfile.md) |  | [optional] [default to undefined]
+**createdBy** | **string** |  | [optional] [default to undefined]
+**modifiedBy** | **string** |  | [optional] [default to undefined]
 
 ## Example
 
@@ -32,6 +34,8 @@ const instance: BankAccount = {
     swiftCode,
     isPrimary,
     professor,
+    createdBy,
+    modifiedBy,
 };
 ```
 

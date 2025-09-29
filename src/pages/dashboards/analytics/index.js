@@ -26,6 +26,7 @@ import { CircularProgress } from '@mui/material'
 import { useRouter } from 'next/router'
 import LastTestResults from './components/LastTestResults'
 import LessonStatsOverall from './components/LessonStatsOverall'
+import CrmLastTransaction from 'src/views/dashboards/crm/CrmLastTransaction'
 
 const AnalyticsDashboard = () => {
   const dispatch = useDispatch()
@@ -80,6 +81,9 @@ const AnalyticsDashboard = () => {
               </Grid>
               <Grid item xs={12} md={6}>
                 <LastTestResults direction={'ltr'} data={quizServiceData} />
+              </Grid>
+              <Grid item xs={12} md={9}>
+                <CrmLastTransaction />
               </Grid>
             </>
           ) : (

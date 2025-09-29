@@ -27,7 +27,7 @@ async function generateApis() {
         .map(([key, value]) => `${key}=${value}`)
         .join(',')
 
-      const command = `npx @openapitools/openapi-generator-cli generate -i "${service.swaggerUrl}" -g ${config.globalConfig.generator} -o "${service.outputDir}" --additional-properties=${additionalProps}`
+      const command = `npx @openapitools/openapi-generator-cli generate -i "${service.swaggerUrl}" -g ${config.globalConfig.generator} -o "${service.outputDir}" --additional-properties=${additionalProps} --skip-validate-spec`
 
       console.log(`   Fetching from: ${service.swaggerUrl}`)
       execSync(command, { stdio: 'pipe' })
@@ -68,9 +68,26 @@ async function generateApis() {
 
 async function postProcessGeneratedFiles(service) {
   const apiDir = path.join(service.outputDir, 'api')
+  const apiFilePath = path.join(service.outputDir, 'api.ts')
   const configPath = path.join(service.outputDir, 'configuration.ts')
 
-  // Check if directories exist and process API files
+  // Process api.ts file if it exists in the root
+  if (await fs.pathExists(apiFilePath)) {
+    let content = await fs.readFile(apiFilePath, 'utf8')
+
+    // Replace the default axios import with our custom apiClient
+    content = content.replace(
+      /import.*globalAxios.*from.*['"]axios['"];?/g,
+      `import apiClient from '../../@core/axios/axiosEmentor';`
+    )
+
+    // Replace globalAxios usage with apiClient
+    content = content.replace(/globalAxios/g, 'apiClient')
+
+    await fs.writeFile(apiFilePath, content)
+  }
+
+  // Check if old structure with api directory exists and process API files
   if (await fs.pathExists(apiDir)) {
     const apiFiles = await fs.readdir(apiDir)
 
@@ -119,13 +136,22 @@ async function postProcessGeneratedFiles(service) {
 async function createServiceIndex(service) {
   const indexPath = path.join(service.outputDir, 'index.ts')
 
+  // Check which files exist to determine what to export
+  const apiExists = await fs.pathExists(path.join(service.outputDir, 'api.ts'))
+  const modelExists = await fs.pathExists(path.join(service.outputDir, 'model.ts'))
+  const configExists = await fs.pathExists(path.join(service.outputDir, 'configuration.ts'))
+  const baseExists = await fs.pathExists(path.join(service.outputDir, 'base.ts'))
+
+  let exports = []
+  if (apiExists) exports.push("export * from './api';")
+  if (modelExists) exports.push("export * from './model';")
+  if (configExists) exports.push("export * from './configuration';")
+  if (baseExists) exports.push("export * from './base';")
+
   const indexContent = `// Auto-generated index file for ${service.name}
 // Generated on: ${new Date().toISOString()}
 
-export * from './api';
-export * from './model';
-export * from './configuration';
-export * from './base';
+${exports.join('\n')}
 
 // Service configuration
 export const ${toCamelCase(service.name)}Config = {

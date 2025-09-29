@@ -1,6 +1,6 @@
 # EventsControllerApi
 
-All URIs are relative to *https://dev.api.e-mentor.ro/service2*
+All URIs are relative to *https://dev.api.e-mentor.ro*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
@@ -91,19 +91,21 @@ import {
 const configuration = new Configuration();
 const apiInstance = new EventsControllerApi(configuration);
 
-let seriesId: string; // (default to undefined)
 let originalStartTime: string; // (default to undefined)
 let actualStartTime: string; // (default to undefined)
 let actualEndTime: string; // (default to undefined)
 let eventAttendeeDTO: Array<EventAttendeeDTO>; //
+let singularEventId: string; // (optional) (default to undefined)
+let seriesId: string; // (optional) (default to undefined)
 let description: string; // (optional) (default to undefined)
 
 const { status, data } = await apiInstance.completeEventOccurrence(
-    seriesId,
     originalStartTime,
     actualStartTime,
     actualEndTime,
     eventAttendeeDTO,
+    singularEventId,
+    seriesId,
     description
 );
 ```
@@ -113,10 +115,11 @@ const { status, data } = await apiInstance.completeEventOccurrence(
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
 | **eventAttendeeDTO** | **Array<EventAttendeeDTO>**|  | |
-| **seriesId** | [**string**] |  | defaults to undefined|
 | **originalStartTime** | [**string**] |  | defaults to undefined|
 | **actualStartTime** | [**string**] |  | defaults to undefined|
 | **actualEndTime** | [**string**] |  | defaults to undefined|
+| **singularEventId** | [**string**] |  | (optional) defaults to undefined|
+| **seriesId** | [**string**] |  | (optional) defaults to undefined|
 | **description** | [**string**] |  | (optional) defaults to undefined|
 
 
