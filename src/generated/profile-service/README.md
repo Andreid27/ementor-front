@@ -47,7 +47,7 @@ npm install PATH_TO_GENERATED_PACKAGE --save
 
 ### Documentation for API Endpoints
 
-All URIs are relative to *https://dev.api.e-mentor.ro*
+All URIs are relative to *https://api.e-mentor.ro//service2*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
@@ -96,6 +96,7 @@ Class | Method | HTTP request | Description
 *HostFileControllerApi* | [**delete2**](docs/HostFileControllerApi.md#delete2) | **DELETE** /host-file/{id} | Delete a speciality by ID.
 *HostFileControllerApi* | [**download3**](docs/HostFileControllerApi.md#download3) | **GET** /host-file/download/{fileId} | Download file
 *HostFileControllerApi* | [**upload1**](docs/HostFileControllerApi.md#upload1) | **POST** /host-file/upload | Upload a document
+*InvoiceControllerApi* | [**getMyInvoices**](docs/InvoiceControllerApi.md#getmyinvoices) | **GET** /invoices/my | Get invoices for the current user
 *PaymentControllerApi* | [**canConfirmPayment**](docs/PaymentControllerApi.md#canconfirmpayment) | **GET** /payment/can-confirm/{paymentId} | Check if payment can be confirmed
 *PaymentControllerApi* | [**confirmPayment**](docs/PaymentControllerApi.md#confirmpayment) | **POST** /payment/confirm | Confirm a bank transfer payment
 *PaymentControllerApi* | [**createPayment**](docs/PaymentControllerApi.md#createpayment) | **POST** /payment | Create a new bank transfer payment
@@ -169,10 +170,12 @@ Class | Method | HTTP request | Description
  - [AllocationResultDTO](docs/AllocationResultDTO.md)
  - [BankAccount](docs/BankAccount.md)
  - [BankAccountDTO](docs/BankAccountDTO.md)
+ - [BankTransferPayment](docs/BankTransferPayment.md)
  - [BankTransferPaymentDTO](docs/BankTransferPaymentDTO.md)
  - [CreatePaymentRequest](docs/CreatePaymentRequest.md)
  - [CredentialRepresentation](docs/CredentialRepresentation.md)
  - [CredentialRepresentationConfig](docs/CredentialRepresentationConfig.md)
+ - [CustomerDTO](docs/CustomerDTO.md)
  - [EventAttendee](docs/EventAttendee.md)
  - [EventAttendeeDTO](docs/EventAttendeeDTO.md)
  - [EventDebtSummaryDTO](docs/EventDebtSummaryDTO.md)
@@ -190,6 +193,8 @@ Class | Method | HTTP request | Description
  - [GenerateReferenceRequest](docs/GenerateReferenceRequest.md)
  - [GroupDTO](docs/GroupDTO.md)
  - [HostFile](docs/HostFile.md)
+ - [InvoiceDTO](docs/InvoiceDTO.md)
+ - [InvoiceLineItemDTO](docs/InvoiceLineItemDTO.md)
  - [InvoicePlatform](docs/InvoicePlatform.md)
  - [Location](docs/Location.md)
  - [LocationDTO](docs/LocationDTO.md)
@@ -256,7 +261,7 @@ Authentication schemes defined for the API:
 
 - **Type**: OAuth
 - **Flow**: accessCode
-- **Authorization URL**: https://dev.api.e-mentor.ro/auth/realms/e-mentor/protocol/openid-connect/auth
+- **Authorization URL**: https://api.e-mentor.ro/auth/realms/e-mentor/protocol/openid-connect/auth
 - **Scopes**: 
  - **openid**: OpenID Connect scope
  - **profile**: Access user profile information

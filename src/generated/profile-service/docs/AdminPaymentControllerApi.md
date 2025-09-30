@@ -1,6 +1,6 @@
 # AdminPaymentControllerApi
 
-All URIs are relative to *https://dev.api.e-mentor.ro*
+All URIs are relative to *https://api.e-mentor.ro//service2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|

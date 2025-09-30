@@ -1,43 +1,36 @@
-# BankAccountControllerApi
+# InvoiceControllerApi
 
 All URIs are relative to *https://api.e-mentor.ro//service2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**getBankAccountsForProfessor**](#getbankaccountsforprofessor) | **GET** /bank-account/professor/{professorId} | Get bank accounts for a professor|
+|[**getMyInvoices**](#getmyinvoices) | **GET** /invoices/my | Get invoices for the current user|
 
-# **getBankAccountsForProfessor**
-> Array<BankAccountDTO> getBankAccountsForProfessor()
+# **getMyInvoices**
+> Array<InvoiceDTO> getMyInvoices()
 
 
 ### Example
 
 ```typescript
 import {
-    BankAccountControllerApi,
+    InvoiceControllerApi,
     Configuration
 } from 'ementor-api-client';
 
 const configuration = new Configuration();
-const apiInstance = new BankAccountControllerApi(configuration);
+const apiInstance = new InvoiceControllerApi(configuration);
 
-let professorId: string; // (default to undefined)
-
-const { status, data } = await apiInstance.getBankAccountsForProfessor(
-    professorId
-);
+const { status, data } = await apiInstance.getMyInvoices();
 ```
 
 ### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **professorId** | [**string**] |  | defaults to undefined|
+This endpoint does not have any parameters.
 
 
 ### Return type
 
-**Array<BankAccountDTO>**
+**Array<InvoiceDTO>**
 
 ### Authorization
 
@@ -52,8 +45,9 @@ const { status, data } = await apiInstance.getBankAccountsForProfessor(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
+|**403** | Forbidden |  -  |
 |**200** | Request successful |  -  |
-|**400** | Invalid request |  -  |
+|**401** | Unauthorized |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

@@ -11,6 +11,7 @@ import {
   UniversityControllerApi,
   UserControllerApi,
   PaymentControllerApi,
+  InvoiceControllerApi,
   WalletControllerApi
 } from './profile-service/api'
 
@@ -108,6 +109,11 @@ export class ProfileServiceClient {
   get wallet() {
     return new WalletControllerApi(this.config, undefined, apiClient)
   }
+
+  // Invoice APIs
+  get invoice() {
+    return new InvoiceControllerApi(this.config, undefined, apiClient)
+  }
 }
 
 // Export singleton instance
@@ -123,6 +129,7 @@ export {
   StudentProfileControllerApi,
   ThumbnailControllerApi,
   UniversityControllerApi,
+  InvoiceControllerApi,
   UserControllerApi,
   PaymentControllerApi,
   WalletControllerApi

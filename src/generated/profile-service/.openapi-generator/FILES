@@ -13,10 +13,12 @@ docs/AllocationResultDTO.md
 docs/BankAccount.md
 docs/BankAccountControllerApi.md
 docs/BankAccountDTO.md
+docs/BankTransferPayment.md
 docs/BankTransferPaymentDTO.md
 docs/CreatePaymentRequest.md
 docs/CredentialRepresentation.md
 docs/CredentialRepresentationConfig.md
+docs/CustomerDTO.md
 docs/EventAttendee.md
 docs/EventAttendeeDTO.md
 docs/EventDebtSummaryDTO.md
@@ -37,6 +39,9 @@ docs/GenerateReferenceRequest.md
 docs/GroupDTO.md
 docs/HostFile.md
 docs/HostFileControllerApi.md
+docs/InvoiceControllerApi.md
+docs/InvoiceDTO.md
+docs/InvoiceLineItemDTO.md
 docs/InvoicePlatform.md
 docs/Location.md
 docs/LocationDTO.md
