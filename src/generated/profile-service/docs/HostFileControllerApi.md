@@ -100,7 +100,7 @@ const { status, data } = await apiInstance.download3(
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: application/vnd.openxmlformats-officedocument.wordprocessingml.document, */*
+ - **Accept**: application/octet-stream, */*
 
 
 ### HTTP response details

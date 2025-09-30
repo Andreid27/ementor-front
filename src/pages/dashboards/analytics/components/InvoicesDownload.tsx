@@ -35,6 +35,7 @@ const formatDate = (iso?: string) => {
 const InvoicesDownload: React.FC = () => {
   const [invoices, setInvoices] = useState<Invoice[] | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
+  const [downloadingId, setDownloadingId] = useState<string | null>(null)
 
   useEffect(() => {
     let mounted = true
@@ -63,22 +64,22 @@ const InvoicesDownload: React.FC = () => {
   }, [])
 
   const handleDownload = (invoice: Invoice) => {
-    if (invoice.downloadUrl && invoice.downloadUrl !== '#') {
-      window.open(invoice.downloadUrl, '_blank')
-      return
-    }
+    if (!invoice.id) return
 
     if (profileServiceClient && profileServiceClient.invoice) {
-      // try common generated method names
-      const api = profileServiceClient.invoice
-      if (typeof api.downloadInvoice === 'function') {
+      const api = profileServiceClient.invoice as any
+      if (typeof api.downloadInvoiceById === 'function') {
+        setDownloadingId(String(invoice.id))
         api
-          .downloadInvoice({ id: invoice.id })
+          .downloadInvoiceById({ id: invoice.id }, { responseType: 'blob' })
           .then((res: any) => {
-            const url = res?.data?.downloadUrl || null
-            if (url) window.open(url, '_blank')
+            const contentType = res.headers?.['content-type'] || 'application/octet-stream'
+            const blob = new Blob([res.data], { type: contentType })
+            const url = window.URL.createObjectURL(blob)
+            window.open(url, '_blank')
           })
           .catch(() => {})
+          .finally(() => setDownloadingId(null))
       }
     }
   }
@@ -106,8 +107,13 @@ const InvoicesDownload: React.FC = () => {
                 />
                 <ListItemSecondaryAction>
                   <Tooltip title='Download'>
-                    <IconButton edge='end' aria-label='download' onClick={() => handleDownload(inv)}>
-                      <DownloadIcon />
+                    <IconButton
+                      edge='end'
+                      aria-label='download'
+                      onClick={() => handleDownload(inv)}
+                      disabled={downloadingId === String(inv.id)}
+                    >
+                      {downloadingId === String(inv.id) ? <CircularProgress size={20} /> : <DownloadIcon />}
                     </IconButton>
                   </Tooltip>
                 </ListItemSecondaryAction>

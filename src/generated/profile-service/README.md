@@ -96,6 +96,7 @@ Class | Method | HTTP request | Description
 *HostFileControllerApi* | [**delete2**](docs/HostFileControllerApi.md#delete2) | **DELETE** /host-file/{id} | Delete a speciality by ID.
 *HostFileControllerApi* | [**download3**](docs/HostFileControllerApi.md#download3) | **GET** /host-file/download/{fileId} | Download file
 *HostFileControllerApi* | [**upload1**](docs/HostFileControllerApi.md#upload1) | **POST** /host-file/upload | Upload a document
+*InvoiceControllerApi* | [**downloadInvoiceById**](docs/InvoiceControllerApi.md#downloadinvoicebyid) | **GET** /invoices/{id}/download | Download invoice by ID
 *InvoiceControllerApi* | [**getMyInvoices**](docs/InvoiceControllerApi.md#getmyinvoices) | **GET** /invoices/my | Get invoices for the current user
 *PaymentControllerApi* | [**canConfirmPayment**](docs/PaymentControllerApi.md#canconfirmpayment) | **GET** /payment/can-confirm/{paymentId} | Check if payment can be confirmed
 *PaymentControllerApi* | [**confirmPayment**](docs/PaymentControllerApi.md#confirmpayment) | **POST** /payment/confirm | Confirm a bank transfer payment
