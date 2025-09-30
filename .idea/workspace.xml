@@ -5,65 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="653054c1-c124-4812-83c6-b3de20386dd4" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/AdminPaymentControllerApi.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/AllocationResultDTO.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/BankTransferPaymentDTO.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/CreatePaymentRequest.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/EventDebtSummaryDTO.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/EventPaymentInfoDTO.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/FIFOAllocationApi.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/FIFOSystemStatisticsDTO.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/GenerateReferenceRequest.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/InvoicePlatform.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/PageBankTransferPaymentDTO.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/PageWalletDTO.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/PageableObject.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/PaymentAllocationDetailDTO.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/PaymentConfirmationRequest.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/PaymentConfirmationResultDTO.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/PaymentControllerApi.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/PaymentDetailDTO.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/PaymentEventAssociation.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/PaymentReferenceDTO.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/PaymentSystemStatisticsDTO.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/ProfessorPaymentInfoDTO.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/ProfessorPaymentSummaryDTO.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/ProfessorPlatformIntegration.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/ReferenceValidationRequest.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/ReferenceValidationResponseDTO.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/SortObject.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/StudentDebtSummaryDTO.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/WalletBalanceChangeDTO.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/WalletControllerApi.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/WalletDTO.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/WalletSummaryDTO.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/generate-apis.js" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/generate-apis.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/examples/ProfileServiceExample.tsx" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/generated/api-client-factory.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/generated/api-client-factory.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/generated/profile-service-client.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/generated/profile-service-client.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/generated/profile-service/.openapi-generator/FILES" beforeDir="false" afterPath="$PROJECT_DIR$/src/generated/profile-service/.openapi-generator/FILES" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/generated/profile-service/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/src/generated/profile-service/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/generated/profile-service/api.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/generated/profile-service/api.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/generated/profile-service/base.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/generated/profile-service/base.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/generated/profile-service/configuration.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/generated/profile-service/configuration.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/generated/profile-service/docs/BankAccount.md" beforeDir="false" afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/BankAccount.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/generated/profile-service/docs/BankAccountControllerApi.md" beforeDir="false" afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/BankAccountControllerApi.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/generated/profile-service/docs/EventAttendee.md" beforeDir="false" afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/EventAttendee.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/generated/profile-service/docs/EventsControllerApi.md" beforeDir="false" afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/EventsControllerApi.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/generated/profile-service/docs/HostFileControllerApi.md" beforeDir="false" afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/HostFileControllerApi.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/generated/profile-service/docs/ProfessorProfile.md" beforeDir="false" afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/ProfessorProfile.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/generated/profile-service/docs/ProfessorProfileControllerApi.md" beforeDir="false" afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/ProfessorProfileControllerApi.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/generated/profile-service/docs/ProfilePictureControllerApi.md" beforeDir="false" afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/ProfilePictureControllerApi.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/generated/profile-service/docs/SpecialityControllerApi.md" beforeDir="false" afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/SpecialityControllerApi.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/generated/profile-service/docs/StudentProfessorRelationshipControllerApi.md" beforeDir="false" afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/StudentProfessorRelationshipControllerApi.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/generated/profile-service/docs/StudentProfileControllerApi.md" beforeDir="false" afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/StudentProfileControllerApi.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/generated/profile-service/docs/ThumbnailControllerApi.md" beforeDir="false" afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/ThumbnailControllerApi.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/generated/profile-service/docs/UniversityControllerApi.md" beforeDir="false" afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/UniversityControllerApi.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/generated/profile-service/docs/UserControllerApi.md" beforeDir="false" afterPath="$PROJECT_DIR$/src/generated/profile-service/docs/UserControllerApi.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/generated/profile-service/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/generated/profile-service/index.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pages/dashboards/analytics/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/dashboards/analytics/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/views/dashboards/crm/CrmLastTransaction.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/generated/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/generated/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/acl/components/PaymentTimeline.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/acl/components/PaymentTimeline.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/acl/payments.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/acl/payments.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -129,7 +77,7 @@
       <workItem from="1711058170218" duration="781000" />
       <workItem from="1712839057583" duration="19000" />
       <workItem from="1713468798929" duration="52000" />
-      <workItem from="1759167269147" duration="771000" />
+      <workItem from="1759167269147" duration="2554000" />
     </task>
     <servers />
   </component>
@@ -138,6 +86,7 @@
     <option name="exactExcludedFiles">
       <list>
         <option value="$PROJECT_DIR$/src/views/dashboards/crm/CrmLastTransaction.js" />
+        <option value="$PROJECT_DIR$/src/pages/bank-transfer/index.js" />
       </list>
     </option>
   </component>
