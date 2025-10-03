@@ -59,6 +59,7 @@ export interface AddEventSidebarProps {
   }) => Promise<any>
   cancelEventOccurrence?: (payload: { seriesId: string | number; occurrenceStartTime: string }) => Promise<any>
   completeEventOccurrence?: (payload: {
+    singularEventId: string
     seriesId: string
     originalStartTime: string
     actualStartTime: string

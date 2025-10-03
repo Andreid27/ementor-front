@@ -1,5 +1,5 @@
 // ** React Imports
-import { useContext, useEffect, useState } from 'react'
+import { useContext, useEffect, useState, useRef } from 'react'
 
 // ** Context Imports
 import { AbilityContext } from 'src/layouts/components/acl/Can'
@@ -15,12 +15,14 @@ import * as apiSpec from '../../apiSpec'
 import profilePictureDownloader from 'src/@core/axios/profile-picture-downloader'
 import extractProfilePicture from 'src/@core/axios/profile-picture-extractor'
 import PaymentTimeline from './components/PaymentTimeline'
+import PaymentConfirmationHistory from './components/PaymentConfirmationHistory'
 
 const ACLPage = () => {
   const dispatch = useDispatch()
   const [users, setUsers] = useState(useSelector(selectAllStudents))
   const [loading, setLoading] = useState(true)
   const [quizzesData, setQuizzesData] = useState([])
+  const paymentHistoryRef = useRef(null)
 
   const quizServiceRequestParams = {
     filters: [
@@ -97,13 +99,21 @@ const ACLPage = () => {
     })
   }
 
+  const handlePaymentConfirmed = () => {
+    // Refresh the confirmation history when a payment is confirmed
+    if (paymentHistoryRef.current) {
+      paymentHistoryRef.current.refresh()
+    }
+  }
+
   return (
     <Grid container spacing={6}>
       <Grid item md={6} xs={12}>
         <CardActivityTimeline quizzesData={quizzesData} users={users} loading={loading} />
       </Grid>
       <Grid item md={6} xs={12}>
-        <PaymentTimeline users={users} loading={loading} />
+        <PaymentTimeline users={users} loading={loading} onPaymentConfirmed={handlePaymentConfirmed} />
+        <PaymentConfirmationHistory ref={paymentHistoryRef} users={users} />
       </Grid>
     </Grid>
   )

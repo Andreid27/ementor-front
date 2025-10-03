@@ -14,19 +14,12 @@ import TimelineSeparator from '@mui/lab/TimelineSeparator'
 import TimelineConnector from '@mui/lab/TimelineConnector'
 import MuiTimeline from '@mui/lab/Timeline'
 import MuiCardHeader from '@mui/material/CardHeader'
-import {
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormControlLabel,
-  Checkbox
-} from '@mui/material'
+import { CircularProgress } from '@mui/material'
 import Icon from 'src/@core/components/icon'
 import OptionsMenu from 'src/@core/components/option-menu'
 import timeAgo from 'src/@core/utils/time-ago'
 import UserViewDrawer from 'src/pages/student-profile/components/UserViewDrawer'
+import PaymentConfirmationDialog from './PaymentConfirmationDialog'
 import { BankTransferPaymentDTO, BankTransferPaymentDTOStatusEnum } from 'src/generated/profile-service'
 import { profileServiceClient } from 'src/services'
 import profilePictureDownloader from 'src/@core/axios/profile-picture-downloader'
@@ -78,9 +71,7 @@ const PaymentTimeline: React.FC<PaymentTimelineProps> = ({ users, loading, onPay
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
   const [confirmDialogOpen, setConfirmDialogOpen] = useState<boolean>(false)
   const [selectedPayment, setSelectedPayment] = useState<BankTransferPaymentDTO | null>(null)
-  const [confirmingPayment, setConfirmingPayment] = useState<boolean>(false)
   const [paymentsData, setPaymentsData] = useState<EnhancedPaymentData[]>([])
-  const [generateInvoice, setGenerateInvoice] = useState<boolean>(true)
 
   const handleAvatarClick = (userId: string) => {
     setSelectedUserId(userId)
@@ -158,22 +149,9 @@ const PaymentTimeline: React.FC<PaymentTimelineProps> = ({ users, loading, onPay
     setSelectedPayment(null)
   }
 
-  const handleConfirmPaymentSubmit = async () => {
-    if (!selectedPayment?.id) return
-
-    setConfirmingPayment(true)
+  const handlePaymentConfirmed = async () => {
+    // Refresh the payments data after successful confirmation
     try {
-      await profileServiceClient.payment.confirmPayment({
-        paymentConfirmationRequest: {
-          paymentId: selectedPayment.id,
-          generateInvoice: generateInvoice
-        }
-      })
-
-      setConfirmDialogOpen(false)
-      setSelectedPayment(null)
-
-      // Refresh the payments data after successful confirmation
       const response = await profileServiceClient.payment.getPendingPayments()
       const paymentsData = response.data || []
       const processedData = await processPaymentData(paymentsData, users)
@@ -182,9 +160,7 @@ const PaymentTimeline: React.FC<PaymentTimelineProps> = ({ users, loading, onPay
       // Notify parent component if callback is provided
       onPaymentConfirmed?.()
     } catch (error) {
-      console.error('Failed to confirm payment:', error)
-    } finally {
-      setConfirmingPayment(false)
+      console.error('Failed to refresh payments:', error)
     }
   }
 
@@ -347,53 +323,14 @@ const PaymentTimeline: React.FC<PaymentTimelineProps> = ({ users, loading, onPay
 
       <UserViewDrawer open={isDrawerOpen} onClose={handleDrawerClose} userId={selectedUserId} tab='account' />
 
-      <Dialog open={confirmDialogOpen} onClose={handleConfirmDialogClose} maxWidth='sm' fullWidth>
-        <DialogTitle>Confirmă plata</DialogTitle>
-        <DialogContent>
-          <Typography variant='body1' sx={{ mb: 2 }}>
-            Ești sigur că vrei să confirmi această plată?
-          </Typography>
-          {selectedPayment && (
-            <Box>
-              <Typography variant='body2' sx={{ mb: 1 }}>
-                <strong>Sumă:</strong> {formatCurrency(selectedPayment.amount, selectedPayment.currency)}
-              </Typography>
-              <Typography variant='body2' sx={{ mb: 1 }}>
-                <strong>Plătitor:</strong> {getUserName(selectedPayment.payerId)}
-              </Typography>
-              {selectedPayment.referenceCode && (
-                <Typography variant='body2' sx={{ mb: 2 }}>
-                  <strong>Cod referință:</strong> {selectedPayment.referenceCode}
-                </Typography>
-              )}
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={generateInvoice}
-                    onChange={e => setGenerateInvoice(e.target.checked)}
-                    color='primary'
-                  />
-                }
-                label='Generează factură'
-              />
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleConfirmDialogClose} disabled={confirmingPayment}>
-            Anulează
-          </Button>
-          <Button
-            onClick={handleConfirmPaymentSubmit}
-            variant='contained'
-            color='success'
-            disabled={confirmingPayment}
-            startIcon={confirmingPayment ? <CircularProgress size={16} /> : <Icon icon='tabler:check' />}
-          >
-            {confirmingPayment ? 'Se confirmă...' : 'Confirmă plata'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <PaymentConfirmationDialog
+        open={confirmDialogOpen}
+        payment={selectedPayment}
+        onClose={handleConfirmDialogClose}
+        onSuccess={handlePaymentConfirmed}
+        getUserName={getUserName}
+        formatCurrency={formatCurrency}
+      />
     </>
   )
 }
