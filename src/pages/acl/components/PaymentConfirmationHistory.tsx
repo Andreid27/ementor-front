@@ -170,6 +170,7 @@ const PaymentConfirmationHistory = forwardRef<PaymentConfirmationHistoryRef, Pay
 
     const handleQuickRange = (days: number) => {
       const end = new Date()
+      end.setDate(end.getDate() + 1) // Set to tomorrow to include today
       const start = new Date()
       start.setDate(start.getDate() - days)
 
