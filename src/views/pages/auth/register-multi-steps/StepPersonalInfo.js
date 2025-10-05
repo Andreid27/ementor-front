@@ -27,6 +27,7 @@ import schoolSpecialities from './schoolSpecialities.json'
 import schoolDomains from './schoolDomains.json'
 import countryCodes from './countryCodes.json'
 import { useAuth } from 'src/hooks/useAuth'
+import apiClient from 'src/@core/axios/axiosEmentor'
 
 const StepPersonalDetails = ({ handleNext, initPrerequire, setInitPrerequire, setCounties, profile, setProfile }) => {
   const user = useSelector(selectUser)
@@ -44,7 +45,7 @@ const StepPersonalDetails = ({ handleNext, initPrerequire, setInitPrerequire, se
   const { direction } = theme
 
   useEffect(() => {
-    axios.get(apiSpec.PROD_HOST + apiSpec.PROFILE_CONTROLLER + '/profile-prerequire').then(response => {
+    apiClient.get(apiSpec.PROD_HOST + apiSpec.PROFILE_CONTROLLER + '/profile-prerequire').then(response => {
       setInitPrerequire(response.data)
     })
     setUniversityId(profile.university)

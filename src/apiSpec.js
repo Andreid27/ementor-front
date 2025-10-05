@@ -8,7 +8,7 @@ export const PROFILE_SERVICE = '/service2'
 
 export const THUMBNAIL_CONTROLLER = PROFILE_SERVICE + '/thumbnail'
 
-export const PROFILE_CONTROLLER = PROFILE_SERVICE + '/profile'
+export const PROFILE_CONTROLLER = PROFILE_SERVICE + '/student-profile'
 
 export const PROFILE_IMAGE_CONTROLLER = PROFILE_SERVICE + '/profile-image'
 

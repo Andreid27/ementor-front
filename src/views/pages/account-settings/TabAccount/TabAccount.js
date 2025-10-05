@@ -125,17 +125,21 @@ const TabAccount = () => {
   // Define an async function to fetch the data
   const fetchData = async () => {
     try {
-      const prerequireResponse = await axios.get(apiSpec.PROD_HOST + apiSpec.PROFILE_CONTROLLER + '/profile-prerequire')
+      const prerequireResponse = await apiClient.get(
+        apiSpec.PROD_HOST + apiSpec.PROFILE_CONTROLLER + '/profile-prerequire'
+      )
       setInitPrerequire(prerequireResponse.data)
 
       const fullProfileResponse = await apiClient.get(apiSpec.PROFILE_CONTROLLER + '/get-full')
       setFullProfile(fullProfileResponse.data)
 
       if (fullProfileResponse.data.pictureId) {
-
-        const profilePictureResponse = await apiClient.get(`${apiSpec.PROFILE_CONTROLLER}-image/download/${fullProfileResponse.data.pictureId}`, {
-          responseType: 'blob'
-        })
+        const profilePictureResponse = await apiClient.get(
+          `${apiSpec.PROFILE_CONTROLLER}-image/download/${fullProfileResponse.data.pictureId}`,
+          {
+            responseType: 'blob'
+          }
+        )
         const imageBlob = profilePictureResponse.data
         const newImageUrl = URL.createObjectURL(imageBlob)
         setImgSrc(newImageUrl)
@@ -152,7 +156,6 @@ const TabAccount = () => {
   useEffect(() => {
     fetchData()
   }, [])
-
 
   useEffect(() => {
     //TODO continue here updating the small profile picture component on this dispatch

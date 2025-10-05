@@ -16,8 +16,8 @@ import { useDispatch } from 'react-redux'
 const AccountDetailsCard = ({ fullProfile, setFullProfile }, ref) => {
   const dispatch = useDispatch()
   const [loading, setLoading] = useState(false)
-  const phoneNumber = fullProfile.phone.substring(fullProfile.phone.length - 9)
-  const prefix = fullProfile.phone.substring(0, fullProfile.phone.length - 9)
+  const phoneNumber = fullProfile?.phone ? fullProfile.phone.substring(fullProfile.phone.length - 9) : ''
+  const prefix = fullProfile?.phone ? fullProfile.phone.substring(0, fullProfile.phone.length - 9) : ''
 
   const [loadedUser, setLoadedUser] = useState({
     ...fullProfile.user,
