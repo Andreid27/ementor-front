@@ -61,8 +61,20 @@ const EventViewImproved: React.FC<EventViewImprovedProps> = ({
 }) => {
   const theme = useTheme()
   const selectedEventFromStore = useSelector(selectSelectedEvent)
-  // Use prop selectedEvent if available, otherwise fall back to store
-  const selectedEvent = propSelectedEvent || selectedEventFromStore
+  // IMPORTANT: Prioritize store value to ensure we always have the latest data
+  // This prevents stale event data from being displayed after updates/completions
+  const selectedEvent = selectedEventFromStore || propSelectedEvent
+
+  // Debug logging
+  console.log('EventViewImproved render:', {
+    propSelectedEvent: propSelectedEvent?.id,
+    propCompleted: propSelectedEvent?.completed,
+    storeSelectedEvent: selectedEventFromStore?.id,
+    storeCompleted: selectedEventFromStore?.completed,
+    finalSelectedEvent: selectedEvent?.id,
+    finalCompleted: selectedEvent?.completed
+  })
+
   const meetingLink = selectedEvent?.meetingLink
 
   // Helper functions similar to AttendeeManager

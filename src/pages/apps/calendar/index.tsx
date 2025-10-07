@@ -191,6 +191,13 @@ const AppCalendar = () => {
       })
 
       console.log('Local completeEventOccurrence API response:', response.data)
+
+      // Update the selected event in Redux store immediately with the completed event
+      if (response.data) {
+        dispatch(handleSelectEvent(response.data))
+      }
+
+      // Then refresh all events to keep the list in sync
       await dispatch(fetchEvents())
 
       return response.data

@@ -492,6 +492,18 @@ export const appCalendarSlice = createSlice({
     builder.addCase(fetchEvents.fulfilled, (state, action) => {
       state.events = action.payload
       state.loading = false
+
+      // If there's a selected event, refresh it with the latest data from the fetched events
+      if (state.selectedEvent?.id) {
+        const updatedEvent = action.payload.find((event: EventOccurrenceDTO) => event.id === state.selectedEvent?.id)
+        if (updatedEvent) {
+          console.log('Redux store - Refreshing selected event after fetchEvents:', {
+            oldEvent: state.selectedEvent,
+            updatedEvent
+          })
+          state.selectedEvent = updatedEvent
+        }
+      }
     })
     builder.addCase(fetchEvents.rejected, (state, action) => {
       state.loading = false
@@ -537,6 +549,19 @@ export const appCalendarSlice = createSlice({
           })
           state.selectedEvent = updatedEvent
         }
+      }
+    })
+
+    // Complete Event Occurrence - refresh selected event after completion
+    builder.addCase(completeEventOccurrence.fulfilled, (state, action) => {
+      // Use the returned completed event data directly from the API response
+      // This is more reliable than trying to find it in the events array
+      if (action.payload && state.selectedEvent) {
+        console.log('Redux store - Updating selected event after completion with API response:', {
+          oldEvent: state.selectedEvent,
+          completedEvent: action.payload
+        })
+        state.selectedEvent = action.payload
       }
     })
 

@@ -106,6 +106,10 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
   const theme = useTheme()
   const [activeStep, setActiveStep] = useState(0)
 
+  // Completion result state
+  const [completionStatus, setCompletionStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [completionError, setCompletionError] = useState<string | null>(null)
+
   // Form state
   const [actualStartTime, setActualStartTime] = useState<dayjs.Dayjs | null>(null)
   const [actualEndTime, setActualEndTime] = useState<dayjs.Dayjs | null>(null)
@@ -270,9 +274,26 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
     }
 
     try {
-      await onComplete(completionData)
+      setCompletionStatus('loading')
+      setCompletionError(null)
+      const result = await onComplete(completionData)
+      console.log('EventCompletionWizard - onComplete result:', result)
+      setCompletionStatus('success')
     } catch (error) {
       console.error('EventCompletionWizard - Error in onComplete:', error)
+      setCompletionStatus('error')
+
+      // Extract error message
+      let errorMessage = 'A apărut o eroare la finalizarea evenimentului.'
+      if (error instanceof Error) {
+        errorMessage = error.message
+      } else if (typeof error === 'string') {
+        errorMessage = error
+      } else if (error && typeof error === 'object' && 'message' in error) {
+        errorMessage = String((error as any).message)
+      }
+
+      setCompletionError(errorMessage)
     }
   }
 
@@ -605,104 +626,218 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
         Finalizează Eveniment: {selectedEvent?.seriesTitle || 'Eveniment Fără Titlu'}
       </Typography>
 
-      <Stepper activeStep={activeStep} orientation='vertical'>
-        {steps.map((step, index) => (
-          <Step key={step.label}>
-            <StepLabel
-              optional={index === 1 ? <Typography variant='caption'>Opțional</Typography> : null}
-              onClick={() => handleStepClick(index)}
-              sx={{
-                cursor: 'pointer',
-                '&:hover .MuiStepLabel-label': {
-                  color: 'primary.main'
-                }
-              }}
-              StepIconComponent={() => (
-                <Box
-                  sx={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    bgcolor: index <= activeStep ? 'primary.main' : 'grey.300',
-                    color: index <= activeStep ? 'primary.contrastText' : 'grey.600',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    '&:hover': {
-                      transform: 'scale(1.05)',
-                      bgcolor: index <= activeStep ? 'primary.dark' : 'grey.400'
-                    }
-                  }}
-                  onClick={e => {
-                    e.stopPropagation()
-                    handleStepClick(index)
-                  }}
-                >
-                  <Icon icon={step.icon} fontSize='1.25rem' />
-                </Box>
-              )}
-            >
-              <Typography variant='h6'>{step.label}</Typography>
-              <Typography variant='body2' color='textSecondary'>
-                {step.description}
-              </Typography>
-            </StepLabel>
-            <StepContent>
-              <Box sx={{ mt: 2, mb: 3 }}>{renderStepContent(index)}</Box>
-              <Box sx={{ display: 'flex', gap: 2 }}>
-                {index > 0 && (
-                  <Button onClick={handleBack} variant='outlined'>
-                    Înapoi
-                  </Button>
-                )}
-                {index < steps.length - 1 ? (
-                  <Button
-                    variant='contained'
-                    onClick={handleNext}
-                    disabled={!canProceedToStep(index)}
-                    startIcon={<Icon icon='tabler:arrow-right' />}
-                  >
-                    Următorul
-                  </Button>
-                ) : (
-                  <Button
-                    variant='contained'
-                    color='success'
-                    onClick={handleComplete}
-                    disabled={!canProceedToStep(index) || isLoading}
-                    startIcon={<Icon icon='tabler:check' />}
-                  >
-                    {isLoading ? 'Se Finalizează...' : 'Finalizează Eveniment'}
-                  </Button>
-                )}
+      {/* Show result screen if completion succeeded or failed */}
+      {(completionStatus === 'success' || completionStatus === 'error') && (
+        <Paper elevation={3} sx={{ p: 4, textAlign: 'center', mb: 3 }}>
+          {completionStatus === 'success' ? (
+            <>
+              {/* Success Screen */}
+              <Box
+                sx={{
+                  width: 80,
+                  height: 80,
+                  borderRadius: '50%',
+                  bgcolor: 'success.main',
+                  color: 'success.contrastText',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto',
+                  mb: 3
+                }}
+              >
+                <Icon icon='tabler:check' fontSize='3rem' />
               </Box>
-            </StepContent>
-          </Step>
-        ))}
-      </Stepper>
-
-      {activeStep === steps.length && (
-        <Paper square elevation={0} sx={{ p: 3, mt: 3 }}>
-          <Typography variant='h6' gutterBottom>
-            Finalizarea evenimentului în curs...
-          </Typography>
-          <Typography variant='body2'>Te rog să aștepți în timp ce procesăm finalizarea evenimentului.</Typography>
+              <Typography variant='h5' gutterBottom color='success.main' sx={{ fontWeight: 600 }}>
+                Eveniment Finalizat cu Succes!
+              </Typography>
+              <Typography variant='body1' color='textSecondary' paragraph>
+                Evenimentul <strong>{selectedEvent?.seriesTitle || 'Eveniment'}</strong> a fost marcat ca finalizat.
+              </Typography>
+              <Typography variant='body2' color='textSecondary' paragraph>
+                Toate informațiile despre participanți, prezență și prețuri au fost salvate.
+              </Typography>
+              <Box sx={{ mt: 4 }}>
+                <Button
+                  variant='contained'
+                  color='success'
+                  size='large'
+                  onClick={onCancel}
+                  startIcon={<Icon icon='tabler:check' />}
+                >
+                  Închide
+                </Button>
+              </Box>
+            </>
+          ) : (
+            <>
+              {/* Error Screen */}
+              <Box
+                sx={{
+                  width: 80,
+                  height: 80,
+                  borderRadius: '50%',
+                  bgcolor: 'error.main',
+                  color: 'error.contrastText',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto',
+                  mb: 3
+                }}
+              >
+                <Icon icon='tabler:x' fontSize='3rem' />
+              </Box>
+              <Typography variant='h5' gutterBottom color='error.main' sx={{ fontWeight: 600 }}>
+                Eroare la Finalizarea Evenimentului
+              </Typography>
+              <Typography variant='body1' color='textSecondary' paragraph>
+                Ne pare rău, dar a apărut o problemă la finalizarea evenimentului.
+              </Typography>
+              {completionError && (
+                <Alert severity='error' sx={{ mt: 2, mb: 3, textAlign: 'left' }}>
+                  <Typography variant='body2'>
+                    <strong>Detalii eroare:</strong>
+                  </Typography>
+                  <Typography variant='body2' sx={{ mt: 1 }}>
+                    {completionError}
+                  </Typography>
+                </Alert>
+              )}
+              <Stack direction='row' spacing={2} justifyContent='center' sx={{ mt: 4 }}>
+                <Button
+                  variant='outlined'
+                  color='primary'
+                  size='large'
+                  onClick={() => {
+                    setCompletionStatus('idle')
+                    setCompletionError(null)
+                  }}
+                  startIcon={<Icon icon='tabler:arrow-left' />}
+                >
+                  Încearcă Din Nou
+                </Button>
+                <Button
+                  variant='outlined'
+                  color='secondary'
+                  size='large'
+                  onClick={onCancel}
+                  startIcon={<Icon icon='tabler:x' />}
+                >
+                  Anulează
+                </Button>
+              </Stack>
+            </>
+          )}
         </Paper>
       )}
 
-      <Box sx={{ mt: 4, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
-        <Button
-          variant='outlined'
-          color='secondary'
-          onClick={onCancel}
-          disabled={isLoading}
-          startIcon={<Icon icon='tabler:x' />}
-        >
-          Anulează
-        </Button>
-      </Box>
+      {/* Show stepper only if not in result state */}
+      {completionStatus !== 'success' && completionStatus !== 'error' && (
+        <>
+          <Stepper activeStep={activeStep} orientation='vertical'>
+            {steps.map((step, index) => (
+              <Step key={step.label}>
+                <StepLabel
+                  optional={index === 1 ? <Typography variant='caption'>Opțional</Typography> : null}
+                  onClick={() => handleStepClick(index)}
+                  sx={{
+                    cursor: 'pointer',
+                    '&:hover .MuiStepLabel-label': {
+                      color: 'primary.main'
+                    }
+                  }}
+                  StepIconComponent={() => (
+                    <Box
+                      sx={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        bgcolor: index <= activeStep ? 'primary.main' : 'grey.300',
+                        color: index <= activeStep ? 'primary.contrastText' : 'grey.600',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        '&:hover': {
+                          transform: 'scale(1.05)',
+                          bgcolor: index <= activeStep ? 'primary.dark' : 'grey.400'
+                        }
+                      }}
+                      onClick={e => {
+                        e.stopPropagation()
+                        handleStepClick(index)
+                      }}
+                    >
+                      <Icon icon={step.icon} fontSize='1.25rem' />
+                    </Box>
+                  )}
+                >
+                  <Typography variant='h6'>{step.label}</Typography>
+                  <Typography variant='body2' color='textSecondary'>
+                    {step.description}
+                  </Typography>
+                </StepLabel>
+                <StepContent>
+                  <Box sx={{ mt: 2, mb: 3 }}>{renderStepContent(index)}</Box>
+                  <Box sx={{ display: 'flex', gap: 2 }}>
+                    {index > 0 && (
+                      <Button onClick={handleBack} variant='outlined'>
+                        Înapoi
+                      </Button>
+                    )}
+                    {index < steps.length - 1 ? (
+                      <Button
+                        variant='contained'
+                        onClick={handleNext}
+                        disabled={!canProceedToStep(index)}
+                        startIcon={<Icon icon='tabler:arrow-right' />}
+                      >
+                        Următorul
+                      </Button>
+                    ) : (
+                      <Button
+                        variant='contained'
+                        color='success'
+                        onClick={handleComplete}
+                        disabled={!canProceedToStep(index) || completionStatus === 'loading'}
+                        startIcon={<Icon icon='tabler:check' />}
+                      >
+                        {completionStatus === 'loading' ? 'Se Finalizează...' : 'Finalizează Eveniment'}
+                      </Button>
+                    )}
+                  </Box>
+                </StepContent>
+              </Step>
+            ))}
+          </Stepper>
+
+          {activeStep === steps.length && (
+            <Paper square elevation={0} sx={{ p: 3, mt: 3 }}>
+              <Typography variant='h6' gutterBottom>
+                Finalizarea evenimentului în curs...
+              </Typography>
+              <Typography variant='body2'>Te rog să aștepți în timp ce procesăm finalizarea evenimentului.</Typography>
+            </Paper>
+          )}
+        </>
+      )}
+
+      {/* Cancel button - show only if not in success state */}
+      {completionStatus !== 'success' && (
+        <Box sx={{ mt: 4, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+          <Button
+            variant='outlined'
+            color='secondary'
+            onClick={onCancel}
+            disabled={isLoading || completionStatus === 'loading'}
+            startIcon={<Icon icon='tabler:x' />}
+          >
+            Anulează
+          </Button>
+        </Box>
+      )}
     </Box>
   )
 }

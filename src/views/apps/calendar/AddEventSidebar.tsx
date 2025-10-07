@@ -156,20 +156,25 @@ const AddEventSidebar: React.FC<AddEventSidebarProps> = props => {
 
         await completeEventOccurrence(payload)
 
-        setIsCompletionMode(false)
-        handleSidebarClose()
+        // Success! Let the wizard show the success screen
+        // Don't close the sidebar here - the wizard will handle it
       } catch (error) {
         console.error('AddEventSidebar - Error completing event:', error)
+        // Re-throw the error so the wizard can catch it and show the error screen
+        throw error
       } finally {
         setActionLoading(false)
       }
     },
-    [store.selectedEvent, completeEventOccurrence, handleSidebarClose]
+    [store.selectedEvent, completeEventOccurrence]
   )
 
-  // Handle wizard cancellation
+  // Handle wizard cancellation or close after success/error
   const handleCancelCompletion = React.useCallback(() => {
+    // Exit completion mode - this will show EventViewImproved with updated event data
     setIsCompletionMode(false)
+    // Don't close sidebar here - let user see the updated event view
+    // User can close sidebar manually if desired
   }, [])
 
   // Handle cancel confirmation dialog
