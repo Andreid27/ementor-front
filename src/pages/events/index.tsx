@@ -9,8 +9,6 @@ import useMediaQuery from '@mui/material/useMediaQuery'
 // ** Redux Imports
 import { useDispatch, useSelector } from 'react-redux'
 
-// ** Components
-import EventsWidget, { EventsWidgetRef } from 'src/views/dashboards/EventsWidget'
 // @ts-ignore
 import AddEventSidebar from 'src/views/apps/calendar/AddEventSidebar'
 
@@ -28,6 +26,7 @@ import {
 import { EventOccurrenceDTO, profileServiceClient } from 'src/services'
 import { EventAttendeeDTO } from 'src/generated/profile-service'
 import { selectAllStudents } from 'src/store/apps/user'
+import { EventsWidgetRef } from '../acl/components/EventsWidget'
 
 const EventsPage = () => {
   // ** States
