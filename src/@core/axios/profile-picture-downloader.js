@@ -20,15 +20,11 @@ const profilePictureDownloader = async (url, userId, fullSize = false) => {
 
   // 1. Check if already cached - return immediately
   if (imageCache.has(cacheKey)) {
-    console.log(`[ProfilePictureCache] Cache HIT for ${cacheKey}`)
-
     return imageCache.get(cacheKey)
   }
 
   // 2. Check if there's already an in-flight request for this exact image
   if (inFlightRequests.has(cacheKey)) {
-    console.log(`[ProfilePictureCache] Waiting for in-flight request: ${cacheKey}`)
-
     // Wait for the existing request to complete and return its result
     return await inFlightRequests.get(cacheKey)
   }
@@ -36,8 +32,6 @@ const profilePictureDownloader = async (url, userId, fullSize = false) => {
   // 3. Create a new request promise
   const requestPromise = (async () => {
     try {
-      console.log(`[ProfilePictureCache] Cache MISS - Downloading: ${cacheKey}`)
-
       // Fetch the image as a blob from the API
       const response = await apiClient.get(url, {
         responseType: 'blob'
@@ -49,9 +43,6 @@ const profilePictureDownloader = async (url, userId, fullSize = false) => {
 
         // Store in cache
         imageCache.set(cacheKey, blobUrl)
-
-        console.log(`[ProfilePictureCache] Cached successfully: ${cacheKey}`)
-        console.log(`[ProfilePictureCache] Total cached images: ${imageCache.size}`)
 
         return blobUrl
       } else {
@@ -82,8 +73,6 @@ const profilePictureDownloader = async (url, userId, fullSize = false) => {
  * Useful for memory management or when user logs out
  */
 export const clearProfilePictureCache = () => {
-  console.log(`[ProfilePictureCache] Clearing cache of ${imageCache.size} images`)
-
   // Revoke all blob URLs to free memory
   imageCache.forEach(blobUrl => {
     if (blobUrl && typeof blobUrl === 'string' && blobUrl.startsWith('blob:')) {
@@ -112,8 +101,6 @@ export const clearUserFromCache = userId => {
   })
 
   keysToDelete.forEach(key => imageCache.delete(key))
-
-  console.log(`[ProfilePictureCache] Cleared ${keysToDelete.length} images for user ${userId}`)
 }
 
 /**
