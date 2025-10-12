@@ -300,23 +300,47 @@ const EventsWidget = forwardRef<EventsWidgetRef, EventsWidgetProps>(({ onComplet
     }
   }
 
-  const formatEventDuration = (durationString: any) => {
-    if (!durationString) return 'N/A'
+  const formatEventDuration = (event: EnhancedEventData) => {
+    const durationString = event.duration as any
 
-    // If it's already a string in PT format
-    if (typeof durationString === 'string') {
+    // First try to parse the duration field if it exists
+    if (durationString && typeof durationString === 'string') {
       const match = durationString.match(/PT(?:(\d+)H)?(?:(\d+)M)?/)
-      if (!match) return durationString
+      if (match) {
+        const hours = parseInt(match[1] || '0')
+        const minutes = parseInt(match[2] || '0')
 
-      const hours = parseInt(match[1] || '0')
-      const minutes = parseInt(match[2] || '0')
+        if (hours > 0 && minutes > 0) {
+          return `${hours}h ${minutes}m`
+        } else if (hours > 0) {
+          return `${hours}h`
+        } else if (minutes > 0) {
+          return `${minutes}m`
+        }
+      }
+    }
 
-      if (hours > 0 && minutes > 0) {
-        return `${hours}h ${minutes}m`
-      } else if (hours > 0) {
-        return `${hours}h`
-      } else if (minutes > 0) {
-        return `${minutes}m`
+    // If duration field is not available or invalid, calculate from actualStartTime and actualEndTime
+    if (event.actualStartTime && event.actualEndTime) {
+      try {
+        const startTime = new Date(event.actualStartTime).getTime()
+        const endTime = new Date(event.actualEndTime).getTime()
+        const durationMs = endTime - startTime
+
+        if (durationMs > 0) {
+          const hours = Math.floor(durationMs / (1000 * 60 * 60))
+          const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60))
+
+          if (hours > 0 && minutes > 0) {
+            return `${hours}h ${minutes}m`
+          } else if (hours > 0) {
+            return `${hours}h`
+          } else if (minutes > 0) {
+            return `${minutes}m`
+          }
+        }
+      } catch (error) {
+        console.error('Error calculating duration from actual times:', error)
       }
     }
 
@@ -464,7 +488,7 @@ const EventsWidget = forwardRef<EventsWidgetRef, EventsWidgetProps>(({ onComplet
                             >
                               <Icon icon='tabler:clock' fontSize={14} style={{ opacity: 0.7 }} />
                               <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.75rem' }}>
-                                {formatEventDuration(event.duration)}
+                                {formatEventDuration(event)}
                               </Typography>
                             </Box>
                           </Box>
