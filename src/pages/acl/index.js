@@ -17,7 +17,7 @@ import profilePictureDownloader from 'src/@core/axios/profile-picture-downloader
 import extractProfilePicture from 'src/@core/axios/profile-picture-extractor'
 import PaymentTimeline from './components/PaymentTimeline'
 import PaymentConfirmationHistory from './components/PaymentConfirmationHistory'
-import EventsWidget from 'src/views/dashboards/EventsWidget'
+import EventsWidget from 'src/pages/acl/components/EventsWidget'
 import AddEventSidebar from 'src/views/apps/calendar/AddEventSidebar'
 import { addEvent, updateEvent, deleteEvent, handleSelectEvent, fetchEvents } from 'src/store/apps/calendar'
 import { EventAttendeeDTO } from 'src/generated/profile-service'

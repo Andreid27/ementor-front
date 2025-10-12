@@ -518,7 +518,7 @@ const EventsWidget = forwardRef<EventsWidgetRef, EventsWidgetProps>(({ onComplet
                               {event.attendeeAvatars.length > 3 && (
                                 <Tooltip
                                   title={
-                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, py: 0.5 }}>
+                                    <Box sx={{ py: 0.5 }}>
                                       {event.attendeeNames?.slice(3).map((name, idx) => {
                                         const avatarIdx = idx + 3
                                         const avatar = event.attendeeAvatars?.[avatarIdx]
@@ -531,7 +531,15 @@ const EventsWidget = forwardRef<EventsWidgetRef, EventsWidgetProps>(({ onComplet
                                           .slice(0, 2)
 
                                         return (
-                                          <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                          <Box
+                                            key={idx}
+                                            sx={{
+                                              display: 'flex',
+                                              alignItems: 'center',
+                                              gap: 1.5,
+                                              py: 0.5
+                                            }}
+                                          >
                                             <Avatar
                                               src={hasValidAvatar ? avatar : undefined}
                                               alt={name}
