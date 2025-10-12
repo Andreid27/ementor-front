@@ -91,8 +91,12 @@ const PaymentTimeline: React.FC<PaymentTimelineProps> = ({ users, loading, onPay
       }
     }
 
-    fetchAndProcessPayments()
-  }, [users])
+    // Only fetch when parent has finished loading and users are available
+    if (!loading && users.length > 0) {
+      fetchAndProcessPayments()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading])
 
   const processPaymentData = async (data: BankTransferPaymentDTO[], users: User[]) => {
     const usersOnPage = data.map(row => row.payerId)

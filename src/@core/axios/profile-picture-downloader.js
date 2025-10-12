@@ -1,52 +1,131 @@
-import apiClient from "./axiosEmentor";
+import apiClient from './axiosEmentor'
 
-// Image cache to store image URLs based on user ID and size
-const imageCache = new Map();
+// Global image cache to store image URLs based on cache key (userId + size)
+// This cache persists across the entire application session until page refresh
+const imageCache = new Map()
 
+// In-flight requests map to prevent duplicate simultaneous requests
+const inFlightRequests = new Map()
+
+/**
+ * Downloads and caches profile pictures with singleton behavior
+ * @param {string} url - The API endpoint to download the image from
+ * @param {string} userId - The unique user identifier
+ * @param {boolean} fullSize - Whether to fetch full size or thumbnail
+ * @returns {Promise<string|null>} - The blob URL of the cached image or null on error
+ */
 const profilePictureDownloader = async (url, userId, fullSize = false) => {
-  // Check if the user ID is in the cache
-  if (imageCache.has(userId)) {
-    const userCache = imageCache.get(userId);
+  // Create a unique cache key combining userId, URL, and size
+  const cacheKey = `${userId}-${url}-${fullSize ? 'full' : 'regular'}`
 
-    // If fullSize image is requested and cached, return it
-    if (fullSize && userCache.fullSize) {
-      return userCache.fullSize;
-    }
+  // 1. Check if already cached - return immediately
+  if (imageCache.has(cacheKey)) {
+    console.log(`[ProfilePictureCache] Cache HIT for ${cacheKey}`)
 
-    // If regular image is requested and cached, return it
-    if (!fullSize && userCache.regular) {
-      return userCache.regular;
-    }
+    return imageCache.get(cacheKey)
   }
 
-  try {
-    // Fetch the image as a blob from the API
-    const response = await apiClient.get(url, {
-      responseType: 'blob', // Set the responseType to 'blob'
-    });
+  // 2. Check if there's already an in-flight request for this exact image
+  if (inFlightRequests.has(cacheKey)) {
+    console.log(`[ProfilePictureCache] Waiting for in-flight request: ${cacheKey}`)
 
-    // Check if the response is a valid blob
-    if (response && response.data) {
-      const blobUrl = URL.createObjectURL(response.data); // Create an object URL from the blob
+    // Wait for the existing request to complete and return its result
+    return await inFlightRequests.get(cacheKey)
+  }
 
-      // Cache the image based on size
-      const userCache = imageCache.get(userId) || {};
-      if (fullSize) {
-        userCache.fullSize = blobUrl;
+  // 3. Create a new request promise
+  const requestPromise = (async () => {
+    try {
+      console.log(`[ProfilePictureCache] Cache MISS - Downloading: ${cacheKey}`)
+
+      // Fetch the image as a blob from the API
+      const response = await apiClient.get(url, {
+        responseType: 'blob'
+      })
+
+      // Check if the response is a valid blob
+      if (response && response.data) {
+        const blobUrl = URL.createObjectURL(response.data)
+
+        // Store in cache
+        imageCache.set(cacheKey, blobUrl)
+
+        console.log(`[ProfilePictureCache] Cached successfully: ${cacheKey}`)
+        console.log(`[ProfilePictureCache] Total cached images: ${imageCache.size}`)
+
+        return blobUrl
       } else {
-        userCache.regular = blobUrl;
+        throw new Error('Invalid blob response')
       }
-      imageCache.set(userId, userCache);
+    } catch (error) {
+      console.error(`[ProfilePictureCache] Error downloading for ${cacheKey}:`, error)
 
-      return blobUrl; // Return the blob URL
-    } else {
-      throw new Error("Invalid blob response");
+      // Cache null result to prevent retry storms
+      imageCache.set(cacheKey, null)
+
+      return null
+    } finally {
+      // Clean up in-flight request tracking
+      inFlightRequests.delete(cacheKey)
     }
-  } catch (error) {
-    console.error(`Error downloading profile picture for user ID: ${userId}`, error);
+  })()
 
-    return null;
+  // Store the promise in in-flight requests
+  inFlightRequests.set(cacheKey, requestPromise)
+
+  // Return the promise
+  return await requestPromise
+}
+
+/**
+ * Clear the entire image cache and revoke all blob URLs
+ * Useful for memory management or when user logs out
+ */
+export const clearProfilePictureCache = () => {
+  console.log(`[ProfilePictureCache] Clearing cache of ${imageCache.size} images`)
+
+  // Revoke all blob URLs to free memory
+  imageCache.forEach(blobUrl => {
+    if (blobUrl && typeof blobUrl === 'string' && blobUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(blobUrl)
+    }
+  })
+
+  imageCache.clear()
+  inFlightRequests.clear()
+}
+
+/**
+ * Remove a specific user's images from cache
+ * @param {string} userId - The user ID to remove from cache
+ */
+export const clearUserFromCache = userId => {
+  const keysToDelete = []
+
+  imageCache.forEach((value, key) => {
+    if (key.startsWith(`${userId}-`)) {
+      keysToDelete.push(key)
+      if (value && typeof value === 'string' && value.startsWith('blob:')) {
+        URL.revokeObjectURL(value)
+      }
+    }
+  })
+
+  keysToDelete.forEach(key => imageCache.delete(key))
+
+  console.log(`[ProfilePictureCache] Cleared ${keysToDelete.length} images for user ${userId}`)
+}
+
+/**
+ * Get cache statistics
+ * @returns {object} Cache statistics
+ */
+export const getCacheStats = () => {
+  return {
+    cachedImages: imageCache.size,
+    inFlightRequests: inFlightRequests.size,
+    cacheKeys: Array.from(imageCache.keys())
   }
-};
+}
 
-export default profilePictureDownloader;
+export default profilePictureDownloader
