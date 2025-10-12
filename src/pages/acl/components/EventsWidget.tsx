@@ -100,6 +100,19 @@ const EventsWidget = forwardRef<EventsWidgetRef, EventsWidgetProps>(({ onComplet
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Re-fetch when users change (e.g., when avatars are loaded)
+  useEffect(() => {
+    if (users.length > 0 && eventsData.length > 0) {
+      // Only re-process event data with new user info, don't re-fetch from API
+      const reprocessEvents = async () => {
+        const processedEvents = await processEventData(eventsData, users)
+        setEventsData(processedEvents)
+      }
+      reprocessEvents()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [users])
+
   const fetchEvents = async () => {
     if (!startDate || !endDate) return
 
@@ -199,7 +212,7 @@ const EventsWidget = forwardRef<EventsWidgetRef, EventsWidgetProps>(({ onComplet
     fetchEvents()
   }
 
-  const handleQuickRange = (days: number) => {
+  const handleQuickRange = async (days: number) => {
     const end = new Date()
     end.setDate(end.getDate() + 1) // Set to tomorrow to include today
     const start = new Date()
@@ -212,13 +225,39 @@ const EventsWidget = forwardRef<EventsWidgetRef, EventsWidgetProps>(({ onComplet
       return `${year}-${month}-${day}T00:00`
     }
 
-    setStartDate(formatDateForInput(start))
-    setEndDate(formatDateForInput(end))
+    const formattedStart = formatDateForInput(start)
+    const formattedEnd = formatDateForInput(end)
 
-    // Auto-fetch after setting dates
-    setTimeout(() => {
-      fetchEvents()
-    }, 100)
+    setStartDate(formattedStart)
+    setEndDate(formattedEnd)
+
+    // Fetch immediately with the new dates instead of waiting for state update
+    setLoading(true)
+    try {
+      const startISO = new Date(formattedStart).toISOString()
+      const endISO = new Date(formattedEnd).toISOString()
+
+      const response = await profileServiceClient.events.getConsolidatedEvents({
+        startDate: startISO,
+        endDate: endISO
+      })
+
+      const eventsData = response.data || []
+
+      const sortedEvents = [...eventsData].sort((a, b) => {
+        const dateA = new Date(a.effectiveStartTime || 0).getTime()
+        const dateB = new Date(b.effectiveStartTime || 0).getTime()
+        return dateB - dateA
+      })
+
+      const processedEvents = await processEventData(sortedEvents, users)
+      setEventsData(processedEvents)
+    } catch (error) {
+      console.error('Failed to fetch events:', error)
+      setEventsData([])
+    } finally {
+      setLoading(false)
+    }
   }
 
   const getEventStatus = (event: EnhancedEventData) => {
@@ -652,7 +691,7 @@ const EventsWidget = forwardRef<EventsWidgetRef, EventsWidgetProps>(({ onComplet
         {!loading && eventsData.length > 0 && (
           <Box sx={{ mt: 3, p: 2, bgcolor: 'action.hover', borderRadius: 1 }}>
             <Grid container spacing={2}>
-              <Grid item xs={6}>
+              <Grid item xs={6} sm={4}>
                 <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 0.5 }}>
                   Total Events
                 </Typography>
@@ -660,7 +699,7 @@ const EventsWidget = forwardRef<EventsWidgetRef, EventsWidgetProps>(({ onComplet
                   {eventsData.length}
                 </Typography>
               </Grid>
-              <Grid item xs={6}>
+              <Grid item xs={6} sm={4}>
                 <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 0.5 }}>
                   Finished
                 </Typography>
@@ -668,7 +707,34 @@ const EventsWidget = forwardRef<EventsWidgetRef, EventsWidgetProps>(({ onComplet
                   {eventsData.filter(e => e.completed).length}
                 </Typography>
               </Grid>
-              <Grid item xs={6}>
+              <Grid item xs={6} sm={4}>
+                <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 0.5 }}>
+                  Estimated Revenue
+                </Typography>
+                <Typography variant='h6' color='primary.main' sx={{ fontSize: '1.25rem', fontWeight: 600 }}>
+                  {(() => {
+                    const revenue = eventsData.reduce((total, event) => {
+                      if (!event.eventAttendees) return total
+                      
+                      // Calculate revenue for this event based on attended participants
+                      const eventRevenue = event.eventAttendees.reduce((eventTotal, attendee) => {
+                        // Only count if attendee actually attended
+                        if (attendee.attended) {
+                          // Use custom price if available, otherwise use event's base price
+                          const price = attendee.hasCustomPricing ? (attendee.customPrice || 0) : (event.price || 0)
+                          return eventTotal + price
+                        }
+                        return eventTotal
+                      }, 0)
+                      
+                      return total + eventRevenue
+                    }, 0)
+                    
+                    return `${revenue.toFixed(2)} RON`
+                  })()}
+                </Typography>
+              </Grid>
+              <Grid item xs={6} sm={4}>
                 <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 0.5 }}>
                   Upcoming
                 </Typography>
@@ -676,12 +742,22 @@ const EventsWidget = forwardRef<EventsWidgetRef, EventsWidgetProps>(({ onComplet
                   {eventsData.filter(e => e.upcoming && !e.completed && !e.cancelled).length}
                 </Typography>
               </Grid>
-              <Grid item xs={6}>
+              <Grid item xs={6} sm={4}>
                 <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 0.5 }}>
                   Cancelled
                 </Typography>
                 <Typography variant='h6' color='error.main' sx={{ fontSize: '1.25rem' }}>
                   {eventsData.filter(e => e.cancelled).length}
+                </Typography>
+              </Grid>
+              <Grid item xs={6} sm={4}>
+                <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 0.5 }}>
+                  Total Attendees
+                </Typography>
+                <Typography variant='h6' sx={{ fontSize: '1.25rem' }}>
+                  {eventsData.reduce((total, event) => {
+                    return total + (event.eventAttendees?.filter(a => a.attended).length || 0)
+                  }, 0)}
                 </Typography>
               </Grid>
             </Grid>
