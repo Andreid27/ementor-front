@@ -345,6 +345,17 @@ const AppCalendar = () => {
   const handleLeftSidebarToggle = () => setLeftSidebarOpen(!leftSidebarOpen)
   const handleAddEventSidebarToggle = () => setAddEventSidebarOpen(!addEventSidebarOpen)
 
+  // ** Handler for opening complete event from Events Widget
+  const handleCompleteEventFromWidget = useCallback(
+    (event: EventOccurrenceDTO) => {
+      // Set the selected event in Redux
+      dispatch(handleSelectEvent(event))
+      // Open the sidebar
+      setAddEventSidebarOpen(true)
+    },
+    [dispatch]
+  )
+
   return (
     <CalendarWrapper
       className='app-calendar'
