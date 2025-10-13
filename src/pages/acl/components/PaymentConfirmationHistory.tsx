@@ -17,10 +17,7 @@ import {
   TableRow,
   TextField,
   Grid,
-  Skeleton,
-  Paper,
-  Fade,
-  Divider
+  Skeleton
 } from '@mui/material'
 import Icon from 'src/@core/components/icon'
 import OptionsMenu from 'src/@core/components/option-menu'
@@ -28,6 +25,7 @@ import { BankTransferPaymentDTO, BankTransferPaymentDTOStatusEnum } from 'src/ge
 import { profileServiceClient } from 'src/services'
 import profilePictureDownloader from 'src/@core/axios/profile-picture-downloader'
 import extractProfilePicture from 'src/@core/axios/profile-picture-extractor'
+import PaymentDetailCard from './PaymentDetailCard'
 
 // Define a user interface that matches the actual user data structure
 interface User {
@@ -91,7 +89,6 @@ const PaymentConfirmationHistory = forwardRef<PaymentConfirmationHistoryRef, Pay
     const [startDate, setStartDate] = useState<string>(defaultDates.start)
     const [endDate, setEndDate] = useState<string>(defaultDates.end)
     const [selectedPayment, setSelectedPayment] = useState<EnhancedPaymentData | null>(null)
-    const [detailCardAnchor, setDetailCardAnchor] = useState<{ top: number; left: number } | null>(null)
 
     // Expose refresh method to parent components
     useImperativeHandle(ref, () => ({
@@ -261,59 +258,12 @@ const PaymentConfirmationHistory = forwardRef<PaymentConfirmationHistoryRef, Pay
       }
     }
 
-    const handleRowClick = (payment: EnhancedPaymentData, event: React.MouseEvent<HTMLTableRowElement>) => {
-      const rect = event.currentTarget.getBoundingClientRect()
-      const cardWidth = 400
-      const cardMaxHeight = window.innerHeight * 0.8 // 80vh
-      const padding = 20
-      const isMobile = window.innerWidth < 600 // sm breakpoint
-
-      // On mobile, use fullscreen modal style
-      if (isMobile) {
-        setDetailCardAnchor({
-          top: padding,
-          left: padding
-        })
-        setSelectedPayment(payment)
-        return
-      }
-
-      // Calculate horizontal position (viewport coordinates for fixed positioning)
-      let left = rect.right + padding
-
-      // If card would overflow right edge, position it to the left of the row
-      if (left + cardWidth > window.innerWidth - padding) {
-        left = rect.left - cardWidth - padding
-      }
-
-      // If still overflows (very narrow screen), center it
-      if (left < padding) {
-        left = Math.max(padding, (window.innerWidth - cardWidth) / 2)
-      }
-
-      // Calculate vertical position (viewport coordinates for fixed positioning)
-      let top = rect.top
-
-      // If card would overflow bottom, adjust upward
-      if (top + cardMaxHeight > window.innerHeight - padding) {
-        top = Math.max(padding, window.innerHeight - cardMaxHeight - padding)
-      }
-
-      // Ensure card doesn't go above viewport
-      if (top < padding) {
-        top = padding
-      }
-
-      setDetailCardAnchor({
-        top,
-        left
-      })
+    const handleRowClick = async (payment: EnhancedPaymentData) => {
       setSelectedPayment(payment)
     }
 
     const handleCloseDetail = () => {
       setSelectedPayment(null)
-      setDetailCardAnchor(null)
     }
 
     const formatDate = (iso?: string) => {
@@ -502,7 +452,7 @@ const PaymentConfirmationHistory = forwardRef<PaymentConfirmationHistoryRef, Pay
                         <TableRow
                           key={payment.id || index}
                           hover
-                          onClick={e => handleRowClick(payment, e)}
+                          onClick={() => handleRowClick(payment)}
                           sx={{
                             cursor: 'pointer',
                             '&:hover': {
@@ -602,308 +552,14 @@ const PaymentConfirmationHistory = forwardRef<PaymentConfirmationHistoryRef, Pay
             )}
           </Box>
 
-          {/* Floating Detail Card */}
-          {selectedPayment && detailCardAnchor && (
-            <>
-              {/* Backdrop to close detail card */}
-              <Box
-                sx={{
-                  position: 'fixed',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  backgroundColor: { xs: 'rgba(0, 0, 0, 0.5)', sm: 'transparent' },
-                  zIndex: 1200
-                }}
-                onClick={handleCloseDetail}
-              />
-
-              {/* Detail Card */}
-              <Fade in={!!selectedPayment}>
-                <Paper
-                  elevation={8}
-                  sx={{
-                    position: 'fixed',
-                    top: { xs: '50%', sm: detailCardAnchor.top },
-                    left: { xs: '50%', sm: detailCardAnchor.left },
-                    transform: { xs: 'translate(-50%, -50%)', sm: 'none' },
-                    width: { xs: 'calc(100vw - 32px)', sm: 400 },
-                    maxWidth: { xs: 500, sm: 400 },
-                    maxHeight: { xs: 'calc(100vh - 32px)', sm: '80vh' },
-                    overflowY: 'auto',
-                    zIndex: 1300,
-                    p: { xs: 2.5, sm: 3 },
-                    borderRadius: { xs: 3, sm: 1 },
-                    '&::-webkit-scrollbar': {
-                      width: '6px'
-                    },
-                    '&::-webkit-scrollbar-track': {
-                      backgroundColor: 'action.hover',
-                      borderRadius: '4px'
-                    },
-                    '&::-webkit-scrollbar-thumb': {
-                      backgroundColor: 'action.selected',
-                      borderRadius: '4px'
-                    }
-                  }}
-                >
-                  {/* Header */}
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2.5 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, sm: 2 }, flex: 1, minWidth: 0 }}>
-                      <Avatar
-                        src={getUserAvatar(selectedPayment.payerId)}
-                        sx={{
-                          width: { xs: 44, sm: 48 },
-                          height: { xs: 44, sm: 48 },
-                          flexShrink: 0
-                        }}
-                      />
-                      <Box sx={{ minWidth: 0, flex: 1 }}>
-                        <Typography
-                          variant='h6'
-                          sx={{
-                            fontWeight: 600,
-                            fontSize: { xs: '1.063rem', sm: '1.25rem' },
-                            lineHeight: 1.3,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap'
-                          }}
-                        >
-                          {getUserName(selectedPayment.payerId)}
-                        </Typography>
-                        <Typography
-                          variant='caption'
-                          color='text.secondary'
-                          sx={{
-                            fontSize: { xs: '0.688rem', sm: '0.75rem' },
-                            display: 'block',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap'
-                          }}
-                        >
-                          ID: {selectedPayment.payerId}
-                        </Typography>
-                      </Box>
-                    </Box>
-                    <Box
-                      onClick={handleCloseDetail}
-                      sx={{
-                        cursor: 'pointer',
-                        color: 'text.secondary',
-                        ml: 1,
-                        flexShrink: 0,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        width: 32,
-                        height: 32,
-                        borderRadius: 1,
-                        '&:hover': {
-                          backgroundColor: 'action.hover',
-                          color: 'text.primary'
-                        }
-                      }}
-                    >
-                      <Icon icon='tabler:x' fontSize='1.25rem' />
-                    </Box>
-                  </Box>
-
-                  <Divider sx={{ mb: 2.5 }} />
-
-                  {/* Payment Details */}
-                  <Grid container spacing={{ xs: 1.5, sm: 2 }}>
-                    {/* Amount */}
-                    <Grid item xs={12}>
-                      <Box
-                        sx={{
-                          textAlign: 'center',
-                          py: { xs: 2.5, sm: 2 },
-                          backgroundColor: 'action.hover',
-                          borderRadius: 2
-                        }}
-                      >
-                        <Typography
-                          variant='caption'
-                          color='text.secondary'
-                          sx={{ fontSize: { xs: '0.75rem', sm: '0.813rem' } }}
-                        >
-                          Sumă Plătită
-                        </Typography>
-                        <Typography
-                          variant='h4'
-                          sx={{
-                            fontWeight: 700,
-                            color: 'success.main',
-                            fontSize: { xs: '1.75rem', sm: '2.125rem' },
-                            mt: 0.5
-                          }}
-                        >
-                          {formatCurrency(selectedPayment.amount, selectedPayment.currency)}
-                        </Typography>
-                      </Box>
-                    </Grid>
-
-                    {/* Status */}
-                    <Grid item xs={12}>
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          py: { xs: 1, sm: 0.5 }
-                        }}
-                      >
-                        <Typography
-                          variant='body2'
-                          color='text.secondary'
-                          sx={{ fontSize: { xs: '0.875rem', sm: '0.875rem' } }}
-                        >
-                          Status
-                        </Typography>
-                        <Chip
-                          label={getStatusText(selectedPayment.status)}
-                          color={getStatusColor(selectedPayment.status)}
-                          size='small'
-                          sx={{ fontSize: { xs: '0.75rem', sm: '0.813rem' } }}
-                        />
-                      </Box>
-                    </Grid>
-
-                    <Grid item xs={12}>
-                      <Divider />
-                    </Grid>
-
-                    {/* Reference Code */}
-                    <Grid item xs={12}>
-                      <Typography
-                        variant='caption'
-                        color='text.secondary'
-                        sx={{ fontSize: { xs: '0.75rem', sm: '0.75rem' } }}
-                      >
-                        Cod Referință
-                      </Typography>
-                      <Typography
-                        variant='body2'
-                        sx={{
-                          fontFamily: 'monospace',
-                          fontWeight: 500,
-                          fontSize: { xs: '0.875rem', sm: '0.95rem' },
-                          mt: 0.5,
-                          wordBreak: 'break-all'
-                        }}
-                      >
-                        {selectedPayment.referenceCode || '-'}
-                      </Typography>
-                    </Grid>
-
-                    {/* Creation Date */}
-                    <Grid item xs={6}>
-                      <Typography
-                        variant='caption'
-                        color='text.secondary'
-                        sx={{ fontSize: { xs: '0.75rem', sm: '0.75rem' } }}
-                      >
-                        Data Creare
-                      </Typography>
-                      <Typography
-                        variant='body2'
-                        sx={{ fontWeight: 500, fontSize: { xs: '0.875rem', sm: '0.875rem' }, mt: 0.5 }}
-                      >
-                        {formatDate(selectedPayment.creation)}
-                      </Typography>
-                      <Typography
-                        variant='caption'
-                        color='text.secondary'
-                        sx={{ fontSize: { xs: '0.688rem', sm: '0.75rem' } }}
-                      >
-                        {formatTime(selectedPayment.creation)}
-                      </Typography>
-                    </Grid>
-
-                    {/* Confirmation Date */}
-                    <Grid item xs={6}>
-                      <Typography
-                        variant='caption'
-                        color='text.secondary'
-                        sx={{ fontSize: { xs: '0.75rem', sm: '0.75rem' } }}
-                      >
-                        Data Confirmare
-                      </Typography>
-                      <Typography
-                        variant='body2'
-                        sx={{
-                          fontWeight: 500,
-                          color: 'success.main',
-                          fontSize: { xs: '0.875rem', sm: '0.875rem' },
-                          mt: 0.5
-                        }}
-                      >
-                        {formatDate(selectedPayment.confirmedAt)}
-                      </Typography>
-                      <Typography
-                        variant='caption'
-                        sx={{ color: 'success.main', fontSize: { xs: '0.688rem', sm: '0.75rem' } }}
-                      >
-                        {formatTime(selectedPayment.confirmedAt)}
-                      </Typography>
-                    </Grid>
-
-                    {/* Payment ID */}
-                    <Grid item xs={12}>
-                      <Typography
-                        variant='caption'
-                        color='text.secondary'
-                        sx={{ fontSize: { xs: '0.75rem', sm: '0.75rem' } }}
-                      >
-                        Payment ID
-                      </Typography>
-                      <Typography
-                        variant='body2'
-                        sx={{
-                          fontFamily: 'monospace',
-                          fontSize: { xs: '0.75rem', sm: '0.85rem' },
-                          mt: 0.5,
-                          wordBreak: 'break-all'
-                        }}
-                      >
-                        {selectedPayment.id}
-                      </Typography>
-                    </Grid>
-
-                    <Grid item xs={12}>
-                      <Divider />
-                    </Grid>
-
-                    {/* Actions */}
-                    <Grid item xs={12}>
-                      <Box sx={{ display: 'flex', gap: { xs: 1, sm: 1 }, flexDirection: { xs: 'column', sm: 'row' } }}>
-                        <Button
-                          fullWidth
-                          variant='outlined'
-                          size='small'
-                          startIcon={<Icon icon='tabler:receipt' />}
-                          sx={{ py: { xs: 1.25, sm: 0.75 } }}
-                        >
-                          Factură
-                        </Button>
-                        <Button
-                          fullWidth
-                          variant='outlined'
-                          size='small'
-                          startIcon={<Icon icon='tabler:download' />}
-                          sx={{ py: { xs: 1.25, sm: 0.75 } }}
-                        >
-                          Export
-                        </Button>
-                      </Box>
-                    </Grid>
-                  </Grid>
-                </Paper>
-              </Fade>
-            </>
+          {/* Payment Detail Modal */}
+          {selectedPayment && (
+            <PaymentDetailCard
+              payment={selectedPayment}
+              onClose={handleCloseDetail}
+              getUserName={getUserName}
+              getUserAvatar={getUserAvatar}
+            />
           )}
 
           {/* Summary */}

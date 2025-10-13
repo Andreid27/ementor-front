@@ -206,12 +206,6 @@ const PaymentTimeline: React.FC<PaymentTimelineProps> = ({ users, loading, onPay
     return user ? `${user.firstName} ${user.lastName}` : 'Utilizator necunoscut'
   }
 
-  const getUserAvatar = (userId: string | undefined): string | undefined => {
-    if (!userId) return undefined
-    const user = users.find(u => u.id === userId) as any
-    return user?.avatar || undefined
-  }
-
   const formatCurrency = (amount: number | undefined, currency: string | undefined = 'RON'): string => {
     if (amount === undefined) return '0 RON'
     return `${amount.toFixed(2)} ${currency}`
@@ -288,7 +282,7 @@ const PaymentTimeline: React.FC<PaymentTimelineProps> = ({ users, loading, onPay
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <Avatar
-                          src={getUserAvatar(payment.payerId)}
+                          src={payment.avatar || undefined}
                           sx={{ mr: 3, width: 38, height: 38, cursor: 'pointer' }}
                           onClick={() => payment.payerId && handleAvatarClick(payment.payerId)}
                         />
