@@ -41,7 +41,7 @@ const apiClient = createProfileServiceAxios()
 // Create configuration with our custom axios instance
 const createProfileServiceConfig = () =>
   new Configuration({
-    basePath: 'http://localhost:49202',
+    basePath: process.env.NEXT_PUBLIC_PROD_HOST + '/service2',
     baseOptions: {
       // Any additional axios configuration can go here
     }
