@@ -47,7 +47,7 @@ const data = {
   billing: 'Manual - Cash',
   contact: '(479) 232-9151',
   currentPlan: 'enterprise',
-  fullName: 'Daisy Patterson',
+  fullName: 'Daisy Patterson'
 }
 
 const roleColors = {
@@ -86,7 +86,7 @@ const UserViewLeft = ({ profileData, profilePictureUrl, quizStats }) => {
   const [suspendDialogOpen, setSuspendDialogOpen] = useState(false)
   const [subscriptionDialogOpen, setSubscriptionDialogOpen] = useState(false)
   const fullName = profileData?.user.firstName + ' ' + profileData?.user.lastName
-  const totalAvarage = (quizStats.questions.correctQuestions * 100 / quizStats.questions.totalQuestions).toFixed(2)
+  const totalAvarage = ((quizStats.questions.correctQuestions * 100) / quizStats.questions.totalQuestions).toFixed(2)
 
   // Handle Edit dialog
   const handleEditClickOpen = () => setOpenEdit(true)
@@ -115,7 +115,6 @@ const UserViewLeft = ({ profileData, profilePictureUrl, quizStats }) => {
       return [totalAvarage, 'success']
     }
   }
-
 
   function getAdress(profileData) {
     if (profileData && profileData.address) {
@@ -194,7 +193,12 @@ const UserViewLeft = ({ profileData, profilePictureUrl, quizStats }) => {
             <CardContent sx={{ pt: theme => `${theme.spacing(2)} !important` }}>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Box sx={{ mr: 8, display: 'flex', alignItems: 'center' }}>
-                  <CustomAvatar skin='light' color={getOverallResultsColor(quizStats)[1]} variant='rounded' sx={{ mr: 2.5, width: 38, height: 38 }}>
+                  <CustomAvatar
+                    skin='light'
+                    color={getOverallResultsColor(quizStats)[1]}
+                    variant='rounded'
+                    sx={{ mr: 2.5, width: 38, height: 38 }}
+                  >
                     <Icon fontSize='1.75rem' icon='tabler:checkbox' />
                   </CustomAvatar>
                   <div>
@@ -207,8 +211,26 @@ const UserViewLeft = ({ profileData, profilePictureUrl, quizStats }) => {
                     <Icon fontSize='1.75rem' icon='tabler:briefcase' />
                   </CustomAvatar>
                   <div>
-                    <Typography sx={{ fontWeight: 500, color: 'text.secondary' }}>{quizStats.quizzes.completedQuizzes}</Typography>
+                    <Typography sx={{ fontWeight: 500, color: 'text.secondary' }}>
+                      {quizStats.quizzes.completedQuizzes}
+                    </Typography>
                     <Typography variant='body2'>Teste</Typography>
+                  </div>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <CustomAvatar
+                    skin='light'
+                    variant='rounded'
+                    color='warning'
+                    sx={{ ml: 5, mr: 2.5, width: 38, height: 38 }}
+                  >
+                    <Icon fontSize='1.75rem' icon='tabler:wallet' />
+                  </CustomAvatar>
+                  <div>
+                    <Typography sx={{ fontWeight: 500, color: 'text.secondary' }}>
+                      {profileData.wallet ? profileData.wallet.balance + ' ' + profileData.wallet.currency : '0'}
+                    </Typography>
+                    <Typography variant='body2'>Portofel</Typography>
                   </div>
                 </Box>
               </Box>
@@ -248,11 +270,15 @@ const UserViewLeft = ({ profileData, profilePictureUrl, quizStats }) => {
                 </Box>
                 <Box sx={{ display: 'flex', mb: 3 }}>
                   <Typography sx={{ mr: 2, fontWeight: 500, color: 'text.secondary' }}>Liceu:</Typography>
-                  <Typography sx={{ color: 'text.secondary' }}>{`${profileData.school}, domeniu: ${schoolDomains[profileData.schoolDomain]}, profil: ${schoolSpecialities[profileData.schoolSpeciality]}`}</Typography>
+                  <Typography sx={{ color: 'text.secondary' }}>{`${profileData.school}, domeniu: ${
+                    schoolDomains[profileData.schoolDomain]
+                  }, profil: ${schoolSpecialities[profileData.schoolSpeciality]}`}</Typography>
                 </Box>
                 <Box sx={{ display: 'flex', mb: 3 }}>
                   <Typography sx={{ mr: 2, fontWeight: 500, color: 'text.secondary' }}>Facultatea dorită:</Typography>
-                  <Typography sx={{ color: 'text.secondary' }}>{profileData.specialityValue}, {profileData.universityValue}</Typography>
+                  <Typography sx={{ color: 'text.secondary' }}>
+                    {profileData.specialityValue}, {profileData.universityValue}
+                  </Typography>
                 </Box>
                 <Box sx={{ display: 'flex' }}>
                   <Typography sx={{ mr: 2, fontWeight: 500, color: 'text.secondary' }}>Data examenului:</Typography>
@@ -260,10 +286,9 @@ const UserViewLeft = ({ profileData, profilePictureUrl, quizStats }) => {
                     {new Date(profileData.desiredExamDate).toLocaleDateString('ro-RO', {
                       year: 'numeric',
                       month: 'long',
-                      day: 'numeric',
+                      day: 'numeric'
                     })}
                   </Typography>
-
                 </Box>
               </Box>
             </CardContent>
