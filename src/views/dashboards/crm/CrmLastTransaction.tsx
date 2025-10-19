@@ -29,7 +29,8 @@ import { hexToRGBA } from 'src/@core/utils/hex-to-rgba'
 import { profileServiceClient } from 'src/services'
 import { useRouter } from 'next/router'
 import { set } from 'date-fns'
-import { WalletBalanceChangeDTO, WalletSummaryDTO } from 'src/generated/profile-service'
+import { WalletBalanceChangeDTO, WalletSummaryDTO, BankTransferPaymentDTO } from 'src/generated/profile-service'
+import PaymentDetailCard from 'src/pages/acl/components/PaymentDetailCard'
 
 const StyledGrid = styled(Grid)(({ theme }) => ({
   [theme.breakpoints.down('sm')]: {
@@ -54,17 +55,25 @@ interface CrmLastTransactionProps {
   disableCardWrapper?: boolean
   /** Optional callback invoked when the component finishes loading wallet summary */
   onWalletLoaded?: (walletSummary: WalletSummaryDTO) => void
+  /**
+   * User role for permission-based features
+   * Default: 'student' (preserves existing behavior)
+   */
+  userRole?: 'student' | 'professor'
 }
 
 const CrmLastTransaction: React.FC<CrmLastTransactionProps> = ({
   showPaymentButton = true,
   disableCardWrapper = false,
-  onWalletLoaded
+  onWalletLoaded,
+  userRole = 'student'
 }) => {
   const router = useRouter()
   const [anchorEl, setAnchorEl] = useState(null)
 
   const [walletSummary, setWalletSummary] = useState<WalletSummaryDTO | null>(null)
+  const [selectedPayment, setSelectedPayment] = useState<BankTransferPaymentDTO | null>(null)
+  const [showPaymentDetail, setShowPaymentDetail] = useState(false)
 
   const theme = useTheme()
   const { settings } = useSettings()
@@ -116,6 +125,43 @@ const CrmLastTransaction: React.FC<CrmLastTransactionProps> = ({
         console.error('Error fetching balance history:', error)
       })
   }, [])
+
+  // Handle click on bank transfer transaction to show payment details
+  const handleTransactionClick = (transaction: WalletBalanceChangeDTO) => {
+    // Only handle bank transfer transactions
+    if (transaction.referenceType !== 'BANK_TRANSFER' || !transaction.referenceId) {
+      return
+    }
+
+    // Create a minimal payment object - PaymentDetailCard will fetch full details
+    const payment: BankTransferPaymentDTO = {
+      id: transaction.referenceId,
+      amount: transaction.amount,
+      confirmedAt: transaction.creation
+    }
+
+    setSelectedPayment(payment)
+    setShowPaymentDetail(true)
+  }
+
+  const handleClosePaymentDetail = () => {
+    setShowPaymentDetail(false)
+    setSelectedPayment(null)
+  }
+
+  // Helper function to get user name (placeholder - extend based on your user data structure)
+  const getUserName = (userId: string | undefined): string => {
+    if (!userId) return 'Utilizator necunoscut'
+    // TODO: Implement user lookup when user data is available
+    return 'Student'
+  }
+
+  // Helper function to get user avatar (placeholder - extend based on your user data structure)
+  const getUserAvatar = (userId: string | undefined): string | undefined => {
+    if (!userId) return undefined
+    // TODO: Implement avatar lookup when user data is available
+    return undefined
+  }
 
   const getChartOptions = (balance: number | undefined) => ({
     chart: {
@@ -193,10 +239,16 @@ const CrmLastTransaction: React.FC<CrmLastTransactionProps> = ({
                   walletSummary.balanceChanges.map((row: WalletBalanceChangeDTO) => (
                     <TableRow
                       key={row.id}
+                      onClick={() => handleTransactionClick(row)}
                       sx={{
                         '&:last-child .MuiTableCell-root': { pb: theme => `${theme.spacing(6)} !important` },
                         '& .MuiTableCell-root': { border: 0, py: theme => `${theme.spacing(2.25)} !important` },
-                        '&:first-of-type .MuiTableCell-root': { pt: theme => `${theme.spacing(4.5)} !important` }
+                        '&:first-of-type .MuiTableCell-root': { pt: theme => `${theme.spacing(4.5)} !important` },
+                        cursor: row.referenceType === 'BANK_TRANSFER' ? 'pointer' : 'default',
+                        '&:hover': {
+                          backgroundColor: row.referenceType === 'BANK_TRANSFER' ? 'action.hover' : 'transparent'
+                        },
+                        transition: 'background-color 0.2s ease'
                       }}
                     >
                       <TableCell sx={{ width: '140px' }}>
@@ -403,10 +455,36 @@ const CrmLastTransaction: React.FC<CrmLastTransactionProps> = ({
 
   // If the parent wants to disable the card wrapper, return only the inner content.
   if (disableCardWrapper) {
-    return InnerContent
+    return (
+      <>
+        {InnerContent}
+        {/* Payment Detail Modal */}
+        {selectedPayment && (
+          <PaymentDetailCard
+            payment={selectedPayment}
+            onClose={handleClosePaymentDetail}
+            getUserName={getUserName}
+            getUserAvatar={getUserAvatar}
+          />
+        )}
+      </>
+    )
   }
 
-  return <Card>{InnerContent}</Card>
+  return (
+    <>
+      <Card>{InnerContent}</Card>
+      {/* Payment Detail Modal */}
+      {selectedPayment && (
+        <PaymentDetailCard
+          payment={selectedPayment}
+          onClose={handleClosePaymentDetail}
+          getUserName={getUserName}
+          getUserAvatar={getUserAvatar}
+        />
+      )}
+    </>
+  )
 }
 
 export default CrmLastTransaction

@@ -47,10 +47,21 @@ interface PaymentDetailCardProps {
 
 const PaymentDetailCard = ({ payment, onClose, getUserName, getUserAvatar }: PaymentDetailCardProps) => {
   // States
-  const [detailsLoading, setDetailsLoading] = useState(true)
+  const [basicDetailsLoading, setBasicDetailsLoading] = useState(
+    !payment.creation || !payment.confirmedAt || !payment.status || !payment.referenceCode
+  )
+  const [confirmationResultLoading, setConfirmationResultLoading] = useState(true)
   const [confirmationResult, setConfirmationResult] = useState<PaymentConfirmationResultDTO | null>(null)
   const [downloadingInvoice, setDownloadingInvoice] = useState(false)
   const [open, setOpen] = useState(false)
+
+  // Enhanced payment data with API fallback
+  const [enhancedPayment, setEnhancedPayment] = useState({
+    creation: payment.creation,
+    confirmedAt: payment.confirmedAt,
+    status: payment.status,
+    referenceCode: payment.referenceCode
+  })
 
   useEffect(() => {
     // Trigger opening animation
@@ -112,18 +123,40 @@ const PaymentDetailCard = ({ payment, onClose, getUserName, getUserAvatar }: Pay
   const fetchConfirmationDetails = async () => {
     if (!payment.id) return
 
-    setDetailsLoading(true)
+    // Only set loading if we're missing basic payment details
+    const needsBasicData = !payment.creation || !payment.confirmedAt || !payment.status || !payment.referenceCode
+    if (needsBasicData) {
+      setBasicDetailsLoading(true)
+    }
+
+    // Always loading confirmation result (wallet balance, allocations)
+    setConfirmationResultLoading(true)
+
     try {
       const response = await profileServiceClient.payment.getConfirmationResult({ paymentId: payment.id })
       setConfirmationResult(response.data)
+
+      // Update enhanced payment data with API response if missing from props
+      setEnhancedPayment(prev => ({
+        creation: prev.creation || payment.creation || response.data.creation,
+        confirmedAt: prev.confirmedAt || response.data.confirmedAt,
+        status: prev.status || 'CONFIRMED', // If confirmed, status is confirmed
+        referenceCode: prev.referenceCode || payment.id // Use payment ID as fallback
+      }))
     } catch (error) {
       console.error('Error fetching confirmation details:', error)
+      // Even on error, update what we can from payment prop
+      setEnhancedPayment(prev => ({
+        creation: prev.creation || payment.creation,
+        confirmedAt: prev.confirmedAt || payment.confirmedAt,
+        status: prev.status || payment.status || 'PENDING',
+        referenceCode: prev.referenceCode || payment.referenceCode || payment.id
+      }))
     } finally {
-      setDetailsLoading(false)
+      setBasicDetailsLoading(false)
+      setConfirmationResultLoading(false)
     }
-  }
-
-  // Download invoice
+  } // Download invoice
   const handleDownloadInvoice = async (invoiceId: string) => {
     setDownloadingInvoice(true)
     try {
@@ -361,136 +394,148 @@ const PaymentDetailCard = ({ payment, onClose, getUserName, getUserAvatar }: Pay
 
                     {/* Status & Details - Compact Row */}
                     <Grid item xs={12}>
-                      <Fade in={open} timeout={800}>
-                        <Box
-                          sx={{
-                            display: 'flex',
-                            gap: 1,
-                            p: 1.25,
-                            borderRadius: 1.5,
-                            bgcolor: 'action.hover',
-                            border: '1px solid',
-                            borderColor: 'divider'
-                          }}
-                        >
-                          <Box sx={{ flex: 1, minWidth: 0 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.25 }}>
-                              <Icon icon='tabler:circle-check' fontSize='0.875rem' style={{ opacity: 0.6 }} />
-                              <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.688rem' }}>
-                                Status
+                      {basicDetailsLoading && (!payment.status || !payment.referenceCode) ? (
+                        <Skeleton variant='rectangular' width='100%' height={66} sx={{ borderRadius: 1.5 }} />
+                      ) : (
+                        <Fade in={open} timeout={800}>
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              gap: 1,
+                              p: 1.25,
+                              borderRadius: 1.5,
+                              bgcolor: 'action.hover',
+                              border: '1px solid',
+                              borderColor: 'divider'
+                            }}
+                          >
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.25 }}>
+                                <Icon icon='tabler:circle-check' fontSize='0.875rem' style={{ opacity: 0.6 }} />
+                                <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.688rem' }}>
+                                  Status
+                                </Typography>
+                              </Box>
+                              <Chip
+                                label={getStatusText(enhancedPayment.status || '')}
+                                color={getStatusColor(enhancedPayment.status || '')}
+                                size='small'
+                                sx={{
+                                  height: 22,
+                                  fontWeight: 600,
+                                  fontSize: '0.75rem'
+                                }}
+                              />
+                            </Box>
+                            <Divider orientation='vertical' flexItem />
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.25 }}>
+                                <Icon icon='tabler:hash' fontSize='0.875rem' style={{ opacity: 0.6 }} />
+                                <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.688rem' }}>
+                                  Referință
+                                </Typography>
+                              </Box>
+                              <Typography
+                                variant='body2'
+                                sx={{
+                                  fontFamily: 'monospace',
+                                  fontWeight: 600,
+                                  fontSize: '0.75rem',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap'
+                                }}
+                              >
+                                {enhancedPayment.referenceCode || '-'}
                               </Typography>
                             </Box>
-                            <Chip
-                              label={getStatusText(payment.status || '')}
-                              color={getStatusColor(payment.status || '')}
-                              size='small'
-                              sx={{
-                                height: 22,
-                                fontWeight: 600,
-                                fontSize: '0.75rem'
-                              }}
-                            />
                           </Box>
-                          <Divider orientation='vertical' flexItem />
-                          <Box sx={{ flex: 1, minWidth: 0 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.25 }}>
-                              <Icon icon='tabler:hash' fontSize='0.875rem' style={{ opacity: 0.6 }} />
-                              <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.688rem' }}>
-                                Referință
-                              </Typography>
-                            </Box>
-                            <Typography
-                              variant='body2'
-                              sx={{
-                                fontFamily: 'monospace',
-                                fontWeight: 600,
-                                fontSize: '0.75rem',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap'
-                              }}
-                            >
-                              {payment.referenceCode || '-'}
-                            </Typography>
-                          </Box>
-                        </Box>
-                      </Fade>
+                        </Fade>
+                      )}
                     </Grid>
 
                     {/* Dates - Compact Grid */}
                     <Grid item xs={6}>
-                      <Zoom in={open} timeout={900}>
-                        <Box
-                          sx={{
-                            p: 1.25,
-                            borderRadius: 1.5,
-                            bgcolor: 'action.hover',
-                            height: '100%',
-                            transition: 'all 0.2s ease-in-out',
-                            '&:hover': {
-                              transform: 'translateY(-2px)',
-                              boxShadow: '0 4px 8px rgba(0,0,0,0.08)'
-                            }
-                          }}
-                        >
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
-                            <Icon icon='tabler:clock' fontSize='0.875rem' style={{ opacity: 0.6 }} />
-                            <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.688rem' }}>
-                              Creare
+                      {basicDetailsLoading && !payment.creation ? (
+                        <Skeleton variant='rectangular' width='100%' height={78} sx={{ borderRadius: 1.5 }} />
+                      ) : (
+                        <Zoom in={open} timeout={900}>
+                          <Box
+                            sx={{
+                              p: 1.25,
+                              borderRadius: 1.5,
+                              bgcolor: 'action.hover',
+                              height: '100%',
+                              transition: 'all 0.2s ease-in-out',
+                              '&:hover': {
+                                transform: 'translateY(-2px)',
+                                boxShadow: '0 4px 8px rgba(0,0,0,0.08)'
+                              }
+                            }}
+                          >
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
+                              <Icon icon='tabler:clock' fontSize='0.875rem' style={{ opacity: 0.6 }} />
+                              <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.688rem' }}>
+                                Creare
+                              </Typography>
+                            </Box>
+                            <Typography variant='body2' sx={{ fontWeight: 600, fontSize: '0.813rem' }}>
+                              {enhancedPayment.creation ? formatDate(enhancedPayment.creation) : 'N/A'}
                             </Typography>
+                            {enhancedPayment.creation && (
+                              <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.625rem' }}>
+                                {formatTime(enhancedPayment.creation)}
+                              </Typography>
+                            )}
                           </Box>
-                          <Typography variant='body2' sx={{ fontWeight: 600, fontSize: '0.813rem' }}>
-                            {payment.creation ? formatDate(payment.creation) : 'N/A'}
-                          </Typography>
-                          {payment.creation && (
-                            <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.625rem' }}>
-                              {formatTime(payment.creation)}
-                            </Typography>
-                          )}
-                        </Box>
-                      </Zoom>
+                        </Zoom>
+                      )}
                     </Grid>
 
                     <Grid item xs={6}>
-                      <Zoom in={open} timeout={1000}>
-                        <Box
-                          sx={{
-                            p: 1.25,
-                            borderRadius: 1.5,
-                            background:
-                              'linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(56, 142, 60, 0.1) 100%)',
-                            border: '1px solid',
-                            borderColor: 'success.light',
-                            height: '100%',
-                            transition: 'all 0.2s ease-in-out',
-                            '&:hover': {
-                              transform: 'translateY(-2px)',
-                              boxShadow: '0 4px 12px rgba(76, 175, 80, 0.15)'
-                            }
-                          }}
-                        >
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
-                            <Icon icon='tabler:circle-check' fontSize='0.875rem' style={{ color: '#4caf50' }} />
-                            <Typography variant='caption' sx={{ fontSize: '0.688rem', color: 'success.main' }}>
-                              Confirmare
-                            </Typography>
-                          </Box>
-                          <Typography
-                            variant='body2'
-                            sx={{ fontWeight: 600, color: 'success.main', fontSize: '0.813rem' }}
+                      {basicDetailsLoading && !payment.confirmedAt ? (
+                        <Skeleton variant='rectangular' width='100%' height={78} sx={{ borderRadius: 1.5 }} />
+                      ) : (
+                        <Zoom in={open} timeout={1000}>
+                          <Box
+                            sx={{
+                              p: 1.25,
+                              borderRadius: 1.5,
+                              background:
+                                'linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(56, 142, 60, 0.1) 100%)',
+                              border: '1px solid',
+                              borderColor: 'success.light',
+                              height: '100%',
+                              transition: 'all 0.2s ease-in-out',
+                              '&:hover': {
+                                transform: 'translateY(-2px)',
+                                boxShadow: '0 4px 12px rgba(76, 175, 80, 0.15)'
+                              }
+                            }}
                           >
-                            {payment.confirmedAt ? formatDate(payment.confirmedAt) : 'N/A'}
-                          </Typography>
-                          {payment.confirmedAt && (
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
+                              <Icon icon='tabler:circle-check' fontSize='0.875rem' style={{ color: '#4caf50' }} />
+                              <Typography variant='caption' sx={{ fontSize: '0.688rem', color: 'success.main' }}>
+                                Confirmare
+                              </Typography>
+                            </Box>
                             <Typography
-                              variant='caption'
-                              sx={{ color: 'success.main', fontSize: '0.625rem', opacity: 0.8 }}
+                              variant='body2'
+                              sx={{ fontWeight: 600, color: 'success.main', fontSize: '0.813rem' }}
                             >
-                              {formatTime(payment.confirmedAt)}
+                              {enhancedPayment.confirmedAt ? formatDate(enhancedPayment.confirmedAt) : 'N/A'}
                             </Typography>
-                          )}
-                        </Box>
-                      </Zoom>
+                            {enhancedPayment.confirmedAt && (
+                              <Typography
+                                variant='caption'
+                                sx={{ color: 'success.main', fontSize: '0.625rem', opacity: 0.8 }}
+                              >
+                                {formatTime(enhancedPayment.confirmedAt)}
+                              </Typography>
+                            )}
+                          </Box>
+                        </Zoom>
+                      )}
                     </Grid>
 
                     <Grid item xs={12}>
@@ -498,321 +543,414 @@ const PaymentDetailCard = ({ payment, onClose, getUserName, getUserAvatar }: Pay
                     </Grid>
 
                     {/* Confirmation Details */}
-                    {detailsLoading && (
-                      <Grid item xs={12}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                          <CircularProgress size={16} />
-                          <Typography variant='caption' color='text.secondary'>
-                            Se încarcă detalii...
-                          </Typography>
-                        </Box>
-                        <Skeleton variant='rectangular' width='100%' height={60} sx={{ borderRadius: 1.5, mb: 1 }} />
-                        <Skeleton variant='rectangular' width='100%' height={100} sx={{ borderRadius: 1.5 }} />
-                      </Grid>
-                    )}
-
-                    {!detailsLoading && confirmationResult && (
+                    {confirmationResultLoading ? (
                       <>
-                        {/* Wallet Balance - Compact */}
-                        {(confirmationResult.walletBalanceBefore !== undefined ||
-                          confirmationResult.walletBalanceAfter !== undefined) && (
-                          <Grid item xs={12}>
-                            <Slide direction='up' in timeout={800}>
-                              <Box>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
-                                  <Icon icon='tabler:wallet' fontSize='1rem' style={{ opacity: 0.6 }} />
-                                  <Typography variant='body2' sx={{ fontWeight: 600, fontSize: '0.875rem' }}>
-                                    Sold Portofel
-                                  </Typography>
-                                </Box>
+                        {/* Wallet Balance Skeleton */}
+                        <Grid item xs={12}>
+                          <Box>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+                              <Skeleton variant='circular' width={16} height={16} />
+                              <Skeleton variant='text' width={100} height={20} />
+                            </Box>
+                            <Box
+                              sx={{
+                                display: 'flex',
+                                gap: 1,
+                                p: 1.5,
+                                background:
+                                  'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)',
+                                borderRadius: 1.5,
+                                border: '1px solid',
+                                borderColor: 'divider'
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  flex: 1,
+                                  textAlign: 'center',
+                                  p: 1,
+                                  borderRadius: 1,
+                                  bgcolor: 'background.paper'
+                                }}
+                              >
+                                <Skeleton variant='text' width={60} height={16} sx={{ mx: 'auto', mb: 0.5 }} />
+                                <Skeleton variant='text' width={80} height={28} sx={{ mx: 'auto' }} />
+                              </Box>
+                              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                <Skeleton variant='circular' width={20} height={20} />
+                              </Box>
+                              <Box
+                                sx={{
+                                  flex: 1,
+                                  textAlign: 'center',
+                                  p: 1,
+                                  borderRadius: 1,
+                                  bgcolor: 'success.lighter',
+                                  border: '1px solid',
+                                  borderColor: 'success.light'
+                                }}
+                              >
+                                <Skeleton variant='text' width={60} height={16} sx={{ mx: 'auto', mb: 0.5 }} />
+                                <Skeleton variant='text' width={80} height={28} sx={{ mx: 'auto' }} />
+                              </Box>
+                            </Box>
+                          </Box>
+                        </Grid>
+
+                        {/* Allocations Skeleton */}
+                        <Grid item xs={12}>
+                          <Box>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+                              <Skeleton variant='circular' width={16} height={16} />
+                              <Skeleton variant='text' width={80} height={20} />
+                              <Skeleton variant='rounded' width={24} height={18} sx={{ borderRadius: 2 }} />
+                            </Box>
+                            <Box
+                              sx={{
+                                borderRadius: 1.5,
+                                border: '1px solid',
+                                borderColor: 'divider',
+                                overflow: 'hidden'
+                              }}
+                            >
+                              {[1, 2, 3].map((item, index) => (
                                 <Box
+                                  key={item}
                                   sx={{
                                     display: 'flex',
-                                    gap: 1,
-                                    p: 1.5,
-                                    background:
-                                      'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)',
-                                    borderRadius: 1.5,
-                                    border: '1px solid',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    p: 1.25,
+                                    bgcolor: index % 2 === 0 ? 'background.paper' : 'action.hover',
+                                    borderBottom: index < 2 ? '1px solid' : 'none',
                                     borderColor: 'divider'
                                   }}
                                 >
-                                  <Box
-                                    sx={{
-                                      flex: 1,
-                                      textAlign: 'center',
-                                      p: 1,
-                                      borderRadius: 1,
-                                      bgcolor: 'background.paper'
-                                    }}
-                                  >
-                                    <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.688rem' }}>
-                                      Înainte
-                                    </Typography>
-                                    <Typography variant='h6' sx={{ fontWeight: 700, fontSize: '1rem' }}>
-                                      {confirmationResult.walletBalanceBefore?.toFixed(2) || '0.00'}
-                                    </Typography>
-                                  </Box>
-                                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                    <Icon icon='tabler:arrow-right' fontSize='1.25rem' style={{ opacity: 0.4 }} />
-                                  </Box>
-                                  <Box
-                                    sx={{
-                                      flex: 1,
-                                      textAlign: 'center',
-                                      p: 1,
-                                      borderRadius: 1,
-                                      bgcolor: 'success.lighter',
-                                      border: '1px solid',
-                                      borderColor: 'success.light'
-                                    }}
-                                  >
-                                    <Typography variant='caption' sx={{ fontSize: '0.688rem', color: 'success.main' }}>
-                                      După
-                                    </Typography>
-                                    <Typography
-                                      variant='h6'
-                                      sx={{ fontWeight: 700, color: 'success.main', fontSize: '1rem' }}
-                                    >
-                                      {confirmationResult.walletBalanceAfter?.toFixed(2) || '0.00'}
-                                    </Typography>
-                                  </Box>
-                                </Box>
-                              </Box>
-                            </Slide>
-                          </Grid>
-                        )}
-
-                        {/* Allocations - Slim List */}
-                        {confirmationResult.allocations && confirmationResult.allocations.length > 0 && (
-                          <Grid item xs={12}>
-                            <Slide direction='up' in timeout={900}>
-                              <Box>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
-                                  <Icon icon='tabler:receipt' fontSize='1rem' style={{ opacity: 0.6 }} />
-                                  <Typography variant='body2' sx={{ fontWeight: 600, fontSize: '0.875rem' }}>
-                                    Alocări
-                                  </Typography>
-                                  <Chip
-                                    label={confirmationResult.allocations.length}
-                                    size='small'
-                                    sx={{
-                                      height: 18,
-                                      fontSize: '0.688rem',
-                                      fontWeight: 600,
-                                      bgcolor: 'primary.main',
-                                      color: 'white',
-                                      '& .MuiChip-label': { px: 0.75 }
-                                    }}
-                                  />
-                                </Box>
-                                <Box
-                                  sx={{
-                                    borderRadius: 1.5,
-                                    border: '1px solid',
-                                    borderColor: 'divider',
-                                    overflow: 'hidden'
-                                  }}
-                                >
-                                  {confirmationResult.allocations.map((allocation, index) => (
-                                    <Zoom
-                                      key={index}
-                                      in
-                                      timeout={1000 + index * 80}
-                                      style={{ transitionDelay: `${index * 40}ms` }}
-                                    >
-                                      <Box
-                                        sx={{
-                                          display: 'flex',
-                                          justifyContent: 'space-between',
-                                          alignItems: 'center',
-                                          p: 1.25,
-                                          bgcolor: index % 2 === 0 ? 'background.paper' : 'action.hover',
-                                          borderBottom:
-                                            index < confirmationResult.allocations!.length - 1 ? '1px solid' : 'none',
-                                          borderColor: 'divider',
-                                          transition: 'all 0.2s ease-in-out',
-                                          '&:hover': {
-                                            bgcolor: 'action.selected',
-                                            transform: 'translateX(4px)'
-                                          }
-                                        }}
-                                      >
-                                        <Box sx={{ flex: 1, minWidth: 0, mr: 1 }}>
-                                          <Typography
-                                            variant='body2'
-                                            sx={{
-                                              fontWeight: 600,
-                                              fontSize: '0.813rem',
-                                              overflow: 'hidden',
-                                              textOverflow: 'ellipsis',
-                                              whiteSpace: 'nowrap',
-                                              mb: 0.25
-                                            }}
-                                          >
-                                            {allocation.eventTitle || 'Event'}
-                                          </Typography>
-                                          {allocation.eventDate && (
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                              <Icon
-                                                icon='tabler:calendar-event'
-                                                fontSize='0.75rem'
-                                                style={{ opacity: 0.6 }}
-                                              />
-                                              <Typography
-                                                variant='caption'
-                                                color='text.secondary'
-                                                sx={{ fontSize: '0.688rem' }}
-                                              >
-                                                {formatDate(allocation.eventDate)}
-                                              </Typography>
-                                            </Box>
-                                          )}
-                                        </Box>
-                                        <Typography
-                                          variant='body2'
-                                          sx={{
-                                            fontWeight: 700,
-                                            color: 'primary.main',
-                                            fontSize: '0.875rem',
-                                            flexShrink: 0
-                                          }}
-                                        >
-                                          {allocation.allocatedAmount?.toFixed(2)}{' '}
-                                          {confirmationResult.currency || 'RON'}
-                                        </Typography>
-                                      </Box>
-                                    </Zoom>
-                                  ))}
-
-                                  {/* Total - Highlighted Footer */}
-                                  {confirmationResult.totalAllocated !== undefined && (
-                                    <Box
-                                      sx={{
-                                        display: 'flex',
-                                        justifyContent: 'space-between',
-                                        alignItems: 'center',
-                                        p: 1.5,
-                                        bgcolor: 'action.selected',
-                                        borderTop: '2px solid',
-                                        borderColor: 'primary.main'
-                                      }}
-                                    >
-                                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                        <Icon icon='tabler:sum' fontSize='1rem' />
-                                        <Typography variant='body2' sx={{ fontWeight: 700, fontSize: '0.875rem' }}>
-                                          Total Alocat
-                                        </Typography>
-                                      </Box>
-                                      <Typography
-                                        variant='h6'
-                                        sx={{
-                                          fontWeight: 800,
-                                          color: 'primary.main',
-                                          fontSize: '1rem'
-                                        }}
-                                      >
-                                        {confirmationResult.totalAllocated.toFixed(2)}{' '}
-                                        {confirmationResult.currency || 'RON'}
-                                      </Typography>
+                                  <Box sx={{ flex: 1, minWidth: 0, mr: 1 }}>
+                                    <Skeleton variant='text' width='70%' height={20} sx={{ mb: 0.5 }} />
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                      <Skeleton variant='circular' width={12} height={12} />
+                                      <Skeleton variant='text' width={100} height={16} />
                                     </Box>
-                                  )}
+                                  </Box>
+                                  <Skeleton variant='text' width={60} height={20} />
                                 </Box>
-                              </Box>
-                            </Slide>
-                          </Grid>
-                        )}
-
-                        {/* Invoice - Compact */}
-                        {confirmationResult.invoice && (
-                          <Grid item xs={12}>
-                            <Fade in timeout={1000}>
-                              <Box>
-                                <Divider sx={{ my: 1 }} />
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
-                                  <Icon icon='tabler:file-invoice' fontSize='1rem' style={{ opacity: 0.6 }} />
-                                  <Typography variant='body2' sx={{ fontWeight: 600, fontSize: '0.875rem' }}>
-                                    Factură
-                                  </Typography>
-                                </Box>
-                                <Box
-                                  sx={{
-                                    p: 1.5,
-                                    bgcolor: 'action.hover',
-                                    borderRadius: 1.5,
-                                    border: '1px solid',
-                                    borderColor: 'divider'
-                                  }}
-                                >
+                              ))}
+                            </Box>
+                          </Box>
+                        </Grid>
+                      </>
+                    ) : (
+                      confirmationResult && (
+                        <>
+                          {/* Wallet Balance - Compact */}
+                          {(confirmationResult.walletBalanceBefore !== undefined ||
+                            confirmationResult.walletBalanceAfter !== undefined) && (
+                            <Grid item xs={12}>
+                              <Slide direction='up' in timeout={800}>
+                                <Box>
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+                                    <Icon icon='tabler:wallet' fontSize='1rem' style={{ opacity: 0.6 }} />
+                                    <Typography variant='body2' sx={{ fontWeight: 600, fontSize: '0.875rem' }}>
+                                      Sold Portofel
+                                    </Typography>
+                                  </Box>
                                   <Box
                                     sx={{
                                       display: 'flex',
-                                      justifyContent: 'space-between',
-                                      alignItems: 'center',
-                                      mb: 1
+                                      gap: 1,
+                                      p: 1.5,
+                                      background:
+                                        'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)',
+                                      borderRadius: 1.5,
+                                      border: '1px solid',
+                                      borderColor: 'divider'
                                     }}
                                   >
-                                    <Typography variant='body2' sx={{ fontWeight: 600, fontSize: '0.813rem' }}>
-                                      {confirmationResult.invoice.number || `#${confirmationResult.invoice.id}`}
-                                    </Typography>
-                                    <Chip
-                                      label={confirmationResult.invoice.status || 'Emis'}
-                                      size='small'
-                                      color='success'
-                                      sx={{ height: 20, fontSize: '0.688rem' }}
-                                    />
-                                  </Box>
-                                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
-                                    {confirmationResult.invoice.issueDate && (
+                                    <Box
+                                      sx={{
+                                        flex: 1,
+                                        textAlign: 'center',
+                                        p: 1,
+                                        borderRadius: 1,
+                                        bgcolor: 'background.paper'
+                                      }}
+                                    >
                                       <Typography
                                         variant='caption'
                                         color='text.secondary'
                                         sx={{ fontSize: '0.688rem' }}
                                       >
-                                        {formatDate(confirmationResult.invoice.issueDate)}
+                                        Înainte
                                       </Typography>
-                                    )}
-                                    {confirmationResult.invoice.totalAmount !== undefined && (
-                                      <Typography variant='body2' sx={{ fontWeight: 600, fontSize: '0.813rem' }}>
-                                        {confirmationResult.invoice.totalAmount.toFixed(2)}{' '}
-                                        {confirmationResult.invoice.currencyCode || 'RON'}
+                                      <Typography variant='h6' sx={{ fontWeight: 700, fontSize: '1rem' }}>
+                                        {confirmationResult.walletBalanceBefore?.toFixed(2) || '0.00'}
                                       </Typography>
-                                    )}
-                                  </Box>
-                                  {confirmationResult.invoice.id && (
-                                    <Button
-                                      fullWidth
-                                      variant='contained'
-                                      size='small'
-                                      startIcon={
-                                        downloadingInvoice ? (
-                                          <CircularProgress size={14} color='inherit' />
-                                        ) : (
-                                          <Icon icon='tabler:download' fontSize='1rem' />
-                                        )
-                                      }
-                                      onClick={() => handleDownloadInvoice(confirmationResult.invoice!.id!)}
-                                      disabled={downloadingInvoice}
+                                    </Box>
+                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                      <Icon icon='tabler:arrow-right' fontSize='1.25rem' style={{ opacity: 0.4 }} />
+                                    </Box>
+                                    <Box
                                       sx={{
-                                        py: 0.75,
-                                        fontSize: '0.813rem',
-                                        fontWeight: 600,
-                                        transition: 'all 0.2s ease-in-out',
-                                        '&:hover': {
-                                          transform: 'translateY(-2px)',
-                                          boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)'
-                                        }
+                                        flex: 1,
+                                        textAlign: 'center',
+                                        p: 1,
+                                        borderRadius: 1,
+                                        bgcolor: 'success.lighter',
+                                        border: '1px solid',
+                                        borderColor: 'success.light'
                                       }}
                                     >
-                                      {downloadingInvoice ? 'Se descarcă...' : 'Descarcă Factură'}
-                                    </Button>
-                                  )}
+                                      <Typography
+                                        variant='caption'
+                                        sx={{ fontSize: '0.688rem', color: 'success.main' }}
+                                      >
+                                        După
+                                      </Typography>
+                                      <Typography
+                                        variant='h6'
+                                        sx={{ fontWeight: 700, color: 'success.main', fontSize: '1rem' }}
+                                      >
+                                        {confirmationResult.walletBalanceAfter?.toFixed(2) || '0.00'}
+                                      </Typography>
+                                    </Box>
+                                  </Box>
                                 </Box>
-                              </Box>
-                            </Fade>
-                          </Grid>
-                        )}
-                      </>
+                              </Slide>
+                            </Grid>
+                          )}
+
+                          {/* Allocations - Slim List */}
+                          {confirmationResult.allocations && confirmationResult.allocations.length > 0 && (
+                            <Grid item xs={12}>
+                              <Slide direction='up' in timeout={900}>
+                                <Box>
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+                                    <Icon icon='tabler:receipt' fontSize='1rem' style={{ opacity: 0.6 }} />
+                                    <Typography variant='body2' sx={{ fontWeight: 600, fontSize: '0.875rem' }}>
+                                      Alocări
+                                    </Typography>
+                                    <Chip
+                                      label={confirmationResult.allocations.length}
+                                      size='small'
+                                      sx={{
+                                        height: 18,
+                                        fontSize: '0.688rem',
+                                        fontWeight: 600,
+                                        bgcolor: 'primary.main',
+                                        color: 'white',
+                                        '& .MuiChip-label': { px: 0.75 }
+                                      }}
+                                    />
+                                  </Box>
+                                  <Box
+                                    sx={{
+                                      borderRadius: 1.5,
+                                      border: '1px solid',
+                                      borderColor: 'divider',
+                                      overflow: 'hidden'
+                                    }}
+                                  >
+                                    {confirmationResult.allocations.map((allocation, index) => (
+                                      <Zoom
+                                        key={index}
+                                        in
+                                        timeout={1000 + index * 80}
+                                        style={{ transitionDelay: `${index * 40}ms` }}
+                                      >
+                                        <Box
+                                          sx={{
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center',
+                                            p: 1.25,
+                                            bgcolor: index % 2 === 0 ? 'background.paper' : 'action.hover',
+                                            borderBottom:
+                                              index < confirmationResult.allocations!.length - 1 ? '1px solid' : 'none',
+                                            borderColor: 'divider',
+                                            transition: 'all 0.2s ease-in-out',
+                                            '&:hover': {
+                                              bgcolor: 'action.selected',
+                                              transform: 'translateX(4px)'
+                                            }
+                                          }}
+                                        >
+                                          <Box sx={{ flex: 1, minWidth: 0, mr: 1 }}>
+                                            <Typography
+                                              variant='body2'
+                                              sx={{
+                                                fontWeight: 600,
+                                                fontSize: '0.813rem',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                whiteSpace: 'nowrap',
+                                                mb: 0.25
+                                              }}
+                                            >
+                                              {allocation.eventTitle || 'Event'}
+                                            </Typography>
+                                            {allocation.eventDate && (
+                                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                <Icon
+                                                  icon='tabler:calendar-event'
+                                                  fontSize='0.75rem'
+                                                  style={{ opacity: 0.6 }}
+                                                />
+                                                <Typography
+                                                  variant='caption'
+                                                  color='text.secondary'
+                                                  sx={{ fontSize: '0.688rem' }}
+                                                >
+                                                  {formatDate(allocation.eventDate)}
+                                                </Typography>
+                                              </Box>
+                                            )}
+                                          </Box>
+                                          <Typography
+                                            variant='body2'
+                                            sx={{
+                                              fontWeight: 700,
+                                              color: 'primary.main',
+                                              fontSize: '0.875rem',
+                                              flexShrink: 0
+                                            }}
+                                          >
+                                            {allocation.allocatedAmount?.toFixed(2)}{' '}
+                                            {confirmationResult.currency || 'RON'}
+                                          </Typography>
+                                        </Box>
+                                      </Zoom>
+                                    ))}
+
+                                    {/* Total - Highlighted Footer */}
+                                    {confirmationResult.totalAllocated !== undefined && (
+                                      <Box
+                                        sx={{
+                                          display: 'flex',
+                                          justifyContent: 'space-between',
+                                          alignItems: 'center',
+                                          p: 1.5,
+                                          bgcolor: 'action.selected',
+                                          borderTop: '2px solid',
+                                          borderColor: 'primary.main'
+                                        }}
+                                      >
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                          <Icon icon='tabler:sum' fontSize='1rem' />
+                                          <Typography variant='body2' sx={{ fontWeight: 700, fontSize: '0.875rem' }}>
+                                            Total Alocat
+                                          </Typography>
+                                        </Box>
+                                        <Typography
+                                          variant='h6'
+                                          sx={{
+                                            fontWeight: 800,
+                                            color: 'primary.main',
+                                            fontSize: '1rem'
+                                          }}
+                                        >
+                                          {confirmationResult.totalAllocated.toFixed(2)}{' '}
+                                          {confirmationResult.currency || 'RON'}
+                                        </Typography>
+                                      </Box>
+                                    )}
+                                  </Box>
+                                </Box>
+                              </Slide>
+                            </Grid>
+                          )}
+
+                          {/* Invoice - Compact */}
+                          {confirmationResult.invoice && (
+                            <Grid item xs={12}>
+                              <Fade in timeout={1000}>
+                                <Box>
+                                  <Divider sx={{ my: 1 }} />
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+                                    <Icon icon='tabler:file-invoice' fontSize='1rem' style={{ opacity: 0.6 }} />
+                                    <Typography variant='body2' sx={{ fontWeight: 600, fontSize: '0.875rem' }}>
+                                      Factură
+                                    </Typography>
+                                  </Box>
+                                  <Box
+                                    sx={{
+                                      p: 1.5,
+                                      bgcolor: 'action.hover',
+                                      borderRadius: 1.5,
+                                      border: '1px solid',
+                                      borderColor: 'divider'
+                                    }}
+                                  >
+                                    <Box
+                                      sx={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        mb: 1
+                                      }}
+                                    >
+                                      <Typography variant='body2' sx={{ fontWeight: 600, fontSize: '0.813rem' }}>
+                                        {confirmationResult.invoice.number || `#${confirmationResult.invoice.id}`}
+                                      </Typography>
+                                      <Chip
+                                        label={confirmationResult.invoice.status || 'Emis'}
+                                        size='small'
+                                        color='success'
+                                        sx={{ height: 20, fontSize: '0.688rem' }}
+                                      />
+                                    </Box>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
+                                      {confirmationResult.invoice.issueDate && (
+                                        <Typography
+                                          variant='caption'
+                                          color='text.secondary'
+                                          sx={{ fontSize: '0.688rem' }}
+                                        >
+                                          {formatDate(confirmationResult.invoice.issueDate)}
+                                        </Typography>
+                                      )}
+                                      {confirmationResult.invoice.totalAmount !== undefined && (
+                                        <Typography variant='body2' sx={{ fontWeight: 600, fontSize: '0.813rem' }}>
+                                          {confirmationResult.invoice.totalAmount.toFixed(2)}{' '}
+                                          {confirmationResult.invoice.currencyCode || 'RON'}
+                                        </Typography>
+                                      )}
+                                    </Box>
+                                    {confirmationResult.invoice.id && (
+                                      <Button
+                                        fullWidth
+                                        variant='contained'
+                                        size='small'
+                                        startIcon={
+                                          downloadingInvoice ? (
+                                            <CircularProgress size={14} color='inherit' />
+                                          ) : (
+                                            <Icon icon='tabler:download' fontSize='1rem' />
+                                          )
+                                        }
+                                        onClick={() => handleDownloadInvoice(confirmationResult.invoice!.id!)}
+                                        disabled={downloadingInvoice}
+                                        sx={{
+                                          py: 0.75,
+                                          fontSize: '0.813rem',
+                                          fontWeight: 600,
+                                          transition: 'all 0.2s ease-in-out',
+                                          '&:hover': {
+                                            transform: 'translateY(-2px)',
+                                            boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)'
+                                          }
+                                        }}
+                                      >
+                                        {downloadingInvoice ? 'Se descarcă...' : 'Descarcă Factură'}
+                                      </Button>
+                                    )}
+                                  </Box>
+                                </Box>
+                              </Fade>
+                            </Grid>
+                          )}
+                        </>
+                      )
                     )}
                   </Grid>
                 </Box>

@@ -2691,6 +2691,12 @@ export interface PaymentConfirmationResultDTO {
    * @type {string}
    * @memberof PaymentConfirmationResultDTO
    */
+  creation?: string
+  /**
+   *
+   * @type {string}
+   * @memberof PaymentConfirmationResultDTO
+   */
   confirmedBy?: string
   /**
    *
@@ -2741,6 +2747,12 @@ export interface PaymentConfirmationResultDTO {
    *
    **/
   invoice?: InvoiceDTO
+  /**
+   *
+   * @type {string}
+   * @memberof BankTransferPayment
+   */
+  referenceCode?: string
 }
 /**
  *
