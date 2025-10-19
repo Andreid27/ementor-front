@@ -141,7 +141,7 @@ const PaymentDetailCard = ({ payment, onClose, getUserName, getUserAvatar }: Pay
         creation: prev.creation || payment.creation || response.data.creation,
         confirmedAt: prev.confirmedAt || response.data.confirmedAt,
         status: prev.status || 'CONFIRMED', // If confirmed, status is confirmed
-        referenceCode: prev.referenceCode || payment.id // Use payment ID as fallback
+        referenceCode: prev.referenceCode || response.data.referenceCode || payment.id
       }))
     } catch (error) {
       console.error('Error fetching confirmation details:', error)
