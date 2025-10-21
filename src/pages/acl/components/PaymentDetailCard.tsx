@@ -1,6 +1,14 @@
 // React Imports
 import { useState, useEffect } from 'react'
 
+// Redux Imports
+import { useDispatch, useSelector } from 'react-redux'
+import {
+  fetchProfessorProfile as fetchProfessorProfileAction,
+  selectProfessorProfile,
+  selectProfessorProfileLoading
+} from 'src/store/apps/user'
+
 // MUI Imports
 import {
   Box,
@@ -33,6 +41,11 @@ import type { BankTransferPaymentDTO } from 'src/generated/profile-service'
 // API Imports
 import { profileServiceClient } from 'src/services'
 
+// Utils
+import extractProfilePicture from 'src/@core/axios/profile-picture-extractor'
+import profilePictureDownloader from 'src/@core/axios/profile-picture-downloader'
+import EmentorAvatar, { UserType } from 'src/@core/components/ementor-avatar'
+
 interface EnhancedPaymentData extends BankTransferPaymentDTO {
   avatar?: string | null
   payerName?: string
@@ -43,9 +56,18 @@ interface PaymentDetailCardProps {
   onClose: () => void
   getUserName: (userId: string) => string
   getUserAvatar: (userId: string) => string | null
+  userRole?: 'student' | 'professor'
 }
 
-const PaymentDetailCard = ({ payment, onClose, getUserName, getUserAvatar }: PaymentDetailCardProps) => {
+const PaymentDetailCard = ({
+  payment,
+  onClose,
+  getUserName,
+  getUserAvatar,
+  userRole = 'professor'
+}: PaymentDetailCardProps) => {
+  const dispatch = useDispatch()
+
   // States
   const [basicDetailsLoading, setBasicDetailsLoading] = useState(
     !payment.creation || !payment.confirmedAt || !payment.status || !payment.referenceCode
@@ -54,7 +76,10 @@ const PaymentDetailCard = ({ payment, onClose, getUserName, getUserAvatar }: Pay
   const [confirmationResult, setConfirmationResult] = useState<PaymentConfirmationResultDTO | null>(null)
   const [downloadingInvoice, setDownloadingInvoice] = useState(false)
   const [open, setOpen] = useState(false)
+  const [professorUserId, setProfessorUserId] = useState<string | null>(null)
 
+  // Redux selectors - get professor profile from store
+  const professorProfile = useSelector(selectProfessorProfile(professorUserId || ''))
   // Enhanced payment data with API fallback
   const [enhancedPayment, setEnhancedPayment] = useState({
     creation: payment.creation,
@@ -119,6 +144,30 @@ const PaymentDetailCard = ({ payment, onClose, getUserName, getUserAvatar }: Pay
     return colorMap[status] || 'default'
   }
 
+  // Get display name based on user role
+  const getDisplayName = () => {
+    if (userRole === 'student' && professorProfile) {
+      // Student view: show professor name
+      return (
+        professorProfile.fullName ||
+        professorProfile.user?.firstName + ' ' + professorProfile.user?.lastName ||
+        'Professor'
+      )
+    } else {
+      // Professor view: show payer name
+      return payment.payerId ? getUserName(payment.payerId) : 'Unknown'
+    }
+  }
+
+  // Get display user ID based on user role
+  const getDisplayUserId = () => {
+    if (userRole === 'student' && professorUserId) {
+      return professorUserId
+    } else {
+      return payment.payerId || 'N/A'
+    }
+  }
+
   // Fetch confirmation details
   const fetchConfirmationDetails = async () => {
     if (!payment.id) return
@@ -135,6 +184,12 @@ const PaymentDetailCard = ({ payment, onClose, getUserName, getUserAvatar }: Pay
     try {
       const response = await profileServiceClient.payment.getConfirmationResult({ paymentId: payment.id })
       setConfirmationResult(response.data)
+
+      // If user is student and we have confirmedBy, set the professor userId
+      if (userRole === 'student' && response.data.confirmedBy) {
+        setProfessorUserId(response.data.confirmedBy)
+        // The useEffect will handle fetching if not cached
+      }
 
       // Update enhanced payment data with API response if missing from props
       setEnhancedPayment(prev => ({
@@ -247,9 +302,11 @@ const PaymentDetailCard = ({ payment, onClose, getUserName, getUserAvatar }: Pay
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, position: 'relative', zIndex: 1 }}>
                   <Zoom in={open} timeout={700}>
-                    <Avatar
-                      src={payment.payerId ? getUserAvatar(payment.payerId) || undefined : undefined}
-                      alt={payment.payerId ? getUserName(payment.payerId) : ''}
+                    <EmentorAvatar
+                      userId={userRole === 'student' ? professorUserId : null}
+                      userType={userRole === 'student' ? UserType.PROFESSOR : UserType.STUDENT}
+                      avatarSrc={userRole === 'student' ? undefined : getUserAvatar(payment.payerId || '')}
+                      alt={getDisplayName()}
                       sx={{
                         width: 48,
                         height: 48,
@@ -275,7 +332,7 @@ const PaymentDetailCard = ({ payment, onClose, getUserName, getUserAvatar }: Pay
                         whiteSpace: 'nowrap'
                       }}
                     >
-                      {payment.payerId ? getUserName(payment.payerId) : 'Unknown'}
+                      {getDisplayName()}
                     </Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.25 }}>
                       <Icon icon='tabler:id' fontSize='0.75rem' style={{ color: 'rgba(255,255,255,0.85)' }} />
@@ -289,7 +346,7 @@ const PaymentDetailCard = ({ payment, onClose, getUserName, getUserAvatar }: Pay
                           whiteSpace: 'nowrap'
                         }}
                       >
-                        {payment.payerId || 'N/A'}
+                        {getDisplayUserId()}
                       </Typography>
                     </Box>
                   </Box>

@@ -68,7 +68,7 @@ const CrmDashboard = () => {
           <CrmActiveProjects />
         </Grid>
         <Grid item xs={12} md={6}>
-          <CrmLastTransaction />
+          <CrmLastTransaction userRole='student' />
         </Grid>
         <Grid item xs={12} md={6}>
           <CrmActivityTimeline />

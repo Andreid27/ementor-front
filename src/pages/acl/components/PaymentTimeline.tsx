@@ -24,6 +24,7 @@ import { BankTransferPaymentDTO, BankTransferPaymentDTOStatusEnum } from 'src/ge
 import { profileServiceClient } from 'src/services'
 import profilePictureDownloader from 'src/@core/axios/profile-picture-downloader'
 import extractProfilePicture from 'src/@core/axios/profile-picture-extractor'
+import EmentorAvatar, { UserType } from 'src/@core/components/ementor-avatar'
 
 // Define a user interface that matches the actual user data structure
 interface User {
@@ -281,8 +282,9 @@ const PaymentTimeline: React.FC<PaymentTimelineProps> = ({ users, loading, onPay
 
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Avatar
-                          src={payment.avatar || undefined}
+                        <EmentorAvatar
+                          userType={UserType.STUDENT}
+                          avatarSrc={payment.avatar || undefined}
                           sx={{ mr: 3, width: 38, height: 38, cursor: 'pointer' }}
                           onClick={() => payment.payerId && handleAvatarClick(payment.payerId)}
                         />

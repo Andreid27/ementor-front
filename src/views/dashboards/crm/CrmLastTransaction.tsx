@@ -465,6 +465,7 @@ const CrmLastTransaction: React.FC<CrmLastTransactionProps> = ({
             onClose={handleClosePaymentDetail}
             getUserName={getUserName}
             getUserAvatar={getUserAvatar}
+            userRole={userRole}
           />
         )}
       </>
@@ -481,6 +482,7 @@ const CrmLastTransaction: React.FC<CrmLastTransactionProps> = ({
           onClose={handleClosePaymentDetail}
           getUserName={getUserName}
           getUserAvatar={getUserAvatar}
+          userRole={userRole}
         />
       )}
     </>

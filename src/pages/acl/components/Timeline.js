@@ -18,6 +18,7 @@ import timeAgo from 'src/@core/utils/time-ago'
 import timeBetween from 'src/@core/utils/time-between'
 import { CircularProgress } from '@mui/material'
 import UserViewDrawer from 'src/pages/student-profile/components/UserViewDrawer'
+import EmentorAvatar, { UserType } from 'src/@core/components/ementor-avatar'
 
 const Timeline = styled(MuiTimeline)({
   '& .MuiTimelineItem-root': {
@@ -40,11 +41,11 @@ const CardHeader = styled(MuiCardHeader)(({ theme }) => ({
   }
 }))
 
-const CardActivityTimeline = (props) => {
+const CardActivityTimeline = props => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [selectedStudentId, setSelectedStudentId] = useState(null)
 
-  const handleAvatarClick = (userId) => {
+  const handleAvatarClick = userId => {
     setSelectedStudentId(userId) // Set userId first
   }
 
@@ -68,8 +69,8 @@ const CardActivityTimeline = (props) => {
     return color
   }
 
-  const getStudentName = (quizStudent) => {
-    const student = props.users.find((user) => user.id === quizStudent.studentId)
+  const getStudentName = quizStudent => {
+    const student = props.users.find(user => user.id === quizStudent.studentId)
 
     return `${student.firstName} ${student.lastName}`
   }
@@ -114,7 +115,7 @@ const CardActivityTimeline = (props) => {
                     />
                     <TimelineConnector />
                   </TimelineSeparator>
-                  <TimelineContent sx={{ pt: 0, mt: 0, mb: (theme) => `${theme.spacing(2)} !important` }}>
+                  <TimelineContent sx={{ pt: 0, mt: 0, mb: theme => `${theme.spacing(2)} !important` }}>
                     <Box
                       sx={{
                         mb: 0.5,
@@ -166,7 +167,7 @@ const CardActivityTimeline = (props) => {
           )}
         </CardContent>
       </Card>
-      <UserViewDrawer open={isDrawerOpen} onClose={handleDrawerClose} userId={selectedStudentId} tab="account" />
+      <UserViewDrawer open={isDrawerOpen} onClose={handleDrawerClose} userId={selectedStudentId} tab='account' />
     </>
   )
 }
