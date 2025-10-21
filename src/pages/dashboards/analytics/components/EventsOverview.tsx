@@ -254,7 +254,6 @@ const EventsOverview: React.FC = () => {
 
   return (
     <Card>
-      <CardHeader title='Evenimente' subheader='Sesiuni recente și viitoare' />
       <CardContent sx={{ p: 0 }}>
         {loading ? (
           <>
@@ -302,8 +301,8 @@ const EventsOverview: React.FC = () => {
             {/* Upcoming Events */}
             {upcomingEvents.length > 0 && (
               <>
-                <Box sx={{ px: 3, pt: 2, pb: 1 }}>
-                  <Typography variant='subtitle2' color='primary' fontWeight={600}>
+                <Box sx={{ px: 3, pt: 4, pb: 3 }}>
+                  <Typography variant='subtitle1' color='primary' fontWeight={600}>
                     Evenimente viitoare
                   </Typography>
                 </Box>

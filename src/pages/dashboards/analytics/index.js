@@ -22,7 +22,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { fetchData, selectDashboardData } from 'src/store/apps/dashboard'
 import { fetchNotifications } from 'src/store/apps/notifications'
 import StudentStatsQuestions from './components/StudentStatsQuestions'
-import { CircularProgress } from '@mui/material'
+import { Box, CircularProgress } from '@mui/material'
 import { useRouter } from 'next/router'
 import LastTestResults from './components/LastTestResults'
 import LessonStatsOverall from './components/LessonStatsOverall'
@@ -81,7 +81,9 @@ const AnalyticsDashboard = () => {
                 <StudentStatsQuestions questions={quizServiceData.questions} />
               </Grid>
               <Grid item xs={12} md={6}>
-                <LastTestResults direction={'ltr'} data={quizServiceData} />
+                <Box sx={{ mt: -8 }}>
+                  <LastTestResults direction={'ltr'} data={quizServiceData} />
+                </Box>
               </Grid>
               <Grid item xs={12} md={9}>
                 <CrmLastTransaction />
