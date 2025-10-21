@@ -27,7 +27,7 @@ import { useRouter } from 'next/router'
 import LastTestResults from './components/LastTestResults'
 import LessonStatsOverall from './components/LessonStatsOverall'
 import CrmLastTransaction from 'src/views/dashboards/crm/CrmLastTransaction'
-import InvoicesDownload from './components/InvoicesDownload'
+import EventsOverview from './components/EventsOverview'
 
 const AnalyticsDashboard = () => {
   const dispatch = useDispatch()
@@ -87,7 +87,7 @@ const AnalyticsDashboard = () => {
                 <CrmLastTransaction />
               </Grid>
               <Grid item xs={12} md={3}>
-                <InvoicesDownload />
+                <EventsOverview />
               </Grid>
             </>
           ) : (
