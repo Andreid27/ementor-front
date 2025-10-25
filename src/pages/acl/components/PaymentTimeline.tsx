@@ -4,7 +4,7 @@ import Card from '@mui/material/Card'
 import Avatar from '@mui/material/Avatar'
 import { Button } from '@mui/material'
 import Chip from '@mui/material/Chip'
-import { styled } from '@mui/material/styles'
+import { styled, keyframes, alpha } from '@mui/material/styles'
 import TimelineDot from '@mui/lab/TimelineDot'
 import TimelineItem from '@mui/lab/TimelineItem'
 import Typography from '@mui/material/Typography'
@@ -14,7 +14,7 @@ import TimelineSeparator from '@mui/lab/TimelineSeparator'
 import TimelineConnector from '@mui/lab/TimelineConnector'
 import MuiTimeline from '@mui/lab/Timeline'
 import MuiCardHeader from '@mui/material/CardHeader'
-import { CircularProgress } from '@mui/material'
+import Skeleton from '@mui/material/Skeleton'
 import Icon from 'src/@core/components/icon'
 import OptionsMenu from 'src/@core/components/option-menu'
 import timeAgo from 'src/@core/utils/time-ago'
@@ -53,6 +53,148 @@ const CardHeader = styled(MuiCardHeader)(({ theme }) => ({
     [theme.breakpoints.up('sm')]: {
       fontSize: '1.25rem'
     }
+  }
+}))
+
+// Aggressive "ticking bomb" pulse - dot throbs and sends out radar-like rings
+const dotThrob = keyframes`
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.3);
+  }
+`
+
+const ringPulse = keyframes`
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 0.9;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2.8);
+    opacity: 0;
+  }
+`
+
+const ringPulseSecondary = keyframes`
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 0.9;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(3.5);
+    opacity: 0;
+  }
+`
+
+// Pulsing timeline dot with aggressive attention-grabbing "ticking bomb" effect
+const PulsingTimelineDot = styled(TimelineDot, {
+  shouldForwardProp: prop => prop !== 'dotcolor'
+})<{ dotcolor?: string }>(({ theme, dotcolor }) => {
+  const bg = dotcolor || theme.palette.info.main
+  const glowColor = alpha(bg as string, 0.5)
+  const ringColor = alpha(bg as string, 0.7)
+
+  return {
+    position: 'relative',
+    width: 38,
+    height: 38,
+    minWidth: 38,
+    border: `3px solid ${theme.palette.background.paper}`,
+    backgroundColor: bg,
+    boxShadow: `0 0 14px ${alpha(bg as string, 0.45)}`,
+    // run the throb once on mount, then stop (returns to scale(1) at 100%)
+    animation: `${dotThrob} 1.2s ease-in-out 1`,
+    zIndex: 1,
+    '&::before, &::after': {
+      content: '""',
+      position: 'absolute',
+      left: '50%',
+      top: '50%',
+      borderRadius: '50%',
+      border: `3px solid ${ringColor}`,
+      pointerEvents: 'none'
+    },
+    // First ring wave - runs once and stops
+    '&::before': {
+      width: 38,
+      height: 38,
+      animation: `${ringPulse} 1.2s cubic-bezier(0, 0.2, 0.8, 1) 1 forwards`,
+      boxShadow: `0 0 12px ${glowColor}`
+    },
+    // Second ring wave - slightly delayed, runs once
+    '&::after': {
+      width: 38,
+      height: 38,
+      animation: `${ringPulseSecondary} 1.2s cubic-bezier(0, 0.2, 0.8, 1) 1 forwards`,
+      animationDelay: '0.3s',
+      boxShadow: `0 0 16px ${glowColor}`
+    },
+    // accessibility: respect reduced motion preference
+    '@media (prefers-reduced-motion: reduce)': {
+      animation: 'none',
+      '&::before, &::after': {
+        animation: 'none',
+        opacity: 0.4
+      }
+    }
+  }
+})
+
+// Tick/check animation for empty state
+const tickPulse = keyframes`
+  0% { transform: scale(0.98); }
+  50% { transform: scale(1.06); }
+  100% { transform: scale(0.98); }
+`
+
+const tickDraw = keyframes`
+  0% { stroke-dashoffset: 100; opacity: 0; }
+  30% { opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 1; }
+`
+
+const CheckSvg = styled('svg')(({ theme }) => ({
+  width: 72,
+  height: 72,
+  display: 'block',
+  '& path': {
+    stroke: theme.palette.success.main,
+    strokeWidth: 6,
+    strokeLinecap: 'round',
+    strokeLinejoin: 'round',
+    fill: 'none',
+    strokeDasharray: 100,
+    strokeDashoffset: 100,
+    animation: `${tickDraw} 0.9s cubic-bezier(.2,.9,.2,1) forwards`
+  }
+}))
+
+const EmptyTickContainer = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: theme.spacing(6, 2),
+  color: theme.palette.text.secondary,
+  '& .circle': {
+    width: 88,
+    height: 88,
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: alpha(theme.palette.success.main, 0.12),
+    boxShadow: theme.shadows[1],
+    // run the gentle pulse once on mount, then stop (no infinite looping)
+    animation: `${tickPulse} 1.6s ease-in-out 1 forwards`
   }
 }))
 
@@ -186,6 +328,21 @@ const PaymentTimeline: React.FC<PaymentTimelineProps> = ({ users, loading, onPay
     }
   }
 
+  // map status to a hex color used by the pulsing dot/halo
+  const getStatusHex = (status: BankTransferPaymentDTOStatusEnum | string | undefined): string => {
+    switch (status) {
+      case BankTransferPaymentDTOStatusEnum.Pending:
+        return '#FB8C00'
+      case BankTransferPaymentDTOStatusEnum.Confirmed:
+        return '#2E7D32'
+      case BankTransferPaymentDTOStatusEnum.Rejected:
+      case BankTransferPaymentDTOStatusEnum.Expired:
+        return '#D32F2F'
+      default:
+        return '#0288D1'
+    }
+  }
+
   const getStatusText = (status: BankTransferPaymentDTOStatusEnum | string | undefined): string => {
     switch (status) {
       case BankTransferPaymentDTOStatusEnum.Pending:
@@ -214,7 +371,7 @@ const PaymentTimeline: React.FC<PaymentTimelineProps> = ({ users, loading, onPay
 
   return (
     <>
-      <Card>
+      <Card sx={{ borderRadius: 2, boxShadow: theme => theme.shadows[8], border: '1px solid rgba(0,0,0,0.04)' }}>
         <CardHeader
           title={
             <Box sx={{ display: 'flex', alignItems: 'center', '& svg': { mr: 3 } }}>
@@ -240,17 +397,42 @@ const PaymentTimeline: React.FC<PaymentTimelineProps> = ({ users, loading, onPay
           }}
         >
           {loading ? (
-            <CircularProgress />
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, py: 2 }}>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Box key={i} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 1 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Skeleton variant='circular' width={38} height={38} />
+                    <Box>
+                      <Skeleton variant='text' width={180} height={22} />
+                      <Skeleton variant='text' width={120} height={16} />
+                    </Box>
+                  </Box>
+
+                  <Skeleton variant='rectangular' width={100} height={36} sx={{ borderRadius: 1 }} />
+                </Box>
+              ))}
+            </Box>
           ) : paymentsData.length === 0 ? (
-            <Typography variant='body2' color='text.secondary' sx={{ textAlign: 'center', py: 4 }}>
-              Nu există plăți în așteptare
-            </Typography>
+            <EmptyTickContainer>
+              <div className='circle'>
+                <CheckSvg viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg' aria-hidden>
+                  <path d='M20 42 L34 56 L60 26' />
+                </CheckSvg>
+              </div>
+
+              <Typography variant='h6' sx={{ mt: 2, fontWeight: 600 }}>
+                Toate plățile au fost confirmate
+              </Typography>
+              <Typography variant='body2' sx={{ mt: 1, color: 'text.secondary' }}>
+                Nu există acțiuni în așteptare.
+              </Typography>
+            </EmptyTickContainer>
           ) : (
             <Timeline>
               {paymentsData.map((payment, index) => (
                 <TimelineItem key={payment.id || index}>
                   <TimelineSeparator>
-                    <TimelineDot color={getStatusColor(payment.status)} sx={{ mt: 1.5 }} />
+                    <PulsingTimelineDot dotcolor={getStatusHex(payment.status)} sx={{ mt: 1.5 }} />
                     <TimelineConnector />
                   </TimelineSeparator>
                   <TimelineContent sx={{ pt: 0, mt: 0, mb: theme => `${theme.spacing(2)} !important` }}>
@@ -272,7 +454,13 @@ const PaymentTimeline: React.FC<PaymentTimelineProps> = ({ users, loading, onPay
                     </Box>
 
                     <Box sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Chip label={getStatusText(payment.status)} color={getStatusColor(payment.status)} size='small' />
+                      <Chip
+                        label={getStatusText(payment.status)}
+                        variant='outlined'
+                        color={getStatusColor(payment.status)}
+                        size='small'
+                        sx={{ textTransform: 'none', fontWeight: 500 }}
+                      />
                       {payment.referenceCode && (
                         <Typography variant='caption' sx={{ color: 'text.secondary' }}>
                           Ref: {payment.referenceCode}
@@ -285,7 +473,14 @@ const PaymentTimeline: React.FC<PaymentTimelineProps> = ({ users, loading, onPay
                         <EmentorAvatar
                           userType={UserType.STUDENT}
                           avatarSrc={payment.avatar || undefined}
-                          sx={{ mr: 3, width: 38, height: 38, cursor: 'pointer' }}
+                          sx={{
+                            mr: 3,
+                            width: 40,
+                            height: 40,
+                            cursor: 'pointer',
+                            boxShadow: theme => theme.shadows[3],
+                            border: '2px solid rgba(255,255,255,0.6)'
+                          }}
                           onClick={() => payment.payerId && handleAvatarClick(payment.payerId)}
                         />
                         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
