@@ -104,14 +104,13 @@ const PulsingTimelineDot = styled(TimelineDot, {
 
   return {
     position: 'relative',
-    width: 38,
-    height: 38,
-    minWidth: 38,
+    width: 18,
+    height: 18,
+    minWidth: 18,
     border: `3px solid ${theme.palette.background.paper}`,
     backgroundColor: bg,
-    boxShadow: `0 0 14px ${alpha(bg as string, 0.45)}`,
-    // run the throb once on mount, then stop (returns to scale(1) at 100%)
-    animation: `${dotThrob} 1.2s ease-in-out 1`,
+    boxShadow: `0 0 20px ${alpha(bg as string, 0.6)}`,
+    animation: `${dotThrob} 1.2s ease-in-out infinite`,
     zIndex: 1,
     '&::before, &::after': {
       content: '""',
@@ -122,19 +121,19 @@ const PulsingTimelineDot = styled(TimelineDot, {
       border: `3px solid ${ringColor}`,
       pointerEvents: 'none'
     },
-    // First ring wave - runs once and stops
+    // First ring wave - faster, smaller
     '&::before': {
-      width: 38,
-      height: 38,
-      animation: `${ringPulse} 1.2s cubic-bezier(0, 0.2, 0.8, 1) 1 forwards`,
+      width: 18,
+      height: 18,
+      animation: `${ringPulse} 1.2s cubic-bezier(0, 0.2, 0.8, 1) infinite`,
       boxShadow: `0 0 12px ${glowColor}`
     },
-    // Second ring wave - slightly delayed, runs once
+    // Second ring wave - slightly delayed, larger
     '&::after': {
-      width: 38,
-      height: 38,
-      animation: `${ringPulseSecondary} 1.2s cubic-bezier(0, 0.2, 0.8, 1) 1 forwards`,
-      animationDelay: '0.3s',
+      width: 18,
+      height: 18,
+      animation: `${ringPulseSecondary} 1.2s cubic-bezier(0, 0.2, 0.8, 1) infinite`,
+      animationDelay: '0.4s',
       boxShadow: `0 0 16px ${glowColor}`
     },
     // accessibility: respect reduced motion preference
@@ -428,7 +427,7 @@ const PaymentTimeline: React.FC<PaymentTimelineProps> = ({ users, loading, onPay
               </Typography>
             </EmptyTickContainer>
           ) : (
-            <Timeline>
+            <Timeline sx={{ mt: 3 }}>
               {paymentsData.map((payment, index) => (
                 <TimelineItem key={payment.id || index}>
                   <TimelineSeparator>
