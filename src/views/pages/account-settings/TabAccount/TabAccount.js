@@ -126,16 +126,16 @@ const TabAccount = () => {
   const fetchData = async () => {
     try {
       const prerequireResponse = await apiClient.get(
-        apiSpec.PROD_HOST + apiSpec.PROFILE_CONTROLLER + '/profile-prerequire'
+        apiSpec.PROD_HOST + apiSpec.STUDENT_PROFILE_CONTROLLER + '/profile-prerequire'
       )
       setInitPrerequire(prerequireResponse.data)
 
-      const fullProfileResponse = await apiClient.get(apiSpec.PROFILE_CONTROLLER + '/get-full')
+      const fullProfileResponse = await apiClient.get(apiSpec.STUDENT_PROFILE_CONTROLLER + '/get-full')
       setFullProfile(fullProfileResponse.data)
 
       if (fullProfileResponse.data.pictureId) {
         const profilePictureResponse = await apiClient.get(
-          `${apiSpec.PROFILE_CONTROLLER}-image/download/${fullProfileResponse.data.pictureId}`,
+          `${apiSpec.STUDENT_PROFILE_CONTROLLER}-image/download/${fullProfileResponse.data.pictureId}`,
           {
             responseType: 'blob'
           }
@@ -180,7 +180,7 @@ const TabAccount = () => {
     if (value === 'yes') {
       debugger
       apiClient
-        .delete(apiSpec.PROFILE_CONTROLLER + '/' + fullProfile.user.userId)
+        .delete(apiSpec.STUDENT_PROFILE_CONTROLLER + '/' + fullProfile.user.userId)
         .then(async response => {
           logout()
           dispatch(updateTokens({ accessToken: '', refreshToken: '' }))
@@ -235,7 +235,7 @@ const TabAccount = () => {
     const requestBody = buildRequestBody()
     if (userData.data.hasProfile === false) {
       apiClient
-        .post(apiSpec.PROFILE_CONTROLLER + '/create', requestBody)
+        .post(apiSpec.STUDENT_PROFILE_CONTROLLER + '/create', requestBody)
         .then(async response => {
           toast.success('Profil creat cu succes!')
           dispatch(updateUserHasProfile(true))
@@ -250,7 +250,7 @@ const TabAccount = () => {
         })
     } else {
       apiClient
-        .put(apiSpec.PROFILE_CONTROLLER + '/update', requestBody)
+        .put(apiSpec.STUDENT_PROFILE_CONTROLLER + '/update', requestBody)
         .then(async response => {
           toast.success('Cont actualizat cu succes!')
         })

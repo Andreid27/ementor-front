@@ -132,14 +132,14 @@ const RegisterMultiSteps = () => {
     schoolDomain: 'ch',
     schoolSpeciality: 'ch',
     prefix: '+40',
-    phone: '',
+    phone: ''
   })
 
   // ** Hooks & Var
   const { settings } = useSettings()
   const smallScreen = useMediaQuery(theme => theme.breakpoints.down('md'))
   const { direction } = settings
-  var querystring = require('querystring');
+  var querystring = require('querystring')
 
   // Handle Stepper
   const handleNext = props => {
@@ -170,35 +170,41 @@ const RegisterMultiSteps = () => {
       schoolDomain: profile.schoolDomain,
       schoolSpeciality: profile.schoolSpeciality,
       address: data,
-      phone: profile.prefix + profile.phone,
+      phone: profile.prefix + profile.phone
     }
 
-    apiClient.post(apiSpec.PROD_HOST + apiSpec.PROFILE_CONTROLLER + '/create', requestBody).then(() => {
-      setSubmitLoading(false)
-      toast.success('Profil creat cu succes')
+    apiClient
+      .post(apiSpec.PROD_HOST + apiSpec.STUDENT_PROFILE_CONTROLLER + '/create', requestBody)
+      .then(() => {
+        setSubmitLoading(false)
+        toast.success('Profil creat cu succes')
 
-      const accessTokenParams = {
-        grant_type: 'refresh_token',
-        client_id: authConfig.clientId,
-        refresh_token: tokens.refreshToken,
-      };
-
-      axios.post(authConfig.loginEndpoint, querystring.stringify(accessTokenParams), {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
+        const accessTokenParams = {
+          grant_type: 'refresh_token',
+          client_id: authConfig.clientId,
+          refresh_token: tokens.refreshToken
         }
-      }).then(response => {
-        auth.login(response.data);
-        const returnUrl = router.query.returnUrl
-        const redirectURL = returnUrl && returnUrl !== '/' ? returnUrl : '/'
-        router.replace(redirectURL)
-      }).catch(error => {
-        auth.logout()
+
+        axios
+          .post(authConfig.loginEndpoint, querystring.stringify(accessTokenParams), {
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            }
+          })
+          .then(response => {
+            auth.login(response.data)
+            const returnUrl = router.query.returnUrl
+            const redirectURL = returnUrl && returnUrl !== '/' ? returnUrl : '/'
+            router.replace(redirectURL)
+          })
+          .catch(error => {
+            auth.logout()
+          })
       })
-    }).catch((error) => {
-      setSubmitLoading(false)
-      toast.error('Eroare la crearea profilului')
-    })
+      .catch(error => {
+        setSubmitLoading(false)
+        toast.error('Eroare la crearea profilului')
+      })
   }
 
   const getStepContent = step => {

@@ -58,7 +58,9 @@ const StudentAvatar: React.FC<StudentAvatarProps> = ({ student, onClick }) => {
         }, PHOTO_LOADING_TIMEOUT)
 
         // Fetch profile data
-        const profileResponse = await apiClient.get(`${apiSpec.PROFILE_CONTROLLER}/get-full/${student.studentUserId}`)
+        const profileResponse = await apiClient.get(
+          `${apiSpec.STUDENT_PROFILE_CONTROLLER}/get-full/${student.studentUserId}`
+        )
 
         if (!isMounted) return
 

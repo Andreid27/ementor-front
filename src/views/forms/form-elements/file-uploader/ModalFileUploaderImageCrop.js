@@ -54,7 +54,7 @@ const ModalFileUploaderImageCrop = ({
           <Card className={'bro'} sx={{ width: 500, height: 400 }}>
             <CardHeader title={'Încarcă fotografia ta aici'} />
             <FileUploaderImageCrop
-              uploadFile={apiSpec.PROD_HOST + apiSpec.PROFILE_CONTROLLER + '-image/upload'}
+              uploadFile={apiSpec.PROD_HOST + apiSpec.STUDENT_PROFILE_CONTROLLER + '-image/upload'}
               setFile={setFile}
               setOpenCrop={setOpenCrop}
               setPhotoURL={setPhotoURL}

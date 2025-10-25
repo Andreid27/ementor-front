@@ -11,8 +11,6 @@ import extractProfilePicture from 'src/@core/axios/profile-picture-extractor'
 import profilePictureDownloader from 'src/@core/axios/profile-picture-downloader'
 import { CircularProgress } from '@mui/material'
 
-
-
 const UserView = ({ tab, userId, invoiceData }) => {
   const [loading, setLoading] = useState(true)
   const [profilePictureUrl, setProfilePictureUrl] = useState(null)
@@ -21,24 +19,23 @@ const UserView = ({ tab, userId, invoiceData }) => {
   const [lessonStats, setLessonStats] = useState({})
   const [quizStats, setQuizStats] = useState({})
 
-  const quizServiceRequestParams =
-  {
+  const quizServiceRequestParams = {
     filters: [
       {
-        "key": "startedAt",
-        "operation": "GREATER",
-        "value": "2000-01-01T00:00:00.00Z"
+        key: 'startedAt',
+        operation: 'GREATER',
+        value: '2000-01-01T00:00:00.00Z'
       },
       {
-        "key": "studentId",
-        "operation": "EQUAL",
-        "value": userId
+        key: 'studentId',
+        operation: 'EQUAL',
+        value: userId
       }
     ],
     sorters: [
       {
-        "key": "startedAt",
-        "direction": "DESC"
+        key: 'startedAt',
+        direction: 'DESC'
       }
     ]
   }
@@ -47,7 +44,7 @@ const UserView = ({ tab, userId, invoiceData }) => {
     const fetchData = async () => {
       try {
         const [profileServiceResponse, quizzesResponse, quizStatsResponse, lessonStatsResponse] = await Promise.all([
-          apiClient.get(apiSpec.PROFILE_CONTROLLER + '/get-full/' + userId),
+          apiClient.get(apiSpec.STUDENT_PROFILE_CONTROLLER + '/get-full/' + userId),
           apiClient.post(apiSpec.QUIZ_SERVICE + '/assigned-paginated', {
             filters: quizServiceRequestParams.filters,
             sorters: quizServiceRequestParams.sorters,
@@ -56,47 +53,53 @@ const UserView = ({ tab, userId, invoiceData }) => {
           }),
           apiClient.get(`${apiSpec.QUIZ_SERVICE}/dashboard-stats/${userId}`),
           apiClient.get(`${apiSpec.LESSON_CONTROLLER}/dashboard-stats/${userId}`)
-        ]);
+        ])
 
         if (profileServiceResponse.status === 200) {
-          const profilePicture = extractProfilePicture(profileServiceResponse.data, true);
-          let finalUrl;
+          const profilePicture = extractProfilePicture(profileServiceResponse.data, true)
+          let finalUrl
 
           if (profilePicture.type === 'API') {
-            finalUrl = await profilePictureDownloader(profilePicture.url, profilePicture.userId);
+            finalUrl = await profilePictureDownloader(profilePicture.url, profilePicture.userId)
           } else if (profilePicture.type === 'EXTERNAL') {
-            finalUrl = profilePicture.url;
+            finalUrl = profilePicture.url
           } else {
-            finalUrl = null;
+            finalUrl = null
           }
 
-          setProfilePictureUrl(finalUrl);
-          setProfileData(profileServiceResponse.data);
-          setQuizzesData(quizzesResponse.data.data);
-          setQuizStats(quizStatsResponse.data);
-          setLessonStats(lessonStatsResponse.data);
+          setProfilePictureUrl(finalUrl)
+          setProfileData(profileServiceResponse.data)
+          setQuizzesData(quizzesResponse.data.data)
+          setQuizStats(quizStatsResponse.data)
+          setLessonStats(lessonStatsResponse.data)
         }
       } catch (error) {
-        console.error(error);
+        console.error(error)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
-
+    }
 
     fetchData()
   }, [userId])
 
-  return (
-    loading ? <CircularProgress /> :
-      <Grid container spacing={6}>
-        <Grid item xs={12} md={5} lg={4}>
-          <UserViewLeft profileData={profileData} profilePictureUrl={profilePictureUrl} quizStats={quizStats} />
-        </Grid>
-        <Grid item xs={12} md={7} lg={8}>
-          <UserViewRight tab={tab} profileData={profileData} quizStats={quizStats} lessonStats={lessonStats} quizzesData={quizzesData} />
-        </Grid>
+  return loading ? (
+    <CircularProgress />
+  ) : (
+    <Grid container spacing={6}>
+      <Grid item xs={12} md={5} lg={4}>
+        <UserViewLeft profileData={profileData} profilePictureUrl={profilePictureUrl} quizStats={quizStats} />
       </Grid>
+      <Grid item xs={12} md={7} lg={8}>
+        <UserViewRight
+          tab={tab}
+          profileData={profileData}
+          quizStats={quizStats}
+          lessonStats={lessonStats}
+          quizzesData={quizzesData}
+        />
+      </Grid>
+    </Grid>
   )
 }
 

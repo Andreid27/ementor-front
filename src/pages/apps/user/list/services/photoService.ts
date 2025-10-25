@@ -69,7 +69,7 @@ export class PhotoLoadingService {
 
       try {
         // Fetch profile data
-        const profileResponse = await apiClient.get(`${apiSpec.PROFILE_CONTROLLER}/get-full/${studentUserId}`)
+        const profileResponse = await apiClient.get(`${apiSpec.STUDENT_PROFILE_CONTROLLER}/get-full/${studentUserId}`)
 
         if (profileResponse.status === 200 && profileResponse.data) {
           const profilePicture = extractProfilePicture(profileResponse.data, true)
