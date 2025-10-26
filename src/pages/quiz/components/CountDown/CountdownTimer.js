@@ -6,14 +6,22 @@ import React from 'react'
 import { CountdownCircleTimer } from 'react-countdown-circle-timer'
 
 const CountdownTimer = props => {
-  const startTime = props.startTime / 1000 // use UNIX timestamp in seconds
-  const endTime = props.targetTimestamp / 1000 // use UNIX timestamp in seconds
+  const currentTime = Date.now() / 1000
+  const endTime = props.targetTimestamp / 1000
+  const startTime = props.startTime / 1000
 
-  let remainingTime = 0
+  let duration = 0
+  let initialRemaining = 0
+
   if (props.timeFinished || props.completed) {
-    remainingTime = endTime - startTime
+    // Results view - show total time taken
+    duration = endTime - startTime
+    initialRemaining = endTime - startTime
   } else {
-    remainingTime = endTime - startTime
+    // Active quiz - show remaining time from current moment
+    const timeLeft = Math.max(0, endTime - currentTime)
+    duration = timeLeft
+    initialRemaining = timeLeft
   }
 
   return (
@@ -28,8 +36,8 @@ const CountdownTimer = props => {
       </svg>
       <CountdownCircleTimer
         isPlaying={!(props.timeFinished || props.completed)}
-        duration={props.initialTimeRemaining ? props.initialTimeRemaining : remainingTime}
-        initialRemainingTime={props.initialTimeRemaining ? remainingTime : null}
+        duration={duration}
+        initialRemainingTime={initialRemaining}
         colors={'url(#your-unique-id)'}
         strokeWidth={6}
         size={props.size}
@@ -42,9 +50,9 @@ const CountdownTimer = props => {
       >
         {({ remainingTime, color }) => {
           // Use Math.floor and modulo for all the calculations
-          const hours = Math.floor(remainingTime / (60 * 60)) % 24
-          const minutes = Math.floor(remainingTime / 60) % 60
-          const seconds = Math.floor(remainingTime) % 60
+          const hours = Math.floor(Math.abs(remainingTime) / (60 * 60)) % 24
+          const minutes = Math.floor(Math.abs(remainingTime) / 60) % 60
+          const seconds = Math.floor(Math.abs(remainingTime)) % 60
 
           return (
             <div className='time-wrapper'>
