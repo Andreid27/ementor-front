@@ -21,6 +21,7 @@ import { ProgressTrackerProps } from '../types'
 // ** Constants
 import { ANIMATION_DURATIONS, EASING_FUNCTIONS } from '../../quizzes/constants/animations'
 import { SPACING } from '../../quizzes/constants/theme'
+import { QUIZ_COLORS } from '../../quizzes/constants/colors'
 
 const ProgressTracker: React.FC<
   ProgressTrackerProps & {
@@ -73,11 +74,9 @@ const ProgressTracker: React.FC<
         <Box
           sx={{
             display: 'flex',
-            flexDirection: isMobile && orientation === 'portrait' ? 'column' : 'row',
             justifyContent: 'space-between',
-            alignItems: isMobile && orientation === 'portrait' ? 'flex-start' : 'center',
-            mb: 1,
-            gap: isMobile ? 1 : 0
+            alignItems: 'center',
+            mb: 1
           }}
         >
           <Typography
@@ -90,21 +89,6 @@ const ProgressTracker: React.FC<
           >
             Progres: {Math.round(progressPercentage)}%
           </Typography>
-
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <Icon icon='tabler:clock' fontSize={compact ? '0.875rem' : '1rem'} style={{ color: getTimeColor }} />
-            <Typography
-              variant={compact ? 'caption' : 'body2'}
-              sx={{
-                fontWeight: 600,
-                color: getTimeColor,
-                fontFamily: 'monospace',
-                fontSize: compact ? '0.75rem' : isMobile ? '0.8rem' : '0.875rem'
-              }}
-            >
-              {formatTime(timeRemaining)}
-            </Typography>
-          </Box>
         </Box>
 
         <LinearProgress

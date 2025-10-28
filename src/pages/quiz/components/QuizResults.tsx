@@ -6,7 +6,7 @@ import Box from '@mui/material/Box'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import Typography from '@mui/material/Typography'
-import Button from '@mui/material/Button'
+import { Button } from '@mui/material'
 import Chip from '@mui/material/Chip'
 import LinearProgress from '@mui/material/LinearProgress'
 import Accordion from '@mui/material/Accordion'
@@ -278,9 +278,13 @@ const QuestionResultItem: React.FC<{
   const [expanded, setExpanded] = useState(false)
 
   const isCorrect = userAnswer === correctAnswer
-  const answers = [question.answer1, question.answer2, question.answer3, question.answer4, question.answer5].filter(
-    Boolean
-  )
+  const answers = [
+    { index: 1, text: question.answer1 || '', isEmpty: !question.answer1 || question.answer1.trim() === '' },
+    { index: 2, text: question.answer2 || '', isEmpty: !question.answer2 || question.answer2.trim() === '' },
+    { index: 3, text: question.answer3 || '', isEmpty: !question.answer3 || question.answer3.trim() === '' },
+    { index: 4, text: question.answer4 || '', isEmpty: !question.answer4 || question.answer4.trim() === '' },
+    { index: 5, text: question.answer5 || '', isEmpty: !question.answer5 || question.answer5.trim() === '' }
+  ].filter(answer => !answer.isEmpty)
 
   useEffect(() => {
     const timer = setTimeout(() => setVisible(true), delay)
@@ -387,13 +391,13 @@ const QuestionResultItem: React.FC<{
                 }}
               >
                 {answers.map((answer, answerIndex) => {
-                  const answerNumber = answerIndex + 1
+                  const answerNumber = answer.index
                   const isUserAnswer = userAnswer === answerNumber
                   const isCorrectAnswer = correctAnswer === answerNumber
 
                   return (
                     <Box
-                      key={answerIndex}
+                      key={answer.index}
                       sx={{
                         display: 'flex',
                         alignItems: 'center',
@@ -431,7 +435,7 @@ const QuestionResultItem: React.FC<{
                           minWidth: 20
                         }}
                       >
-                        {String.fromCharCode(65 + answerIndex)}.
+                        {String.fromCharCode(65 + answer.index - 1)}.
                       </Typography>
                       <Typography
                         variant='body2'
@@ -444,7 +448,7 @@ const QuestionResultItem: React.FC<{
                             : 'text.primary'
                         }}
                       >
-                        {answer}
+                        {answer.text}
                       </Typography>
                       {isCorrectAnswer && <CheckCircleIcon sx={{ color: 'success.main', fontSize: 16 }} />}
                       {isUserAnswer && !isCorrectAnswer && <CancelIcon sx={{ color: 'error.main', fontSize: 16 }} />}

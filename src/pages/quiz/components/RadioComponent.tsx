@@ -424,14 +424,34 @@ const RadioComponent: React.FC<
     [handleAnswerSelect]
   )
 
-  // Answer options with labels
+  // Answer options with labels - keep all 5 slots, mark empty ones
   const answerOptions = [
-    { index: 1, label: 'A', text: question.answer1 },
-    { index: 2, label: 'B', text: question.answer2 },
-    { index: 3, label: 'C', text: question.answer3 },
-    { index: 4, label: 'D', text: question.answer4 },
-    { index: 5, label: 'E', text: question.answer5 }
-  ].filter(option => option.text && option.text.trim() !== '')
+    {
+      index: 1,
+      label: 'A',
+      text: question.answer1 || '',
+      isEmpty: !question.answer1 || question.answer1.trim() === ''
+    },
+    {
+      index: 2,
+      label: 'B',
+      text: question.answer2 || '',
+      isEmpty: !question.answer2 || question.answer2.trim() === ''
+    },
+    {
+      index: 3,
+      label: 'C',
+      text: question.answer3 || '',
+      isEmpty: !question.answer3 || question.answer3.trim() === ''
+    },
+    {
+      index: 4,
+      label: 'D',
+      text: question.answer4 || '',
+      isEmpty: !question.answer4 || question.answer4.trim() === ''
+    },
+    { index: 5, label: 'E', text: question.answer5 || '', isEmpty: !question.answer5 || question.answer5.trim() === '' }
+  ]
 
   const renderStatusIcon = (answerIndex: number) => {
     const isCorrect = correctAnswer === answerIndex
@@ -509,21 +529,21 @@ const RadioComponent: React.FC<
       <QuestionCard compact={compact} ref={cardRef}>
         <QuestionHeader compact={compact}>
           <Typography
-            variant={compact ? 'subtitle1' : 'h6'}
+            variant='body1'
             component='h3'
             sx={{
-              fontWeight: 600,
-              lineHeight: compact ? 1.3 : 1.4,
-              color: theme.palette.text.primary,
-              fontSize: compact ? '1rem' : '1.125rem',
+              fontWeight: 500,
+              lineHeight: 1.5,
+              color: theme.palette.text.secondary,
+              fontSize: compact ? '0.95rem' : '1rem',
               // Mobile-first responsive typography
               [theme.breakpoints.down('sm')]: {
-                fontSize: '0.95rem',
-                lineHeight: 1.3
+                fontSize: '0.9rem',
+                lineHeight: 1.4
               },
               // Tablet typography
               [theme.breakpoints.between('sm', 'md')]: {
-                fontSize: compact ? '1rem' : '1.05rem'
+                fontSize: compact ? '0.95rem' : '1rem'
               }
             }}
           >
@@ -607,10 +627,13 @@ const RadioComponent: React.FC<
                           ? theme.palette.success.dark
                           : isIncorrect
                           ? theme.palette.error.dark
-                          : theme.palette.text.primary
+                          : option.isEmpty
+                          ? theme.palette.text.disabled
+                          : theme.palette.text.primary,
+                        fontStyle: option.isEmpty ? 'italic' : 'normal'
                       }}
                     >
-                      {option.text}
+                      {option.text || '(Răspuns lipsă)'}
                     </AnswerText>
                   </Box>
                   {showResults && renderStatusIcon(option.index)}

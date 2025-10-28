@@ -122,7 +122,7 @@ const CountdownTimer: React.FC<
   }, [timeRemaining, onTimeUp])
 
   // Responsive sizing
-  const circularSize = compact ? 60 : isMobile ? 70 : 80
+  const circularSize = compact ? 50 : isMobile ? 60 : 70
   const circularThickness = compact ? 3 : 4
 
   return (
@@ -131,7 +131,7 @@ const CountdownTimer: React.FC<
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: compact ? 1 : SPACING.SM
+        gap: compact ? 0.5 : SPACING.SM
       }}
     >
       {/* Circular Progress Timer */}
@@ -143,6 +143,17 @@ const CountdownTimer: React.FC<
           justifyContent: 'center'
         }}
       >
+        {/* SVG Gradient Definition */}
+        <svg width={0} height={0}>
+          <defs>
+            <linearGradient id='timer-gradient' x1='0%' y1='0%' x2='100%' y2='100%'>
+              <stop offset='0%' stopColor={theme.palette.success.main} />
+              <stop offset='50%' stopColor={theme.palette.warning.main} />
+              <stop offset='100%' stopColor={theme.palette.error.main} />
+            </linearGradient>
+          </defs>
+        </svg>
+
         <CircularProgress
           variant='determinate'
           value={progressPercentage}
@@ -157,6 +168,7 @@ const CountdownTimer: React.FC<
 
             '& .MuiCircularProgress-circle': {
               strokeLinecap: 'round',
+              stroke: timePercentage > 25 ? getTimeColor : 'url(#timer-gradient)',
               transition: shouldReduceMotion()
                 ? 'none'
                 : `stroke-dashoffset ${ANIMATION_DURATIONS.SHORT}ms ${EASING_FUNCTIONS.STANDARD}`
@@ -194,7 +206,7 @@ const CountdownTimer: React.FC<
               fontWeight: 700,
               color: getTimeColor,
               fontFamily: 'monospace',
-              fontSize: compact ? '0.8rem' : isMobile ? '0.9rem' : '1rem',
+              fontSize: compact ? '0.7rem' : isMobile ? '0.85rem' : '0.95rem',
               lineHeight: 1,
               transition: shouldReduceMotion()
                 ? 'none'

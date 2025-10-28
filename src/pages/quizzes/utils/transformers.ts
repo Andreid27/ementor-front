@@ -34,16 +34,12 @@ export const getDifficultyColor = (difficulty: number): string => {
 /**
  * Calculate performance level based on score
  */
-export const calculatePerformanceLevel = (
-  score: number,
-  totalQuestions: number
-): 'excellent' | 'good' | 'average' | 'poor' => {
+export const calculatePerformanceLevel = (score: number, totalQuestions: number): 'high' | 'medium' | 'low' => {
   const percentage = (score / totalQuestions) * 100
 
-  if (percentage >= 90) return 'excellent'
-  if (percentage >= 75) return 'good'
-  if (percentage >= 60) return 'average'
-  return 'poor'
+  if (percentage >= 80) return 'high'
+  if (percentage >= 60) return 'medium'
+  return 'low'
 }
 
 /**
@@ -53,13 +49,11 @@ export const getPerformanceColor = (score: number, totalQuestions: number): stri
   const level = calculatePerformanceLevel(score, totalQuestions)
 
   switch (level) {
-    case 'excellent':
+    case 'high':
       return '#4caf50' // Green
-    case 'good':
-      return '#8bc34a' // Light Green
-    case 'average':
+    case 'medium':
       return '#ff9800' // Orange
-    case 'poor':
+    case 'low':
       return '#f44336' // Red
     default:
       return '#9e9e9e' // Grey

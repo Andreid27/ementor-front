@@ -12,7 +12,10 @@ import Typography from '@mui/material/Typography'
 import LinearProgress from '@mui/material/LinearProgress'
 import Alert from '@mui/material/Alert'
 import Fade from '@mui/material/Fade'
-import { useTheme } from '@mui/material/styles'
+import { useTheme, alpha } from '@mui/material/styles'
+
+// ** Icon Imports
+import Icon from 'src/@core/components/icon'
 
 // ** Custom Components
 import ProgressTracker from './ProgressTracker'
@@ -80,6 +83,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId }) => {
   const [showResults, setShowResults] = useState(false)
   const [showCelebration, setShowCelebration] = useState(false)
   const [results, setResults] = useState<any>(null)
+  const [isScrolled, setIsScrolled] = useState(false)
 
   // ** Computed values
   const answeredQuestions = useMemo(() => {
@@ -88,6 +92,20 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId }) => {
 
   const totalQuestions = quizState.quiz?.questions?.length || 0
   const isQuizComplete = answeredQuestions === totalQuestions
+
+  // ** Timer color helper
+  const getTimerColor = useCallback(() => {
+    if (quizState.timeRemaining < 300) return theme.palette.error.main
+    if (quizState.timeRemaining < 600) return theme.palette.warning.main
+    return theme.palette.success.main
+  }, [quizState.timeRemaining, theme])
+
+  // ** Format time helper
+  const formatTime = useCallback((seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }, [])
 
   // ** Load quiz data
   useEffect(() => {
@@ -149,6 +167,17 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId }) => {
 
     return () => clearInterval(timer)
   }, [quizState.quiz, quizState.hasSubmitted, loading])
+
+  // ** Scroll detection for compact header
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY
+      setIsScrolled(scrollPosition > 50)
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   // ** Auto-save progress
   useEffect(() => {
@@ -314,113 +343,188 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId }) => {
 
   // ** Main quiz interface
   return (
-    <Box sx={{
-      width: '100%',
-      maxWidth: isMobile ? '100%' : isTablet ? '100%' : 1200,
-      mx: 'auto',
-      p: isMobile ? 1 : isTablet ? 2 : SPACING.MD
-    }}>
-      {/* Header with Progress and Timer */}
-      <Card sx={{
-        mb: cardSpacing,
-        overflow: 'visible',
-        borderRadius: isMobile ? 1 : 2,
-        boxShadow: isMobile ? 1 : 2
-      }}>
-        <CardContent sx={{
-          p: isMobile ? 2 : isTablet ? 3 : 4,
-          '&:last-child': { pb: isMobile ? 2 : isTablet ? 3 : 4 }
-        }}>
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: stackLayout ? 'column' : 'row',
-              justifyContent: 'space-between',
-              alignItems: stackLayout ? 'stretch' : 'flex-start',
-              gap: isMobile ? 2 : SPACING.MD
-            }}
-          >
-            {/* Quiz Title and Description */}
-            <Box sx={{
-              flex: 1,
-              minWidth: stackLayout ? 'auto' : 300,
-              mb: stackLayout ? 2 : 0
-            }}>
+    <Box
+      sx={{
+        width: '100%',
+        maxWidth: isMobile ? '100%' : isTablet ? '100%' : 1200,
+        mx: 'auto',
+        p: isMobile ? 1 : isTablet ? 2 : SPACING.LG
+      }}
+    >
+      {/* Header with Progress and Timer - Sticky and Compact on Scroll */}
+      <Card
+        sx={{
+          position: 'sticky',
+          top: isMobile ? 56 : 80,
+          zIndex: 1000,
+          mb: cardSpacing,
+          overflow: 'visible',
+          borderRadius: isMobile ? 1 : 2,
+          boxShadow: isScrolled ? 6 : isMobile ? 2 : 4,
+          backgroundColor: alpha(theme.palette.background.paper, isScrolled ? 0.95 : 1),
+          backdropFilter: isScrolled ? 'blur(20px)' : 'blur(10px)',
+          transition: `all ${ANIMATION_DURATIONS.MEDIUM}ms ${EASING_FUNCTIONS.STANDARD}`,
+          borderBottom: isScrolled ? `1px solid ${alpha(theme.palette.divider, 0.1)}` : 'none'
+        }}
+      >
+        <CardContent
+          sx={{
+            p: isScrolled ? (isMobile ? 1.5 : 2) : isMobile ? 2 : 2.5,
+            '&:last-child': { pb: isScrolled ? (isMobile ? 1.5 : 2) : isMobile ? 2 : 2.5 },
+            transition: `all ${ANIMATION_DURATIONS.MEDIUM}ms ${EASING_FUNCTIONS.STANDARD}`
+          }}
+        >
+          {isScrolled ? (
+            // Compact layout when scrolled - everything in one row
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2,
+                justifyContent: 'space-between'
+              }}
+            >
+              {/* Title */}
               <Typography
-                variant={isMobile ? 'h5' : isTablet ? 'h4' : 'h4'}
+                variant='body1'
                 sx={{
-                  fontWeight: 700,
+                  fontWeight: 500,
                   color: 'text.primary',
-                  mb: 1,
-                  fontSize: isMobile ? '1.25rem' : isTablet ? '1.5rem' : '2rem',
-                  lineHeight: isMobile ? 1.3 : 1.4
+                  fontSize: isMobile ? '0.95rem' : '1rem',
+                  lineHeight: 1.2,
+                  flex: '0 0 auto',
+                  maxWidth: isMobile ? '30%' : '25%',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap'
                 }}
               >
                 {quizState.quiz?.title}
               </Typography>
-              {quizState.quiz?.description && (
+
+              {/* Progress bar */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flex: 1, minWidth: 0 }}>
+                <Box sx={{ flex: 1, minWidth: 100 }}>
+                  <LinearProgress
+                    variant='determinate'
+                    value={(answeredQuestions / totalQuestions) * 100}
+                    sx={{
+                      height: 4,
+                      borderRadius: 2,
+                      backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                      '& .MuiLinearProgress-bar': {
+                        borderRadius: 2,
+                        backgroundColor:
+                          answeredQuestions === totalQuestions
+                            ? theme.palette.success.main
+                            : answeredQuestions > totalQuestions / 2
+                            ? theme.palette.primary.main
+                            : theme.palette.warning.main
+                      }
+                    }}
+                  />
+                </Box>
                 <Typography
-                  variant='body1'
+                  variant='caption'
                   sx={{
-                    color: 'text.secondary',
-                    lineHeight: 1.6,
-                    fontSize: isMobile ? '0.9rem' : '1rem',
-                    display: compactHeader ? '-webkit-box',
-                    WebkitLineClamp: compactHeader ? 2 : 'none',
-                    WebkitBoxOrient: 'vertical',
-                    overflow: compactHeader ? 'hidden' : 'visible'
+                    color: 'text.primary',
+                    fontSize: '0.7rem',
+                    fontWeight: 600,
+                    whiteSpace: 'nowrap'
                   }}
                 >
-                  {quizState.quiz.description}
+                  {answeredQuestions}/{totalQuestions}
                 </Typography>
+              </Box>
+
+              {/* Timer */}
+              {quizState.quiz && (
+                <Box sx={{ flex: '0 0 auto' }}>
+                  <CountdownTimer
+                    timeRemaining={quizState.timeRemaining}
+                    totalTime={(quizState.quiz?.maxTime || 60) * 60}
+                    onTimeUp={() => handleSubmitQuiz(true)}
+                    showWarnings={false}
+                    compact={true}
+                  />
+                </Box>
               )}
             </Box>
-
-            {/* Timer and Progress Summary */}
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: stackLayout ? 'row' : 'column',
-                alignItems: stackLayout ? 'center' : 'flex-end',
-                justifyContent: stackLayout ? 'space-between' : 'flex-start',
-                gap: isMobile ? 1 : SPACING.SM,
-                minWidth: stackLayout ? '100%' : 'auto'
-              }}
-            >
-              <CountdownTimer
-                timeRemaining={quizState.timeRemaining}
-                totalTime={(quizState.quiz?.maxTime || 60) * 60}
-                onTimeUp={() => handleSubmitQuiz(true)}
-                showWarnings={!isMobile}
-                compact={isMobile}
-              />
-              <Typography
-                variant='body2'
+          ) : (
+            // Full layout when not scrolled
+            <>
+              <Box
                 sx={{
-                  color: 'text.secondary',
-                  textAlign: stackLayout ? 'left' : 'right',
-                  fontSize: isMobile ? '0.8rem' : '0.875rem',
-                  whiteSpace: 'nowrap'
+                  display: 'flex',
+                  flexDirection: stackLayout ? 'column' : 'row',
+                  justifyContent: 'space-between',
+                  alignItems: stackLayout ? 'stretch' : 'flex-start',
+                  gap: isMobile ? 2 : SPACING.MD
                 }}
               >
-                {answeredQuestions} din {totalQuestions} întrebări
-              </Typography>
-            </Box>
-          </Box>
+                {/* Quiz Title and Description */}
+                <Box
+                  sx={{
+                    flex: 1,
+                    minWidth: stackLayout ? 'auto' : 300,
+                    mb: stackLayout ? 2 : 0
+                  }}
+                >
+                  <Typography
+                    variant='h6'
+                    sx={{
+                      fontWeight: 600,
+                      color: 'text.primary',
+                      mb: 0.5,
+                      fontSize: isMobile ? '1rem' : '1.125rem',
+                      lineHeight: 1.3
+                    }}
+                  >
+                    {quizState.quiz?.title}
+                  </Typography>
+                  {quizState.quiz?.description && !compactHeader && (
+                    <Typography
+                      variant='body2'
+                      sx={{
+                        color: 'text.secondary',
+                        lineHeight: 1.4,
+                        fontSize: isMobile ? '0.8rem' : '0.875rem',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 1,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden'
+                      }}
+                    >
+                      {quizState.quiz.description}
+                    </Typography>
+                  )}
+                </Box>
 
-          {/* Progress Tracker */}
-          {!compactHeader && (
-            <Box sx={{ mt: isMobile ? 2 : SPACING.LG }}>
-              <ProgressTracker
-                totalQuestions={totalQuestions}
-                answeredQuestions={answeredQuestions}
-                currentQuestion={0}
-                timeRemaining={quizState.timeRemaining}
-                onScrollToQuestion={handleScrollToQuestion}
-                compact={isMobile}
-                orientation={orientation}
-              />
-            </Box>
+                {/* Timer */}
+                {quizState.quiz && (
+                  <CountdownTimer
+                    timeRemaining={quizState.timeRemaining}
+                    totalTime={(quizState.quiz?.maxTime || 60) * 60}
+                    onTimeUp={() => handleSubmitQuiz(true)}
+                    showWarnings={false}
+                    compact={isMobile}
+                  />
+                )}
+              </Box>
+
+              {/* Progress Tracker */}
+              <Box sx={{ mt: isMobile ? 1.5 : 2.5 }}>
+                <ProgressTracker
+                  totalQuestions={totalQuestions}
+                  answeredQuestions={answeredQuestions}
+                  currentQuestion={0}
+                  timeRemaining={quizState.timeRemaining}
+                  onScrollToQuestion={handleScrollToQuestion}
+                  compact={isMobile}
+                  orientation={orientation}
+                />
+              </Box>
+            </>
           )}
         </CardContent>
       </Card>
@@ -447,11 +551,15 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId }) => {
             key={question.id}
             id={`question-${index}`}
             sx={{
-              transition: enableAnimations ? `all ${ANIMATION_DURATIONS.MEDIUM}ms ${EASING_FUNCTIONS.STANDARD}` : 'none',
-              '&:target': enableHoverEffects ? {
-                transform: 'scale(1.02)',
-                boxShadow: theme.shadows[8]
-              } : {}
+              transition: enableAnimations
+                ? `all ${ANIMATION_DURATIONS.MEDIUM}ms ${EASING_FUNCTIONS.STANDARD}`
+                : 'none',
+              '&:target': enableHoverEffects
+                ? {
+                    transform: 'scale(1.02)',
+                    boxShadow: theme.shadows[8]
+                  }
+                : {}
             }}
           >
             <RadioComponent
@@ -468,16 +576,20 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId }) => {
       </Box>
 
       {/* Submit Section */}
-      <Card sx={{
-        mt: cardSpacing,
-        mb: cardSpacing,
-        borderRadius: isMobile ? 1 : 2,
-        boxShadow: isMobile ? 1 : 2
-      }}>
-        <CardContent sx={{
-          p: isMobile ? 2 : isTablet ? 3 : 4,
-          '&:last-child': { pb: isMobile ? 2 : isTablet ? 3 : 4 }
-        }}>
+      <Card
+        sx={{
+          mt: cardSpacing,
+          mb: cardSpacing,
+          borderRadius: isMobile ? 1 : 2,
+          boxShadow: isMobile ? 1 : 2
+        }}
+      >
+        <CardContent
+          sx={{
+            p: isMobile ? 2 : isTablet ? 3 : 4,
+            '&:last-child': { pb: isMobile ? 2 : isTablet ? 3 : 4 }
+          }}
+        >
           <Box
             sx={{
               display: 'flex',
@@ -524,7 +636,9 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId }) => {
                 onClick={() => handleSubmitQuiz(false)}
                 disabled={quizState.isSubmitting}
                 style={{
-                  padding: isMobile ? `${touchTargetSize/3}px ${touchTargetSize/2}px` : `${SPACING.MD}px ${SPACING.XL}px`,
+                  padding: isMobile
+                    ? `${touchTargetSize / 3}px ${touchTargetSize / 2}px`
+                    : `${SPACING.MD}px ${SPACING.XL}px`,
                   borderRadius: isMobile ? 6 : 8,
                   border: 'none',
                   backgroundColor: theme.palette.primary.main,
@@ -533,7 +647,9 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId }) => {
                   fontWeight: 600,
                   cursor: quizState.isSubmitting ? 'not-allowed' : 'pointer',
                   opacity: quizState.isSubmitting ? 0.6 : 1,
-                  transition: enableAnimations ? `all ${ANIMATION_DURATIONS.SHORT}ms ${EASING_FUNCTIONS.STANDARD}` : 'none',
+                  transition: enableAnimations
+                    ? `all ${ANIMATION_DURATIONS.SHORT}ms ${EASING_FUNCTIONS.STANDARD}`
+                    : 'none',
                   transform: 'translateY(0)',
                   minHeight: touchTargetSize,
                   minWidth: isMobile ? '100%' : 'auto',

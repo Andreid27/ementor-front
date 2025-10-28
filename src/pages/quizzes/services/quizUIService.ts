@@ -1,6 +1,11 @@
 // Quiz UI Service - Wrapper around quiz-service-client for UI-specific logic
 import { quizServiceClient } from '../../../generated/quiz-service-client'
-import { QuizDTO, QuizzesView } from '../../../generated/quiz-service/api'
+import {
+  QuizDTO,
+  QuizzesView,
+  FilterCriteriaObjectOperationEnum,
+  SortCriteriaDirectionEnum
+} from '../../../generated/quiz-service/api'
 import { QuizGridRow, DataGridParams } from '../types'
 import { transformQuizDTOToGridRow } from '../utils/transformers'
 
@@ -21,11 +26,22 @@ export class QuizUIService {
         pageSize: params.pageSize,
         filters:
           params.filterModel?.quickFilterValues && params.filterModel.quickFilterValues.length > 0
-            ? [{ field: 'title', operator: 'contains', value: params.filterModel.quickFilterValues[0] }]
+            ? [
+                {
+                  key: 'title',
+                  operation: FilterCriteriaObjectOperationEnum.Like,
+                  value: params.filterModel.quickFilterValues[0] as unknown as object
+                }
+              ]
             : [],
         sorters:
           params.sortModel && params.sortModel.length > 0
-            ? [{ field: params.sortModel[0].field, direction: params.sortModel[0].sort }]
+            ? [
+                {
+                  key: params.sortModel[0].field,
+                  direction: params.sortModel[0].sort.toUpperCase() as SortCriteriaDirectionEnum
+                }
+              ]
             : []
       }
 
@@ -77,19 +93,16 @@ export class QuizUIService {
    */
   async submitQuiz(quizId: string, answers: Record<string, number>): Promise<any> {
     try {
-      // Transform answers to API format
+      // Transform answers to match the API format
       const submitData = {
-        quizId,
-        answers: Object.entries(answers).map(([questionId, answerIndex]) => ({
+        quizStudentId: quizId,
+        submitedQuestionAnswers: Object.entries(answers).map(([questionId, answerIndex]) => ({
           questionId,
-          selectedAnswer: answerIndex
+          answer: answerIndex
         }))
       }
 
-      const response = await this.client.quizzes.submit({
-        id: quizId,
-        submitQuizDTO: submitData
-      })
+      const response = await this.client.quizzes.submit({ submitQuizDTO: submitData })
       return response.data
     } catch (error) {
       console.error(`Error submitting quiz ${quizId}:`, error)
@@ -100,11 +113,10 @@ export class QuizUIService {
   /**
    * Get quiz attempt details
    */
-  async getQuizAttempt(quizId: string, attemptId: string): Promise<any> {
+  async getQuizAttempt(attemptId: string): Promise<any> {
     try {
       const response = await this.client.quizzes.getAttempt({
-        quizId,
-        attemptId
+        id: attemptId
       })
       return response.data
     } catch (error) {
