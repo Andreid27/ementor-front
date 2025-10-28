@@ -1,0 +1,586 @@
+/**
+ * Enhanced Mobile-First Responsive Design Utilities
+ *
+ * This CSS file provides mobile-first responsive utilities that complement
+ * the TypeScript responsive system. All styles follow mobile-first approach
+ * with progressive enhancement for larger screens.
+ *
+ * Requirements addressed:
+ * - 8.1: Mobile-first responsive design with progressive enhancement
+ * - 8.2: Minimum 48px touch targets on mobile devices
+ * - 8.3: Mobile typography and spacing matching desktop quality
+ * - 8.5: Adaptive layouts for all screen sizes
+ */
+
+/* ============================================================================
+ * CSS CUSTOM PROPERTIES FOR RESPONSIVE DESIGN
+ * ============================================================================ */
+
+:root {
+  /* Touch target sizes (Requirement 8.2) */
+  --touch-target-minimum: 44px;
+  --touch-target-mobile: 48px;
+  --touch-target-comfortable: 52px;
+  --touch-target-large: 56px;
+
+  /* Responsive spacing scale */
+  --spacing-xs-mobile: 4px;
+  --spacing-sm-mobile: 8px;
+  --spacing-md-mobile: 16px;
+  --spacing-lg-mobile: 24px;
+  --spacing-xl-mobile: 32px;
+  --spacing-xxl-mobile: 48px;
+
+  /* Mobile-first typography (Requirement 8.3) */
+  --font-size-display: 1.75rem;
+  --font-size-body-large: 1rem;
+  --font-size-body-regular: 0.875rem;
+  --font-size-body-small: 0.8125rem;
+  --font-size-caption: 0.75rem;
+
+  /* Line heights for optimal readability */
+  --line-height-display: 1.3;
+  --line-height-body-large: 1.4;
+  --line-height-body-regular: 1.4;
+  --line-height-body-small: 1.4;
+  --line-height-caption: 1.3;
+
+  /* Animation durations - mobile optimized */
+  --animation-duration-fast: 150ms;
+  --animation-duration-medium: 200ms;
+  --animation-duration-slow: 250ms;
+
+  /* Container widths */
+  --container-mobile: 100%;
+  --container-padding-mobile: 16px;
+}
+
+/* Tablet breakpoint (600px and up) */
+@media (min-width: 600px) {
+  :root {
+    /* Enhanced spacing for tablets */
+    --spacing-xs-tablet: 6px;
+    --spacing-sm-tablet: 12px;
+    --spacing-md-tablet: 20px;
+    --spacing-lg-tablet: 32px;
+    --spacing-xl-tablet: 40px;
+    --spacing-xxl-tablet: 56px;
+
+    /* Enhanced typography for tablets (Requirement 8.3) */
+    --font-size-display: 2rem;
+    --font-size-body-large: 1.125rem;
+    --font-size-body-regular: 1rem;
+    --font-size-body-small: 0.875rem;
+    --font-size-caption: 0.8125rem;
+
+    /* Improved line heights for tablets */
+    --line-height-display: 1.25;
+    --line-height-body-large: 1.5;
+    --line-height-body-regular: 1.5;
+    --line-height-body-small: 1.4;
+    --line-height-caption: 1.3;
+
+    /* Slightly longer animations for tablets */
+    --animation-duration-fast: 200ms;
+    --animation-duration-medium: 250ms;
+    --animation-duration-slow: 300ms;
+
+    /* Container adjustments */
+    --container-padding-mobile: 24px;
+  }
+}
+
+/* Desktop breakpoint (960px and up) */
+@media (min-width: 960px) {
+  :root {
+    /* Desktop spacing */
+    --spacing-xs-desktop: 8px;
+    --spacing-sm-desktop: 16px;
+    --spacing-md-desktop: 24px;
+    --spacing-lg-desktop: 32px;
+    --spacing-xl-desktop: 48px;
+    --spacing-xxl-desktop: 64px;
+
+    /* Desktop typography (Requirement 8.3) */
+    --font-size-display: 2.125rem;
+    --font-size-body-large: 1.125rem;
+    --font-size-body-regular: 1rem;
+    --font-size-body-small: 0.875rem;
+    --font-size-caption: 0.8125rem;
+
+    /* Desktop line heights */
+    --line-height-display: 1.25;
+    --line-height-body-large: 1.5;
+    --line-height-body-regular: 1.5;
+    --line-height-body-small: 1.4;
+    --line-height-caption: 1.3;
+
+    /* Full animation durations for desktop */
+    --animation-duration-fast: 200ms;
+    --animation-duration-medium: 300ms;
+    --animation-duration-slow: 400ms;
+
+    /* Desktop container */
+    --container-padding-mobile: 32px;
+  }
+}
+
+/* ============================================================================
+ * MOBILE-FIRST UTILITY CLASSES
+ * ============================================================================ */
+
+/* Touch target utilities (Requirement 8.2) */
+.touch-target-minimum {
+  min-height: var(--touch-target-minimum);
+  min-width: var(--touch-target-minimum);
+}
+
+.touch-target-mobile {
+  min-height: var(--touch-target-mobile);
+  min-width: var(--touch-target-mobile);
+}
+
+.touch-target-comfortable {
+  min-height: var(--touch-target-comfortable);
+  min-width: var(--touch-target-comfortable);
+}
+
+.touch-target-large {
+  min-height: var(--touch-target-large);
+  min-width: var(--touch-target-large);
+}
+
+/* Responsive typography utilities (Requirement 8.3) */
+.text-display {
+  font-size: var(--font-size-display);
+  line-height: var(--line-height-display);
+  font-weight: 600;
+}
+
+.text-body-large {
+  font-size: var(--font-size-body-large);
+  line-height: var(--line-height-body-large);
+  font-weight: 400;
+}
+
+.text-body-regular {
+  font-size: var(--font-size-body-regular);
+  line-height: var(--line-height-body-regular);
+  font-weight: 400;
+}
+
+.text-body-small {
+  font-size: var(--font-size-body-small);
+  line-height: var(--line-height-body-small);
+  font-weight: 400;
+}
+
+.text-caption {
+  font-size: var(--font-size-caption);
+  line-height: var(--line-height-caption);
+  font-weight: 400;
+}
+
+/* Responsive spacing utilities */
+.spacing-xs {
+  gap: var(--spacing-xs-mobile);
+}
+
+.spacing-sm {
+  gap: var(--spacing-sm-mobile);
+}
+
+.spacing-md {
+  gap: var(--spacing-md-mobile);
+}
+
+.spacing-lg {
+  gap: var(--spacing-lg-mobile);
+}
+
+.spacing-xl {
+  gap: var(--spacing-xl-mobile);
+}
+
+.spacing-xxl {
+  gap: var(--spacing-xxl-mobile);
+}
+
+/* Tablet spacing adjustments */
+@media (min-width: 600px) {
+  .spacing-xs {
+    gap: var(--spacing-xs-tablet);
+  }
+  .spacing-sm {
+    gap: var(--spacing-sm-tablet);
+  }
+  .spacing-md {
+    gap: var(--spacing-md-tablet);
+  }
+  .spacing-lg {
+    gap: var(--spacing-lg-tablet);
+  }
+  .spacing-xl {
+    gap: var(--spacing-xl-tablet);
+  }
+  .spacing-xxl {
+    gap: var(--spacing-xxl-tablet);
+  }
+}
+
+/* Desktop spacing adjustments */
+@media (min-width: 960px) {
+  .spacing-xs {
+    gap: var(--spacing-xs-desktop);
+  }
+  .spacing-sm {
+    gap: var(--spacing-sm-desktop);
+  }
+  .spacing-md {
+    gap: var(--spacing-md-desktop);
+  }
+  .spacing-lg {
+    gap: var(--spacing-lg-desktop);
+  }
+  .spacing-xl {
+    gap: var(--spacing-xl-desktop);
+  }
+  .spacing-xxl {
+    gap: var(--spacing-xxl-desktop);
+  }
+}
+
+/* ============================================================================
+ * ADAPTIVE LAYOUT UTILITIES (Requirement 8.5)
+ * ============================================================================ */
+
+/* Mobile-first container */
+.responsive-container {
+  width: 100%;
+  max-width: var(--container-mobile);
+  margin: 0 auto;
+  padding: 0 var(--container-padding-mobile);
+}
+
+/* Tablet container adjustments */
+@media (min-width: 600px) {
+  .responsive-container {
+    max-width: 100%;
+  }
+}
+
+/* Desktop container adjustments */
+@media (min-width: 960px) {
+  .responsive-container {
+    max-width: 1200px;
+  }
+}
+
+/* Adaptive flex layouts */
+.flex-mobile-column {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 600px) {
+  .flex-tablet-row {
+    flex-direction: row;
+  }
+}
+
+@media (min-width: 960px) {
+  .flex-desktop-row {
+    flex-direction: row;
+  }
+}
+
+/* Adaptive grid layouts */
+.grid-mobile-1 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-md-mobile);
+}
+
+@media (min-width: 600px) {
+  .grid-tablet-2 {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md-tablet);
+  }
+}
+
+@media (min-width: 960px) {
+  .grid-desktop-3 {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-md-desktop);
+  }
+}
+
+/* ============================================================================
+ * TOUCH-OPTIMIZED INTERACTIVE ELEMENTS
+ * ============================================================================ */
+
+/* Enhanced button styles for touch devices (Requirement 8.2) */
+.touch-button {
+  min-height: var(--touch-target-mobile);
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: var(--font-size-body-regular);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--animation-duration-fast) ease-out;
+
+  /* Ensure proper touch target size */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+
+  /* Touch feedback */
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+/* Touch feedback for mobile devices */
+@media (hover: none) and (pointer: coarse) {
+  .touch-button:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease-out;
+  }
+}
+
+/* Hover effects for devices that support hover */
+@media (hover: hover) and (pointer: fine) {
+  .touch-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+}
+
+/* Enhanced input styles for touch devices */
+.touch-input {
+  min-height: var(--touch-target-mobile);
+  padding: 12px 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: var(--font-size-body-regular);
+  transition: all var(--animation-duration-fast) ease-out;
+
+  /* Ensure proper touch target size */
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.touch-input:focus {
+  outline: none;
+  border-color: #007aff;
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+}
+
+/* ============================================================================
+ * ACCESSIBILITY AND REDUCED MOTION SUPPORT
+ * ============================================================================ */
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .touch-button:hover,
+  .touch-button:active {
+    transform: none !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .touch-button,
+  .touch-input {
+    border-width: 3px;
+  }
+
+  .touch-button:focus,
+  .touch-input:focus {
+    box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.3);
+  }
+}
+
+/* ============================================================================
+ * QUIZ-SPECIFIC RESPONSIVE COMPONENTS
+ * ============================================================================ */
+
+/* Progress card responsive styles */
+.quiz-progress-card {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  transition: all var(--animation-duration-medium) ease-out;
+}
+
+@media (min-width: 600px) {
+  .quiz-progress-card {
+    padding: 20px 24px;
+  }
+}
+
+@media (min-width: 960px) {
+  .quiz-progress-card {
+    padding: 24px 32px;
+  }
+}
+
+/* Question card responsive styles */
+.quiz-question-card {
+  margin-bottom: 24px;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all var(--animation-duration-medium) ease-out;
+}
+
+@media (min-width: 600px) {
+  .quiz-question-card {
+    margin-bottom: 28px;
+    padding: 20px 24px;
+    border-radius: 12px;
+  }
+}
+
+@media (min-width: 960px) {
+  .quiz-question-card {
+    margin-bottom: 32px;
+    padding: 24px 32px;
+    border-radius: 12px;
+  }
+}
+
+/* Answer option responsive styles */
+.quiz-answer-option {
+  min-height: var(--touch-target-mobile);
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all var(--animation-duration-fast) ease-out;
+
+  display: flex;
+  align-items: center;
+  font-size: var(--font-size-body-regular);
+  line-height: var(--line-height-body-regular);
+}
+
+@media (min-width: 600px) {
+  .quiz-answer-option {
+    padding: 14px 20px;
+    margin-bottom: 14px;
+  }
+}
+
+@media (min-width: 960px) {
+  .quiz-answer-option {
+    padding: 16px 24px;
+    margin-bottom: 16px;
+  }
+}
+
+/* Touch feedback for answer options */
+@media (hover: none) and (pointer: coarse) {
+  .quiz-answer-option:active {
+    transform: scale(0.98);
+    background-color: rgba(0, 122, 255, 0.05);
+  }
+}
+
+/* Hover effects for answer options */
+@media (hover: hover) and (pointer: fine) {
+  .quiz-answer-option:hover {
+    border-color: #007aff;
+    background-color: rgba(0, 122, 255, 0.02);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* Submit card responsive styles */
+.quiz-submit-card {
+  max-width: 100%;
+  margin: 32px auto;
+  padding: 24px 16px;
+  text-align: center;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+@media (min-width: 600px) {
+  .quiz-submit-card {
+    max-width: 480px;
+    padding: 32px 24px;
+  }
+}
+
+@media (min-width: 960px) {
+  .quiz-submit-card {
+    max-width: 480px;
+    padding: 40px 32px;
+  }
+}
+
+/* ============================================================================
+ * PERFORMANCE OPTIMIZATIONS FOR MOBILE
+ * ============================================================================ */
+
+/* Optimize animations for mobile performance */
+@media (max-width: 599px) {
+  * {
+    /* Use transform and opacity for better performance */
+    will-change: auto;
+  }
+
+  /* Reduce animation complexity on mobile */
+  .quiz-question-card,
+  .quiz-answer-option {
+    will-change: transform;
+  }
+
+  /* Simplify shadows on mobile for better performance */
+  .quiz-question-card {
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .quiz-answer-option:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* ============================================================================
+ * PRINT STYLES
+ * ============================================================================ */
+
+@media print {
+  .quiz-progress-card,
+  .touch-button {
+    display: none;
+  }
+
+  .quiz-question-card,
+  .quiz-answer-option {
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #000;
+  }
+
+  .quiz-answer-option {
+    margin-bottom: 8px;
+  }
+}

@@ -1,3 +1,6 @@
+/* Import Apple Design System Global Styles */
+@import '../src/@core/theme/apple-design-system/global-styles.css';
+
 html,
 body {
   min-height: 100%;

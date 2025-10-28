@@ -64,32 +64,57 @@ export class QuizUIService {
 
   /**
    * Get a single quiz by ID
+   * Enhanced with better error handling (Requirement 9.3)
    */
   async getQuizById(quizId: string): Promise<QuizDTO> {
     try {
       const response = await this.client.quizzes.get1({ id: quizId })
       return response.data
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error fetching quiz ${quizId}:`, error)
-      throw error
+
+      // Provide user-friendly error messages
+      if (error.response?.status === 404) {
+        throw new Error('Testul nu a fost găsit.')
+      } else if (error.response?.status === 403) {
+        throw new Error('Nu ai permisiunea de a accesa acest test.')
+      } else if (error.message?.includes('network') || !error.response) {
+        throw new Error('Probleme de conexiune. Verifică conexiunea la internet.')
+      }
+
+      throw new Error('Nu am putut încărca testul. Te rugăm să încerci din nou.')
     }
   }
 
   /**
    * Start a quiz attempt
+   * Enhanced with better error handling (Requirement 9.3)
    */
   async startQuiz(quizId: string): Promise<any> {
     try {
       const response = await this.client.quizzes.start({ id: quizId })
       return response.data
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error starting quiz ${quizId}:`, error)
-      throw error
+
+      // Provide user-friendly error messages
+      if (error.response?.status === 404) {
+        throw new Error('Testul nu a fost găsit.')
+      } else if (error.response?.status === 403) {
+        throw new Error('Nu ai permisiunea de a începe acest test.')
+      } else if (error.response?.status === 409) {
+        throw new Error('Ai început deja acest test.')
+      } else if (error.message?.includes('network') || !error.response) {
+        throw new Error('Probleme de conexiune. Verifică conexiunea la internet.')
+      }
+
+      throw new Error('Nu am putut începe testul. Te rugăm să încerci din nou.')
     }
   }
 
   /**
    * Submit quiz answers
+   * Enhanced with better error handling (Requirement 9.3)
    */
   async submitQuiz(quizId: string, answers: Record<string, number>): Promise<any> {
     try {
@@ -104,9 +129,23 @@ export class QuizUIService {
 
       const response = await this.client.quizzes.submit({ submitQuizDTO: submitData })
       return response.data
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error submitting quiz ${quizId}:`, error)
-      throw error
+
+      // Provide user-friendly error messages
+      if (error.response?.status === 404) {
+        throw new Error('Testul nu a fost găsit.')
+      } else if (error.response?.status === 400) {
+        throw new Error('Răspunsurile nu sunt valide. Te rugăm să verifici și să încerci din nou.')
+      } else if (error.response?.status === 409) {
+        throw new Error('Testul a fost deja trimis.')
+      } else if (error.message?.includes('timeout')) {
+        throw new Error('Timpul de așteptare a expirat. Te rugăm să încerci din nou.')
+      } else if (error.message?.includes('network') || !error.response) {
+        throw new Error('Probleme de conexiune. Verifică conexiunea la internet.')
+      }
+
+      throw new Error('Nu am putut trimite testul. Te rugăm să încerci din nou.')
     }
   }
 

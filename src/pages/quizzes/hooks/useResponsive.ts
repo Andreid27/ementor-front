@@ -1,5 +1,5 @@
 // Custom hook for responsive design and device detection
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useTheme } from '@mui/material/styles'
 import { useMediaQuery } from '@mui/material'
 import {
@@ -11,7 +11,11 @@ import {
   BREAKPOINTS,
   RESPONSIVE_SPACING,
   RESPONSIVE_TYPOGRAPHY,
-  RESPONSIVE_ANIMATIONS
+  RESPONSIVE_ANIMATIONS,
+  TOUCH_TARGETS,
+  CONTAINER_WIDTHS,
+  getResponsiveTypography,
+  getLayoutConfig
 } from '../constants/responsive'
 
 interface ResponsiveState {
@@ -193,19 +197,60 @@ export const useResponsiveDataGrid = () => {
   }
 }
 
-// Hook for responsive quiz interface configuration
+// Enhanced hook for responsive quiz interface configuration
 export const useResponsiveQuizInterface = () => {
-  const { deviceType, isTouchDevice, shouldReduceMotion, getSpacing } = useResponsive()
+  const { deviceType, isMobile, isTablet, isTouchDevice, shouldReduceMotion, getSpacing, supportsHover, orientation } =
+    useResponsive()
 
+  // Get adaptive touch target size (Requirement 8.2)
+  const touchTargetSize = useMemo(() => {
+    if (isMobile) return TOUCH_TARGETS.MOBILE // 48px minimum on mobile
+    if (isTablet && isTouchDevice) return TOUCH_TARGETS.COMFORTABLE
+    return TOUCH_TARGETS.MINIMUM
+  }, [isMobile, isTablet, isTouchDevice])
+
+  // Get layout configuration (Requirement 8.5)
+  const layoutConfig = useMemo(() => {
+    return getLayoutConfig(deviceType)
+  }, [deviceType])
+
+  // Enhanced responsive configuration
   return {
+    // Spacing configuration
     cardSpacing: getSpacing('LG'),
     questionSpacing: getSpacing('MD'),
     answerSpacing: getSpacing('SM'),
-    touchTargetSize: isTouchDevice ? 48 : 40,
-    enableHoverEffects: !isTouchDevice && !shouldReduceMotion(),
+    sectionSpacing: layoutConfig.sectionSpacing,
+
+    // Touch and interaction configuration (Requirement 8.2)
+    touchTargetSize,
+    minTouchTarget: TOUCH_TARGETS.MOBILE, // Always ensure 48px minimum
+
+    // Animation and interaction preferences
+    enableHoverEffects: supportsHover && !shouldReduceMotion(),
     enableAnimations: !shouldReduceMotion(),
-    stackLayout: deviceType === 'mobile',
-    compactHeader: deviceType === 'mobile'
+    animationDuration: RESPONSIVE_ANIMATIONS[deviceType.toUpperCase() as keyof typeof RESPONSIVE_ANIMATIONS].duration,
+
+    // Layout configuration (Requirement 8.5)
+    stackLayout: layoutConfig.stackDirection === 'column',
+    compactHeader: layoutConfig.headerCompact,
+    sidebarCollapsed: layoutConfig.sidebarCollapsed,
+
+    // Device-specific optimizations
+    isMobileOptimized: isMobile,
+    isTabletOptimized: isTablet,
+    isTouchOptimized: isTouchDevice,
+    isLandscape: orientation === 'landscape',
+
+    // Typography configuration (Requirement 8.3)
+    getTypographyConfig: (variant: keyof typeof RESPONSIVE_TYPOGRAPHY) => getResponsiveTypography(variant, deviceType),
+
+    // Container configuration
+    containerMaxWidth: CONTAINER_WIDTHS.QUIZ_INTERFACE[deviceType],
+
+    // Performance optimizations
+    shouldOptimizeForMobile: isMobile,
+    maxParticles: RESPONSIVE_ANIMATIONS[deviceType.toUpperCase() as keyof typeof RESPONSIVE_ANIMATIONS].maxParticles
   }
 }
 

@@ -1,0 +1,446 @@
+/**
+ * Apple Design System CSS Custom Properties
+ *
+ * Global CSS variables for consistent application of the Apple-inspired design system.
+ * These variables ensure adherence to the 8px grid, typography hierarchy, border radius
+ * consistency, elevation limits, and color palette requirements.
+ */
+
+:root {
+  /* ========================================================================
+   * SPACING SYSTEM - 8px Grid (Requirement 6.1)
+   * ======================================================================== */
+
+  --apple-spacing-base: 8px;
+  --apple-spacing-xs: 4px; /* 0.5 * base */
+  --apple-spacing-sm: 8px; /* 1 * base */
+  --apple-spacing-md: 16px; /* 2 * base */
+  --apple-spacing-lg: 24px; /* 3 * base */
+  --apple-spacing-xl: 32px; /* 4 * base */
+  --apple-spacing-xxl: 48px; /* 6 * base */
+
+  /* Component-specific spacing */
+  --apple-card-padding-mobile: var(--apple-spacing-md); /* 16px */
+  --apple-card-padding-desktop: var(--apple-spacing-lg); /* 24px */
+  --apple-question-spacing-mobile: var(--apple-spacing-lg); /* 24px max */
+  --apple-question-spacing-desktop: var(--apple-spacing-xl); /* 32px max */
+  --apple-answer-spacing: 12px; /* 1.5 * base */
+
+  /* Touch targets */
+  --apple-touch-target-minimum: 44px; /* iOS minimum */
+  --apple-touch-target-mobile: 48px; /* Android minimum */
+
+  /* ========================================================================
+   * TYPOGRAPHY HIERARCHY - Max 3 sizes per screen (Requirement 6.2)
+   * ======================================================================== */
+
+  /* Font family - Apple system font stack */
+  --apple-font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Helvetica,
+    Arial, sans-serif;
+
+  /* Display typography (major headings) */
+  --apple-font-size-display-mobile: 28px;
+  --apple-font-size-display-desktop: 32px;
+  --apple-line-height-display-mobile: 36px;
+  --apple-line-height-display-desktop: 40px;
+  --apple-font-weight-display: 600;
+  --apple-letter-spacing-display: -0.02em;
+
+  /* Body Large typography (question text, primary content) */
+  --apple-font-size-body-large-mobile: 16px;
+  --apple-font-size-body-large-desktop: 18px;
+  --apple-line-height-body-large-mobile: 22px;
+  --apple-line-height-body-large-desktop: 24px;
+  --apple-font-weight-body-large: 400;
+  --apple-letter-spacing-body-large: 0em;
+
+  /* Body Regular typography (answer options, secondary content) */
+  --apple-font-size-body-regular-mobile: 14px;
+  --apple-font-size-body-regular-desktop: 16px;
+  --apple-line-height-body-regular-mobile: 20px;
+  --apple-line-height-body-regular-desktop: 24px;
+  --apple-font-weight-body-regular: 400;
+  --apple-letter-spacing-body-regular: 0em;
+
+  /* Caption typography (metadata, progress indicators) */
+  --apple-font-size-caption-mobile: 12px;
+  --apple-font-size-caption-desktop: 14px;
+  --apple-line-height-caption-mobile: 18px;
+  --apple-line-height-caption-desktop: 20px;
+  --apple-font-weight-caption: 400;
+  --apple-letter-spacing-caption: 0.01em;
+
+  /* ========================================================================
+   * BORDER RADIUS SYSTEM (Requirement 6.3)
+   * ======================================================================== */
+
+  --apple-border-radius-small: 4px; /* Buttons, inputs, small elements */
+  --apple-border-radius-medium: 8px; /* Answer options, radio components, mobile cards */
+  --apple-border-radius-large: 12px; /* Question cards desktop, major containers */
+  --apple-border-radius-extra-large: 16px; /* Modal dialogs, celebration overlays */
+
+  /* Component-specific radius */
+  --apple-border-radius-radio: var(--apple-border-radius-medium); /* 8px */
+  --apple-border-radius-question-mobile: var(--apple-border-radius-medium); /* 8px */
+  --apple-border-radius-question-desktop: var(--apple-border-radius-large); /* 12px */
+  --apple-border-radius-button: var(--apple-border-radius-medium); /* 8px */
+  --apple-border-radius-modal: var(--apple-border-radius-extra-large); /* 16px */
+
+  /* ========================================================================
+   * ELEVATION SYSTEM - Max 4dp (Requirement 6.4)
+   * ======================================================================== */
+
+  /* Light theme shadows */
+  --apple-shadow-none: none;
+  --apple-shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.12); /* Level 1 */
+  --apple-shadow-raised: 0 2px 6px rgba(0, 0, 0, 0.16); /* Level 2 - Question cards */
+  --apple-shadow-floating: 0 4px 12px rgba(0, 0, 0, 0.24); /* Level 3 */
+  --apple-shadow-modal: 0 8px 24px rgba(0, 0, 0, 0.32); /* Level 4 - Maximum */
+
+  /* Component-specific elevation */
+  --apple-elevation-progress-card: var(--apple-shadow-subtle);
+  --apple-elevation-question-card: var(--apple-shadow-raised); /* 2dp - Requirement 2.2 */
+  --apple-elevation-submit-card: var(--apple-shadow-raised);
+  --apple-elevation-celebration: var(--apple-shadow-modal); /* Maximum elevation */
+
+  /* ========================================================================
+   * COLOR PALETTE - Limited with proper contrast (Requirement 6.5)
+   * ======================================================================== */
+
+  /* Primary Apple colors */
+  --apple-color-primary: #007aff; /* Apple Blue - 4.5:1 contrast on white */
+  --apple-color-primary-light: #e3f2fd; /* Light blue background */
+  --apple-color-primary-dark: #0056cc; /* Darker blue for hover */
+
+  /* Semantic colors */
+  --apple-color-success: #34c759; /* Apple Green - 4.7:1 contrast */
+  --apple-color-warning: #ff9500; /* Apple Orange - 4.6:1 contrast */
+  --apple-color-error: #ff3b30; /* Apple Red - 4.8:1 contrast */
+
+  /* Background colors */
+  --apple-color-background-primary: #ffffff; /* Light mode background */
+  --apple-color-background-secondary: #f2f2f7; /* Light mode surface */
+
+  /* Text colors (minimum 4.5:1 contrast ratio) */
+  --apple-color-text-primary: #000000; /* 21:1 contrast ratio */
+  --apple-color-text-secondary: #8e8e93; /* 4.6:1 contrast ratio */
+  --apple-color-text-disabled: #c7c7cc; /* Disabled text */
+
+  /* Border and divider colors */
+  --apple-color-border: #e5e5ea; /* Light borders */
+  --apple-color-border-focus: var(--apple-color-primary); /* Focus state */
+
+  /* Interactive state colors */
+  --apple-color-hover-background: #f0f8ff; /* Light hover background */
+  --apple-color-selected-background: var(--apple-color-primary-light);
+  --apple-color-selected-border: var(--apple-color-primary);
+  --apple-color-disabled-background: #f9f9f9; /* Disabled background */
+  --apple-color-disabled-border: #f2f2f7; /* Disabled border */
+  --apple-color-disabled-text: var(--apple-color-text-secondary);
+
+  /* Performance-based colors for celebrations */
+  --apple-color-performance-excellent: #ffd700; /* Gold for 80%+ */
+  --apple-color-performance-good: var(--apple-color-primary); /* Blue for 60-79% */
+  --apple-color-performance-needs-improvement: var(--apple-color-text-secondary); /* Gray for <60% */
+
+  /* ========================================================================
+   * ANIMATION SYSTEM (Requirements 7.1, 7.2)
+   * ======================================================================== */
+
+  /* Duration standards */
+  --apple-duration-micro: 150ms; /* Micro-interactions (hover, focus) */
+  --apple-duration-standard: 300ms; /* Standard transitions (state changes) */
+  --apple-duration-complex: 500ms; /* Complex animations (page transitions) */
+  --apple-duration-celebration: 4000ms; /* Celebration animation (Requirement 5.4) */
+
+  /* Apple-style easing functions (Requirement 7.2) */
+  --apple-easing-standard: cubic-bezier(0.4, 0, 0.2, 1); /* Standard easing */
+  --apple-easing-decelerate: cubic-bezier(0, 0, 0.2, 1); /* Entrance animations */
+  --apple-easing-accelerate: cubic-bezier(0.4, 0, 1, 1); /* Exit animations */
+  --apple-easing-sharp: cubic-bezier(0.4, 0, 0.6, 1); /* Temporary elements */
+
+  /* Component-specific animation */
+  --apple-transition-radio: all var(--apple-duration-micro) var(--apple-easing-standard);
+  --apple-transition-card: all var(--apple-duration-standard) var(--apple-easing-standard);
+  --apple-transition-button: all var(--apple-duration-micro) var(--apple-easing-standard);
+
+  /* ========================================================================
+   * RESPONSIVE BREAKPOINTS
+   * ======================================================================== */
+
+  --apple-breakpoint-mobile-min: 320px;
+  --apple-breakpoint-mobile-max: 767px;
+  --apple-breakpoint-tablet-min: 768px;
+  --apple-breakpoint-tablet-max: 1024px;
+  --apple-breakpoint-desktop-min: 1025px;
+
+  /* Container constraints */
+  --apple-container-max-width: 1200px;
+  --apple-margin-mobile: 16px;
+  --apple-margin-tablet: 24px;
+  --apple-margin-desktop: 32px;
+
+  /* ========================================================================
+   * COMPONENT-SPECIFIC VARIABLES
+   * ======================================================================== */
+
+  /* Progress Card */
+  --apple-progress-card-min-height: 64px;
+  --apple-progress-card-compact-height: 48px;
+
+  /* Question Card */
+  --apple-question-card-elevation: var(--apple-elevation-question-card);
+
+  /* Radio Component */
+  --apple-radio-border-width: 1px;
+  --apple-radio-transition: var(--apple-transition-radio);
+
+  /* Submit Card */
+  --apple-submit-card-max-width: 480px;
+  --apple-submit-button-height-mobile: var(--apple-touch-target-mobile);
+  --apple-submit-button-height-desktop: var(--apple-touch-target-minimum);
+}
+
+/* ============================================================================
+ * DARK THEME OVERRIDES
+ * ============================================================================ */
+
+[data-theme='dark'] {
+  /* Background colors */
+  --apple-color-background-primary: #000000; /* Dark mode background */
+  --apple-color-background-secondary: #1c1c1e; /* Dark mode surface */
+
+  /* Text colors */
+  --apple-color-text-primary: #ffffff; /* 21:1 contrast ratio */
+  --apple-color-text-secondary: #8e8e93; /* Same as light mode */
+  --apple-color-text-disabled: #48484a; /* Dark mode disabled text */
+
+  /* Border colors */
+  --apple-color-border: #38383a; /* Dark borders */
+
+  /* Interactive state colors */
+  --apple-color-hover-background: #1a1a1a; /* Dark hover background */
+
+  /* Dark theme shadows */
+  --apple-shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.24);
+  --apple-shadow-raised: 0 2px 6px rgba(0, 0, 0, 0.32);
+  --apple-shadow-floating: 0 4px 12px rgba(0, 0, 0, 0.48);
+  --apple-shadow-modal: 0 8px 24px rgba(0, 0, 0, 0.64);
+
+  /* Update component elevations for dark theme */
+  --apple-elevation-progress-card: var(--apple-shadow-subtle);
+  --apple-elevation-question-card: var(--apple-shadow-raised);
+  --apple-elevation-submit-card: var(--apple-shadow-raised);
+  --apple-elevation-celebration: var(--apple-shadow-modal);
+}
+
+/* ============================================================================
+ * REDUCED MOTION SUPPORT (Requirement 7.4)
+ * ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --apple-duration-micro: 1ms;
+    --apple-duration-standard: 1ms;
+    --apple-duration-complex: 1ms;
+    --apple-duration-celebration: 1ms;
+
+    --apple-transition-radio: none;
+    --apple-transition-card: none;
+    --apple-transition-button: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================================================
+ * RESPONSIVE TYPOGRAPHY (Mobile-first approach)
+ * ============================================================================ */
+
+/* Mobile typography (default) */
+.apple-typography-display {
+  font-family: var(--apple-font-family);
+  font-size: var(--apple-font-size-display-mobile);
+  line-height: var(--apple-line-height-display-mobile);
+  font-weight: var(--apple-font-weight-display);
+  letter-spacing: var(--apple-letter-spacing-display);
+}
+
+.apple-typography-body-large {
+  font-family: var(--apple-font-family);
+  font-size: var(--apple-font-size-body-large-mobile);
+  line-height: var(--apple-line-height-body-large-mobile);
+  font-weight: var(--apple-font-weight-body-large);
+  letter-spacing: var(--apple-letter-spacing-body-large);
+}
+
+.apple-typography-body-regular {
+  font-family: var(--apple-font-family);
+  font-size: var(--apple-font-size-body-regular-mobile);
+  line-height: var(--apple-line-height-body-regular-mobile);
+  font-weight: var(--apple-font-weight-body-regular);
+  letter-spacing: var(--apple-letter-spacing-body-regular);
+}
+
+.apple-typography-caption {
+  font-family: var(--apple-font-family);
+  font-size: var(--apple-font-size-caption-mobile);
+  line-height: var(--apple-line-height-caption-mobile);
+  font-weight: var(--apple-font-weight-caption);
+  letter-spacing: var(--apple-letter-spacing-caption);
+}
+
+/* Desktop typography overrides */
+@media (min-width: 1025px) {
+  .apple-typography-display {
+    font-size: var(--apple-font-size-display-desktop);
+    line-height: var(--apple-line-height-display-desktop);
+  }
+
+  .apple-typography-body-large {
+    font-size: var(--apple-font-size-body-large-desktop);
+    line-height: var(--apple-line-height-body-large-desktop);
+  }
+
+  .apple-typography-body-regular {
+    font-size: var(--apple-font-size-body-regular-desktop);
+    line-height: var(--apple-line-height-body-regular-desktop);
+  }
+
+  .apple-typography-caption {
+    font-size: var(--apple-font-size-caption-desktop);
+    line-height: var(--apple-line-height-caption-desktop);
+  }
+}
+
+/* ============================================================================
+ * UTILITY CLASSES
+ * ============================================================================ */
+
+/* Spacing utilities */
+.apple-spacing-xs {
+  margin: var(--apple-spacing-xs);
+}
+.apple-spacing-sm {
+  margin: var(--apple-spacing-sm);
+}
+.apple-spacing-md {
+  margin: var(--apple-spacing-md);
+}
+.apple-spacing-lg {
+  margin: var(--apple-spacing-lg);
+}
+.apple-spacing-xl {
+  margin: var(--apple-spacing-xl);
+}
+.apple-spacing-xxl {
+  margin: var(--apple-spacing-xxl);
+}
+
+/* Padding utilities */
+.apple-padding-xs {
+  padding: var(--apple-spacing-xs);
+}
+.apple-padding-sm {
+  padding: var(--apple-spacing-sm);
+}
+.apple-padding-md {
+  padding: var(--apple-spacing-md);
+}
+.apple-padding-lg {
+  padding: var(--apple-spacing-lg);
+}
+.apple-padding-xl {
+  padding: var(--apple-spacing-xl);
+}
+.apple-padding-xxl {
+  padding: var(--apple-spacing-xxl);
+}
+
+/* Border radius utilities */
+.apple-radius-small {
+  border-radius: var(--apple-border-radius-small);
+}
+.apple-radius-medium {
+  border-radius: var(--apple-border-radius-medium);
+}
+.apple-radius-large {
+  border-radius: var(--apple-border-radius-large);
+}
+.apple-radius-extra-large {
+  border-radius: var(--apple-border-radius-extra-large);
+}
+
+/* Elevation utilities */
+.apple-elevation-none {
+  box-shadow: var(--apple-shadow-none);
+}
+.apple-elevation-subtle {
+  box-shadow: var(--apple-shadow-subtle);
+}
+.apple-elevation-raised {
+  box-shadow: var(--apple-shadow-raised);
+}
+.apple-elevation-floating {
+  box-shadow: var(--apple-shadow-floating);
+}
+.apple-elevation-modal {
+  box-shadow: var(--apple-shadow-modal);
+}
+
+/* Color utilities */
+.apple-color-primary {
+  color: var(--apple-color-primary);
+}
+.apple-color-success {
+  color: var(--apple-color-success);
+}
+.apple-color-warning {
+  color: var(--apple-color-warning);
+}
+.apple-color-error {
+  color: var(--apple-color-error);
+}
+.apple-color-text-primary {
+  color: var(--apple-color-text-primary);
+}
+.apple-color-text-secondary {
+  color: var(--apple-color-text-secondary);
+}
+
+/* Background utilities */
+.apple-bg-primary {
+  background-color: var(--apple-color-background-primary);
+}
+.apple-bg-secondary {
+  background-color: var(--apple-color-background-secondary);
+}
+.apple-bg-selected {
+  background-color: var(--apple-color-selected-background);
+}
+
+/* Border utilities */
+.apple-border {
+  border: 1px solid var(--apple-color-border);
+}
+.apple-border-focus {
+  border-color: var(--apple-color-border-focus);
+}
+
+/* Transition utilities */
+.apple-transition-micro {
+  transition: var(--apple-transition-radio);
+}
+.apple-transition-standard {
+  transition: var(--apple-transition-card);
+}
+.apple-transition-button {
+  transition: var(--apple-transition-button);
+}

@@ -1,0 +1,458 @@
+/**
+ * Apple-Style Animation and Transition CSS System
+ *
+ * This CSS file provides utility classes and custom properties for implementing
+ * Apple-style animations throughout the quiz interface.
+ *
+ * Requirements addressed:
+ * - 7.1: Consistent animation durations (150ms micro-interactions, 300ms transitions)
+ * - 7.2: Apple-style cubic-bezier easing functions
+ * - 7.4: Reduced motion support system
+ * - 7.5: Ensure all animations serve functional purposes
+ */
+
+/* ============================================================================
+   CSS CUSTOM PROPERTIES - Animation System Variables
+   ============================================================================ */
+
+:root {
+  /* Animation Durations (Requirement 7.1) */
+  --apple-duration-micro: 150ms; /* Micro-interactions */
+  --apple-duration-standard: 300ms; /* Standard transitions */
+  --apple-duration-complex: 500ms; /* Complex animations */
+  --apple-duration-celebration: 4000ms; /* Celebration sequence */
+
+  /* Component-specific durations */
+  --apple-duration-radio: 200ms; /* Radio selection feedback */
+  --apple-duration-touch: 100ms; /* Touch feedback */
+  --apple-duration-touch-scale: 150ms; /* Touch scale animation */
+
+  /* Apple-style Easing Functions (Requirement 7.2) */
+  --apple-ease-standard: cubic-bezier(0.4, 0, 0.2, 1); /* Standard Apple easing */
+  --apple-ease-decelerate: cubic-bezier(0, 0, 0.2, 1); /* Entrance animations */
+  --apple-ease-accelerate: cubic-bezier(0.4, 0, 1, 1); /* Exit animations */
+  --apple-ease-sharp: cubic-bezier(0.4, 0, 0.6, 1); /* Quick interactions */
+  --apple-ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Spring-like */
+  --apple-ease-celebration: cubic-bezier(0.25, 0.46, 0.45, 0.94); /* Celebrations */
+  --apple-ease-touch: cubic-bezier(0.25, 0.46, 0.45, 0.94); /* Touch feedback */
+
+  /* Animation scales for touch feedback */
+  --apple-scale-press: 0.98; /* Scale on press */
+  --apple-scale-hover: 1.02; /* Scale on hover (desktop) */
+}
+
+/* ============================================================================
+   REDUCED MOTION SUPPORT (Requirement 7.4)
+   ============================================================================ */
+
+/* Respect user's reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Override custom properties for reduced motion */
+  :root {
+    --apple-duration-micro: 1ms;
+    --apple-duration-standard: 1ms;
+    --apple-duration-complex: 1ms;
+    --apple-duration-celebration: 100ms; /* Minimal celebration */
+    --apple-duration-radio: 1ms;
+    --apple-duration-touch: 1ms;
+    --apple-duration-touch-scale: 1ms;
+  }
+}
+
+/* ============================================================================
+   UTILITY CLASSES - Common Animation Patterns
+   ============================================================================ */
+
+/* Standard transition utility */
+.apple-transition {
+  transition: all var(--apple-duration-standard) var(--apple-ease-standard);
+}
+
+/* Micro-interaction transition */
+.apple-transition-micro {
+  transition: all var(--apple-duration-micro) var(--apple-ease-standard);
+}
+
+/* Complex animation transition */
+.apple-transition-complex {
+  transition: all var(--apple-duration-complex) var(--apple-ease-decelerate);
+}
+
+/* Property-specific transitions */
+.apple-transition-transform {
+  transition: transform var(--apple-duration-standard) var(--apple-ease-standard);
+}
+
+.apple-transition-opacity {
+  transition: opacity var(--apple-duration-standard) var(--apple-ease-standard);
+}
+
+.apple-transition-colors {
+  transition: background-color var(--apple-duration-standard) var(--apple-ease-standard),
+    border-color var(--apple-duration-standard) var(--apple-ease-standard),
+    color var(--apple-duration-standard) var(--apple-ease-standard);
+}
+
+.apple-transition-shadow {
+  transition: box-shadow var(--apple-duration-micro) var(--apple-ease-standard);
+}
+
+/* ============================================================================
+   COMPONENT-SPECIFIC ANIMATION CLASSES
+   ============================================================================ */
+
+/* Progress Card Animations (Requirements 1.2, 1.5) */
+.apple-progress-card {
+  transition: height var(--apple-duration-standard) var(--apple-ease-decelerate),
+    backdrop-filter var(--apple-duration-standard) var(--apple-ease-decelerate),
+    background-color var(--apple-duration-standard) var(--apple-ease-decelerate);
+}
+
+.apple-progress-bar {
+  transition: width var(--apple-duration-standard) var(--apple-ease-standard),
+    background-color var(--apple-duration-standard) var(--apple-ease-standard);
+}
+
+/* Question Card Animations (Requirement 2.3) */
+.apple-question-card {
+  transition: box-shadow var(--apple-duration-micro) var(--apple-ease-standard),
+    border-color var(--apple-duration-micro) var(--apple-ease-standard),
+    transform var(--apple-duration-micro) var(--apple-ease-standard);
+}
+
+.apple-question-card:focus-within {
+  transform: translateY(-1px); /* Gentle lift on focus */
+}
+
+/* Radio Component Animations (Requirements 3.2, 3.5) */
+.apple-radio-option {
+  transition: border-color var(--apple-duration-radio) var(--apple-ease-standard),
+    background-color var(--apple-duration-radio) var(--apple-ease-standard),
+    transform var(--apple-duration-radio) var(--apple-ease-standard);
+}
+
+/* Hover states only on hover-capable devices (Requirement 3.5) */
+@media (hover: hover) and (pointer: fine) {
+  .apple-radio-option:hover {
+    transform: translateY(-1px);
+    transition-duration: var(--apple-duration-micro);
+  }
+}
+
+/* Touch feedback for mobile devices */
+.apple-radio-option:active {
+  transform: scale(var(--apple-scale-press));
+  transition-duration: var(--apple-duration-touch);
+}
+
+/* Submit Card Animations (Requirement 4.4) */
+.apple-submit-card {
+  transition: opacity var(--apple-duration-standard) var(--apple-ease-standard),
+    transform var(--apple-duration-standard) var(--apple-ease-standard);
+}
+
+.apple-submit-button {
+  transition: background-color var(--apple-duration-micro) var(--apple-ease-standard),
+    transform var(--apple-duration-micro) var(--apple-ease-standard),
+    box-shadow var(--apple-duration-micro) var(--apple-ease-standard);
+}
+
+.apple-submit-button:active {
+  transform: scale(var(--apple-scale-press));
+}
+
+/* Loading state animation */
+.apple-loading-button {
+  transition: opacity var(--apple-duration-standard) var(--apple-ease-standard),
+    transform var(--apple-duration-standard) var(--apple-ease-standard);
+}
+
+/* ============================================================================
+   CELEBRATION ANIMATION CLASSES (Requirements 5.1-5.5)
+   ============================================================================ */
+
+/* Celebration container */
+.apple-celebration {
+  transition: opacity var(--apple-duration-standard) var(--apple-ease-decelerate),
+    backdrop-filter var(--apple-duration-standard) var(--apple-ease-decelerate);
+}
+
+/* Score progression animation */
+.apple-score-reveal {
+  transition: transform var(--apple-duration-complex) var(--apple-ease-spring),
+    opacity var(--apple-duration-complex) var(--apple-ease-spring);
+}
+
+/* Performance-based celebration effects */
+.apple-celebration-excellent {
+  animation: apple-celebration-bounce var(--apple-duration-complex) var(--apple-ease-celebration);
+}
+
+.apple-celebration-good {
+  animation: apple-celebration-pulse var(--apple-duration-complex) var(--apple-ease-celebration);
+}
+
+.apple-celebration-supportive {
+  animation: apple-celebration-gentle var(--apple-duration-complex) var(--apple-ease-celebration);
+}
+
+/* Typography transition animations */
+.apple-message-transition {
+  transition: opacity var(--apple-duration-standard) var(--apple-ease-decelerate),
+    transform var(--apple-duration-standard) var(--apple-ease-decelerate);
+}
+
+/* ============================================================================
+   KEYFRAME ANIMATIONS
+   ============================================================================ */
+
+/* Celebration bounce animation for excellent performance */
+@keyframes apple-celebration-bounce {
+  0% {
+    transform: scale(0.8) translateY(20px);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05) translateY(-5px);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Celebration pulse animation for good performance */
+@keyframes apple-celebration-pulse {
+  0% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.02);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Gentle celebration animation for supportive feedback */
+@keyframes apple-celebration-gentle {
+  0% {
+    transform: scale(0.95) translateY(10px);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Loading spinner animation */
+@keyframes apple-spinner {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Progress bar fill animation */
+@keyframes apple-progress-fill {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: var(--progress-width, 100%);
+  }
+}
+
+/* Fade in animation */
+@keyframes apple-fade-in {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Fade out animation */
+@keyframes apple-fade-out {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+/* ============================================================================
+   PERFORMANCE OPTIMIZATIONS
+   ============================================================================ */
+
+/* GPU acceleration for animated elements */
+.apple-gpu-accelerated {
+  will-change: transform, opacity;
+  transform: translateZ(0); /* Force GPU layer */
+}
+
+/* Remove will-change after animation completes */
+.apple-animation-complete {
+  will-change: auto;
+}
+
+/* Optimize for 60fps animations */
+.apple-smooth-animation {
+  backface-visibility: hidden;
+  perspective: 1000px;
+  transform-style: preserve-3d;
+}
+
+/* ============================================================================
+   RESPONSIVE ANIMATION ADJUSTMENTS
+   ============================================================================ */
+
+/* Mobile-optimized animations (Requirements 8.2, 8.3, 8.4) */
+@media (max-width: 767px) {
+  :root {
+    /* Slightly faster animations on mobile for responsiveness */
+    --apple-duration-micro: 120ms; /* 20% faster */
+    --apple-duration-standard: 240ms; /* 20% faster */
+    --apple-duration-complex: 400ms; /* 20% faster */
+  }
+
+  /* Enhanced touch feedback on mobile */
+  .apple-touch-feedback:active {
+    transform: scale(var(--apple-scale-press));
+    transition: transform var(--apple-duration-touch) var(--apple-ease-touch);
+  }
+
+  /* Optimize animations for mobile performance */
+  .apple-mobile-optimized {
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 768px) and (max-width: 1024px) {
+  :root {
+    /* Slightly faster animations on tablet */
+    --apple-duration-micro: 135ms; /* 10% faster */
+    --apple-duration-standard: 270ms; /* 10% faster */
+  }
+}
+
+/* Desktop enhancements */
+@media (min-width: 1025px) {
+  /* Full animation durations on desktop */
+  :root {
+    --apple-duration-micro: 150ms;
+    --apple-duration-standard: 300ms;
+    --apple-duration-complex: 500ms;
+  }
+
+  /* Enhanced hover effects on desktop */
+  @media (hover: hover) and (pointer: fine) {
+    .apple-desktop-hover:hover {
+      transform: translateY(-2px);
+      transition: transform var(--apple-duration-micro) var(--apple-ease-standard);
+    }
+  }
+}
+
+/* ============================================================================
+   ACCESSIBILITY AND FUNCTIONAL PURPOSE (Requirement 7.5)
+   ============================================================================ */
+
+/* Ensure animations serve functional purposes */
+.apple-functional-animation {
+  /* All animations must enhance usability */
+  /* Provide visual feedback for user actions */
+  /* Guide user attention to important changes */
+  /* Add delight without being distracting */
+}
+
+/* Focus indicators with smooth transitions */
+.apple-focus-indicator:focus {
+  outline: 2px solid #007aff;
+  outline-offset: 2px;
+  transition: outline-offset var(--apple-duration-micro) var(--apple-ease-standard);
+}
+
+/* Loading states with clear visual feedback */
+.apple-loading-state {
+  position: relative;
+  overflow: hidden;
+}
+
+.apple-loading-state::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: apple-loading-shimmer 1.5s infinite;
+}
+
+@keyframes apple-loading-shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* ============================================================================
+   UTILITY CLASSES FOR COMMON PATTERNS
+   ============================================================================ */
+
+/* Entrance animations */
+.apple-enter {
+  animation: apple-fade-in var(--apple-duration-standard) var(--apple-ease-decelerate);
+}
+
+/* Exit animations */
+.apple-exit {
+  animation: apple-fade-out var(--apple-duration-standard) var(--apple-ease-accelerate);
+}
+
+/* Bounce effect for success states */
+.apple-bounce {
+  animation: apple-celebration-bounce var(--apple-duration-complex) var(--apple-ease-spring);
+}
+
+/* Pulse effect for attention */
+.apple-pulse {
+  animation: apple-celebration-pulse var(--apple-duration-complex) var(--apple-ease-celebration);
+}
+
+/* Spinner for loading states */
+.apple-spinner {
+  animation: apple-spinner 1s linear infinite;
+}
+
+/* Progress animation */
+.apple-progress {
+  animation: apple-progress-fill var(--apple-duration-complex) var(--apple-ease-standard);
+}

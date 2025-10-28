@@ -1,6 +1,6 @@
 // ** React Imports
 import React, { useState, useEffect, useCallback, useRef } from 'react'
-import { Box, Card, CardContent, Typography, useTheme, alpha, Fade, Grow, Zoom, Slide, keyframes } from '@mui/material'
+import { Box, Card, CardContent, Typography, useTheme, alpha, Fade, Zoom, keyframes } from '@mui/material'
 import { styled } from '@mui/material/styles'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import CancelIcon from '@mui/icons-material/Cancel'
@@ -8,7 +8,17 @@ import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked'
 import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked'
 import { RadioComponentProps } from '../types'
 import { useResponsive } from '../../quizzes/hooks/useResponsive'
-import { TOUCH_TARGETS } from '../../quizzes/constants/responsive'
+
+// ** Apple Design System
+import {
+  APPLE_DESIGN_SYSTEM,
+  APPLE_SPACING,
+  APPLE_TYPOGRAPHY,
+  APPLE_BORDER_RADIUS,
+  APPLE_ELEVATION,
+  APPLE_ANIMATION_DURATIONS,
+  APPLE_EASING_FUNCTIONS
+} from '../../../@core/theme/apple-design-system'
 
 // Animation keyframes
 const pulseAnimation = keyframes`
@@ -58,28 +68,38 @@ const shimmerAnimation = keyframes`
   }
 `
 
-// Styled components for responsive premium design
-const QuestionCard = styled(Card)<{ compact?: boolean }>(({ theme, compact }) => ({
-  marginBottom: compact ? theme.spacing(2.5) : theme.spacing(4),
-  borderRadius: compact ? theme.spacing(1) : theme.spacing(2),
-  boxShadow: compact ? '0 1px 4px rgba(0, 0, 0, 0.08)' : '0 2px 8px rgba(0, 0, 0, 0.08)',
+// Styled components using Apple Design System
+// Task 6: Optimize Question Card spacing and visual hierarchy
+const QuestionCard = styled(Card)<{ compact?: boolean }>(({ theme }) => ({
+  // Requirement 2.1: Maximum 32px spacing between questions on desktop, 24px on mobile
+  marginBottom: 0, // Remove margin - spacing handled by parent container gap
+
+  // Requirement 2.2: Apple Design System border radius (12px desktop/8px mobile)
+  borderRadius: APPLE_BORDER_RADIUS.QUESTION_CARD.DESKTOP, // 12px on desktop
+
+  // Requirement 2.2: Apple Design System elevation (2dp)
+  boxShadow: APPLE_ELEVATION.SHADOWS.LIGHT.RAISED, // 2dp elevation
   border: `1px solid ${alpha(theme.palette.divider, 0.12)}`,
-  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-  animation: `${slideInFromBottom} 0.5s ease-out`,
+
+  // Apple Design System transitions
+  transition: `all ${APPLE_ANIMATION_DURATIONS.STANDARD}ms ${APPLE_EASING_FUNCTIONS.STANDARD}`,
+  animation: `${slideInFromBottom} ${APPLE_ANIMATION_DURATIONS.COMPLEX}ms ${APPLE_EASING_FUNCTIONS.DECELERATE}`,
   position: 'relative',
   overflow: 'hidden',
 
+  // Apple Design System typography
+  fontFamily: APPLE_TYPOGRAPHY.FONT_FAMILY,
+
   // Mobile-first responsive design
   [theme.breakpoints.down('sm')]: {
-    marginBottom: theme.spacing(2),
-    borderRadius: theme.spacing(1),
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)'
+    // Requirement 2.2: 8px on mobile (Apple Design System)
+    borderRadius: APPLE_BORDER_RADIUS.QUESTION_CARD.MOBILE, // 8px on mobile
+    boxShadow: APPLE_ELEVATION.SHADOWS.LIGHT.RAISED // Maintain 2dp elevation
   },
 
   // Tablet adjustments
   [theme.breakpoints.between('sm', 'md')]: {
-    marginBottom: theme.spacing(3),
-    borderRadius: theme.spacing(1.5)
+    borderRadius: (APPLE_BORDER_RADIUS.QUESTION_CARD.MOBILE + APPLE_BORDER_RADIUS.QUESTION_CARD.DESKTOP) / 2 // 10px on tablet
   },
 
   '&::before': {
@@ -92,15 +112,18 @@ const QuestionCard = styled(Card)<{ compact?: boolean }>(({ theme, compact }) =>
     background: `linear-gradient(90deg, transparent, ${alpha(theme.palette.primary.main, 0.1)}, transparent)`,
     animation: `${shimmerAnimation} 2s infinite`,
     opacity: 0,
-    transition: 'opacity 0.3s ease'
+    transition: `opacity ${APPLE_ANIMATION_DURATIONS.STANDARD}ms ease`
   },
 
+  // Requirement 2.3: Gentle visual feedback without excessive emphasis
   // Hover effects only on devices that support hover
   '@media (hover: hover) and (pointer: fine)': {
     '&:hover': {
-      boxShadow: compact ? '0 4px 12px rgba(0, 0, 0, 0.12)' : '0 8px 24px rgba(0, 0, 0, 0.15)',
-      transform: compact ? 'translateY(-2px)' : 'translateY(-4px) scale(1.01)',
-      borderColor: alpha(theme.palette.primary.main, 0.3),
+      // Subtle elevation increase (from 2dp to 3dp equivalent)
+      boxShadow: APPLE_ELEVATION.SHADOWS.LIGHT.FLOATING,
+      // Gentle lift without excessive scale
+      transform: 'translateY(-2px)',
+      borderColor: alpha(theme.palette.primary.main, 0.2),
 
       '&::before': {
         opacity: 1
@@ -112,7 +135,7 @@ const QuestionCard = styled(Card)<{ compact?: boolean }>(({ theme, compact }) =>
   '@media (hover: none) and (pointer: coarse)': {
     '&:active': {
       transform: 'scale(0.98)',
-      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)'
+      boxShadow: APPLE_ELEVATION.SHADOWS.LIGHT.SUBTLE
     }
   },
 
@@ -132,18 +155,25 @@ const QuestionCard = styled(Card)<{ compact?: boolean }>(({ theme, compact }) =>
   }
 }))
 
-const QuestionHeader = styled(Box)<{ compact?: boolean }>(({ theme, compact }) => ({
-  padding: compact ? theme.spacing(2, 2.5, 1.5) : theme.spacing(3, 4, 2),
+const QuestionHeader = styled(Box)<{ compact?: boolean }>(({ theme }) => ({
+  // Requirement 2.4: Apple Design System padding (24px desktop/16px mobile)
+  padding: `${APPLE_SPACING.LG}px ${APPLE_SPACING.LG}px ${APPLE_SPACING.MD}px`, // 24px horizontal, 16px bottom on desktop
   borderBottom: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
+
+  // Apple Design System typography
+  fontFamily: APPLE_TYPOGRAPHY.FONT_FAMILY,
 
   // Mobile-first responsive padding
   [theme.breakpoints.down('sm')]: {
-    padding: theme.spacing(2, 2.5, 1.5)
+    // Requirement 2.4: 16px on mobile (Apple Design System)
+    padding: `${APPLE_SPACING.MD}px ${APPLE_SPACING.MD}px ${APPLE_SPACING.SM + 4}px` // 16px horizontal, 12px bottom on mobile
   },
 
   // Tablet padding
   [theme.breakpoints.between('sm', 'md')]: {
-    padding: compact ? theme.spacing(2.5, 3, 1.5) : theme.spacing(2.5, 3.5, 2)
+    padding: `${(APPLE_SPACING.MD + APPLE_SPACING.LG) / 2}px ${(APPLE_SPACING.MD + APPLE_SPACING.LG) / 2}px ${
+      APPLE_SPACING.SM + 6
+    }px` // 20px horizontal on tablet
   }
 }))
 
@@ -155,11 +185,14 @@ const AnswerOption = styled(Card)<{
   index?: number
   compact?: boolean
   touchOptimized?: boolean
-}>(({ theme, selected, correct, incorrect, disabled, index = 0, compact, touchOptimized }) => ({
-  margin: compact ? theme.spacing(1, 0) : theme.spacing(1.5, 0),
-  borderRadius: compact ? theme.spacing(1) : theme.spacing(1.5),
+}>(({ theme, selected, correct, incorrect, disabled, index = 0 }) => ({
+  // Requirement 3.4: Apply consistent 12px spacing between answer options
+  margin: theme.spacing(1.5, 0), // 12px vertical spacing
+
+  // Requirement 3.1: Implement subtle borders (1px) with 8px rounded corners
+  borderRadius: theme.spacing(1), // 8px rounded corners
   cursor: disabled ? 'default' : 'pointer',
-  border: `2px solid ${
+  border: `1px solid ${
     correct
       ? theme.palette.success.main
       : incorrect
@@ -167,7 +200,7 @@ const AnswerOption = styled(Card)<{
       : selected
       ? theme.palette.primary.main
       : alpha(theme.palette.divider, 0.2)
-  }`,
+  }`, // 1px subtle border
   backgroundColor: correct
     ? alpha(theme.palette.success.main, 0.04)
     : incorrect
@@ -175,25 +208,39 @@ const AnswerOption = styled(Card)<{
     : selected
     ? alpha(theme.palette.primary.main, 0.04)
     : theme.palette.background.paper,
-  transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-  minHeight: touchOptimized ? TOUCH_TARGETS.COMFORTABLE : compact ? 48 : 56,
+
+  // Requirement 3.2: Add immediate visual feedback with 200ms smooth transitions
+  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)', // 200ms transition
+
+  // Requirement 3.3: Ensure minimum 44px touch targets on all devices
+  minHeight: 44, // Minimum 44px touch target
   display: 'flex',
   alignItems: 'center',
   position: 'relative',
   overflow: 'hidden',
   animation: `${slideInFromBottom} ${0.3 + index * 0.08}s ease-out`,
 
-  // Mobile-first responsive adjustments
+  // Task 9: Mobile-first responsive adjustments with enhanced touch optimization
   [theme.breakpoints.down('sm')]: {
-    margin: theme.spacing(0.75, 0),
-    borderRadius: theme.spacing(1),
-    minHeight: TOUCH_TARGETS.COMFORTABLE
+    // Requirement 3.4: Maintain 12px spacing on mobile
+    margin: theme.spacing(1.5, 0), // 12px vertical spacing
+    // Requirement 3.1: 8px rounded corners
+    borderRadius: theme.spacing(1), // 8px
+    // Requirement 8.2: Minimum 48px touch targets on mobile
+    minHeight: 48, // 48px touch target on mobile
+    // Task 9: Enhanced mobile typography and spacing quality
+    padding: theme.spacing(0.5, 0) // Additional padding for better touch area
   },
 
-  // Selection pulse animation (reduced for mobile)
+  // Tablet adjustments for progressive enhancement
+  [theme.breakpoints.between('sm', 'md')]: {
+    minHeight: 46 // Progressive enhancement between mobile and desktop
+  },
+
+  // Selection pulse animation (optimized for mobile)
   ...(selected &&
     !disabled && {
-      animation: compact ? `${pulseAnimation} 0.4s ease-out` : `${pulseAnimation} 0.6s ease-out`
+      animation: `${pulseAnimation} 0.5s ease-out`
     }),
 
   // Shimmer effect on hover (only for hover-capable devices)
@@ -209,14 +256,15 @@ const AnswerOption = styled(Card)<{
     opacity: 0
   },
 
-  // Hover effects only on devices that support hover
+  // Requirement 3.5: Implement hover states only on hover-capable devices
   '@media (hover: hover) and (pointer: fine)': {
     '&:hover': !disabled
       ? {
-          transform: compact ? 'translateY(-1px) scale(1.01)' : 'translateY(-2px) scale(1.02)',
-          boxShadow: `0 ${compact ? '4px 12px' : '8px 20px'} ${alpha(
+          // Subtle hover effect without excessive scale
+          transform: 'translateY(-1px)',
+          boxShadow: `0 4px 12px ${alpha(
             correct ? theme.palette.success.main : incorrect ? theme.palette.error.main : theme.palette.primary.main,
-            0.25
+            0.15
           )}`,
           borderColor: correct
             ? theme.palette.success.main
@@ -232,16 +280,28 @@ const AnswerOption = styled(Card)<{
       : {}
   },
 
-  // Touch device optimizations
+  // Task 9: Enhanced touch device optimizations - Requirement 8.2
   '@media (hover: none) and (pointer: coarse)': {
+    // Improve touch target area
+    padding: theme.spacing(0.5, 0),
+
     '&:active': !disabled
       ? {
-          transform: 'scale(0.97)',
-          transition: 'all 0.1s ease',
+          // Task 9: Touch feedback with subtle scale animation (0.98x) on press
+          transform: 'scale(0.98)',
+          transition: 'transform 0.1s cubic-bezier(0.4, 0, 0.2, 1)',
           boxShadow: `0 2px 8px ${alpha(
             correct ? theme.palette.success.main : incorrect ? theme.palette.error.main : theme.palette.primary.main,
             0.2
-          )}`
+          )}`,
+          // Enhanced visual feedback for touch
+          backgroundColor: correct
+            ? alpha(theme.palette.success.main, 0.08)
+            : incorrect
+            ? alpha(theme.palette.error.main, 0.08)
+            : selected
+            ? alpha(theme.palette.primary.main, 0.08)
+            : alpha(theme.palette.action.hover, 0.04)
         }
       : {}
   },
@@ -267,33 +327,34 @@ const AnswerOption = styled(Card)<{
   }
 }))
 
-const AnswerContent = styled(CardContent)<{ compact?: boolean; touchOptimized?: boolean }>(
-  ({ theme, compact, touchOptimized }) => ({
-    padding: compact ? theme.spacing(1.5, 2.5) : theme.spacing(2, 3),
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    minHeight: touchOptimized ? TOUCH_TARGETS.COMFORTABLE : compact ? 48 : 56,
+const AnswerContent = styled(CardContent)<{ compact?: boolean; touchOptimized?: boolean }>(({ theme }) => ({
+  padding: theme.spacing(1.5, 2),
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  // Requirement 3.3: Ensure minimum 44px touch targets on all devices
+  minHeight: 44,
+  '&:last-child': {
+    paddingBottom: theme.spacing(1.5)
+  },
+
+  // Task 9: Enhanced mobile-first responsive padding and touch targets
+  [theme.breakpoints.down('sm')]: {
+    // Task 9: Optimized padding for mobile touch interactions
+    padding: theme.spacing(2, 2.5), // Increased from 1.5 to 2 for better touch area
+    // Requirement 8.2: Minimum 48px touch targets on mobile
+    minHeight: 48,
     '&:last-child': {
-      paddingBottom: compact ? theme.spacing(1.5) : theme.spacing(2)
-    },
-
-    // Mobile-first responsive padding
-    [theme.breakpoints.down('sm')]: {
-      padding: theme.spacing(1.5, 2),
-      minHeight: TOUCH_TARGETS.COMFORTABLE,
-      '&:last-child': {
-        paddingBottom: theme.spacing(1.5)
-      }
-    },
-
-    // Tablet adjustments
-    [theme.breakpoints.between('sm', 'md')]: {
-      padding: compact ? theme.spacing(1.75, 2.25) : theme.spacing(2, 2.75),
-      minHeight: touchOptimized ? TOUCH_TARGETS.COMFORTABLE : 50
+      paddingBottom: theme.spacing(2) // Consistent padding
     }
-  })
-)
+  },
+
+  // Tablet adjustments for progressive enhancement
+  [theme.breakpoints.between('sm', 'md')]: {
+    padding: theme.spacing(1.75, 2.25),
+    minHeight: 46 // Progressive enhancement
+  }
+}))
 
 const AnswerText = styled(Typography)<{ compact?: boolean }>(({ theme, compact }) => ({
   fontWeight: 500,
@@ -304,17 +365,21 @@ const AnswerText = styled(Typography)<{ compact?: boolean }>(({ theme, compact }
   wordBreak: 'break-word',
   hyphens: 'auto',
 
-  // Mobile-first responsive typography
+  // Task 9: Enhanced mobile-first responsive typography matching desktop quality (Requirement 8.3)
   [theme.breakpoints.down('sm')]: {
-    fontSize: '0.85rem',
-    lineHeight: 1.3,
-    marginRight: theme.spacing(1.5)
+    // Task 9: Improved mobile typography - larger, more readable
+    fontSize: compact ? '0.875rem' : '0.9375rem', // Increased from 0.85rem for better readability
+    lineHeight: 1.4, // Improved from 1.3 for better readability
+    marginRight: theme.spacing(1.5),
+    fontWeight: 500, // Maintain consistent weight
+    letterSpacing: '0.01em' // Subtle letter spacing for clarity
   },
 
-  // Tablet typography
+  // Tablet typography for progressive enhancement
   [theme.breakpoints.between('sm', 'md')]: {
     fontSize: compact ? '0.9rem' : '0.95rem',
-    lineHeight: 1.4
+    lineHeight: 1.4,
+    fontWeight: 500
   }
 }))
 
@@ -323,7 +388,21 @@ const AnswerLabel = styled(Typography)(({ theme }) => ({
   fontSize: '1rem',
   marginRight: theme.spacing(2),
   minWidth: '24px',
-  color: theme.palette.text.secondary
+  color: theme.palette.text.secondary,
+
+  // Task 9: Enhanced mobile typography matching desktop quality (Requirement 8.3)
+  [theme.breakpoints.down('sm')]: {
+    fontSize: '0.9375rem', // Slightly larger for better mobile readability
+    fontWeight: 600,
+    minWidth: '28px', // Slightly larger touch target
+    marginRight: theme.spacing(1.5)
+  },
+
+  // Tablet adjustments
+  [theme.breakpoints.between('sm', 'md')]: {
+    fontSize: '0.95rem',
+    minWidth: '26px'
+  }
 }))
 
 const StatusIcon = styled(Box)(({ theme }) => ({
@@ -357,6 +436,8 @@ const RadioComponent: React.FC<
   RadioComponentProps & {
     compact?: boolean
     touchOptimized?: boolean
+    questionNumber?: number
+    totalQuestions?: number
   }
 > = ({
   question,
@@ -366,7 +447,9 @@ const RadioComponent: React.FC<
   showResults = false,
   correctAnswer,
   compact = false,
-  touchOptimized = false
+  touchOptimized = false,
+  questionNumber,
+  totalQuestions
 }) => {
   const theme = useTheme()
   const { isMobile, isTablet, isTouchDevice, shouldReduceMotion, supportsHover } = useResponsive()
@@ -388,8 +471,20 @@ const RadioComponent: React.FC<
       setIsAnimating(true)
       setJustSelected(answerIndex)
 
-      // Shorter delay for mobile devices
-      const delay = isMobile ? 100 : 150
+      // Task 9: Optimized delay for mobile devices
+      const delay = isMobile ? 80 : 150
+
+      // Task 9: Add haptic feedback for touch devices where supported
+      // Provide immediate tactile feedback before visual animation
+      if (isTouchDevice && 'vibrate' in navigator) {
+        try {
+          // Light haptic feedback (30ms) for selection
+          navigator.vibrate(30)
+        } catch (error) {
+          // Silently fail if vibration is not supported
+          console.debug('Haptic feedback not available:', error)
+        }
+      }
 
       setTimeout(() => {
         setLocalSelected(answerIndex)
@@ -404,11 +499,6 @@ const RadioComponent: React.FC<
           shouldReduceMotion() ? 200 : 600
         )
       }, delay)
-
-      // Add haptic feedback on touch devices
-      if (isTouchDevice && 'vibrate' in navigator) {
-        navigator.vibrate(30)
-      }
     },
     [disabled, showResults, onAnswerSelect, isAnimating, isMobile, isTouchDevice, shouldReduceMotion]
   )
@@ -423,6 +513,17 @@ const RadioComponent: React.FC<
     },
     [handleAnswerSelect]
   )
+
+  // Debug logging for review mode
+  if (showResults) {
+    console.log('Review Mode Debug:', {
+      questionId: question.id,
+      questionContent: question.content?.substring(0, 50),
+      correctAnswer,
+      localSelected,
+      showResults
+    })
+  }
 
   // Answer options with labels - keep all 5 slots, mark empty ones
   const answerOptions = [
@@ -459,6 +560,7 @@ const RadioComponent: React.FC<
     const isJustSelected = justSelected === answerIndex
 
     if (showResults) {
+      // Show correct answer icon
       if (isCorrect) {
         return (
           <Zoom in timeout={500} style={{ transitionDelay: '200ms' }}>
@@ -479,6 +581,7 @@ const RadioComponent: React.FC<
         )
       }
 
+      // Show user's incorrect answer icon
       if (isSelected && !isCorrect) {
         return (
           <Zoom in timeout={500} style={{ transitionDelay: '200ms' }}>
@@ -497,6 +600,9 @@ const RadioComponent: React.FC<
           </Zoom>
         )
       }
+
+      // Return null for non-selected, non-correct answers
+      return null
     } else {
       // Show selection indicator during quiz taking
       return (
@@ -528,22 +634,50 @@ const RadioComponent: React.FC<
     <Fade in timeout={shouldReduceMotion() ? 100 : 300}>
       <QuestionCard compact={compact} ref={cardRef}>
         <QuestionHeader compact={compact}>
+          {/* Task 6/7: Question numbering system - "Întrebarea X din Y" */}
+          {questionNumber !== undefined && totalQuestions !== undefined && (
+            <Typography
+              variant='caption'
+              sx={{
+                display: 'block',
+                fontWeight: 500,
+                color: theme.palette.text.secondary,
+                fontSize: compact ? '0.8rem' : '0.875rem',
+                mb: 1,
+                // Task 9: Enhanced mobile-first responsive typography (Requirement 8.3)
+                [theme.breakpoints.down('sm')]: {
+                  fontSize: '0.8125rem', // Improved from 0.75rem for better readability
+                  fontWeight: 500,
+                  letterSpacing: '0.01em'
+                },
+                // Tablet typography
+                [theme.breakpoints.between('sm', 'md')]: {
+                  fontSize: '0.8125rem'
+                }
+              }}
+            >
+              Întrebarea {questionNumber} din {totalQuestions}
+            </Typography>
+          )}
           <Typography
             variant='body1'
             component='h3'
             sx={{
               fontWeight: 500,
               lineHeight: 1.5,
-              color: theme.palette.text.secondary,
+              color: theme.palette.text.primary,
               fontSize: compact ? '0.95rem' : '1rem',
-              // Mobile-first responsive typography
+              // Task 9: Enhanced mobile-first responsive typography matching desktop quality (Requirement 8.3)
               [theme.breakpoints.down('sm')]: {
-                fontSize: '0.9rem',
-                lineHeight: 1.4
+                fontSize: compact ? '0.9rem' : '0.9375rem', // Improved readability
+                lineHeight: 1.45, // Better line height for mobile reading
+                fontWeight: 500,
+                letterSpacing: '0.01em' // Subtle spacing for clarity
               },
               // Tablet typography
               [theme.breakpoints.between('sm', 'md')]: {
-                fontSize: compact ? '0.95rem' : '1rem'
+                fontSize: compact ? '0.95rem' : '1rem',
+                lineHeight: 1.5
               }
             }}
           >
@@ -570,14 +704,16 @@ const RadioComponent: React.FC<
 
         <CardContent
           sx={{
-            padding: compact ? theme.spacing(2, 2.5, 3) : theme.spacing(3, 4, 4),
+            // Requirement 2.4: Consistent internal padding of 24px desktop/16px mobile
+            padding: theme.spacing(3, 3, 3), // 24px on desktop
             // Mobile-first responsive padding
             [theme.breakpoints.down('sm')]: {
-              padding: theme.spacing(2, 2.5, 2.5)
+              // Requirement 2.4: 16px on mobile
+              padding: theme.spacing(2, 2, 2) // 16px on mobile
             },
             // Tablet padding
             [theme.breakpoints.between('sm', 'md')]: {
-              padding: compact ? theme.spacing(2.5, 3, 3) : theme.spacing(2.5, 3.5, 3.5)
+              padding: theme.spacing(2.5, 2.5, 2.5) // 20px on tablet
             }
           }}
         >
@@ -601,42 +737,61 @@ const RadioComponent: React.FC<
                 tabIndex={disabled || showResults ? -1 : 0}
               >
                 <AnswerContent compact={compact} touchOptimized={touchOptimized}>
-                  {!showResults && renderStatusIcon(option.index)}
-                  <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-                    <AnswerLabel
-                      sx={{
-                        color: isCorrect
-                          ? theme.palette.success.main
-                          : isIncorrect
-                          ? theme.palette.error.main
-                          : isSelected
-                          ? theme.palette.primary.main
-                          : theme.palette.text.secondary,
-                        fontSize: compact ? '0.9rem' : '1rem',
-                        [theme.breakpoints.down('sm')]: {
-                          fontSize: '0.85rem'
-                        }
-                      }}
-                    >
-                      {option.label}.
-                    </AnswerLabel>
-                    <AnswerText
-                      compact={compact}
-                      sx={{
-                        color: isCorrect
-                          ? theme.palette.success.dark
-                          : isIncorrect
-                          ? theme.palette.error.dark
-                          : option.isEmpty
-                          ? theme.palette.text.disabled
-                          : theme.palette.text.primary,
-                        fontStyle: option.isEmpty ? 'italic' : 'normal'
-                      }}
-                    >
-                      {option.text || '(Răspuns lipsă)'}
-                    </AnswerText>
+                  {showResults ? (
+                    // Show correct/incorrect icons in review mode
+                    isCorrect ? (
+                      <CheckCircleIcon sx={{ color: theme.palette.success.main, fontSize: 24, mr: 1 }} />
+                    ) : isIncorrect ? (
+                      <CancelIcon sx={{ color: theme.palette.error.main, fontSize: 24, mr: 1 }} />
+                    ) : (
+                      <RadioButtonUncheckedIcon sx={{ color: theme.palette.text.disabled, fontSize: 24, mr: 1 }} />
+                    )
+                  ) : (
+                    renderStatusIcon(option.index)
+                  )}
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      flex: 1,
+                      flexDirection: 'column',
+                      alignItems: 'flex-start'
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                      <AnswerLabel
+                        sx={{
+                          color: isCorrect
+                            ? theme.palette.success.main
+                            : isIncorrect
+                            ? theme.palette.error.main
+                            : isSelected
+                            ? theme.palette.primary.main
+                            : theme.palette.text.secondary,
+                          fontSize: compact ? '0.9rem' : '1rem',
+                          [theme.breakpoints.down('sm')]: {
+                            fontSize: '0.85rem'
+                          }
+                        }}
+                      >
+                        {option.label}.
+                      </AnswerLabel>
+                      <AnswerText
+                        compact={compact}
+                        sx={{
+                          color: isCorrect
+                            ? theme.palette.success.dark
+                            : isIncorrect
+                            ? theme.palette.error.dark
+                            : option.isEmpty
+                            ? theme.palette.text.disabled
+                            : theme.palette.text.primary,
+                          fontStyle: option.isEmpty ? 'italic' : 'normal'
+                        }}
+                      >
+                        {option.text || '(Răspuns lipsă)'}
+                      </AnswerText>
+                    </Box>
                   </Box>
-                  {showResults && renderStatusIcon(option.index)}
                 </AnswerContent>
               </AnswerOption>
             )

@@ -1,0 +1,483 @@
+/**
+ * Apple Design System Global Styles
+ *
+ * Global CSS that applies Apple Design System variables and base styles
+ * throughout the application. Import this file in your main CSS or _app.js
+ */
+
+/* Import Apple Design System CSS Variables and Animations */
+@import './css-variables.css';
+@import './animations.css';
+
+/* ============================================================================
+ * GLOBAL RESET AND BASE STYLES
+ * ============================================================================ */
+
+/* Ensure box-sizing is consistent */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Apply Apple font family globally */
+html {
+  font-family: var(--apple-font-family);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Base body styles */
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--apple-color-background-primary);
+  color: var(--apple-color-text-primary);
+  font-size: var(--apple-font-size-body-regular-mobile);
+  line-height: var(--apple-line-height-body-regular-mobile);
+  transition: background-color var(--apple-duration-standard) var(--apple-easing-standard),
+    color var(--apple-duration-standard) var(--apple-easing-standard);
+}
+
+@media (min-width: 1025px) {
+  body {
+    font-size: var(--apple-font-size-body-regular-desktop);
+    line-height: var(--apple-line-height-body-regular-desktop);
+  }
+}
+
+/* ============================================================================
+ * QUIZ-SPECIFIC COMPONENT STYLES
+ * ============================================================================ */
+
+/* Progress Card Styles (Requirements 1.1-1.5) */
+.quiz-progress-card {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding: var(--apple-card-padding-mobile);
+  background-color: var(--apple-color-background-secondary);
+  border-bottom: 1px solid var(--apple-color-border);
+  box-shadow: var(--apple-elevation-progress-card);
+  backdrop-filter: blur(8px);
+  transition: var(--apple-transition-card);
+  min-height: var(--apple-progress-card-min-height);
+}
+
+@media (min-width: 1025px) {
+  .quiz-progress-card {
+    padding: var(--apple-card-padding-desktop);
+  }
+}
+
+.quiz-progress-card.compact {
+  min-height: var(--apple-progress-card-compact-height);
+  padding: var(--apple-spacing-sm) var(--apple-card-padding-mobile);
+}
+
+@media (min-width: 1025px) {
+  .quiz-progress-card.compact {
+    padding: var(--apple-spacing-sm) var(--apple-card-padding-desktop);
+  }
+}
+
+/* Question Card Styles (Requirements 2.1-2.5) */
+.quiz-question-card {
+  padding: var(--apple-card-padding-mobile);
+  margin-bottom: var(--apple-question-spacing-mobile);
+  border-radius: var(--apple-border-radius-question-mobile);
+  background-color: var(--apple-color-background-primary);
+  border: 1px solid var(--apple-color-border);
+  box-shadow: var(--apple-elevation-question-card);
+  transition: var(--apple-transition-card);
+}
+
+@media (min-width: 1025px) {
+  .quiz-question-card {
+    padding: var(--apple-card-padding-desktop);
+    margin-bottom: var(--apple-question-spacing-desktop);
+    border-radius: var(--apple-border-radius-question-desktop);
+  }
+}
+
+.quiz-question-card:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--apple-shadow-floating);
+}
+
+.quiz-question-card:focus-within {
+  border-color: var(--apple-color-border-focus);
+  box-shadow: var(--apple-shadow-floating), 0 0 0 3px rgba(0, 122, 255, 0.1);
+}
+
+/* Question Number Styling */
+.quiz-question-number {
+  font-size: var(--apple-font-size-caption-mobile);
+  line-height: var(--apple-line-height-caption-mobile);
+  color: var(--apple-color-text-secondary);
+  margin-bottom: var(--apple-spacing-sm);
+  font-weight: var(--apple-font-weight-caption);
+}
+
+@media (min-width: 1025px) {
+  .quiz-question-number {
+    font-size: var(--apple-font-size-caption-desktop);
+    line-height: var(--apple-line-height-caption-desktop);
+  }
+}
+
+/* Question Text Styling */
+.quiz-question-text {
+  font-size: var(--apple-font-size-body-large-mobile);
+  line-height: var(--apple-line-height-body-large-mobile);
+  font-weight: var(--apple-font-weight-body-large);
+  color: var(--apple-color-text-primary);
+  margin-bottom: var(--apple-spacing-lg);
+}
+
+@media (min-width: 1025px) {
+  .quiz-question-text {
+    font-size: var(--apple-font-size-body-large-desktop);
+    line-height: var(--apple-line-height-body-large-desktop);
+  }
+}
+
+/* Radio Component Styles (Requirements 3.1-3.5) */
+.quiz-answer-option {
+  display: flex;
+  align-items: center;
+  padding: var(--apple-spacing-sm) var(--apple-spacing-md);
+  margin-bottom: var(--apple-answer-spacing);
+  border: var(--apple-radio-border-width) solid var(--apple-color-border);
+  border-radius: var(--apple-border-radius-radio);
+  background-color: var(--apple-color-background-primary);
+  min-height: var(--apple-touch-target-minimum);
+  cursor: pointer;
+  transition: var(--apple-radio-transition);
+  font-size: var(--apple-font-size-body-regular-mobile);
+  line-height: var(--apple-line-height-body-regular-mobile);
+}
+
+@media (min-width: 1025px) {
+  .quiz-answer-option {
+    font-size: var(--apple-font-size-body-regular-desktop);
+    line-height: var(--apple-line-height-body-regular-desktop);
+  }
+}
+
+@media (max-width: 767px) {
+  .quiz-answer-option {
+    min-height: var(--apple-touch-target-mobile);
+  }
+}
+
+.quiz-answer-option:hover {
+  border-color: var(--apple-color-primary);
+  background-color: var(--apple-color-hover-background);
+}
+
+.quiz-answer-option.selected {
+  border-color: var(--apple-color-selected-border);
+  background-color: var(--apple-color-selected-background);
+}
+
+.quiz-answer-option:disabled,
+.quiz-answer-option.disabled {
+  border-color: var(--apple-color-disabled-border);
+  background-color: var(--apple-color-disabled-background);
+  color: var(--apple-color-disabled-text);
+  cursor: not-allowed;
+}
+
+.quiz-answer-option:focus {
+  outline: none;
+  border-color: var(--apple-color-border-focus);
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+}
+
+/* Submit Card Styles (Requirements 4.1-4.5) */
+.quiz-submit-card {
+  max-width: var(--apple-submit-card-max-width);
+  margin: var(--apple-spacing-xl) auto;
+  padding: var(--apple-card-padding-mobile);
+  border-radius: var(--apple-border-radius-large);
+  background-color: var(--apple-color-background-primary);
+  border: 1px solid var(--apple-color-border);
+  box-shadow: var(--apple-elevation-submit-card);
+  text-align: center;
+}
+
+@media (min-width: 1025px) {
+  .quiz-submit-card {
+    padding: var(--apple-card-padding-desktop);
+  }
+}
+
+.quiz-submit-button {
+  min-height: var(--apple-submit-button-height-mobile);
+  padding: 0 var(--apple-spacing-lg);
+  border: none;
+  border-radius: var(--apple-border-radius-button);
+  background-color: var(--apple-color-primary);
+  color: white;
+  font-family: var(--apple-font-family);
+  font-size: var(--apple-font-size-body-regular-mobile);
+  font-weight: var(--apple-font-weight-body-regular);
+  cursor: pointer;
+  transition: var(--apple-transition-button);
+  box-shadow: var(--apple-shadow-subtle);
+}
+
+@media (min-width: 1025px) {
+  .quiz-submit-button {
+    min-height: var(--apple-submit-button-height-desktop);
+    font-size: var(--apple-font-size-body-regular-desktop);
+  }
+}
+
+.quiz-submit-button:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--apple-shadow-raised);
+}
+
+.quiz-submit-button:active {
+  transform: translateY(0);
+}
+
+.quiz-submit-button:disabled {
+  background-color: var(--apple-color-disabled-background);
+  color: var(--apple-color-disabled-text);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ============================================================================
+ * CELEBRATION ANIMATION STYLES
+ * ============================================================================ */
+
+.quiz-celebration-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn var(--apple-duration-standard) var(--apple-easing-decelerate);
+}
+
+.quiz-celebration-content {
+  background-color: var(--apple-color-background-primary);
+  border-radius: var(--apple-border-radius-extra-large);
+  padding: var(--apple-spacing-xxl);
+  box-shadow: var(--apple-elevation-celebration);
+  text-align: center;
+  max-width: 400px;
+  margin: var(--apple-spacing-lg);
+  animation: slideUp var(--apple-duration-complex) var(--apple-easing-decelerate);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ============================================================================
+ * UTILITY CLASSES FOR COMMON PATTERNS
+ * ============================================================================ */
+
+/* Spacing utilities */
+.apple-mt-xs {
+  margin-top: var(--apple-spacing-xs);
+}
+.apple-mt-sm {
+  margin-top: var(--apple-spacing-sm);
+}
+.apple-mt-md {
+  margin-top: var(--apple-spacing-md);
+}
+.apple-mt-lg {
+  margin-top: var(--apple-spacing-lg);
+}
+.apple-mt-xl {
+  margin-top: var(--apple-spacing-xl);
+}
+
+.apple-mb-xs {
+  margin-bottom: var(--apple-spacing-xs);
+}
+.apple-mb-sm {
+  margin-bottom: var(--apple-spacing-sm);
+}
+.apple-mb-md {
+  margin-bottom: var(--apple-spacing-md);
+}
+.apple-mb-lg {
+  margin-bottom: var(--apple-spacing-lg);
+}
+.apple-mb-xl {
+  margin-bottom: var(--apple-spacing-xl);
+}
+
+.apple-p-xs {
+  padding: var(--apple-spacing-xs);
+}
+.apple-p-sm {
+  padding: var(--apple-spacing-sm);
+}
+.apple-p-md {
+  padding: var(--apple-spacing-md);
+}
+.apple-p-lg {
+  padding: var(--apple-spacing-lg);
+}
+.apple-p-xl {
+  padding: var(--apple-spacing-xl);
+}
+
+/* Typography utilities */
+.apple-text-display {
+  font-size: var(--apple-font-size-display-mobile);
+  line-height: var(--apple-line-height-display-mobile);
+  font-weight: var(--apple-font-weight-display);
+}
+
+@media (min-width: 1025px) {
+  .apple-text-display {
+    font-size: var(--apple-font-size-display-desktop);
+    line-height: var(--apple-line-height-display-desktop);
+  }
+}
+
+.apple-text-body-large {
+  font-size: var(--apple-font-size-body-large-mobile);
+  line-height: var(--apple-line-height-body-large-mobile);
+  font-weight: var(--apple-font-weight-body-large);
+}
+
+@media (min-width: 1025px) {
+  .apple-text-body-large {
+    font-size: var(--apple-font-size-body-large-desktop);
+    line-height: var(--apple-line-height-body-large-desktop);
+  }
+}
+
+.apple-text-body-regular {
+  font-size: var(--apple-font-size-body-regular-mobile);
+  line-height: var(--apple-line-height-body-regular-mobile);
+  font-weight: var(--apple-font-weight-body-regular);
+}
+
+@media (min-width: 1025px) {
+  .apple-text-body-regular {
+    font-size: var(--apple-font-size-body-regular-desktop);
+    line-height: var(--apple-line-height-body-regular-desktop);
+  }
+}
+
+.apple-text-caption {
+  font-size: var(--apple-font-size-caption-mobile);
+  line-height: var(--apple-line-height-caption-mobile);
+  font-weight: var(--apple-font-weight-caption);
+  color: var(--apple-color-text-secondary);
+}
+
+@media (min-width: 1025px) {
+  .apple-text-caption {
+    font-size: var(--apple-font-size-caption-desktop);
+    line-height: var(--apple-line-height-caption-desktop);
+  }
+}
+
+/* Interactive state utilities */
+.apple-interactive {
+  cursor: pointer;
+  transition: var(--apple-transition-button);
+}
+
+.apple-interactive:hover {
+  transform: translateY(-1px);
+}
+
+.apple-interactive:active {
+  transform: translateY(0);
+}
+
+/* Focus utilities */
+.apple-focus-ring:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+}
+
+/* Container utilities */
+.apple-container {
+  max-width: var(--apple-container-max-width);
+  margin: 0 auto;
+  padding: 0 var(--apple-margin-mobile);
+}
+
+@media (min-width: 768px) {
+  .apple-container {
+    padding: 0 var(--apple-margin-tablet);
+  }
+}
+
+@media (min-width: 1025px) {
+  .apple-container {
+    padding: 0 var(--apple-margin-desktop);
+  }
+}
+
+/* ============================================================================
+ * ACCESSIBILITY ENHANCEMENTS
+ * ============================================================================ */
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .quiz-question-card,
+  .quiz-answer-option,
+  .quiz-submit-card {
+    border-width: 2px;
+  }
+
+  .quiz-answer-option:focus,
+  .quiz-question-card:focus-within {
+    box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.3);
+  }
+}
+
+/* Print styles */
+@media print {
+  .quiz-progress-card,
+  .quiz-submit-card,
+  .quiz-celebration-overlay {
+    display: none;
+  }
+
+  .quiz-question-card {
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #000;
+  }
+}
