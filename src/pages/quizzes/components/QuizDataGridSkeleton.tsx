@@ -6,7 +6,6 @@ import Box from '@mui/material/Box'
 import Skeleton from '@mui/material/Skeleton'
 import Typography from '@mui/material/Typography'
 import { useTheme, alpha } from '@mui/material/styles'
-import { Card } from '@mui/material'
 
 // ** Custom Component Imports
 
@@ -53,7 +52,7 @@ const QuizDataGridSkeleton: React.FC<QuizDataGridSkeletonProps> = ({ rows = 5 })
           </Box>
 
           {/* Durată column - width: 120, center aligned */}
-          <Box sx={{ width: 120, display: 'flex', pl: 6, justifyContent: 'center', alignItems: 'center', px: 2 }}>
+          <Box sx={{ width: 120, display: 'flex', justifyContent: 'center', alignItems: 'center', px: 2, pl: 3.5 }}>
             <Typography
               variant='caption'
               sx={{
@@ -69,7 +68,7 @@ const QuizDataGridSkeleton: React.FC<QuizDataGridSkeletonProps> = ({ rows = 5 })
           </Box>
 
           {/* Dificultate column - width: 140, center aligned */}
-          <Box sx={{ width: 140, display: 'flex', justifyContent: 'center', alignItems: 'center', px: 2, pl: 6 }}>
+          <Box sx={{ width: 140, display: 'flex', justifyContent: 'center', alignItems: 'center', px: 2, pl: 3.5 }}>
             <Typography
               variant='caption'
               sx={{
@@ -84,8 +83,8 @@ const QuizDataGridSkeleton: React.FC<QuizDataGridSkeletonProps> = ({ rows = 5 })
             </Typography>
           </Box>
 
-          {/* Întrebări column - width: 100, center aligned */}
-          <Box sx={{ width: 100, display: 'flex', justifyContent: 'center', alignItems: 'center', px: 2, pl: 6 }}>
+          {/* Întrebări column - width: 105, center aligned */}
+          <Box sx={{ width: 105, display: 'flex', justifyContent: 'center', alignItems: 'center', px: 2, pl: 3.5 }}>
             <Typography
               variant='caption'
               sx={{
@@ -101,7 +100,7 @@ const QuizDataGridSkeleton: React.FC<QuizDataGridSkeletonProps> = ({ rows = 5 })
           </Box>
 
           {/* Status column - width: 140, center aligned */}
-          <Box sx={{ width: 140, display: 'flex', justifyContent: 'center', alignItems: 'center', px: 2, pl: 6 }}>
+          <Box sx={{ width: 140, display: 'flex', justifyContent: 'center', alignItems: 'center', px: 2, pl: 3.5 }}>
             <Typography
               variant='caption'
               sx={{
@@ -117,7 +116,7 @@ const QuizDataGridSkeleton: React.FC<QuizDataGridSkeletonProps> = ({ rows = 5 })
           </Box>
 
           {/* Actions column - width: 80, center aligned */}
-          <Box sx={{ width: 80, display: 'flex', justifyContent: 'center', alignItems: 'center', pl: 6, px: 2 }}>
+          <Box sx={{ width: 80, display: 'flex', justifyContent: 'center', alignItems: 'center', px: 2 }}>
             {/* Empty for actions */}
           </Box>
         </Box>{' '}
@@ -145,7 +144,7 @@ const QuizDataGridSkeleton: React.FC<QuizDataGridSkeletonProps> = ({ rows = 5 })
               }}
             >
               {/* Test column skeleton - flex: 1, minWidth: 300 */}
-              <Box sx={{ flex: 1, minWidth: 300, px: 2, py: 2 }}>
+              <Box sx={{ flex: 1, minWidth: 300, px: 2, pl: 6, py: 2 }}>
                 <Skeleton
                   variant='text'
                   width='85%'
@@ -179,8 +178,8 @@ const QuizDataGridSkeleton: React.FC<QuizDataGridSkeletonProps> = ({ rows = 5 })
                 </Box>
               </Box>
 
-              {/* Întrebări column skeleton - width: 100, center */}
-              <Box sx={{ width: 100, display: 'flex', justifyContent: 'center', px: 2 }}>
+              {/* Întrebări column skeleton - width: 105, center */}
+              <Box sx={{ width: 105, display: 'flex', justifyContent: 'center', px: 2 }}>
                 <Skeleton
                   variant='text'
                   width={30}
@@ -234,7 +233,7 @@ const QuizDataGridSkeleton: React.FC<QuizDataGridSkeletonProps> = ({ rows = 5 })
           px: 2
         }}
       >
-        <Skeleton variant='text' width={150} height={20} sx={{ borderRadius: 1 }} />
+        <div></div>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Skeleton variant='text' width={100} height={20} sx={{ borderRadius: 1 }} />

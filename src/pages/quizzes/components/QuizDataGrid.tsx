@@ -351,7 +351,7 @@ const QuizDataGrid: React.FC<QuizDataGridProps> = ({
       {
         field: 'questionsCount',
         headerName: 'Întrebări',
-        width: 100,
+        width: 105,
         sortable: true,
         filterable: true,
         align: 'center',
