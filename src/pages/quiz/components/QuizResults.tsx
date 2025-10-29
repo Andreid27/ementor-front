@@ -125,15 +125,14 @@ const QuizResults: React.FC<QuizResultsProps> = ({
       sx={{
         width: '100%',
         maxWidth: { xs: '100%', sm: '100%', md: 900 },
-        mx: 'auto',
-        p: { xs: APPLE_SPACING.SM, sm: APPLE_SPACING.MD, md: APPLE_SPACING.LG }
+        mx: 'auto'
       }}
     >
       {/* Header Section - Compact */}
       <Fade in timeout={prefersReducedMotion ? 0 : APPLE_ANIMATION_DURATIONS.STANDARD}>
         <Card
           sx={{
-            mb: APPLE_SPACING.MD,
+            mb: APPLE_SPACING.SM,
             borderTop: `3px solid ${performanceColor}`,
             boxShadow: theme.shadows[APPLE_ELEVATION.RAISED]
           }}
@@ -250,7 +249,7 @@ const QuizResults: React.FC<QuizResultsProps> = ({
           sx={{
             display: 'flex',
             gap: APPLE_SPACING.SM,
-            mb: APPLE_SPACING.MD,
+            mb: APPLE_SPACING.XS,
             flexWrap: 'wrap'
           }}
         >

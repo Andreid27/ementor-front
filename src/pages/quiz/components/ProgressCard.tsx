@@ -54,19 +54,6 @@ const ProgressCard: React.FC<ProgressCardProps> = ({
   onScrollToQuestion,
   showResults
 }) => {
-  console.log(
-    title,
-    timeRemaining,
-    totalQuestions,
-    answeredQuestions,
-    totalTime,
-    onTimeUp,
-    (currentQuestionIndex = 0),
-    (quizDifficulty = 'Mediu'),
-    (estimatedTimePerQuestion = 60),
-    onScrollToQuestion,
-    showResults
-  )
   const theme = useTheme()
   const { isMobile } = useResponsive()
 

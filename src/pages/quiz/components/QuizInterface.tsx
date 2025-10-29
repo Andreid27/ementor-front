@@ -47,10 +47,11 @@ import { ANIMATION_DURATIONS, EASING_FUNCTIONS } from '../../quizzes/constants/a
 import { SPACING } from '../../quizzes/constants/theme'
 
 interface QuizInterfaceProps {
-  quizId: string
+  quizId?: string
+  attemptId?: string
 }
 
-const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId }) => {
+const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId }) => {
   const router = useRouter()
   const theme = useTheme()
 
@@ -71,7 +72,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId }) => {
   const [quizState, setQuizState] = useState<QuizState>({
     quiz: null,
     progress: {
-      quizId,
+      quizId: quizId || '',
       answers: {},
       timeSpent: 0,
       currentQuestion: 0,
@@ -121,19 +122,60 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId }) => {
         setLoading(true)
         setError(null)
 
-        // Start the quiz attempt
-        const quizData = await quizUIService.startQuiz(quizId)
+        if (attemptId) {
+          // Load attempt data for review
+          const attemptData = await quizUIService.getQuizAttempt(attemptId)
 
-        setQuizState(prev => ({
-          ...prev,
-          quiz: quizData,
-          timeRemaining: (quizData.maxTime || 60) * 60, // Convert minutes to seconds
-          progress: {
-            ...prev.progress,
-            startTime: new Date(),
-            lastSaved: new Date()
-          }
-        }))
+          // Map correctAnswers to correctAnswersMap
+          const correctAnswersMap = (attemptData.correctAnswers || []).reduce(
+            (acc: Record<string, number>, item: any) => {
+              acc[item.questionId] = item.answer
+              return acc
+            },
+            {}
+          )
+
+          setQuizState(prev => ({
+            ...prev,
+            quiz: attemptData.quiz,
+            timeRemaining: 0,
+            hasSubmitted: true,
+            progress: {
+              ...prev.progress,
+              quizId: attemptData.quiz.id || '',
+              answers: attemptData.submitedQuestionAnswers.reduce((acc: Record<string, number>, item: any) => {
+                acc[item.questionId] = item.answer
+                return acc
+              }, {}),
+              timeSpent: attemptData.timeSpent || 0,
+              startTime: new Date(attemptData.startedAt),
+              lastSaved: new Date(attemptData.enddedAt)
+            }
+          }))
+
+          // Set results to show review mode, include correctAnswersMap
+          setResults({
+            correctCount: attemptData.correctCount,
+            correctAnswers: attemptData.correctAnswers || [],
+            correctAnswersMap
+          })
+          setReviewMode(true)
+        } else if (quizId) {
+          // Start the quiz attempt
+          const quizData = await quizUIService.startQuiz(quizId)
+
+          setQuizState(prev => ({
+            ...prev,
+            quiz: quizData,
+            timeRemaining: (quizData.maxTime || 60) * 60,
+            progress: {
+              ...prev.progress,
+              quizId: quizData.id || '',
+              startTime: new Date(),
+              lastSaved: new Date()
+            }
+          }))
+        }
       } catch (err) {
         console.error('Error loading quiz:', err)
 
@@ -157,10 +199,10 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId }) => {
       }
     }
 
-    if (quizId) {
+    if (quizId || attemptId) {
       loadQuiz()
     }
-  }, [quizId])
+  }, [quizId, attemptId])
 
   // ** Timer countdown
   useEffect(() => {
@@ -291,7 +333,9 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId }) => {
   // ** Handle celebration completion
   const handleCelebrationComplete = useCallback(() => {
     setShowCelebration(false)
-    setShowResults(true)
+    setReviewMode(true)
+    // Scroll to top to show results
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [])
 
   // ** Handle celebration error
@@ -306,11 +350,8 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId }) => {
     router.push('/quizzes')
   }, [router])
 
-  // ** Handle review answers
+  // ** Handle review answers - just scroll to top since we're already showing everything
   const handleReviewAnswers = useCallback(() => {
-    setShowResults(false)
-    setReviewMode(true)
-    // Scroll to top to review answers
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [])
 
@@ -405,22 +446,43 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId }) => {
   // ** Main quiz interface with error boundaries
   return (
     <>
-      {/* Requirement 9.5: Error boundary for Progress Card */}
-      <QuizComponentErrorBoundary componentName='Progress Card' minimal>
-        <ProgressCard
-          title={quizState.quiz?.title || 'Test'}
-          timeRemaining={quizState.timeRemaining}
-          totalQuestions={totalQuestions}
-          answeredQuestions={answeredQuestions}
-          totalTime={(quizState.quiz?.maxTime || 60) * 60}
-          onTimeUp={() => handleSubmitQuiz(true)}
-          currentQuestionIndex={quizState.progress.currentQuestion}
-          quizDifficulty={quizState.quiz?.difficultyLevel?.toString() || 'Mediu'}
-          estimatedTimePerQuestion={Math.round(((quizState.quiz?.maxTime || 60) * 60) / totalQuestions)}
-          onScrollToQuestion={handleScrollToQuestion}
-          showResults={reviewMode}
-        />
-      </QuizComponentErrorBoundary>
+      {/* Show QuizResults in place of ProgressCard when in review mode */}
+      {reviewMode && results ? (
+        <QuizComponentErrorBoundary componentName='Quiz Results' minimal>
+          <QuizResults
+            score={results.correctCount || 0}
+            totalQuestions={totalQuestions}
+            answers={quizState.progress.answers}
+            correctAnswers={(results.correctAnswers || []).reduce((acc: Record<string, number>, item: any) => {
+              acc[item.questionId] = item.answer
+              return acc
+            }, {})}
+            questions={quizState.quiz?.questions || []}
+            timeSpent={quizState.progress.timeSpent}
+            onReturnToQuizzes={handleReturnToQuizzes}
+            onReviewAnswers={() => {
+              window.scrollTo({ top: 0, behavior: 'smooth' })
+            }}
+          />
+        </QuizComponentErrorBoundary>
+      ) : (
+        /* Requirement 9.5: Error boundary for Progress Card */
+        <QuizComponentErrorBoundary componentName='Progress Card' minimal>
+          <ProgressCard
+            title={quizState.quiz?.title || 'Test'}
+            timeRemaining={quizState.timeRemaining}
+            totalQuestions={totalQuestions}
+            answeredQuestions={answeredQuestions}
+            totalTime={(quizState.quiz?.maxTime || 60) * 60}
+            onTimeUp={() => handleSubmitQuiz(true)}
+            currentQuestionIndex={quizState.progress.currentQuestion}
+            quizDifficulty={quizState.quiz?.difficultyLevel?.toString() || 'Mediu'}
+            estimatedTimePerQuestion={Math.round(((quizState.quiz?.maxTime || 60) * 60) / totalQuestions)}
+            onScrollToQuestion={handleScrollToQuestion}
+            showResults={reviewMode}
+          />
+        </QuizComponentErrorBoundary>
+      )}
 
       <Box
         sx={{
@@ -485,7 +547,11 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId }) => {
                   disabled={quizState.hasSubmitted || quizState.isSubmitting || reviewMode}
                   showResults={reviewMode}
                   correctAnswer={
-                    reviewMode ? results?.correctAnswersMap?.[question.id || ''] || question.correctAnswer : undefined
+                    reviewMode
+                      ? results?.correctAnswersMap?.[question.id || ''] ||
+                        results?.correctAnswers?.find((item: any) => item.questionId === question.id)?.answer ||
+                        question.correctAnswer
+                      : undefined
                   }
                   compact={isMobile}
                   touchOptimized={isTouchDevice}
@@ -508,26 +574,6 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId }) => {
               disabled={quizState.hasSubmitted}
             />
           </QuizComponentErrorBoundary>
-        )}
-
-        {/* Review Mode - Back to Results Button */}
-        {reviewMode && results && (
-          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
-            <Button
-              variant='contained'
-              onClick={() => {
-                setReviewMode(false)
-                setShowResults(true)
-              }}
-              sx={{
-                borderRadius: 2,
-                textTransform: 'none',
-                px: 3
-              }}
-            >
-              Înapoi la rezultate
-            </Button>
-          </Box>
         )}
       </Box>
     </>
