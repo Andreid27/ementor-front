@@ -38,6 +38,7 @@ interface ProgressCardProps {
   quizDifficulty?: string
   estimatedTimePerQuestion?: number
   onScrollToQuestion?: (questionIndex: number) => void
+  showResults?: boolean
 }
 
 const ProgressCard: React.FC<ProgressCardProps> = ({
@@ -50,8 +51,22 @@ const ProgressCard: React.FC<ProgressCardProps> = ({
   currentQuestionIndex = 0,
   quizDifficulty = 'Mediu',
   estimatedTimePerQuestion = 60,
-  onScrollToQuestion
+  onScrollToQuestion,
+  showResults
 }) => {
+  console.log(
+    title,
+    timeRemaining,
+    totalQuestions,
+    answeredQuestions,
+    totalTime,
+    onTimeUp,
+    (currentQuestionIndex = 0),
+    (quizDifficulty = 'Mediu'),
+    (estimatedTimePerQuestion = 60),
+    onScrollToQuestion,
+    showResults
+  )
   const theme = useTheme()
   const { isMobile } = useResponsive()
 
@@ -112,12 +127,6 @@ const ProgressCard: React.FC<ProgressCardProps> = ({
     return answeredQuestions > 0 ? Math.round(timeSpent / answeredQuestions) : 0
   }, [totalTime, timeRemaining, answeredQuestions])
 
-  const estimatedTimeToComplete = useMemo(() => {
-    if (remainingQuestions === 0) return 0
-    const avgTime = averageTimePerQuestion > 0 ? averageTimePerQuestion : estimatedTimePerQuestion
-    return Math.round((remainingQuestions * avgTime) / 60) // Convert to minutes
-  }, [remainingQuestions, averageTimePerQuestion, estimatedTimePerQuestion])
-
   // ** Progress color based on completion and time
   const progressColor = useMemo(() => {
     if (progressPercentage === 100) return theme.palette.success.main
@@ -152,7 +161,7 @@ const ProgressCard: React.FC<ProgressCardProps> = ({
         zIndex: 1200,
 
         // MUI standard border radius
-        borderRadius: theme.shape.borderRadius,
+        borderRadius: isScrolled ? theme.shape.borderRadius * 2 : theme.shape.borderRadius / 2,
 
         // Shadow based on scroll state
         boxShadow: isScrolled ? '0 2px 8px rgba(0, 0, 0, 0.15)' : '0 1px 3px rgba(0, 0, 0, 0.12)',
@@ -179,7 +188,7 @@ const ProgressCard: React.FC<ProgressCardProps> = ({
           padding: isScrolled ? `12px 20px !important` : `${isMobile ? 12 : 24}px !important`,
 
           '&:last-child': {
-            paddingBottom: isScrolled ? '12px !important' : `${isMobile ? 12 : 24}px !important`
+            paddingBottom: '12px !important'
           },
 
           // Layout
@@ -288,18 +297,16 @@ const ProgressCard: React.FC<ProgressCardProps> = ({
         {!isScrolled && (
           <Box sx={{ width: '100%' }}>
             <>
-              {/* Header Section */}
+              {/* Header Section - Title and Timer on same row */}
               <Box sx={{ width: '100%' }}>
-                {/* Quiz Title and Metadata */}
                 <Box
                   sx={{
                     display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center',
                     justifyContent: 'space-between',
-                    alignItems: isMobile ? 'flex-start' : 'center',
-                    flexDirection: isMobile ? 'column' : 'row',
-                    gap: isMobile ? 2 : 16,
-                    mb: isMobile ? 3 : 20,
-                    pt: 2
+                    gap: isMobile ? 2 : 4,
+                    mb: isMobile ? 3 : 5
                   }}
                 >
                   <Box sx={{ flex: 1 }}>
@@ -345,60 +352,24 @@ const ProgressCard: React.FC<ProgressCardProps> = ({
                       </Box>
                     )}
                   </Box>
-
-                  {/* Time Status Indicator - Compact and minimal */}
-                  <Box
-                    sx={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 1,
-                      backgroundColor: alpha(timeStatus.color, 0.1),
-                      px: isMobile ? 1.5 : 2,
-                      py: isMobile ? 0.5 : 0.75,
-                      borderRadius: 1,
-                      border: `1px solid ${alpha(timeStatus.color, 0.2)}`
-                    }}
-                  >
-                    <Typography
-                      variant='body2'
-                      sx={{
-                        color: timeStatus.color,
-                        fontWeight: 600,
-                        fontSize: isMobile ? '0.8rem' : '0.9rem',
-                        fontFamily: APPLE_DESIGN_SYSTEM.TYPOGRAPHY.FONT_FAMILY,
-                        lineHeight: 1.2
-                      }}
-                    >
-                      {formatTime(timeRemaining)}
-                    </Typography>
-                    {!isMobile && (
-                      <Typography
-                        variant='caption'
-                        sx={{
-                          color: timeStatus.color,
-                          fontSize: '0.65rem',
-                          fontFamily: APPLE_DESIGN_SYSTEM.TYPOGRAPHY.FONT_FAMILY,
-                          lineHeight: 1.2
-                        }}
-                      >
-                        {timeStatus.status}
-                      </Typography>
-                    )}
+                  {/* Timer aligned right */}
+                  <Box sx={{ flex: '0 0 auto', display: 'flex', alignItems: 'center' }}>
+                    <CountdownTimer timeRemaining={timeRemaining} totalTime={totalTime} compact={isMobile} />
                   </Box>
                 </Box>
 
                 {/* Progress Section */}
-                <Box sx={{ mb: isMobile ? 8 : 16 }}>
+                <Box sx={{ mb: isMobile ? 4 : 4 }}>
                   {/* Progress Stats */}
                   <Box
                     sx={{
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
-                      mb: isMobile ? 4 : 8
+                      mb: isMobile ? 2 : 1
                     }}
                   >
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: isMobile ? 6 : 16 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: isMobile ? 6 : 2 }}>
                       <Typography
                         variant='body2'
                         sx={{
@@ -422,37 +393,6 @@ const ProgressCard: React.FC<ProgressCardProps> = ({
                         ({answeredQuestions} din {totalQuestions})
                       </Typography>
                     </Box>
-
-                    {/* Additional insights - hide on mobile to save space */}
-                    {!isMobile && (
-                      <Box sx={{ textAlign: 'right' }}>
-                        {remainingQuestions > 0 && estimatedTimeToComplete > 0 && (
-                          <Typography
-                            variant='caption'
-                            sx={{
-                              color: 'text.secondary',
-                              fontSize: '0.7rem',
-                              fontFamily: APPLE_DESIGN_SYSTEM.TYPOGRAPHY.FONT_FAMILY,
-                              display: 'block'
-                            }}
-                          >
-                            ~{estimatedTimeToComplete} min rămase
-                          </Typography>
-                        )}
-                        {averageTimePerQuestion > 0 && (
-                          <Typography
-                            variant='caption'
-                            sx={{
-                              color: 'text.secondary',
-                              fontSize: '0.7rem',
-                              fontFamily: APPLE_DESIGN_SYSTEM.TYPOGRAPHY.FONT_FAMILY
-                            }}
-                          >
-                            {averageTimePerQuestion}s/întrebare
-                          </Typography>
-                        )}
-                      </Box>
-                    )}
                   </Box>
 
                   {/* Enhanced Progress Bar - Smaller on mobile, big on desktop */}
@@ -460,7 +400,7 @@ const ProgressCard: React.FC<ProgressCardProps> = ({
                     variant='determinate'
                     value={progressPercentage}
                     sx={{
-                      height: isMobile ? 12 : 20,
+                      height: isMobile ? 6 : 8,
                       borderRadius: isMobile ? 6 : 10,
                       backgroundColor: alpha(theme.palette.primary.main, 0.15),
                       transition: 'all 300ms cubic-bezier(0, 0, 0.2, 1)',
@@ -476,9 +416,9 @@ const ProgressCard: React.FC<ProgressCardProps> = ({
                 </Box>
 
                 {/* Integrated Progress Tracker Section - More compact on mobile */}
-                <Box sx={{ mt: isMobile ? 8 : 12 }}>
+                <Box sx={{ mt: isMobile ? 4 : 6 }}>
                   {/* Progress Status Chips */}
-                  <Box sx={{ display: 'flex', gap: isMobile ? 6 : 8, flexWrap: 'wrap', mb: isMobile ? 4 : 12 }}>
+                  <Box sx={{ display: 'flex', gap: 6, flexWrap: 'wrap', mb: 4 }}>
                     <Chip
                       size='small'
                       icon={<Icon icon='tabler:check' fontSize='0.75rem' />}
@@ -530,7 +470,7 @@ const ProgressCard: React.FC<ProgressCardProps> = ({
                   </Box>
 
                   {/* Completion Alert */}
-                  {progressPercentage === 100 && (
+                  {progressPercentage === 100 && timeRemaining > 0 && !showResults && (
                     <Alert
                       severity='success'
                       icon={<Icon icon='tabler:circle-check' />}

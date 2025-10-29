@@ -115,23 +115,22 @@ const CountdownTimer: React.FC<
   }, [timeRemaining, showWarnings, hasWarned5Min, hasWarned1Min])
 
   // ** Time up effect
-  useEffect(() => {
-    if (timeRemaining === 0) {
-      onTimeUp()
-    }
-  }, [timeRemaining, onTimeUp])
+  // useEffect(() => {
+  //   if (timeRemaining === 0) {
+  //     onTimeUp()
+  //   }
+  // }, [timeRemaining, onTimeUp])
 
   // Responsive sizing
-  const circularSize = compact ? 50 : isMobile ? 60 : 70
-  const circularThickness = compact ? 3 : 4
+  const circularSize = compact ? 40 : isMobile ? 60 : 70
+  const circularThickness = compact ? 3.5 : 4
 
   return (
     <Box
       sx={{
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        gap: compact ? 0.5 : SPACING.SM
+        alignItems: 'center'
       }}
     >
       {/* Circular Progress Timer */}
@@ -147,9 +146,9 @@ const CountdownTimer: React.FC<
         <svg width={0} height={0}>
           <defs>
             <linearGradient id='timer-gradient' x1='0%' y1='0%' x2='100%' y2='100%'>
-              <stop offset='0%' stopColor={theme.palette.success.main} />
+              <stop offset='0%' stopColor={theme.palette.error.main} />
               <stop offset='50%' stopColor={theme.palette.warning.main} />
-              <stop offset='100%' stopColor={theme.palette.error.main} />
+              <stop offset='100%' stopColor={theme.palette.success.main} />
             </linearGradient>
           </defs>
         </svg>
@@ -206,7 +205,7 @@ const CountdownTimer: React.FC<
               fontWeight: 700,
               color: getTimeColor,
               fontFamily: 'monospace',
-              fontSize: compact ? '0.7rem' : isMobile ? '0.85rem' : '0.95rem',
+              fontSize: compact ? '0.55rem' : isMobile ? '0.85rem' : '0.95rem',
               lineHeight: 1,
               transition: shouldReduceMotion()
                 ? 'none'
@@ -218,69 +217,12 @@ const CountdownTimer: React.FC<
         </Box>
       </Box>
 
-      {/* Status Chip */}
-      {!compact && (
-        <Chip
-          size={isMobile ? 'small' : 'small'}
-          icon={
-            <Icon
-              icon={getStatusIcon}
-              fontSize={isMobile ? '0.75rem' : '0.875rem'}
-              style={{
-                animation:
-                  getTimeStatus === 'danger' && !shouldReduceMotion()
-                    ? `pulse ${ANIMATION_DURATIONS.CELEBRATION}ms ${EASING_FUNCTIONS.STANDARD} infinite`
-                    : 'none'
-              }}
-            />
-          }
-          label={getStatusText}
-          sx={{
-            backgroundColor: `${getTimeColor}20`,
-            color: getTimeColor,
-            fontWeight: 500,
-            border: `1px solid ${getTimeColor}30`,
-            transition: shouldReduceMotion()
-              ? 'none'
-              : `all ${ANIMATION_DURATIONS.MEDIUM}ms ${EASING_FUNCTIONS.STANDARD}`,
-            fontSize: isMobile ? '0.7rem' : '0.75rem',
-            height: isMobile ? 24 : 28,
-
-            '& .MuiChip-icon': {
-              color: getTimeColor
-            },
-
-            // Pulsing animation for critical time
-            ...(getTimeStatus === 'danger' &&
-              !shouldReduceMotion() && {
-                animation: `pulse ${ANIMATION_DURATIONS.CELEBRATION}ms ${EASING_FUNCTIONS.STANDARD} infinite`,
-                boxShadow: `0 0 10px ${getTimeColor}40`
-              })
-          }}
-        />
-      )}
-
-      {/* Time percentage indicator */}
-      {!compact && (
-        <Typography
-          variant='caption'
-          sx={{
-            color: 'text.secondary',
-            textAlign: 'center',
-            fontWeight: 500,
-            fontSize: isMobile ? '0.7rem' : '0.75rem'
-          }}
-        >
-          {Math.round(timePercentage)}% timp rămas
-        </Typography>
-      )}
-
       {/* Critical time warning */}
-      {getTimeStatus === 'danger' && (
+      {getTimeStatus === 'danger' && timeRemaining > 0 && (
         <Box
           sx={{
-            mt: SPACING.SM,
-            p: SPACING.SM,
+            mt: 3,
+            p: 2.5,
             borderRadius: 1,
             backgroundColor: `${theme.palette.error.main}10`,
             border: `1px solid ${theme.palette.error.main}30`,
@@ -293,8 +235,7 @@ const CountdownTimer: React.FC<
               color: theme.palette.error.main,
               fontWeight: 600,
               display: 'flex',
-              alignItems: 'center',
-              gap: 0.5
+              alignItems: 'center'
             }}
           >
             <Icon icon='tabler:alert-triangle' fontSize='0.875rem' />

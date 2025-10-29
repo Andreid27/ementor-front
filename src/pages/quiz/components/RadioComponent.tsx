@@ -100,58 +100,6 @@ const QuestionCard = styled(Card)<{ compact?: boolean }>(({ theme }) => ({
   // Tablet adjustments
   [theme.breakpoints.between('sm', 'md')]: {
     borderRadius: (APPLE_BORDER_RADIUS.QUESTION_CARD.MOBILE + APPLE_BORDER_RADIUS.QUESTION_CARD.DESKTOP) / 2 // 10px on tablet
-  },
-
-  '&::before': {
-    content: '""',
-    position: 'absolute',
-    top: 0,
-    left: '-200px',
-    width: '200px',
-    height: '100%',
-    background: `linear-gradient(90deg, transparent, ${alpha(theme.palette.primary.main, 0.1)}, transparent)`,
-    animation: `${shimmerAnimation} 2s infinite`,
-    opacity: 0,
-    transition: `opacity ${APPLE_ANIMATION_DURATIONS.STANDARD}ms ease`
-  },
-
-  // Requirement 2.3: Gentle visual feedback without excessive emphasis
-  // Hover effects only on devices that support hover
-  '@media (hover: hover) and (pointer: fine)': {
-    '&:hover': {
-      // Subtle elevation increase (from 2dp to 3dp equivalent)
-      boxShadow: APPLE_ELEVATION.SHADOWS.LIGHT.FLOATING,
-      // Gentle lift without excessive scale
-      transform: 'translateY(-2px)',
-      borderColor: alpha(theme.palette.primary.main, 0.2),
-
-      '&::before': {
-        opacity: 1
-      }
-    }
-  },
-
-  // Touch device optimizations
-  '@media (hover: none) and (pointer: coarse)': {
-    '&:active': {
-      transform: 'scale(0.98)',
-      boxShadow: APPLE_ELEVATION.SHADOWS.LIGHT.SUBTLE
-    }
-  },
-
-  // Reduced motion support
-  '@media (prefers-reduced-motion: reduce)': {
-    animation: 'none',
-    transition: 'box-shadow 0.2s ease',
-    '&:hover': {
-      transform: 'none',
-      '&::before': {
-        animation: 'none'
-      }
-    },
-    '&::before': {
-      animation: 'none'
-    }
   }
 }))
 
@@ -513,17 +461,6 @@ const RadioComponent: React.FC<
     },
     [handleAnswerSelect]
   )
-
-  // Debug logging for review mode
-  if (showResults) {
-    console.log('Review Mode Debug:', {
-      questionId: question.id,
-      questionContent: question.content?.substring(0, 50),
-      correctAnswer,
-      localSelected,
-      showResults
-    })
-  }
 
   // Answer options with labels - keep all 5 slots, mark empty ones
   const answerOptions = [

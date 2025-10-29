@@ -418,6 +418,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId }) => {
           quizDifficulty={quizState.quiz?.difficultyLevel?.toString() || 'Mediu'}
           estimatedTimePerQuestion={Math.round(((quizState.quiz?.maxTime || 60) * 60) / totalQuestions)}
           onScrollToQuestion={handleScrollToQuestion}
+          showResults={reviewMode}
         />
       </QuizComponentErrorBoundary>
 
@@ -426,7 +427,6 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId }) => {
           width: '100%',
           maxWidth: isMobile ? '100%' : isTablet ? '100%' : 1200,
           mx: 'auto',
-          p: isMobile ? 1 : isTablet ? 2 : SPACING.LG,
           mt: 2
         }}
       >
@@ -473,13 +473,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId }) => {
               sx={{
                 transition: enableAnimations
                   ? `all ${ANIMATION_DURATIONS.MEDIUM}ms ${EASING_FUNCTIONS.STANDARD}`
-                  : 'none',
-                '&:target': enableHoverEffects
-                  ? {
-                      transform: 'scale(1.02)',
-                      boxShadow: theme.shadows[8]
-                    }
-                  : {}
+                  : 'none'
               }}
             >
               {/* Requirement 9.5: Error boundary for each question */}
