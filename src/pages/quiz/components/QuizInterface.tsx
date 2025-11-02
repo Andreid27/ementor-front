@@ -21,8 +21,8 @@ import CelebrationAnimation from './CelebrationAnimation'
 import SubmitCard from './SubmitCard'
 import DialogTransition from './DialogTransition'
 import QuizComponentErrorBoundary from './QuizComponentErrorBoundary'
-import { QuizLoadingState, QuizInterfaceSkeleton } from './LoadingStates'
-import { QuizLoadError, SubmitError, ValidationError, CelebrationErrorFallback } from './ErrorMessages'
+import { QuizLoadingState, QuizInterfaceSkeleton } from 'src/components/quiz/LoadingStates'
+import { QuizLoadError, SubmitError, ValidationError, CelebrationErrorFallback } from 'src/components/quiz/ErrorMessages'
 
 // ** Hooks
 import { useResponsive, useResponsiveQuizInterface } from '../../quizzes/hooks/useResponsive'

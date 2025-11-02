@@ -11,7 +11,7 @@ export {
   ProgressBarLoading,
   CelebrationLoadingState,
   QuizInterfaceSkeleton
-} from './LoadingStates'
+} from 'src/components/quiz/LoadingStates'
 
 // ** Error Message Components
 export {
@@ -21,7 +21,7 @@ export {
   NetworkError,
   ValidationError,
   CelebrationErrorFallback
-} from './ErrorMessages'
+} from 'src/components/quiz/ErrorMessages'
 
 // ** Existing Components
 export { default as QuizInterface } from './QuizInterface'

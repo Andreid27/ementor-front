@@ -15,10 +15,10 @@ import { alpha } from '@mui/material/styles'
 import Icon from 'src/@core/components/icon'
 
 // ** Hooks
-import { useResponsive } from '../../quizzes/hooks/useResponsive'
+import { useResponsive } from 'src/pages/quizzes/hooks/useResponsive'
 
 // ** Apple Design System
-import { APPLE_SPACING, APPLE_BORDER_RADIUS } from '../../../@core/theme/apple-design-system'
+import { APPLE_SPACING, APPLE_BORDER_RADIUS } from 'src/@core/theme/apple-design-system'
 
 /**
  * ErrorMessages - User-friendly error message components

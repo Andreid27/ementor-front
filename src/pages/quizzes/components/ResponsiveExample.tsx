@@ -35,8 +35,8 @@ import { styled } from '@mui/material/styles'
 import { useEnhancedResponsive, useEnhancedQuizInterface } from '../hooks/useEnhancedResponsive'
 import { useResponsiveTheme } from '../theme/responsiveTheme'
 
-// Import responsive CSS
-import '../styles/responsive.css'
+// Note: Global CSS imports removed - Next.js doesn't allow global CSS in component files
+// If you need global styles, add them to pages/_app.js instead
 
 // Styled components demonstrating mobile-first responsive design
 const ResponsiveContainer = styled(Box)(({ theme }) => ({
