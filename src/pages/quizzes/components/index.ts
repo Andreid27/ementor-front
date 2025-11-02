@@ -1,5 +1,7 @@
 // Export all quiz listing components
 export { default as QuizDataGrid } from './QuizDataGrid'
+export { default as QuizMobileList } from './QuizMobileList'
+export { default as QuizMobileCard } from './QuizMobileCard'
 export { default as QuickSearchToolbar } from './QuickSearchToolbar'
 export { default as QuizStatusChip } from './QuizStatusChip'
 export { default as QuizActions } from './QuizActions'

@@ -1,5 +1,5 @@
 // ** React Imports
-import { Box, Button, Card, CardContent, CardHeader, CircularProgress, Divider, Grid, Rating, Typography } from '@mui/material'
+import { Box, Button, Card, CardContent, CardHeader, CircularProgress, Divider, Grid, Rating, Typography, alpha } from '@mui/material'
 
 import Icon from 'src/@core/components/icon'
 import { styled } from '@mui/material/styles'
@@ -17,7 +17,6 @@ const StyledBox = styled(Box)(({ theme }) => ({
 }))
 
 const QuizPreview = props => {
-  console.log(props)
   const [preview, setPreview] = useState()
   const [loading, setLoading] = useState(true)
   const router = useRouter()
@@ -186,8 +185,8 @@ const QuizPreview = props => {
                             {previewMetadata.title}
                           </Typography>
                         </Box>
-                        <Typography sx={{ mb: 13.75, display: 'flex', color: 'text.secondary', flexDirection: 'column' }}>
-                          <span>{previewMetadata.description}</span>
+                        <Box sx={{ mb: 13.75, display: 'flex', color: 'text.secondary', flexDirection: 'column' }}>
+                          <Typography sx={{ color: 'text.secondary' }}>{previewMetadata.description}</Typography>
                           <Box
                             sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', paddingTop: '0.75em' }}
                           >
@@ -195,9 +194,9 @@ const QuizPreview = props => {
                             <Rating
                               readOnly
                               sx={{ color: 'primary.main' }}
-                              defaultValue={previewMetadata.difficultyLevel}
+                              value={previewMetadata?.difficultyLevel || 0}
                               max={3}
-                              precision={previewMetadata.difficultyLevel}
+                              precision={1}
                               name='read-only'
                             />
                           </Box>
@@ -210,7 +209,7 @@ const QuizPreview = props => {
                             }
 
                           </Typography>
-                        </Typography>
+                        </Box>
                         <Button onClick={() => handleBack()}>Inapoi</Button>
                         {props.userRole === 'STUDENT' ?
                           (<Button
@@ -238,32 +237,47 @@ const QuizPreview = props => {
             </CardContent>
           </Card>
           {preview && preview.quizPreviousAttempts.length > 0 ? (
-            <>
-              <Card sx={{ marginTop: '2rem' }}>
-                <CardContent>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', padding: '1em' }}>
-                    <Grid container spacing={6}>
-                      <Grid item xs={12} sm={12}>
-                        <Typography variant='h4'>Încercări anterioare</Typography>
-                      </Grid>
-                      {preview.quizPreviousAttempts.map((attempt, index) => (
-                        <Grid key={attempt.id} item xs={12} sm={12}>
-                          {props.userRole === 'STUDENT' ? (
-                            <PreviousAttempt attempt={attempt} questionsCount={previewMetadata.questionsCount} index={index} />
-                          ) : (
-                            <PreviousAttemptProfessor
-                              attempt={attempt}
-                              questionsCount={props.preview.questionsCount}
-                              index={index}
-                              users={props.users}
-                            />)}
-                        </Grid>
-                      ))}
-                    </Grid>
-                  </Box>
-                </CardContent>
-              </Card>
-            </>
+            <Card
+              sx={{
+                marginTop: '2rem',
+                backgroundColor: theme => alpha(theme.palette.background.paper, 0.6),
+                backdropFilter: 'blur(20px)',
+                border: theme => `1px solid ${alpha(theme.palette.divider, 0.12)}`,
+                borderRadius: 1,
+                boxShadow: theme => `0 8px 32px ${alpha(theme.palette.common.black, 0.08)}`
+              }}
+            >
+              <CardContent sx={{ p: 3 }}>
+                <Typography
+                  variant='h5'
+                  sx={{
+                    fontWeight: 600,
+                    fontSize: '1.5rem',
+                    color: 'text.primary',
+                    letterSpacing: '-0.025em',
+                    mb: 3
+                  }}
+                >
+                  Încercări anterioare
+                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                  {preview.quizPreviousAttempts.map((attempt, index) => (
+                    <Box key={attempt.id}>
+                      {props.userRole === 'STUDENT' ? (
+                        <PreviousAttempt attempt={attempt} questionsCount={previewMetadata.questionsCount} index={index} />
+                      ) : (
+                        <PreviousAttemptProfessor
+                          attempt={attempt}
+                          questionsCount={props.preview.questionsCount}
+                          index={index}
+                          users={props.users}
+                        />
+                      )}
+                    </Box>
+                  ))}
+                </Box>
+              </CardContent>
+            </Card>
           ) : null}
         </>
       )}

@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react'
-import { Box, Typography, InputBase, alpha } from '@mui/material'
+import { Box, Typography, InputBase, alpha, useMediaQuery } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import SearchIcon from '@mui/icons-material/Search'
 
@@ -10,6 +10,7 @@ interface AppleToolbarProps {
 
 const AppleToolbar: React.FC<AppleToolbarProps> = ({ onSearchChange, searchValue = '' }) => {
   const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'))
 
   const handleSearchChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -25,20 +26,22 @@ const AppleToolbar: React.FC<AppleToolbarProps> = ({ onSearchChange, searchValue
     <Box
       sx={{
         width: '100%',
-        minHeight: 72,
+        minHeight: isMobile ? 'auto' : 72,
         borderBottom: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
-        px: 4,
-        py: 2,
+        px: isMobile ? 2 : 4,
+        py: isMobile ? 2 : 2,
         display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
         justifyContent: 'space-between',
-        alignItems: 'center'
+        alignItems: isMobile ? 'stretch' : 'center',
+        gap: isMobile ? 2 : 0
       }}
     >
       <Typography
         variant='h5'
         sx={{
           fontWeight: 600,
-          fontSize: '1.75rem',
+          fontSize: isMobile ? '1.5rem' : '1.75rem',
           color: 'text.primary',
           letterSpacing: '-0.025em'
         }}
@@ -50,7 +53,8 @@ const AppleToolbar: React.FC<AppleToolbarProps> = ({ onSearchChange, searchValue
           borderRadius: 3,
           backgroundColor: alpha(theme.palette.background.paper, 0.6),
           border: `1px solid ${alpha(theme.palette.divider, 0.12)}`,
-          minWidth: 280,
+          minWidth: isMobile ? 'auto' : 280,
+          width: isMobile ? '100%' : 'auto',
           height: 44,
           display: 'flex',
           alignItems: 'center',

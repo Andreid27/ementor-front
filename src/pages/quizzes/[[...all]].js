@@ -3,10 +3,11 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/router'
 
 // ** MUI Imports
-import { alpha, Box, Card } from '@mui/material'
+import { alpha, Box, Card, useMediaQuery } from '@mui/material'
 
 // ** Components
 import QuizDataGrid from './components/QuizDataGrid'
+import QuizMobileList from './components/QuizMobileList'
 import QuizPreview from './componets/quiz-preview'
 import AppleToolbar from './components/AppleToolbar'
 import { useTheme } from '@mui/material/styles'
@@ -39,6 +40,9 @@ const mapFieldToAPI = field => {
 const QuizzesPage = () => {
   const router = useRouter()
   const theme = useTheme()
+
+  // ** Responsive breakpoint - switch to mobile view on tablets and phones
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'))
 
   // ** State
   const [preview, setPreview] = useState(
@@ -158,11 +162,7 @@ const QuizzesPage = () => {
           pageSize: params.pageSize
         }
 
-        console.log('API Request:', paginatedRequest)
-
         const response = await apiClient.post(apiSpec.QUIZ_SERVICE + '/assigned-paginated', paginatedRequest)
-
-        console.log('API Response:', response.data)
 
         // Transform data to match QuizDataGrid expected format
         const transformedQuizzes = response.data.data.map(quiz => {
@@ -212,7 +212,6 @@ const QuizzesPage = () => {
 
   // ** Initial load
   useEffect(() => {
-    console.log('QuizzesPage: Initial load, preview:', preview)
     if (!preview) {
       loadQuizzes()
     }
@@ -259,8 +258,6 @@ const QuizzesPage = () => {
     [loadQuizzes]
   )
 
-  console.log('QuizzesPage: Rendering, preview:', preview, 'quizzes:', quizzes.length, 'loading:', loading)
-
   return (
     <>
       {preview ? (
@@ -273,7 +270,7 @@ const QuizzesPage = () => {
             backgroundColor: alpha(theme.palette.background.paper, 0.6),
             backdropFilter: 'blur(20px)',
             border: `1px solid ${alpha(theme.palette.divider, 0.12)}`,
-            borderRadius: 3,
+            borderRadius: 2,
             overflow: 'hidden',
             boxShadow: `0 8px 32px ${alpha(theme.palette.common.black, 0.08)}`
           }}
@@ -281,16 +278,28 @@ const QuizzesPage = () => {
           {/* Search toolbar - always visible and outside of loading states */}
           <AppleToolbar onSearchChange={handleSearchChange} searchValue={searchValue} />
 
-          {/* DataGrid content */}
-          <QuizDataGrid
-            quizzes={quizzes}
-            loading={loading}
-            error={error}
-            totalCount={totalCount}
-            onQuizSelect={handleQuizSelect}
-            onRefresh={handleRefresh}
-            onParamsChange={handleParamsChange}
-          />
+          {/* Responsive content - DataGrid for desktop, Card list for mobile */}
+          {isMobile ? (
+            <QuizMobileList
+              quizzes={quizzes}
+              loading={loading}
+              error={error}
+              totalCount={totalCount}
+              onQuizSelect={handleQuizSelect}
+              onRefresh={handleRefresh}
+              onParamsChange={handleParamsChange}
+            />
+          ) : (
+            <QuizDataGrid
+              quizzes={quizzes}
+              loading={loading}
+              error={error}
+              totalCount={totalCount}
+              onQuizSelect={handleQuizSelect}
+              onRefresh={handleRefresh}
+              onParamsChange={handleParamsChange}
+            />
+          )}
         </Card>
       )}
     </>

@@ -1,18 +1,12 @@
 // ** React Imports
-import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useCallback, useMemo, use } from 'react'
 
 // ** Next Imports
 import { useRouter } from 'next/router'
 
 // ** MUI Imports
 import Box from '@mui/material/Box'
-import Card from '@mui/material/Card'
-import CardContent from '@mui/material/CardContent'
-import Typography from '@mui/material/Typography'
-import LinearProgress from '@mui/material/LinearProgress'
-import Alert from '@mui/material/Alert'
 import Fade from '@mui/material/Fade'
-import { Button } from '@mui/material'
 import { useTheme, alpha } from '@mui/material/styles'
 
 // ** Icon Imports
@@ -34,8 +28,8 @@ import { QuizLoadError, SubmitError, ValidationError, CelebrationErrorFallback }
 import { useResponsive, useResponsiveQuizInterface } from '../../quizzes/hooks/useResponsive'
 
 // ** Types
-import { QuizState, QuizProgress } from '../types'
-import { QuestionDTO, QuizDTO } from '../../../generated/quiz-service/api'
+import { QuizState } from '../types'
+import { QuestionDTO, SubmitQuizDTO } from '../../../generated/quiz-service/api'
 
 // ** Services
 import { quizUIService } from '../../quizzes/services/quizUIService'
@@ -46,13 +40,18 @@ import { calculatePerformanceLevel } from '../../quizzes/utils/transformers'
 // ** Constants
 import { ANIMATION_DURATIONS, EASING_FUNCTIONS } from '../../quizzes/constants/animations'
 import { SPACING } from '../../quizzes/constants/theme'
+import { useSelector } from 'react-redux'
+import { selectAllStudents } from 'src/store/apps/user'
+import extractProfilePicture from 'src/@core/axios/profile-picture-extractor'
+import profilePictureDownloader from 'src/@core/axios/profile-picture-downloader'
 
 interface QuizInterfaceProps {
   quizId?: string
   attemptId?: string
+  isProfessor?: boolean
 }
 
-const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId }) => {
+const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId, isProfessor }) => {
   const router = useRouter()
   const theme = useTheme()
 
@@ -82,7 +81,8 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId }) => {
     },
     timeRemaining: 0,
     isSubmitting: false,
-    hasSubmitted: false
+    hasSubmitted: false,
+    userId: null
   })
 
   const [loading, setLoading] = useState(true)
@@ -95,6 +95,8 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId }) => {
   const [reviewMode, setReviewMode] = useState(false)
   const [reviewModeActions, setReviewModeActions] = useState<React.ReactNode>(null)
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+  const students = useSelector(selectAllStudents)
+  const [user, setUser] = useState<any>(null);
 
   // ** Computed values
   const answeredQuestions = useMemo(() => {
@@ -113,8 +115,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId }) => {
 
         if (attemptId) {
           // Load attempt data for review
-          const attemptData = await quizUIService.getQuizAttempt(attemptId)
-
+            const attemptData: SubmitQuizDTO = await quizUIService.getQuizAttempt(attemptId)
           // Map correctAnswers to correctAnswersMap
           const correctAnswersMap = (attemptData.correctAnswers || []).reduce(
             (acc: Record<string, number>, item: any) => {
@@ -129,6 +130,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId }) => {
             quiz: attemptData.quiz,
             timeRemaining: 0,
             hasSubmitted: true,
+            userId: attemptData.studentId || null,
             progress: {
               ...prev.progress,
               quizId: attemptData.quiz.id || '',
@@ -150,6 +152,26 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId }) => {
             correctAnswers: attemptData.correctAnswers || [],
             correctAnswersMap
           })
+          if(isProfessor) {
+          let selectedUser = students.find(student => student.id === attemptData.studentId);
+
+          const processedUser = extractProfilePicture(selectedUser);
+
+          const avatar = processedUser?.type === 'API'
+            ? await profilePictureDownloader(processedUser.url, processedUser.userId)
+            : processedUser?.type === 'EXTERNAL'
+              ? processedUser.url
+              : null;
+
+
+          selectedUser = { ...selectedUser, avatar: avatar };
+
+          setUser(selectedUser);
+          }
+
+
+
+          setLoading(false);
           setReviewMode(true)
         } else if (quizId) {
           // Start the quiz attempt
@@ -341,7 +363,11 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId }) => {
 
   // ** Handle return to quizzes
   const handleReturnToQuizzes = useCallback(() => {
-    router.push('/quizzes')
+    if (isProfessor) {
+      router.push('/student-results')
+    } else{
+      router.push('/quizzes')
+    }
   }, [router])
 
   // ** Handle review answers - just scroll to top since we're already showing everything
@@ -434,12 +460,6 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId }) => {
 
   // ** Show results
   if (showResults && results) {
-    // Transform correctAnswers array to map
-    const correctAnswersMap = (results.correctAnswers || []).reduce((acc: Record<string, number>, item: any) => {
-      acc[item.questionId] = item.answer
-      return acc
-    }, {})
-
     return (
       <QuizResults
         score={results.correctCount || 0}
@@ -466,6 +486,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId }) => {
             reviewModeActions={reviewModeActions}
             setReviewModeActions={setReviewModeActions}
             onReturnToQuizzes={handleReturnToQuizzes}
+            user={user}
             onReviewAnswers={() => {
               window.scrollTo({ top: 0, behavior: 'smooth' })
             }}

@@ -13,7 +13,6 @@ import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import Typography from '@mui/material/Typography'
 import { Button } from '@mui/material'
-import LinearProgress from '@mui/material/LinearProgress'
 import Fade from '@mui/material/Fade'
 import { useTheme } from '@mui/material/styles'
 
@@ -23,11 +22,10 @@ import VisibilityIcon from '@mui/icons-material/Visibility'
 
 // ** Types
 import { PerformanceLevel } from '../types'
-import { QuestionDTO, QuizDTO } from '../../../generated/quiz-service/api'
+import { QuizDTO } from '../../../generated/quiz-service/api'
 
 // ** Apple Design System
 import {
-  APPLE_DESIGN_SYSTEM,
   APPLE_SPACING,
   APPLE_BORDER_RADIUS,
   APPLE_ELEVATION
@@ -43,6 +41,8 @@ import {
 import { calculatePerformanceLevel } from '../../quizzes/utils/transformers'
 import { useResponsive } from 'src/pages/quizzes/hooks/useResponsive'
 import CountdownTimer from './CountdownTimer'
+import UserViewDrawer from 'src/pages/student-profile/components/UserViewDrawer'
+import QuizReviewHeader from '../../review-attempt/components/QuizReviewHeader'
 
 // ** Types
 interface QuizResultsProps {
@@ -52,6 +52,7 @@ interface QuizResultsProps {
   reviewModeActions?: React.ReactNode
   setReviewModeActions?: (actions: React.ReactNode) => void
   timeSpent: number
+  user?: any
   onReturnToQuizzes: () => void
   onReviewAnswers: () => void
 }
@@ -67,12 +68,14 @@ const QuizResults: React.FC<QuizResultsProps> = ({
   reviewModeActions,
   setReviewModeActions,
   timeSpent,
+  user,
   onReturnToQuizzes,
   onReviewAnswers
 }) => {
   const theme = useTheme()
   const [progressAnimated, setProgressAnimated] = useState(false)
   const prefersReducedMotion = APPLE_REDUCED_MOTION.DETECT_REDUCED_MOTION()
+  const [profileDrawerOpen, setProfileDrawerOpen] = useState(false)
 
   // Trigger progress animation
   useEffect(() => {
@@ -121,6 +124,19 @@ const QuizResults: React.FC<QuizResultsProps> = ({
       window.removeEventListener('scroll', handleScroll)
     }
   }, [isMobile])
+
+
+  const handleOpenDialog = (event, dialogType) => {
+    event.stopPropagation()
+
+    if (dialogType === 'PROFILE') {
+      setProfileDrawerOpen(true)
+    }
+  }
+
+  const handleCloseDialog = () => {
+    setProfileDrawerOpen(false)
+  }
 
   // ** Calculate performance metrics
   const percentage = Math.round((score / totalQuestions) * 100)
@@ -239,6 +255,10 @@ const QuizResults: React.FC<QuizResultsProps> = ({
   }, [setReviewModeActions, reviewActions])
 
   return (
+    <>
+          {profileDrawerOpen && (
+            <UserViewDrawer open={profileDrawerOpen} onClose={handleCloseDialog} userId={user?.id} tab='account' />
+          )}
     <Box
       sx={{
         width: '100%',
@@ -296,9 +316,9 @@ const QuizResults: React.FC<QuizResultsProps> = ({
             <Box
               sx={{
                 display: 'grid',
-                gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' },
-                gap: APPLE_SPACING.MD,
-                mb: APPLE_SPACING.MD
+                gridTemplateColumns: { xs: '1fr', sm: quiz && user ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)' },
+                gap: APPLE_SPACING.XS,
+                mb: APPLE_SPACING.XS
               }}
             >
               <Box sx={{ textAlign: { xs: 'left', sm: 'center' } }}>
@@ -340,52 +360,29 @@ const QuizResults: React.FC<QuizResultsProps> = ({
                   </Box>
                 )}
               </Box>
-            </Box>
 
-            {/* Progress Bar - Compact */}
-            <Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: APPLE_SPACING.XS }}>
-                <Typography variant='caption' color='text.secondary'>
-                  Progres
-                </Typography>
-                <Typography variant='caption' fontWeight={600}>
-                  {percentage}%
-                </Typography>
-              </Box>
-              <Box sx={{ position: 'relative' }}>
-                <LinearProgress
-                  variant='determinate'
-                  value={100}
-                  sx={{
-                    height: 6,
-                    borderRadius: APPLE_BORDER_RADIUS.SMALL,
-                    backgroundColor: theme.palette.grey[200]
-                  }}
-                />
-                <LinearProgress
-                  variant='determinate'
-                  value={progressAnimated ? percentage : 0}
-                  sx={{
-                    height: 6,
-                    borderRadius: APPLE_BORDER_RADIUS.SMALL,
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    transition: prefersReducedMotion
-                      ? 'none'
-                      : `all ${APPLE_ANIMATION_DURATIONS.CELEBRATION}ms ${APPLE_EASING_FUNCTIONS.STANDARD}`,
-                    '& .MuiLinearProgress-bar': {
-                      backgroundColor: performanceColor
-                    }
-                  }}
-                />
-              </Box>
+              {/* Quiz Review Header - Only show if user data is provided */}
+              {quiz && user && !isMobile && (
+                <Box sx={{ textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' , mt: -3}}>
+                  <QuizReviewHeader
+                    quiz={{
+                      quiz: quiz,
+                      correctCount: score,
+                      enddedAt: new Date(Date.now()).toISOString(),
+                      startedAt: new Date(Date.now() - timeSpent * 1000).toISOString()
+                    }}
+                    user={user}
+                    themeColor={theme.palette.primary.main}
+                    onUserClick={event => handleOpenDialog(event, 'PROFILE')}
+                  />
+                </Box>
+              )}
             </Box>
           </CardContent>
         </Card>
       </Fade>
     </Box>
+    </>
   )
 }
 

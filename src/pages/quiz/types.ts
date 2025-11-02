@@ -22,6 +22,7 @@ export interface QuizState {
   timeRemaining: number
   isSubmitting: boolean
   hasSubmitted: boolean
+  userId: string | null
 }
 
 // ** Component Props
