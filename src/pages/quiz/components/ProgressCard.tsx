@@ -142,7 +142,7 @@ const ProgressCard: React.FC<ProgressCardProps> = ({
       sx={{
         // FIXED: Proper sticky positioning that doesn't scroll up
         position: 'sticky',
-        top: 90,
+        top: 25,
         left: 0,
         right: 0,
         zIndex: 1200,
@@ -164,7 +164,7 @@ const ProgressCard: React.FC<ProgressCardProps> = ({
         // Border for compact mode
         borderBottom: isScrolled ? `1px solid ${alpha(theme.palette.divider, 0.2)}` : 'none',
         maxWidth: isScrolled ? '80%' : '100%',
-        ml: isScrolled ? '10%' : 0,
+        ml: isScrolled ? '1%' : 0,
 
         overflow: 'hidden'
       }}

@@ -25,6 +25,7 @@ import RadioComponent from './RadioComponent'
 import QuizResults from './QuizResults'
 import CelebrationAnimation from './CelebrationAnimation'
 import SubmitCard from './SubmitCard'
+import DialogTransition from './DialogTransition'
 import QuizComponentErrorBoundary from './QuizComponentErrorBoundary'
 import { QuizLoadingState, QuizInterfaceSkeleton } from './LoadingStates'
 import { QuizLoadError, SubmitError, ValidationError, CelebrationErrorFallback } from './ErrorMessages'
@@ -92,6 +93,8 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId }) => {
   const [celebrationError, setCelebrationError] = useState(false)
   const [results, setResults] = useState<any>(null)
   const [reviewMode, setReviewMode] = useState(false)
+  const [reviewModeActions, setReviewModeActions] = useState<React.ReactNode>(null)
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
 
   // ** Computed values
   const answeredQuestions = useMemo(() => {
@@ -100,20 +103,6 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId }) => {
 
   const totalQuestions = quizState.quiz?.questions?.length || 0
   const isQuizComplete = answeredQuestions === totalQuestions
-
-  // ** Timer color helper
-  const getTimerColor = useCallback(() => {
-    if (quizState.timeRemaining < 300) return theme.palette.error.main
-    if (quizState.timeRemaining < 600) return theme.palette.warning.main
-    return theme.palette.success.main
-  }, [quizState.timeRemaining, theme])
-
-  // ** Format time helper
-  const formatTime = useCallback((seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins}:${secs.toString().padStart(2, '0')}`
-  }, [])
 
   // ** Load quiz data with enhanced error handling
   useEffect(() => {
@@ -147,7 +136,9 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId }) => {
                 acc[item.questionId] = item.answer
                 return acc
               }, {}),
-              timeSpent: attemptData.timeSpent || 0,
+              timeSpent: Math.floor(
+                (new Date(attemptData.enddedAt).getTime() - new Date(attemptData.startedAt).getTime()) / 1000
+              ),
               startTime: new Date(attemptData.startedAt),
               lastSaved: new Date(attemptData.enddedAt)
             }
@@ -213,11 +204,6 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId }) => {
         const newTimeRemaining = Math.max(0, prev.timeRemaining - 1)
         const newTimeSpent = prev.progress.timeSpent + 1
 
-        // Auto-submit when time runs out
-        if (newTimeRemaining === 0 && !prev.isSubmitting) {
-          handleSubmitQuiz(true) // Auto-submit
-        }
-
         return {
           ...prev,
           timeRemaining: newTimeRemaining,
@@ -275,11 +261,12 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId }) => {
 
       // Check if all questions are answered (unless auto-submit)
       if (!isAutoSubmit && !isQuizComplete) {
-        // Requirement 9.3: User-friendly validation error
-        setSubmitError('Te rugăm să răspunzi la toate întrebările înainte de a trimite testul.')
+        // Show confirmation dialog for incomplete quiz
+        setShowConfirmDialog(true)
         return
       }
 
+      // Proceed with submission
       try {
         setQuizState(prev => ({ ...prev, isSubmitting: true }))
         setSubmitError(null)
@@ -330,6 +317,13 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId }) => {
     [quizId, quizState.progress.answers, quizState.isSubmitting, quizState.hasSubmitted, isQuizComplete]
   )
 
+  // ** Auto-submit when time runs out
+  useEffect(() => {
+    if (quizState.timeRemaining === 0 && !quizState.hasSubmitted && !quizState.isSubmitting && quizState.quiz) {
+      handleSubmitQuiz(true)
+    }
+  }, [quizState.timeRemaining, quizState.hasSubmitted, quizState.isSubmitting, quizState.quiz, handleSubmitQuiz])
+
   // ** Handle celebration completion
   const handleCelebrationComplete = useCallback(() => {
     setShowCelebration(false)
@@ -365,6 +359,23 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId }) => {
       })
     }
   }, [])
+
+  // ** Handle dialog close
+  const handleDialogClose = useCallback(() => {
+    setShowConfirmDialog(false)
+  }, [])
+
+  // ** Handle dialog confirm - force submit even with unanswered questions
+  const handleDialogConfirm = useCallback(async () => {
+    setShowConfirmDialog(false)
+    // Force submit by calling with isAutoSubmit=true to bypass the check
+    await handleSubmitQuiz(true)
+  }, [handleSubmitQuiz])
+
+  // ** Get unanswered questions count
+  const getUnansweredQuestions = useCallback(() => {
+    return totalQuestions - answeredQuestions
+  }, [totalQuestions, answeredQuestions])
 
   // ** Requirement 9.2: Clear loading state
   if (loading) {
@@ -433,9 +444,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId }) => {
       <QuizResults
         score={results.correctCount || 0}
         totalQuestions={totalQuestions}
-        answers={quizState.progress.answers}
-        correctAnswers={correctAnswersMap}
-        questions={quizState.quiz?.questions || []}
+        quiz={quizState.quiz}
         timeSpent={quizState.progress.timeSpent}
         onReturnToQuizzes={handleReturnToQuizzes}
         onReviewAnswers={handleReviewAnswers}
@@ -452,13 +461,10 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId }) => {
           <QuizResults
             score={results.correctCount || 0}
             totalQuestions={totalQuestions}
-            answers={quizState.progress.answers}
-            correctAnswers={(results.correctAnswers || []).reduce((acc: Record<string, number>, item: any) => {
-              acc[item.questionId] = item.answer
-              return acc
-            }, {})}
-            questions={quizState.quiz?.questions || []}
+            quiz={quizState.quiz}
             timeSpent={quizState.progress.timeSpent}
+            reviewModeActions={reviewModeActions}
+            setReviewModeActions={setReviewModeActions}
             onReturnToQuizzes={handleReturnToQuizzes}
             onReviewAnswers={() => {
               window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -564,7 +570,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId }) => {
         </Box>
 
         {/* Submit Section with error boundary - Task 10: Compact elegant submit card */}
-        {!reviewMode && (
+        {!reviewMode ? (
           <QuizComponentErrorBoundary componentName='Submit Card' minimal>
             <SubmitCard
               answeredQuestions={answeredQuestions}
@@ -574,8 +580,27 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId }) => {
               disabled={quizState.hasSubmitted}
             />
           </QuizComponentErrorBoundary>
+        ) : (
+          <Box
+            sx={{
+              width: '100%',
+              maxWidth: { xs: '100%', sm: '100%', md: 900 },
+              mx: 'auto',
+              my: 8
+            }}
+          >
+            {reviewModeActions}
+          </Box>
         )}
       </Box>
+
+      {/* Confirmation Dialog for incomplete quiz */}
+      <DialogTransition
+        open={showConfirmDialog}
+        handleClose={handleDialogClose}
+        handleConfirm={handleDialogConfirm}
+        getUnasweredQuestions={getUnansweredQuestions}
+      />
     </>
   )
 }

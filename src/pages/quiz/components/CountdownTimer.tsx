@@ -25,7 +25,7 @@ const CountdownTimer: React.FC<
   CountdownTimerProps & {
     compact?: boolean
   }
-> = ({ timeRemaining, totalTime, onTimeUp, showWarnings = true, compact = false }) => {
+> = ({ timeRemaining, timeSpent, totalTime, onTimeUp, showWarnings = true, compact = false }) => {
   const theme = useTheme()
   const { isMobile, shouldReduceMotion } = useResponsive()
   const [hasWarned5Min, setHasWarned5Min] = useState(false)
@@ -212,7 +212,7 @@ const CountdownTimer: React.FC<
                 : `color ${ANIMATION_DURATIONS.MEDIUM}ms ${EASING_FUNCTIONS.STANDARD}`
             }}
           >
-            {formatTime(timeRemaining)}
+            {formatTime(timeSpent ? timeSpent : timeRemaining)}
           </Typography>
         </Box>
       </Box>
