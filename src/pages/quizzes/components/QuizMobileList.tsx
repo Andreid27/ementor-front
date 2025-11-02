@@ -19,19 +19,29 @@ const QuizMobileList: React.FC<QuizDataGridProps> = ({
   const [page, setPage] = useState(1)
   const [pageSize] = useState(10) // Mobile-friendly page size
   const [showSkeleton, setShowSkeleton] = useState(false)
+  const [isInitialLoad, setIsInitialLoad] = useState(true)
 
   const totalPages = Math.ceil(totalCount / pageSize)
 
-  // Delay skeleton display to prevent flickering on fast loads
+  // Delay skeleton display to prevent flickering on fast loads (except initial load)
   useEffect(() => {
     let timeout: NodeJS.Timeout
 
     if (loading) {
-      timeout = setTimeout(() => {
+      if (isInitialLoad) {
+        // Show skeleton immediately on initial load
         setShowSkeleton(true)
-      }, 200) // Show skeleton only after 200ms
+      } else {
+        // Delay skeleton for subsequent loads
+        timeout = setTimeout(() => {
+          setShowSkeleton(true)
+        }, 200)
+      }
     } else {
       setShowSkeleton(false)
+      if (isInitialLoad) {
+        setIsInitialLoad(false)
+      }
     }
 
     return () => {
@@ -39,7 +49,7 @@ const QuizMobileList: React.FC<QuizDataGridProps> = ({
         clearTimeout(timeout)
       }
     }
-  }, [loading])
+  }, [loading, isInitialLoad])
 
   const handlePageChange = useCallback(
     (_event: React.ChangeEvent<unknown>, newPage: number) => {

@@ -186,17 +186,27 @@ const QuizDataGrid: React.FC<QuizDataGridProps> = ({
     quickFilterValues: []
   })
   const [showSkeleton, setShowSkeleton] = useState(false)
+  const [isInitialLoad, setIsInitialLoad] = useState(true)
 
-  // Delay skeleton display to prevent flickering on fast loads
+  // Delay skeleton display to prevent flickering on fast loads (except initial load)
   useEffect(() => {
     let timeout: NodeJS.Timeout
 
     if (loading) {
-      timeout = setTimeout(() => {
+      if (isInitialLoad) {
+        // Show skeleton immediately on initial load
         setShowSkeleton(true)
-      }, 200) // Show skeleton only after 200ms
+      } else {
+        // Delay skeleton for subsequent loads
+        timeout = setTimeout(() => {
+          setShowSkeleton(true)
+        }, 200)
+      }
     } else {
       setShowSkeleton(false)
+      if (isInitialLoad) {
+        setIsInitialLoad(false)
+      }
     }
 
     return () => {
@@ -204,7 +214,7 @@ const QuizDataGrid: React.FC<QuizDataGridProps> = ({
         clearTimeout(timeout)
       }
     }
-  }, [loading])
+  }, [loading, isInitialLoad])
 
   // ** Handlers
 
