@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import { Box, CircularProgress, Typography, Button, alpha, Pagination, Skeleton } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import QuizMobileCard from './QuizMobileCard'
@@ -18,8 +18,28 @@ const QuizMobileList: React.FC<QuizDataGridProps> = ({
   const theme = useTheme()
   const [page, setPage] = useState(1)
   const [pageSize] = useState(10) // Mobile-friendly page size
+  const [showSkeleton, setShowSkeleton] = useState(false)
 
   const totalPages = Math.ceil(totalCount / pageSize)
+
+  // Delay skeleton display to prevent flickering on fast loads
+  useEffect(() => {
+    let timeout: NodeJS.Timeout
+
+    if (loading) {
+      timeout = setTimeout(() => {
+        setShowSkeleton(true)
+      }, 200) // Show skeleton only after 200ms
+    } else {
+      setShowSkeleton(false)
+    }
+
+    return () => {
+      if (timeout) {
+        clearTimeout(timeout)
+      }
+    }
+  }, [loading])
 
   const handlePageChange = useCallback(
     (_event: React.ChangeEvent<unknown>, newPage: number) => {
@@ -38,7 +58,7 @@ const QuizMobileList: React.FC<QuizDataGridProps> = ({
   )
 
   // Loading skeleton for mobile
-  if (loading) {
+  if (loading && showSkeleton) {
     return (
       <Box sx={{ p: 2 }}>
         {[...Array(5)].map((_, index) => (

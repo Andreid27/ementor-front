@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react'
+import React, { useState, useCallback, useMemo, useEffect } from 'react'
 import { Card, Box, Typography, Rating, IconButton, Tooltip, alpha } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import {
@@ -185,6 +185,26 @@ const QuizDataGrid: React.FC<QuizDataGridProps> = ({
     items: [],
     quickFilterValues: []
   })
+  const [showSkeleton, setShowSkeleton] = useState(false)
+
+  // Delay skeleton display to prevent flickering on fast loads
+  useEffect(() => {
+    let timeout: NodeJS.Timeout
+
+    if (loading) {
+      timeout = setTimeout(() => {
+        setShowSkeleton(true)
+      }, 200) // Show skeleton only after 200ms
+    } else {
+      setShowSkeleton(false)
+    }
+
+    return () => {
+      if (timeout) {
+        clearTimeout(timeout)
+      }
+    }
+  }, [loading])
 
   // ** Handlers
 
@@ -414,7 +434,7 @@ const QuizDataGrid: React.FC<QuizDataGridProps> = ({
   }, [])
 
   // Use modified skeleton with headers and skeleton rows only (no search)
-  if (loading) {
+  if (loading && showSkeleton) {
     return <QuizDataGridSkeleton rows={paginationModel.pageSize} />
   }
 
