@@ -23,7 +23,7 @@ import { getInitials } from 'src/@core/utils/get-initials'
 import * as apiSpec from '../../apiSpec'
 import apiClient from 'src/@core/axios/axiosEmentor'
 import { Button, Checkbox, LinearProgress } from '@mui/material'
-import AssignationModal from './componets/assignationModal'
+import AssignationModal from './componets/assignationModal.tsx'
 import { useDispatch } from 'react-redux'
 import { updateAllStudents } from 'src/store/apps/user'
 import Router from 'next/router'
@@ -94,6 +94,7 @@ const useStyles = makeStyles({
 const StudentsLessonsTable = () => {
   // ** States
   const [users, setUsers] = useState([])
+  const [recurringSeries, setRecurringSeries] = useState([])
   const classes = useStyles()
 
   const columns = [
@@ -279,7 +280,7 @@ const StudentsLessonsTable = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [userServiceResponse, lessonServiceResponse] = await Promise.all([
+        const [userServiceResponse, lessonServiceResponse, recurringSeries] = await Promise.all([
           apiClient.get('service3/users/role/STUDENT'),
           apiClient.post(apiSpec.LESSON_SERVICE + '/lesson/assigned-paginated', {
             filters: [],
@@ -333,6 +334,22 @@ const StudentsLessonsTable = () => {
     }))
 
     return apiSortingConfig
+  }
+
+  const refreshTableData = async () => {
+    try {
+      const response = await apiClient.post(apiSpec.LESSON_SERVICE + '/lesson/assigned-paginated', {
+        filters: [],
+        sorters: getSorters(),
+        page: paginationModel.page,
+        pageSize: paginationModel.pageSize
+      })
+      const processedData = await processStudentLessonsData(response.data.data, users)
+      setData(processedData)
+      setTotalCount(response.data.totalCount)
+    } catch (error) {
+      console.error('Error refreshing table data:', error)
+    }
   }
 
   const processStudentLessonsData = async (data, users) => {
@@ -412,7 +429,7 @@ const StudentsLessonsTable = () => {
 
   return (
     <>
-      <AssignationModal users={users} />
+      <AssignationModal users={users} onAssignSuccess={refreshTableData} />
       <Card>
         <CardHeader title='Rezultate studenți' />
         <Box sx={{ px: 3, pb: 3, pl: '1.7%' }}>

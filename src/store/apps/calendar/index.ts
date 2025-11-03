@@ -41,6 +41,8 @@ export interface CalendarState {
   attendees: UserDTO[]
   myEvents: EventsDTO | null
   mySingularEvents: SingularEventDTO[]
+  myRecurringSeries: RecurringSeriesDTO[]
+  myRecurringSeriesLastFetch: number | null
   loading: boolean
   error: string | null
   periodStart: Date
@@ -148,6 +150,7 @@ export const updateEvent = createAsyncThunk<any, any>(
       })
 
       await dispatch(fetchEvents())
+      await dispatch(fetchMyRecurringSeries({ forceRefresh: true }))
       return response.data
     } else {
       // Update singular event with complete attendee information
@@ -359,6 +362,51 @@ export const getSingularEventsForProfessor = createAsyncThunk<
   return response.data
 })
 
+// ** Fetch My Recurring Series with Smart Caching
+export const fetchMyRecurringSeries = createAsyncThunk<RecurringSeriesDTO[], { forceRefresh?: boolean } | void>(
+  'appCalendar/fetchMyRecurringSeries',
+  async (params, { getState }) => {
+    const forceRefresh = params && typeof params === 'object' ? params.forceRefresh : false
+    const state = getState() as any
+
+    // Defensive check: ensure calendar state exists
+    if (!state.calendar) {
+      console.warn('Calendar state not initialized, fetching myRecurringSeries from API')
+      const response = await profileServiceClient.events.getMyRecurringSeries()
+      return response.data
+    }
+
+    const { myRecurringSeries, myRecurringSeriesLastFetch } = state.calendar
+
+    const TWO_HOURS_IN_MS = 2 * 60 * 60 * 1000
+    const now = Date.now()
+    const isStale = !myRecurringSeriesLastFetch || now - myRecurringSeriesLastFetch > TWO_HOURS_IN_MS
+    const isEmpty = !myRecurringSeries || myRecurringSeries.length === 0
+
+    // Fetch if: forced refresh, empty, or stale (older than 2 hours)
+    if (forceRefresh || isEmpty || isStale) {
+      console.log('Fetching myRecurringSeries:', {
+        reason: forceRefresh ? 'forced' : isEmpty ? 'empty' : 'stale',
+        lastFetch: myRecurringSeriesLastFetch ? new Date(myRecurringSeriesLastFetch).toISOString() : 'never',
+        isEmpty,
+        isStale
+      })
+
+      const response = await profileServiceClient.events.getMyRecurringSeries()
+
+      return response.data
+    }
+
+    // Return cached data
+    console.log('Returning cached myRecurringSeries:', {
+      count: myRecurringSeries.length,
+      lastFetch: new Date(myRecurringSeriesLastFetch).toISOString()
+    })
+
+    return myRecurringSeries
+  }
+)
+
 // ** Complete Event Occurrence with Attendance
 export const completeEventOccurrence = createAsyncThunk<
   EventOccurrenceDTO,
@@ -430,6 +478,8 @@ const initialState: CalendarState = {
   attendees: [],
   myEvents: null,
   mySingularEvents: [],
+  myRecurringSeries: [],
+  myRecurringSeriesLastFetch: null,
   loading: false,
   error: null,
   periodStart: new Date(),
@@ -442,6 +492,9 @@ export const selectSelectedEvent = (state: { calendar: CalendarState }) => state
 export const selectAttendees = (state: { calendar: CalendarState }) => state.calendar?.attendees || []
 export const selectMyEvents = (state: { calendar: CalendarState }) => state.calendar.myEvents
 export const selectMySingularEvents = (state: { calendar: CalendarState }) => state.calendar.mySingularEvents
+export const selectMyRecurringSeries = (state: { calendar: CalendarState }) => state.calendar.myRecurringSeries
+export const selectMyRecurringSeriesLastFetch = (state: { calendar: CalendarState }) =>
+  state.calendar.myRecurringSeriesLastFetch
 export const selectCalendarLoading = (state: { calendar: CalendarState }) => state.calendar.loading
 export const selectCalendarError = (state: { calendar: CalendarState }) => state.calendar.error
 
@@ -523,6 +576,12 @@ export const appCalendarSlice = createSlice({
     // Get My Singular Events
     builder.addCase(getMySingularEvents.fulfilled, (state, action) => {
       state.mySingularEvents = action.payload
+    })
+
+    // Fetch My Recurring Series with Smart Caching
+    builder.addCase(fetchMyRecurringSeries.fulfilled, (state, action) => {
+      state.myRecurringSeries = action.payload
+      state.myRecurringSeriesLastFetch = Date.now()
     })
 
     // Update Event - refresh selected event if it was updated

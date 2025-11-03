@@ -13,7 +13,7 @@ import lesson from 'src/store/apps/lesson'
 import dashboard from 'src/store/apps/dashboard'
 import email from 'src/store/apps/email'
 import invoice from 'src/store/apps/invoice'
-import calendar from 'src/store/apps/calendar'
+import calendarReducer from 'src/store/apps/calendar/index'
 import permissions from 'src/store/apps/permissions'
 import notifications from 'src/store/apps/notifications'
 
@@ -43,7 +43,7 @@ const persistedReducer = persistReducer(
     chat,
     email,
     invoice,
-    calendar,
+    calendar: calendarReducer,
     permissions,
     notifications
   })

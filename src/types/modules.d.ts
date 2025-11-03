@@ -64,4 +64,5 @@ declare module 'src/store/apps/calendar' {
   export const handleAllCalendars: any
   export const handleCalendarsUpdate: any
   export const setPeriod: any
+  export const fetchMyRecurringSeries: any
 }
