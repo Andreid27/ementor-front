@@ -386,13 +386,26 @@ const StudentsResultsTable = () => {
       })
   }
 
+  const refreshTableData = async () => {
+    try {
+      const response = await apiClient.post(apiSpec.QUIZ_SERVICE + '/assigned-paginated', {
+        filters: [],
+        sorters: getSorters(),
+        page: paginationModel.page,
+        pageSize: paginationModel.pageSize
+      })
+
+      const processedData = await processStudentQuizzesData(response.data.data, users)
+      setData(processedData)
+      setTotalCount(response.data.totalCount)
+    } catch (error) {
+      console.error('Error refreshing table data:', error)
+    }
+  }
+
   return (
     <>
-      <AssignationModal
-        users={users}
-        buttonSx={{ margin: '2em', marginLeft: '1em', marginTop: '0em' }}
-        buttonSize={'large'}
-      />
+      <AssignationModal users={users} onAssignSuccess={refreshTableData} />
       <Card>
         <CardHeader title='Rezultate studenți' />
         <Box sx={{ px: 3, pb: 3, pl: '1.7%' }}>
