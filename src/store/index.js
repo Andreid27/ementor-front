@@ -51,13 +51,18 @@ const persistedReducer = persistReducer(
 
 export const store = configureStore({
   reducer: persistedReducer, // Use the persistedReducer as the root reducer
-  middleware: getDefaultMiddleware =>
-    getDefaultMiddleware({
+  middleware: getDefaultMiddleware => {
+    const middleware = getDefaultMiddleware({
       serializableCheck: false
     })
 
-  //UNCOMMENT HERE TO ENABLE LOGGER
-  // .concat(logger) // ** Logger middleware
+    // Only add logger in development mode
+    if (process.env.NODE_ENV !== 'production') {
+      return middleware.concat(logger)
+    }
+
+    return middleware
+  }
 })
 
 // Export the persistor, so you can use it in the 'PersistGate'

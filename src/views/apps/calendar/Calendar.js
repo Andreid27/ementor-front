@@ -72,18 +72,6 @@ const Calendar = props => {
     const transformed = store.events.map(eventData => {
       const calendarCategory = eventData.recurringSeriesId ? `Series-${eventData.recurringSeriesId}` : 'Personal'
 
-      // Debug singular events
-      if (!eventData.recurringSeriesId) {
-        console.log('Calendar.js - Processing singular event:', {
-          id: eventData.id,
-          title: eventData.seriesTitle || eventData.title,
-          calendarCategory,
-          virtual: eventData.virtual,
-          effectiveStartTime: eventData.effectiveStartTime,
-          isSingular: isSingularEvent(eventData)
-        })
-      }
-
       // Enhanced event classification using utility functions
       const eventClassification = getEventClassification(eventData)
 
@@ -206,14 +194,6 @@ const Calendar = props => {
 
       // Debug filtering
       const isSelected = store.selectedCalendars.includes(calendarCategory)
-      if (calendarCategory === 'Personal') {
-        console.log('Calendar.js - Filtering Personal event:', {
-          eventTitle: event.title,
-          calendarCategory,
-          selectedCalendars: store.selectedCalendars,
-          isSelected
-        })
-      }
 
       // Show event if its calendar category is selected
       return isSelected
