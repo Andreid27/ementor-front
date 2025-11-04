@@ -2,6 +2,31 @@
 import Head from 'next/head'
 import { Router } from 'next/router'
 
+// ** APM RUM - Initialize immediately in _app.js (before any other imports)
+import { init as initApm } from '@elastic/apm-rum'
+
+const apm = initApm({
+  serviceName: 'frontend-service-client',
+  serverUrl: 'https://api.e-mentor.ro/apm',
+  serviceVersion: '1.0.0',
+  environment: process.env.NODE_ENV || 'development',
+  distributedTracing: false,
+  transactionSampleRate: 1.0
+})
+
+// Make it globally available
+if (typeof window !== 'undefined') {
+  window.apm = apm
+
+  // Intercept console.error to capture in APM
+  const originalError = console.error
+  console.error = (...args) => {
+    originalError(...args)
+    const error = args.find(arg => arg instanceof Error) || new Error(args.join(' '))
+    apm.captureError(error)
+  }
+}
+
 // ** Store Imports
 import { store } from 'src/store'
 import { Provider } from 'react-redux'
@@ -29,6 +54,20 @@ import AclGuard from 'src/@core/components/auth/AclGuard'
 import ThemeComponent from 'src/@core/theme/ThemeComponent'
 import AuthGuard from 'src/@core/components/auth/AuthGuard'
 import GuestGuard from 'src/@core/components/auth/GuestGuard'
+
+// ** Minimal Error Boundary for APM
+import React from 'react'
+
+class ErrorBoundary extends React.Component {
+  componentDidCatch(error) {
+    if (typeof window !== 'undefined' && window.apm) {
+      window.apm.captureError(error)
+    }
+  }
+  render() {
+    return this.props.children
+  }
+}
 
 // ** Spinner Import
 import Spinner from 'src/@core/components/spinner'
@@ -110,30 +149,32 @@ const App = props => {
           <meta name='viewport' content='initial-scale=1, width=device-width' />
         </Head>
 
-        <AuthProvider>
-          <WebSocketProvider>
-            <SettingsProvider {...(setConfig ? { pageSettings: setConfig() } : {})}>
-              <SettingsConsumer>
-                {({ settings }) => {
-                  return (
-                    <ThemeComponent settings={settings}>
-                      <AppBarProvider>
-                        <Guard authGuard={authGuard} guestGuard={guestGuard}>
-                          <AclGuard aclAbilities={aclAbilities} guestGuard={guestGuard} authGuard={authGuard}>
-                            {getLayout(<Component {...pageProps} />)}
-                          </AclGuard>
-                        </Guard>
-                      </AppBarProvider>
-                      <ReactHotToast>
-                        <Toaster position={settings.toastPosition} toastOptions={{ className: 'react-hot-toast' }} />
-                      </ReactHotToast>
-                    </ThemeComponent>
-                  )
-                }}
-              </SettingsConsumer>
-            </SettingsProvider>
-          </WebSocketProvider>
-        </AuthProvider>
+        <ErrorBoundary>
+          <AuthProvider>
+            <WebSocketProvider>
+              <SettingsProvider {...(setConfig ? { pageSettings: setConfig() } : {})}>
+                <SettingsConsumer>
+                  {({ settings }) => {
+                    return (
+                      <ThemeComponent settings={settings}>
+                        <AppBarProvider>
+                          <Guard authGuard={authGuard} guestGuard={guestGuard}>
+                            <AclGuard aclAbilities={aclAbilities} guestGuard={guestGuard} authGuard={authGuard}>
+                              {getLayout(<Component {...pageProps} />)}
+                            </AclGuard>
+                          </Guard>
+                        </AppBarProvider>
+                        <ReactHotToast>
+                          <Toaster position={settings.toastPosition} toastOptions={{ className: 'react-hot-toast' }} />
+                        </ReactHotToast>
+                      </ThemeComponent>
+                    )
+                  }}
+                </SettingsConsumer>
+              </SettingsProvider>
+            </WebSocketProvider>
+          </AuthProvider>
+        </ErrorBoundary>
       </CacheProvider>
     </Provider>
   )
