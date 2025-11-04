@@ -239,7 +239,7 @@ const PaymentConfirmationHistory = forwardRef<PaymentConfirmationHistoryRef, Pay
 
     const formatCurrency = (amount: number | undefined, currency: string | undefined = 'RON'): string => {
       if (amount === undefined) return '0 RON'
-      return `${amount.toFixed(2)} ${currency}`
+      return `${amount} ${currency}`
     }
 
     const formatDateTime = (iso?: string) => {

@@ -745,7 +745,7 @@ const EventsWidget = forwardRef<EventsWidgetRef, EventsWidgetProps>(({ onComplet
                         // Only count if attendee actually attended
                         if (attendee.attended) {
                           // Use custom price if available, otherwise use event's base price
-                          const price = attendee.hasCustomPricing ? attendee.customPrice || 0 : event.price || 0
+                          const price = attendee.customPrice ? attendee.customPrice || 0 : event.price || 0
                           return eventTotal + price
                         }
                         return eventTotal
@@ -754,7 +754,7 @@ const EventsWidget = forwardRef<EventsWidgetRef, EventsWidgetProps>(({ onComplet
                       return total + eventRevenue
                     }, 0)
 
-                    return `${revenue.toFixed(2)} RON`
+                    return `${revenue} RON`
                   })()}
                 </Typography>
               </Grid>
