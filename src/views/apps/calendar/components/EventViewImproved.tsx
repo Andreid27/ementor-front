@@ -368,33 +368,39 @@ const EventViewImproved: React.FC<EventViewImprovedProps> = ({
                 const isAttended = enrichedAttendee.attended === true
                 const isCompleted = selectedEvent?.completed
 
-                return (
-                  <Chip
-                    key={enrichedAttendee.attendeeId || index}
-                    label={displayName}
-                    size='small'
-                    variant={isCompleted ? (isAttended ? 'filled' : 'outlined') : 'outlined'}
-                    color={isCompleted ? (isAttended ? 'success' : 'default') : 'default'}
-                    avatar={
-                      <Avatar sx={{ width: 24, height: 24 }} src={profilePicture}>
-                        {initials}
-                      </Avatar>
-                    }
-                    icon={isCompleted && isAttended ? <Icon icon='tabler:check' fontSize='0.875rem' /> : undefined}
-                    sx={{
-                      '& .MuiChip-avatar': {
-                        width: 24,
-                        height: 24,
-                        fontSize: '0.75rem'
-                      },
-                      '& .MuiChip-icon': {
-                        fontSize: '0.875rem',
-                        marginLeft: '4px'
-                      },
-                      opacity: isCompleted && !isAttended ? 0.6 : 1
-                    }}
-                  />
-                )
+                // Only use avatar OR icon, not both
+                const chipProps: any = {
+                  key: enrichedAttendee.attendeeId || index,
+                  label: displayName,
+                  size: 'small',
+                  variant: isCompleted ? (isAttended ? 'filled' : 'outlined') : 'outlined',
+                  color: isCompleted ? (isAttended ? 'success' : 'default') : 'default',
+                  sx: {
+                    '& .MuiChip-avatar': {
+                      width: 24,
+                      height: 24,
+                      fontSize: '0.75rem'
+                    },
+                    '& .MuiChip-icon': {
+                      fontSize: '0.875rem',
+                      marginLeft: '4px'
+                    },
+                    opacity: isCompleted && !isAttended ? 0.6 : 1
+                  }
+                }
+
+                // Choose between avatar and icon (prefer avatar if available)
+                if (profilePicture || initials) {
+                  chipProps.avatar = (
+                    <Avatar sx={{ width: 24, height: 24 }} src={profilePicture}>
+                      {initials}
+                    </Avatar>
+                  )
+                } else if (isCompleted && isAttended) {
+                  chipProps.icon = <Icon icon='tabler:check' fontSize='0.875rem' />
+                }
+
+                return <Chip {...chipProps} />
               })}
               {enrichedAttendees.length > 8 && (
                 <Chip
