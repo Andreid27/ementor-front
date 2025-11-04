@@ -161,10 +161,6 @@ const AssignationModal = (props: AssignationModalProps) => {
   // RENDER
   // ========================================
 
-  if (loading) {
-    return <LinearProgress />
-  }
-
   return (
     <GenericAssignmentModal
       // List #1: Entities (Quizzes)

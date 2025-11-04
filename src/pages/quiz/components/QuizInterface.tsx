@@ -22,7 +22,12 @@ import SubmitCard from './SubmitCard'
 import DialogTransition from './DialogTransition'
 import QuizComponentErrorBoundary from './QuizComponentErrorBoundary'
 import { QuizLoadingState, QuizInterfaceSkeleton } from 'src/components/quiz/LoadingStates'
-import { QuizLoadError, SubmitError, ValidationError, CelebrationErrorFallback } from 'src/components/quiz/ErrorMessages'
+import {
+  QuizLoadError,
+  SubmitError,
+  ValidationError,
+  CelebrationErrorFallback
+} from 'src/components/quiz/ErrorMessages'
 
 // ** Hooks
 import { useResponsive, useResponsiveQuizInterface } from '../../quizzes/hooks/useResponsive'
@@ -96,7 +101,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId, isProf
   const [reviewModeActions, setReviewModeActions] = useState<React.ReactNode>(null)
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   const students = useSelector(selectAllStudents)
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<any>(null)
 
   // ** Computed values
   const answeredQuestions = useMemo(() => {
@@ -115,7 +120,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId, isProf
 
         if (attemptId) {
           // Load attempt data for review
-            const attemptData: SubmitQuizDTO = await quizUIService.getQuizAttempt(attemptId)
+          const attemptData: SubmitQuizDTO = await quizUIService.getQuizAttempt(attemptId)
           // Map correctAnswers to correctAnswersMap
           const correctAnswersMap = (attemptData.correctAnswers || []).reduce(
             (acc: Record<string, number>, item: any) => {
@@ -152,26 +157,24 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId, isProf
             correctAnswers: attemptData.correctAnswers || [],
             correctAnswersMap
           })
-          if(isProfessor) {
-          let selectedUser = students.find(student => student.id === attemptData.studentId);
+          if (isProfessor) {
+            let selectedUser = students.find(student => student.id === attemptData.studentId)
 
-          const processedUser = extractProfilePicture(selectedUser);
+            const processedUser = extractProfilePicture(selectedUser)
 
-          const avatar = processedUser?.type === 'API'
-            ? await profilePictureDownloader(processedUser.url, processedUser.userId)
-            : processedUser?.type === 'EXTERNAL'
-              ? processedUser.url
-              : null;
+            const avatar =
+              processedUser?.type === 'API'
+                ? await profilePictureDownloader(processedUser.url, processedUser.userId)
+                : processedUser?.type === 'EXTERNAL'
+                ? processedUser.url
+                : null
 
+            selectedUser = { ...selectedUser, avatar: avatar }
 
-          selectedUser = { ...selectedUser, avatar: avatar };
-
-          setUser(selectedUser);
+            setUser(selectedUser)
           }
 
-
-
-          setLoading(false);
+          setLoading(false)
           setReviewMode(true)
         } else if (quizId) {
           // Start the quiz attempt
@@ -365,7 +368,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId, isProf
   const handleReturnToQuizzes = useCallback(() => {
     if (isProfessor) {
       router.push('/student-results')
-    } else{
+    } else {
       router.push('/quizzes')
     }
   }, [router])
@@ -414,7 +417,13 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId, isProf
       <QuizLoadError
         message={error}
         onRetry={() => window.location.reload()}
-        onGoBack={() => router.push('/quizzes')}
+        onGoBack={() => {
+          if (isProfessor) {
+            router.push('/student-results')
+          } else {
+            router.push('/quizzes')
+          }
+        }}
       />
     )
   }

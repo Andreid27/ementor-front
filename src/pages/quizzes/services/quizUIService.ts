@@ -1,8 +1,7 @@
 // Quiz UI Service - Wrapper around quiz-service-client for UI-specific logic
-import { lessonServiceClient } from '../../../generated/lesson-service-client'
+import quizServiceClient from 'src/generated/quiz-service-client'
 import {
   QuizDTO,
-  QuizzesView,
   FilterCriteriaObjectOperationEnum,
   SortCriteriaDirectionEnum
 } from '../../../generated/quiz-service/api'
@@ -10,7 +9,7 @@ import { QuizGridRow, DataGridParams } from '../types'
 import { transformQuizDTOToGridRow } from '../utils/transformers'
 
 export class QuizUIService {
-  private client = lessonServiceClient
+  private client = quizServiceClient
 
   /**
    * Get quizzes formatted for DataGrid display with pagination and filtering
