@@ -69,8 +69,8 @@ const SectionPaper = styled(Paper)(({ theme }) => ({
   }
 }))
 
-const SectionTitle = styled(Typography)(({ theme }) => ({
-  fontSize: '0.875rem',
+const SectionTitle = styled('div')(({ theme }) => ({
+  ...theme.typography.body2,
   fontWeight: 600,
   marginBottom: theme.spacing(3),
   color: theme.palette.text.primary,

@@ -13,9 +13,10 @@ const QuizzesPage = () => {
   const router = useRouter()
 
   const [preview, setPreview] = useState(
-    window.location.pathname.split('/')[2] &&
-      window.location.pathname.split('/')[2].length === 36
-      ? { id: window.location.pathname.split('/')[2] } : null)
+    window.location.pathname.split('/')[2] && window.location.pathname.split('/')[2].length === 36
+      ? { id: window.location.pathname.split('/')[2] }
+      : null
+  )
 
   const [users, setUsers] = useState([])
   const dispatch = useDispatch()
@@ -37,7 +38,7 @@ const QuizzesPage = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await apiClient.get("service3/users/role/STUDENT")
+        const response = await apiClient.get('service3/users/role/STUDENT')
         setUsers(response.data)
         dispatch(updateAllStudents(response.data))
       } catch (error) {
@@ -48,8 +49,6 @@ const QuizzesPage = () => {
 
     fetchUsers()
   }, [])
-
-  console.log(preview)
 
   return (
     <>

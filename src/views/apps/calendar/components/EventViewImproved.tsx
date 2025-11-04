@@ -65,16 +65,6 @@ const EventViewImproved: React.FC<EventViewImprovedProps> = ({
   // This prevents stale event data from being displayed after updates/completions
   const selectedEvent = selectedEventFromStore || propSelectedEvent
 
-  // Debug logging
-  console.log('EventViewImproved render:', {
-    propSelectedEvent: propSelectedEvent?.id,
-    propCompleted: propSelectedEvent?.completed,
-    storeSelectedEvent: selectedEventFromStore?.id,
-    storeCompleted: selectedEventFromStore?.completed,
-    finalSelectedEvent: selectedEvent?.id,
-    finalCompleted: selectedEvent?.completed
-  })
-
   const meetingLink = selectedEvent?.meetingLink
 
   // Helper functions similar to AttendeeManager

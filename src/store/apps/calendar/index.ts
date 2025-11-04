@@ -73,8 +73,6 @@ export const fetchEvents = createAsyncThunk<EventOccurrenceDTO[]>(
 
 // ** Add Event
 export const addEvent = createAsyncThunk<any, any>('appCalendar/addEvent', async (event: any, { dispatch }) => {
-  console.log('Adding event:', event)
-
   if (event.isRecurring && event.recurringSeriesDTO) {
     // Create recurring series with complete attendee information
     const recurringSeriesDTO: RecurringSeriesDTO = {
@@ -396,12 +394,6 @@ export const fetchMyRecurringSeries = createAsyncThunk<RecurringSeriesDTO[], { f
 
       return response.data
     }
-
-    // Return cached data
-    console.log('Returning cached myRecurringSeries:', {
-      count: myRecurringSeries.length,
-      lastFetch: new Date(myRecurringSeriesLastFetch).toISOString()
-    })
 
     return myRecurringSeries
   }

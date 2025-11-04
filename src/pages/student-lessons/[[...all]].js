@@ -158,7 +158,7 @@ const StudentsLessonsTable = () => {
       headerName: 'începe/Citit',
       field: 'startAfter',
       renderCell: params => (
-        <Typography variant='body2' sx={{ color: 'text.primary' }}>
+        <Typography component='div' variant='body2' sx={{ color: 'text.primary' }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <Box>
               {new Date(params.row.startAfter).toLocaleString('ro-RO', {

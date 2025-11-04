@@ -329,6 +329,8 @@ const AttendeeManager: React.FC<AttendeeManagerProps> = ({
               )}
             </Box>
           }
+          primaryTypographyProps={{ component: 'div' }}
+          secondaryTypographyProps={{ component: 'div' }}
         />
         <ListItemSecondaryAction>
           {!isReadOnly && (
@@ -353,7 +355,12 @@ const AttendeeManager: React.FC<AttendeeManagerProps> = ({
         <ListItemAvatar>
           <Avatar src={student.profilePicture || student.picture}>{initials}</Avatar>
         </ListItemAvatar>
-        <ListItemText primary={displayName} secondary={student.email} />
+        <ListItemText
+          primary={displayName}
+          secondary={student.email}
+          primaryTypographyProps={{ component: 'div' }}
+          secondaryTypographyProps={{ component: 'div' }}
+        />
         <ListItemSecondaryAction>
           <IconButton edge='end' onClick={() => handleAddAttendee(student)} disabled={isReadOnly} color='primary'>
             <AddIcon />
@@ -396,6 +403,8 @@ const AttendeeManager: React.FC<AttendeeManagerProps> = ({
                   primary='Nu s-au selectat participanți'
                   secondary='Adaugă elevi din lista disponibilă de mai jos'
                   sx={{ textAlign: 'center' }}
+                  primaryTypographyProps={{ component: 'div' }}
+                  secondaryTypographyProps={{ component: 'div' }}
                 />
               </ListItem>
             ) : (
@@ -454,6 +463,8 @@ const AttendeeManager: React.FC<AttendeeManagerProps> = ({
                     primary='No students available'
                     secondary={searchTerm ? 'No students match your search' : 'All students are already attendees'}
                     sx={{ textAlign: 'center' }}
+                    primaryTypographyProps={{ component: 'div' }}
+                    secondaryTypographyProps={{ component: 'div' }}
                   />
                 </ListItem>
               ) : (

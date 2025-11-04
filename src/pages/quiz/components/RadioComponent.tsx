@@ -70,7 +70,9 @@ const shimmerAnimation = keyframes`
 
 // Styled components using Apple Design System
 // Task 6: Optimize Question Card spacing and visual hierarchy
-const QuestionCard = styled(Card)<{ compact?: boolean }>(({ theme }) => ({
+const QuestionCard = styled(Card, {
+  shouldForwardProp: prop => prop !== 'compact'
+})<{ compact?: boolean }>(({ theme }) => ({
   // Requirement 2.1: Maximum 32px spacing between questions on desktop, 24px on mobile
   marginBottom: 0, // Remove margin - spacing handled by parent container gap
 
@@ -103,7 +105,9 @@ const QuestionCard = styled(Card)<{ compact?: boolean }>(({ theme }) => ({
   }
 }))
 
-const QuestionHeader = styled(Box)<{ compact?: boolean }>(({ theme }) => ({
+const QuestionHeader = styled(Box, {
+  shouldForwardProp: prop => prop !== 'compact'
+})<{ compact?: boolean }>(({ theme }) => ({
   // Requirement 2.4: Apple Design System padding (24px desktop/16px mobile)
   padding: `${APPLE_SPACING.LG}px ${APPLE_SPACING.LG}px ${APPLE_SPACING.MD}px`, // 24px horizontal, 16px bottom on desktop
   borderBottom: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
@@ -125,7 +129,10 @@ const QuestionHeader = styled(Box)<{ compact?: boolean }>(({ theme }) => ({
   }
 }))
 
-const AnswerOption = styled(Card)<{
+const AnswerOption = styled(Card, {
+  shouldForwardProp: prop =>
+    !['selected', 'correct', 'incorrect', 'disabled', 'index', 'compact', 'touchOptimized'].includes(String(prop))
+})<{
   selected?: boolean
   correct?: boolean
   incorrect?: boolean
@@ -275,7 +282,9 @@ const AnswerOption = styled(Card)<{
   }
 }))
 
-const AnswerContent = styled(CardContent)<{ compact?: boolean; touchOptimized?: boolean }>(({ theme }) => ({
+const AnswerContent = styled(CardContent, {
+  shouldForwardProp: prop => !['compact', 'touchOptimized'].includes(String(prop))
+})<{ compact?: boolean; touchOptimized?: boolean }>(({ theme }) => ({
   padding: theme.spacing(1.5, 2),
   display: 'flex',
   alignItems: 'center',
@@ -304,7 +313,9 @@ const AnswerContent = styled(CardContent)<{ compact?: boolean; touchOptimized?: 
   }
 }))
 
-const AnswerText = styled(Typography)<{ compact?: boolean }>(({ theme, compact }) => ({
+const AnswerText = styled(Typography, {
+  shouldForwardProp: prop => prop !== 'compact'
+})<{ compact?: boolean }>(({ theme, compact }) => ({
   fontWeight: 500,
   fontSize: compact ? '0.9rem' : '1rem',
   lineHeight: compact ? 1.4 : 1.5,
@@ -363,7 +374,9 @@ const StatusIcon = styled(Box)(({ theme }) => ({
   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
 }))
 
-const SelectionIndicator = styled(Box)<{ selected?: boolean }>(({ theme, selected }) => ({
+const SelectionIndicator = styled(Box, {
+  shouldForwardProp: prop => prop !== 'selected'
+})<{ selected?: boolean }>(({ theme, selected }) => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',

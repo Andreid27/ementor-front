@@ -72,16 +72,6 @@ const SidebarHeader: React.FC<SidebarHeaderProps & { isCompletionMode?: boolean 
     const buttons: ActionButton[] = []
 
     if (isExistingEvent && !isEditMode) {
-      // Debug logging
-      console.log('SidebarHeader - Event State Debug:', {
-        selectedEvent,
-        isCompleted: selectedEvent?.completed,
-        isCancelled: selectedEvent?.cancelled,
-        effectiveStartTime: selectedEvent?.effectiveStartTime,
-        hasOnCompleteEvent: !!onCompleteEvent,
-        hasOnCancelEvent: !!onCancelEvent
-      })
-
       // Edit button
       if (canEdit) {
         buttons.push({
@@ -99,7 +89,6 @@ const SidebarHeader: React.FC<SidebarHeaderProps & { isCompletionMode?: boolean 
 
       // Complete button - larger for current/past events, smaller for future events
       if (!isCompleted && !isCancelled && onCompleteEvent && !isCompletionMode) {
-        console.log('Adding Complete button')
         buttons.push({
           icon: 'tabler:check-circle',
           onClick: onCompleteEvent,
@@ -109,7 +98,6 @@ const SidebarHeader: React.FC<SidebarHeaderProps & { isCompletionMode?: boolean 
 
       // Cancel button - larger for future events, smaller for current/past events
       if (!isCompleted && !isCancelled && onCancelEvent) {
-        console.log('Adding Cancel button')
         buttons.push({
           icon: 'tabler:ban',
           onClick: onCancelEvent,
@@ -126,7 +114,6 @@ const SidebarHeader: React.FC<SidebarHeaderProps & { isCompletionMode?: boolean 
       })
     }
 
-    console.log('Final action buttons:', buttons)
     return buttons
   }, [
     isDaySummary,

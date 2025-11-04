@@ -443,8 +443,8 @@ const EventsWidget = forwardRef<EventsWidgetRef, EventsWidgetProps>(({ onComplet
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {eventsData.map(event => (
-                    <TableRow key={event.id} hover>
+                  {eventsData.map((event, eventIdx) => (
+                    <TableRow key={event.id || `event-${eventIdx}`} hover>
                       <TableCell sx={{ py: 2 }}>
                         <Box>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>

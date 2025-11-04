@@ -300,9 +300,6 @@ const AppCalendar = () => {
       dynamicColors[seriesCategory] = colorOptions[colorIndex]
 
       const event = events.find(e => e.recurringSeriesId === seriesId)
-      console.log(
-        `Assigned color ${colorOptions[colorIndex]} (hash: ${hash}, index: ${colorIndex}) to series: ${event?.seriesTitle} (${seriesId})`
-      )
     })
 
     return dynamicColors
@@ -329,7 +326,6 @@ const AppCalendar = () => {
 
         // Step 4: Generate dynamic calendar colors (synchronous)
         const newDynamicColors = generateDynamicCalendarColors(response)
-        console.log('Generated dynamic colors:', newDynamicColors)
         setDynamicCalendarsColor(newDynamicColors)
 
         // Step 5: Initialize selected calendars with all available calendars (show all by default)

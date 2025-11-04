@@ -71,7 +71,7 @@
   background-color: #e6e6e6;
 }
 
-.controlButton:first-child {
+.controlButton:first-of-type {
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
 }

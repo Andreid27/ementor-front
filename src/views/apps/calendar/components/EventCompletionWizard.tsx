@@ -120,16 +120,6 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
   // Initialize form data from selected event
   useEffect(() => {
     if (selectedEvent) {
-      // Debug: Log the selected event to see what duration formats we're getting
-      console.log('EventCompletionWizard - selectedEvent:', {
-        seriesDuration: selectedEvent.seriesDuration,
-        duration: selectedEvent.duration,
-        effectiveStartTime: selectedEvent.effectiveStartTime,
-        start: selectedEvent.start,
-        seriesPrice: selectedEvent.seriesPrice,
-        price: selectedEvent.price
-      })
-
       // Set initial start time to the event's scheduled start time
       const eventStart = dayjs(selectedEvent.effectiveStartTime || selectedEvent.start)
       setActualStartTime(eventStart)
@@ -137,12 +127,6 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
       // Parse duration from various possible formats
       const rawDuration = selectedEvent.seriesDuration || selectedEvent.duration
       const durationMinutes = parseDurationToMinutes(rawDuration)
-
-      console.log('EventCompletionWizard - Duration parsing:', {
-        rawDuration,
-        parsedMinutes: durationMinutes,
-        formatted: formatDurationMinutes(durationMinutes)
-      })
 
       const calculatedEndTime = eventStart.add(durationMinutes, 'minutes')
       setActualEndTime(calculatedEndTime)
@@ -367,7 +351,7 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
         return (
           <Grid container spacing={3}>
             <Grid item xs={12}>
-              <Card variant='outlined' sx={{ mb: 2 }}>
+              <Card variant='outlined' elevation={0} sx={{ mb: 2 }}>
                 <CardContent>
                   <Typography variant='h6' gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Icon icon='tabler:info-circle' />
@@ -515,7 +499,7 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
             />
 
             {durationInfo && (
-              <Card variant='outlined' sx={{ mb: 3 }}>
+              <Card variant='outlined' elevation={0} sx={{ mb: 3 }}>
                 <CardContent>
                   <Typography variant='h6' gutterBottom>
                     Previzualizarea Ajustării Prețurilor

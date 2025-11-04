@@ -325,7 +325,7 @@ const PaymentConfirmationHistory = forwardRef<PaymentConfirmationHistoryRef, Pay
       <Card sx={{ mt: 4 }}>
         <CardHeader
           title={
-            <Box sx={{ display: 'flex', alignItems: 'center', '& svg': { mr: 3 } }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
               <Icon fontSize='1.25rem' icon='tabler:history' />
               <Typography>Istoric Confirmări Plăți</Typography>
             </Box>

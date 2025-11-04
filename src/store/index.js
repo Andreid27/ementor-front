@@ -56,8 +56,8 @@ export const store = configureStore({
       serializableCheck: false
     })
 
-      //UNCOMMENT HERE TO ENABLE LOGGER
-      .concat(logger) // ** Logger middleware
+  //UNCOMMENT HERE TO ENABLE LOGGER
+  // .concat(logger) // ** Logger middleware
 })
 
 // Export the persistor, so you can use it in the 'PersistGate'
