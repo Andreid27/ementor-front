@@ -117,7 +117,6 @@ const CrmLastTransaction: React.FC<CrmLastTransactionProps> = ({
     profileServiceClient.wallet
       .getMyBalanceHistory()
       .then(response => {
-        console.log('Balance history response:', response.data)
         setWalletSummary(response.data)
         if (typeof onWalletLoaded === 'function') onWalletLoaded(response.data)
       })

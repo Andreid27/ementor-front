@@ -46,8 +46,6 @@ const AnalyticsDashboard = () => {
     router.push('/register')
   }
 
-  console.error('Dashboard render - quizServiceData:', quizServiceData)
-
   return (
     <ApexChartWrapper>
       <KeenSliderWrapper>

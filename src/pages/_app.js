@@ -5,17 +5,21 @@ import { Router } from 'next/router'
 // ** APM RUM - Initialize immediately in _app.js (before any other imports)
 import { init as initApm } from '@elastic/apm-rum'
 
-const apm = initApm({
-  serviceName: 'frontend-service-client',
-  serverUrl: 'https://api.e-mentor.ro/apm',
-  serviceVersion: '1.0.0',
-  environment: process.env.NODE_ENV || 'development',
-  distributedTracing: false,
-  transactionSampleRate: 1.0
-})
+// Only initialize APM in production
+const apm =
+  process.env.NODE_ENV === 'production'
+    ? initApm({
+        serviceName: 'frontend-service-client',
+        serverUrl: 'https://api.e-mentor.ro/apm',
+        serviceVersion: '1.0.0',
+        environment: process.env.NODE_ENV || 'development',
+        distributedTracing: false,
+        transactionSampleRate: 1.0
+      })
+    : null
 
 // Make it globally available
-if (typeof window !== 'undefined') {
+if (typeof window !== 'undefined' && apm) {
   window.apm = apm
 
   // Intercept console.error to capture in APM
