@@ -16,9 +16,8 @@ import Icon from 'src/@core/components/icon'
 import OptionsMenu from 'src/@core/components/option-menu'
 import timeAgo from 'src/@core/utils/time-ago'
 import timeBetween from 'src/@core/utils/time-between'
-import { CircularProgress } from '@mui/material'
+import { Skeleton } from '@mui/material'
 import UserViewDrawer from 'src/pages/student-profile/components/UserViewDrawer'
-import EmentorAvatar, { UserType } from 'src/@core/components/ementor-avatar'
 
 const Timeline = styled(MuiTimeline)({
   '& .MuiTimelineItem-root': {
@@ -62,9 +61,9 @@ const CardActivityTimeline = props => {
 
   function handleColorChange(correctPercentage) {
     let color = 'info'
-    if (correctPercentage < 50) color = 'error'
-    else if (correctPercentage < 80) color = 'warning'
-    else if (correctPercentage >= 80) color = 'success'
+    if (correctPercentage <= 50) color = 'error'
+    else if (correctPercentage <= 80) color = 'warning'
+    else if (correctPercentage > 80) color = 'success'
 
     return color
   }
@@ -103,7 +102,38 @@ const CardActivityTimeline = props => {
           }}
         >
           {props.loading ? (
-            <CircularProgress />
+            <Timeline>
+              {[...Array(4)].map((_, index) => (
+                <TimelineItem key={index}>
+                  <TimelineSeparator>
+                    <TimelineDot sx={{ mt: 1.5 }} />
+                    <TimelineConnector />
+                  </TimelineSeparator>
+                  <TimelineContent sx={{ pt: 0, mt: 0, mb: theme => `${theme.spacing(2)} !important` }}>
+                    <Box
+                      sx={{
+                        mb: 0.5,
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        alignItems: 'center',
+                        justifyContent: 'space-between'
+                      }}
+                    >
+                      <Skeleton variant='text' width='60%' height={28} />
+                      <Skeleton variant='text' width='20%' height={20} />
+                    </Box>
+                    <Skeleton variant='text' width='40%' height={20} sx={{ mb: 2.5 }} />
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Skeleton variant='circular' width={38} height={38} sx={{ mr: 3 }} />
+                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', flex: 1 }}>
+                        <Skeleton variant='text' width='50%' height={20} sx={{ ml: 1 }} />
+                        <Skeleton variant='text' width='70%' height={18} />
+                      </Box>
+                    </Box>
+                  </TimelineContent>
+                </TimelineItem>
+              ))}
+            </Timeline>
           ) : (
             <Timeline>
               {props.quizzesData.map((quizStudent, index) => (
