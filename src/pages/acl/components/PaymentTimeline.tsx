@@ -4,6 +4,8 @@ import Card from '@mui/material/Card'
 import Avatar from '@mui/material/Avatar'
 import { Button } from '@mui/material'
 import Chip from '@mui/material/Chip'
+import Tooltip from '@mui/material/Tooltip'
+import IconButton from '@mui/material/IconButton'
 import { styled, keyframes, alpha } from '@mui/material/styles'
 import TimelineDot from '@mui/lab/TimelineDot'
 import TimelineItem from '@mui/lab/TimelineItem'
@@ -20,6 +22,7 @@ import OptionsMenu from 'src/@core/components/option-menu'
 import timeAgo from 'src/@core/utils/time-ago'
 import UserViewDrawer from 'src/pages/student-profile/components/UserViewDrawer'
 import PaymentConfirmationDialog from './PaymentConfirmationDialog'
+import PaymentRejectionDialog from './PaymentRejectionDialog'
 import { BankTransferPaymentDTO, BankTransferPaymentDTOStatusEnum } from 'src/generated/profile-service'
 import { profileServiceClient } from 'src/services'
 import profilePictureDownloader from 'src/@core/axios/profile-picture-downloader'
@@ -212,6 +215,7 @@ const PaymentTimeline: React.FC<PaymentTimelineProps> = ({ users, loading, onPay
   const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false)
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
   const [confirmDialogOpen, setConfirmDialogOpen] = useState<boolean>(false)
+  const [rejectDialogOpen, setRejectDialogOpen] = useState<boolean>(false)
   const [selectedPayment, setSelectedPayment] = useState<BankTransferPaymentDTO | null>(null)
   const [paymentsData, setPaymentsData] = useState<EnhancedPaymentData[]>([])
 
@@ -292,6 +296,16 @@ const PaymentTimeline: React.FC<PaymentTimelineProps> = ({ users, loading, onPay
 
   const handleConfirmDialogClose = () => {
     setConfirmDialogOpen(false)
+    setSelectedPayment(null)
+  }
+
+  const handleRejectPayment = (payment: BankTransferPaymentDTO) => {
+    setSelectedPayment(payment)
+    setRejectDialogOpen(true)
+  }
+
+  const handleRejectDialogClose = () => {
+    setRejectDialogOpen(false)
     setSelectedPayment(null)
   }
 
@@ -407,7 +421,10 @@ const PaymentTimeline: React.FC<PaymentTimelineProps> = ({ users, loading, onPay
                     </Box>
                   </Box>
 
-                  <Skeleton variant='rectangular' width={100} height={36} sx={{ borderRadius: 1 }} />
+                  <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                    <Skeleton variant='circular' width={32} height={32} />
+                    <Skeleton variant='rectangular' width={100} height={36} sx={{ borderRadius: 1 }} />
+                  </Box>
                 </Box>
               ))}
             </Box>
@@ -496,15 +513,50 @@ const PaymentTimeline: React.FC<PaymentTimelineProps> = ({ users, loading, onPay
                       </Box>
 
                       {payment.status === BankTransferPaymentDTOStatusEnum.Pending && (
-                        <Button
-                          size='small'
-                          variant='contained'
-                          color='success'
-                          onClick={() => handleConfirmPayment(payment)}
-                          startIcon={<Icon icon='tabler:check' />}
-                        >
-                          Confirmă
-                        </Button>
+                        <Box sx={{ display: 'flex', gap: 2.5, alignItems: 'center' }}>
+                          <Tooltip title='Respinge plata' placement='top' arrow>
+                            <IconButton
+                              size='small'
+                              color='error'
+                              onClick={() => handleRejectPayment(payment)}
+                              sx={{
+                                width: 26,
+                                height: 26,
+                                mb: 0.5,
+                                border: '1.5px solid',
+                                borderColor: 'error.main',
+                                backgroundColor: alpha => alpha.palette.error.main + '08',
+                                transition: 'all 0.2s ease-in-out',
+                                '&:hover': {
+                                  backgroundColor: 'error.main',
+                                  borderColor: 'error.dark',
+                                  transform: 'scale(1.08)',
+                                  '& svg': {
+                                    color: 'white'
+                                  }
+                                }
+                              }}
+                            >
+                              <Icon icon='tabler:x' fontSize='1rem' />
+                            </IconButton>
+                          </Tooltip>
+                          <Button
+                            size='small'
+                            variant='contained'
+                            color='success'
+                            onClick={() => handleConfirmPayment(payment)}
+                            startIcon={<Icon icon='tabler:check' />}
+                            sx={{
+                              transition: 'all 0.2s ease-in-out',
+                              '&:hover': {
+                                transform: 'translateY(-1px)',
+                                boxShadow: theme => theme.shadows[4]
+                              }
+                            }}
+                          >
+                            Confirmă
+                          </Button>
+                        </Box>
                       )}
                     </Box>
                   </TimelineContent>
@@ -521,6 +573,15 @@ const PaymentTimeline: React.FC<PaymentTimelineProps> = ({ users, loading, onPay
         open={confirmDialogOpen}
         payment={selectedPayment}
         onClose={handleConfirmDialogClose}
+        onSuccess={handlePaymentConfirmed}
+        getUserName={getUserName}
+        formatCurrency={formatCurrency}
+      />
+
+      <PaymentRejectionDialog
+        open={rejectDialogOpen}
+        payment={selectedPayment}
+        onClose={handleRejectDialogClose}
         onSuccess={handlePaymentConfirmed}
         getUserName={getUserName}
         formatCurrency={formatCurrency}
