@@ -12,6 +12,7 @@ import TableCell from '@mui/material/TableCell'
 import Typography from '@mui/material/Typography'
 import CardHeader from '@mui/material/CardHeader'
 import TableContainer from '@mui/material/TableContainer'
+import { keyframes } from '@mui/system'
 
 // ** Custom Components Imports
 
@@ -31,6 +32,18 @@ import { useRouter } from 'next/router'
 import { set } from 'date-fns'
 import { WalletBalanceChangeDTO, WalletSummaryDTO, BankTransferPaymentDTO } from 'src/generated/profile-service'
 import PaymentDetailCard from 'src/pages/acl/components/PaymentDetailCard'
+
+const pulse = keyframes`
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(255, 152, 0, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 152, 0, 0);
+  }
+`
 
 const StyledGrid = styled(Grid)(({ theme }) => ({
   [theme.breakpoints.down('sm')]: {
@@ -234,6 +247,77 @@ const CrmLastTransaction: React.FC<CrmLastTransactionProps> = ({
                 </TableRow>
               </TableHead>
               <TableBody>
+                {/* Pending Bank Transfer Payments */}
+                {walletSummary?.pendingBankTransferPayments &&
+                  walletSummary.pendingBankTransferPayments.length > 0 &&
+                  walletSummary.pendingBankTransferPayments.map((payment: BankTransferPaymentDTO) => (
+                    <TableRow
+                      key={`pending-${payment.id}`}
+                      onClick={() => {
+                        const pendingPayment: BankTransferPaymentDTO = {
+                          id: payment.id,
+                          amount: payment.amount,
+                          confirmedAt: payment.confirmedAt
+                        }
+                        setSelectedPayment(pendingPayment)
+                        setShowPaymentDetail(true)
+                      }}
+                      sx={{
+                        '&:last-child .MuiTableCell-root': { pb: theme => `${theme.spacing(6)} !important` },
+                        '& .MuiTableCell-root': { border: 0, py: theme => `${theme.spacing(2.25)} !important` },
+                        '&:first-of-type .MuiTableCell-root': { pt: theme => `${theme.spacing(4.5)} !important` },
+                        cursor: 'pointer',
+                        '&:hover': {
+                          backgroundColor: 'action.hover'
+                        },
+                        transition: 'background-color 0.2s ease',
+                        animation: `${pulse} 2s infinite`,
+                        backgroundColor: 'rgba(255, 152, 0, 0.05)'
+                      }}
+                    >
+                      <TableCell sx={{ width: '140px' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                          <Box
+                            sx={{
+                              width: 36,
+                              height: 36,
+                              borderRadius: '50%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              bgcolor: 'warning.main'
+                            }}
+                          >
+                            <Icon icon='mdi:clock-outline' color='white' fontSize={20} />
+                          </Box>
+                          <Box sx={{ minWidth: 0, flex: 1 }}>
+                            <Typography noWrap sx={{ fontWeight: 500, color: 'text.secondary', fontSize: '0.875rem' }}>
+                              Transfer bancar
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                          <Typography noWrap sx={{ fontWeight: 500, color: 'warning.main' }}>
+                            În așteptare
+                          </Typography>
+                          <Typography noWrap variant='body2' sx={{ color: 'text.disabled' }}>
+                            {payment.creation ? new Date(payment.creation).toLocaleDateString('ro-RO') : ''}
+                          </Typography>
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <CustomChip rounded size='small' skin='light' label='În așteptare' color='warning' />
+                      </TableCell>
+                      <TableCell>
+                        <Typography noWrap sx={{ fontWeight: 500, color: 'warning.main' }}>
+                          {payment.amount ? `+${payment.amount} RON` : ''}
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                {/* Regular Balance Changes */}
                 {walletSummary?.balanceChanges?.length ? (
                   walletSummary.balanceChanges.map((row: WalletBalanceChangeDTO) => (
                     <TableRow
@@ -416,6 +500,9 @@ const CrmLastTransaction: React.FC<CrmLastTransactionProps> = ({
             showPaymentButton ? (
               <Button
                 onClick={() => router.push('/payment-process')}
+                disabled={
+                  walletSummary?.pendingBankTransferPayments && walletSummary.pendingBankTransferPayments.length > 0
+                }
                 sx={{
                   mt: 6,
                   px: 4,
@@ -427,7 +514,9 @@ const CrmLastTransaction: React.FC<CrmLastTransactionProps> = ({
                 size='medium'
                 color='primary'
               >
-                Mergi către plată
+                {walletSummary?.pendingBankTransferPayments && walletSummary.pendingBankTransferPayments.length > 0
+                  ? 'Plată în așteptare'
+                  : 'Mergi către plată'}
               </Button>
             ) : null
           ) : (
