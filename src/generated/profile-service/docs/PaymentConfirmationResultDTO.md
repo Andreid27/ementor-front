@@ -7,6 +7,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **paymentId** | **string** |  | [optional] [default to undefined]
 **confirmedAt** | **string** |  | [optional] [default to undefined]
+**creation** | **string** |  | [optional] [default to undefined]
 **confirmedBy** | **string** |  | [optional] [default to undefined]
 **totalAmount** | **number** |  | [optional] [default to undefined]
 **walletBalanceBefore** | **number** |  | [optional] [default to undefined]
@@ -15,6 +16,8 @@ Name | Type | Description | Notes
 **totalAllocated** | **number** |  | [optional] [default to undefined]
 **surplusAmount** | **number** |  | [optional] [default to undefined]
 **currency** | **string** |  | [optional] [default to undefined]
+**invoice** | [**InvoiceDTO**](InvoiceDTO.md) |  | [optional] [default to undefined]
+**referenceCode** | **string** |  | [optional] [default to undefined]
 
 ## Example
 
@@ -24,6 +27,7 @@ import { PaymentConfirmationResultDTO } from 'ementor-api-client';
 const instance: PaymentConfirmationResultDTO = {
     paymentId,
     confirmedAt,
+    creation,
     confirmedBy,
     totalAmount,
     walletBalanceBefore,
@@ -32,6 +36,8 @@ const instance: PaymentConfirmationResultDTO = {
     totalAllocated,
     surplusAmount,
     currency,
+    invoice,
+    referenceCode,
 };
 ```
 

@@ -32,6 +32,7 @@ import { handleSelectEvent } from 'src/store/apps/calendar'
 import { format, parseISO } from 'date-fns'
 import profilePictureDownloader from 'src/@core/axios/profile-picture-downloader'
 import extractProfilePicture from 'src/@core/axios/profile-picture-extractor'
+import { photoCacheService } from 'src/@core/services/photo-cache-service-instance'
 
 const CardHeader = styled(MuiCardHeader)(({ theme }) => ({
   '& .MuiTypography-root': {
@@ -170,14 +171,18 @@ const EventsWidget = forwardRef<EventsWidgetRef, EventsWidgetProps>(({ onComplet
       }
     }
 
-    // Download avatars
+    // Download avatars using PhotoCacheService for unified caching and rate limiting
     const usersWithAvatars = await Promise.all(
       processedUsersList.map(async profilePicture => {
         if (profilePicture.type === 'API') {
-          const avatar = await profilePictureDownloader(profilePicture.url, profilePicture.userId)
+          // Use PhotoCacheService for API-based profile pictures
+          const avatar = await photoCacheService.getPhoto('API', profilePicture.url, profilePicture.userId)
           return { ...profilePicture, avatar: avatar || null }
         } else if (profilePicture.type === 'EXTERNAL') {
-          return { ...profilePicture, avatar: profilePicture.url }
+          // Use PhotoCacheService for EXTERNAL photos (Google photos)
+          // Rate limiting prevents 429 errors, blob caching improves subsequent loads
+          const avatar = await photoCacheService.getPhoto('EXTERNAL', profilePicture.url, profilePicture.userId)
+          return { ...profilePicture, avatar }
         } else {
           return { ...profilePicture, avatar: null }
         }

@@ -13,8 +13,7 @@ import { selectAllStudents, updateAllStudents } from 'src/store/apps/user'
 import apiClient from 'src/@core/axios/axiosEmentor'
 import { fetchNotifications } from 'src/store/apps/notifications'
 import * as apiSpec from '../../apiSpec'
-import profilePictureDownloader from 'src/@core/axios/profile-picture-downloader'
-import extractProfilePicture from 'src/@core/axios/profile-picture-extractor'
+import { loadPhotosForUsers } from 'src/@core/services/photo-loader'
 import PaymentTimeline from './components/PaymentTimeline'
 import PaymentConfirmationHistory from './components/PaymentConfirmationHistory'
 import EventsWidget from 'src/pages/acl/components/EventsWidget'
@@ -77,35 +76,13 @@ const ACLPage = () => {
   }, [])
 
   const processStudentQuizzesData = async (data, users) => {
-    const usersOnPage = data.map(row => row.studentId)
-    let uniqueUsers = [...new Set(usersOnPage)]
-    let processedUsersList = []
-    for (const userId of uniqueUsers) {
-      const user = users.find(user => user.id === userId)
-      if (user) {
-        const processedUser = extractProfilePicture(user)
-        processedUsersList.push(processedUser)
-      }
-    }
+    // Use universal photo loader - much simpler!
+    const usersWithPhotos = await loadPhotosForUsers(users)
 
-    const result = await Promise.all(
-      processedUsersList.map(async profilePicture => {
-        if (profilePicture.type === 'API') {
-          const avatar = await profilePictureDownloader(profilePicture.url, profilePicture.userId)
-
-          return { ...profilePicture, avatar: avatar || null }
-        } else if (profilePicture.type === 'EXTERNAL') {
-          return { ...profilePicture, avatar: profilePicture.url }
-        } else {
-          return { ...profilePicture, avatar: null }
-        }
-      })
-    )
-
+    // Map photos to quiz data
     return data.map(row => {
-      const user = result.find(user => user.userId === row.studentId)
-
-      return { ...row, avatar: user.avatar }
+      const user = usersWithPhotos.find(u => u.id === row.studentId)
+      return { ...row, avatar: user?.avatar }
     })
   }
 
@@ -274,7 +251,7 @@ const ACLPage = () => {
 
 ACLPage.acl = {
   action: 'read',
-  subject: 'acl-page'
+  subject: 'professor-pages'
 }
 
 export default ACLPage

@@ -1,208 +1,167 @@
-// ** API Client
-import apiClient from 'src/@core/axios/axiosEmentor'
-import * as apiSpec from 'src/apiSpec'
-
-// ** Utils
+// ** Utils (same as ACLPage)
 import extractProfilePicture from 'src/@core/axios/profile-picture-extractor'
 import profilePictureDownloader from 'src/@core/axios/profile-picture-downloader'
-
-// ** Toast
-import toast from 'react-hot-toast'
+import { photoCacheService } from 'src/@core/services/photo-cache-service-instance'
 
 // ** Local Types
 import { StudentListItem } from '../types'
-import { handleBatchPhotoError } from '../utils'
-
-// ** Constants
-import { PHOTO_LOADING_TIMEOUT, MAX_PHOTO_RETRY_ATTEMPTS } from '../constants'
 
 export interface PhotoResult {
-  studentUserId: string
-  url?: string
-  error: boolean
+  userId: string
+  avatar: string | null
+  type?: 'API' | 'EXTERNAL' | 'INITIALS' | 'NONE'
 }
 
-export class PhotoLoadingService {
-  private loadingCache = new Map<string, Promise<PhotoResult>>()
-  private resultCache = new Map<string, PhotoResult>()
+/**
+ * Process student photos for the current page only
+ * Uses the same approach as ACLPage's processStudentQuizzesData
+ *
+ * @param students - Array of students on the current page
+ * @param fullStudentData - Full student data with profile info (optional for enhanced data)
+ * @returns Promise with students enriched with avatar URLs
+ */
+export const processStudentPhotos = async (
+  students: StudentListItem[],
+  fullStudentData?: any[]
+): Promise<StudentListItem[]> => {
+  // Extract unique user IDs from current page
+  const usersOnPage = students.map(student => student.studentUserId)
+  const uniqueUserIds = Array.from(new Set(usersOnPage))
 
-  /**
-   * Load a single student's profile picture
-   */
-  async loadStudentPhoto(studentUserId: string, retryCount = 0): Promise<PhotoResult> {
-    // Check cache first
-    if (this.resultCache.has(studentUserId)) {
-      return this.resultCache.get(studentUserId)!
-    }
+  // Process profile pictures for unique users
+  const processedUsersList: Array<{
+    userId: string
+    type: 'API' | 'EXTERNAL' | 'INITIALS' | 'NONE'
+    url?: string
+  }> = []
 
-    // Check if already loading
-    if (this.loadingCache.has(studentUserId)) {
-      return this.loadingCache.get(studentUserId)!
-    }
+  for (const userId of uniqueUserIds) {
+    // Try to find student data with attributes (from API response or transformed data)
+    // Match by: studentId (raw data), studentUserId (transformed data), or id (relationship ID)
+    const studentData = fullStudentData?.find(
+      (s: any) => s.studentUserId === userId || s.studentId === userId || s.id === userId
+    )
 
-    // Create loading promise
-    const loadingPromise = this.performPhotoLoad(studentUserId, retryCount)
-    this.loadingCache.set(studentUserId, loadingPromise)
+    if (studentData && studentData.attributes) {
+      // IMPORTANT: extractProfilePicture expects 'id' to be the USER ID, not relationship ID
+      // Create a normalized object for extractProfilePicture
+      const normalizedData = {
+        id: studentData.studentUserId || studentData.studentId || userId,
+        attributes: studentData.attributes
+      }
 
-    try {
-      const result = await loadingPromise
-      this.resultCache.set(studentUserId, result)
-      this.loadingCache.delete(studentUserId)
-      return result
-    } catch (error) {
-      this.loadingCache.delete(studentUserId)
-      throw error
+      // Extract profile picture using the same logic as ACLPage
+      const processedPicture = extractProfilePicture(normalizedData) as {
+        userId: string
+        type: 'API' | 'EXTERNAL' | 'INITIALS' | 'NONE'
+        url?: string
+      }
+      processedUsersList.push(processedPicture)
     }
   }
 
-  /**
-   * Perform the actual photo loading
-   */
-  private async performPhotoLoad(studentUserId: string, retryCount: number): Promise<PhotoResult> {
-    return new Promise(async resolve => {
-      const timeoutId = setTimeout(() => {
-        resolve({
-          studentUserId,
-          error: true
-        })
-      }, PHOTO_LOADING_TIMEOUT)
-
-      try {
-        // Fetch profile data
-        const profileResponse = await apiClient.get(`${apiSpec.STUDENT_PROFILE_CONTROLLER}/get-full/${studentUserId}`)
-
-        if (profileResponse.status === 200 && profileResponse.data) {
-          const profilePicture = extractProfilePicture(profileResponse.data, true)
-          let finalUrl: string | null = null
-
-          if (profilePicture.type === 'API') {
-            finalUrl = await profilePictureDownloader(profilePicture.url, profilePicture.userId, true)
-          } else if (profilePicture.type === 'EXTERNAL') {
-            finalUrl = profilePicture.url
-          }
-
-          clearTimeout(timeoutId)
-          resolve({
-            studentUserId,
-            url: finalUrl || undefined,
-            error: !finalUrl
-          })
-        } else {
-          clearTimeout(timeoutId)
-          resolve({
-            studentUserId,
-            error: true
-          })
-        }
-      } catch (error) {
-        clearTimeout(timeoutId)
-
-        // Retry logic
-        if (retryCount < MAX_PHOTO_RETRY_ATTEMPTS) {
-          console.warn(`Retrying photo load for student ${studentUserId}, attempt ${retryCount + 1}`)
-          try {
-            const retryResult = await this.performPhotoLoad(studentUserId, retryCount + 1)
-            resolve(retryResult)
-          } catch (retryError) {
-            resolve({
-              studentUserId,
-              error: true
-            })
-          }
-        } else {
-          console.warn(`Failed to load photo for student ${studentUserId} after ${retryCount} retries:`, error)
-          resolve({
-            studentUserId,
-            error: true
-          })
-        }
-      }
-    })
-  }
-
-  /**
-   * Load photos for multiple students
-   */
-  async loadBatchPhotos(students: StudentListItem[]): Promise<Map<string, PhotoResult>> {
-    const results = new Map<string, PhotoResult>()
-    const loadPromises: Promise<PhotoResult>[] = []
-
-    // Start loading all photos concurrently
-    for (const student of students) {
-      if (student.studentUserId) {
-        loadPromises.push(this.loadStudentPhoto(student.studentUserId))
-      }
-    }
-
-    // Wait for all to complete
-    const photoResults = await Promise.allSettled(loadPromises)
-    let failedCount = 0
-
-    photoResults.forEach((result, index) => {
-      if (result.status === 'fulfilled') {
-        results.set(result.value.studentUserId, result.value)
-        if (result.value.error) {
-          failedCount++
-        }
+  // Download avatars using PhotoCacheService for unified caching and rate limiting
+  // This prevents 429 errors from Google by rate limiting and caching as blob URLs
+  const result = await Promise.all(
+    processedUsersList.map(async profilePicture => {
+      if (profilePicture.type === 'API' && profilePicture.url) {
+        // Use PhotoCacheService for API-based profile pictures
+        const avatar = await photoCacheService.getPhoto('API', profilePicture.url, profilePicture.userId)
+        return { ...profilePicture, avatar: avatar || null }
+      } else if (profilePicture.type === 'EXTERNAL' && profilePicture.url) {
+        // Use PhotoCacheService for EXTERNAL photos (Google photos)
+        // Rate limiting prevents 429 errors, blob caching improves subsequent loads
+        const avatar = await photoCacheService.getPhoto('EXTERNAL', profilePicture.url, profilePicture.userId)
+        return { ...profilePicture, avatar }
       } else {
-        failedCount++
-        const student = students[index]
-        if (student?.studentUserId) {
-          results.set(student.studentUserId, {
-            studentUserId: student.studentUserId,
-            error: true
-          })
-        }
+        return { ...profilePicture, avatar: null }
       }
     })
+  )
 
-    // Handle batch errors
-    if (failedCount > 0) {
-      handleBatchPhotoError(failedCount, students.length, {
-        error: message => toast.error(message),
-        success: message => toast.success(message),
-        warning: message => toast(message, { icon: '⚠️' }),
-        info: message => toast(message, { icon: 'ℹ️' })
-      })
+  // Map avatars back to students
+  return students.map(student => {
+    const userWithAvatar = result.find(user => user.userId === student.studentUserId)
+
+    return {
+      ...student,
+      avatar: userWithAvatar?.avatar || ''
     }
+  })
+}
 
-    return results
-  }
-
-  /**
-   * Clear photo cache
-   */
-  clearCache(): void {
-    this.loadingCache.clear()
-    this.resultCache.clear()
-  }
-
-  /**
-   * Get cached photo result
-   */
-  getCachedPhoto(studentUserId: string): PhotoResult | undefined {
-    return this.resultCache.get(studentUserId)
-  }
-
-  /**
-   * Preload photos for visible students
-   */
-  async preloadPhotos(students: StudentListItem[]): Promise<void> {
-    // Load photos in background without blocking UI
-    this.loadBatchPhotos(students).catch(error => {
-      console.warn('Background photo preloading failed:', error)
-    })
+/**
+ * Preload photos for students on the current page only (small version)
+ * This is called when the DataGrid page changes
+ *
+ * @param students - Students currently visible on the page
+ * @returns Promise that resolves when photos are loaded
+ */
+export const preloadPhotosForCurrentPage = async (students: StudentListItem[]): Promise<void> => {
+  try {
+    // Process only the students on the current page
+    await processStudentPhotos(students)
+  } catch (error) {
+    console.warn('Failed to preload photos for current page:', error)
   }
 }
 
-// ** Create singleton instance
-export const photoLoadingService = new PhotoLoadingService()
+/**
+ * Legacy export for backward compatibility
+ * Now only processes current page instead of all students
+ */
+export const preloadPhotos = preloadPhotosForCurrentPage
 
-// ** Export convenience methods
-export const loadStudentPhoto = (studentUserId: string) => photoLoadingService.loadStudentPhoto(studentUserId)
+/**
+ * Clear any photo caches if needed
+ * This is a no-op since we don't cache anymore - we fetch on demand per page
+ */
+export const clearPhotoCache = (): void => {
+  // No-op: we don't maintain a cache anymore
+  console.log('Photo cache cleared (no cache maintained)')
+}
 
-export const loadBatchPhotos = (students: StudentListItem[]) => photoLoadingService.loadBatchPhotos(students)
+/**
+ * Load a single student photo
+ * Uses PhotoCacheService for unified caching and rate limiting
+ */
+export const loadStudentPhoto = async (student: StudentListItem): Promise<PhotoResult> => {
+  try {
+    const profilePicture = extractProfilePicture(student)
 
-export const preloadPhotos = (students: StudentListItem[]) => photoLoadingService.preloadPhotos(students)
+    if (profilePicture.type === 'API' && profilePicture.url) {
+      // Use PhotoCacheService for API-based profile pictures
+      const avatar = await photoCacheService.getPhoto('API', profilePicture.url, profilePicture.userId)
 
-export const clearPhotoCache = () => photoLoadingService.clearCache()
+      return {
+        userId: student.studentUserId,
+        avatar: avatar || null,
+        type: profilePicture.type
+      }
+    } else if (profilePicture.type === 'EXTERNAL' && profilePicture.url) {
+      // Use PhotoCacheService for EXTERNAL photos (Google photos)
+      // Rate limiting prevents 429 errors, blob caching improves subsequent loads
+      const avatar = await photoCacheService.getPhoto('EXTERNAL', profilePicture.url, profilePicture.userId)
+
+      return {
+        userId: student.studentUserId,
+        avatar: avatar || null,
+        type: profilePicture.type
+      }
+    } else {
+      return {
+        userId: student.studentUserId,
+        avatar: null,
+        type: 'INITIALS'
+      }
+    }
+  } catch (error) {
+    console.warn(`Failed to load photo for student ${student.studentUserId}:`, error)
+
+    return {
+      userId: student.studentUserId,
+      avatar: null,
+      type: 'INITIALS'
+    }
+  }
+}

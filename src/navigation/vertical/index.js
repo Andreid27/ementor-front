@@ -29,7 +29,7 @@ const navigation = () => {
     {
       path: '/acl',
       action: 'read',
-      subject: 'acl-page',
+      subject: 'professor-pages',
       icon: 'tabler:layout-dashboard',
       title: 'Dashboard'
     },

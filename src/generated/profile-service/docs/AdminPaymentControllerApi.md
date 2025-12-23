@@ -1,6 +1,6 @@
 # AdminPaymentControllerApi
 
-All URIs are relative to *https://api.e-mentor.ro//service2*
+All URIs are relative to *http://localhost:49202*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
@@ -17,6 +17,8 @@ All URIs are relative to *https://api.e-mentor.ro//service2*
 |[**getRecentPayments**](#getrecentpayments) | **GET** /admin/payment-system/payments/recent | Get recent payments (admin only)|
 |[**getStudentDebtSummary1**](#getstudentdebtsummary1) | **GET** /admin/payment-system/fifo/students/{studentId}/professors/{professorId}/debt-summary | Get student debt summary for administrative review (admin only)|
 |[**getTotalDebt1**](#gettotaldebt1) | **GET** /admin/payment-system/fifo/students/{studentId}/professors/{professorId}/total-debt | Calculate total debt for administrative overview (admin only)|
+|[**recalculateAllWallets**](#recalculateallwallets) | **POST** /admin/payment-system/wallets/recalculate-all | Recalculate all user wallets (admin only - bulk operation)|
+|[**recalculateUserWallet**](#recalculateuserwallet) | **POST** /admin/payment-system/wallets/{userId}/recalculate | Recalculate user wallet based on balance changes (admin only)|
 |[**syncStudentSoloClients**](#syncstudentsoloclients) | **GET** /admin/payment-system/sync-student-solo-clients/{userId} | Sync student solo clients with payment system (admin only)|
 
 # **getAllPayments**
@@ -707,6 +709,104 @@ const { status, data } = await apiInstance.getTotalDebt1(
 |-------------|-------------|------------------|
 |**403** | Forbidden |  -  |
 |**200** | Request successful |  -  |
+|**401** | Unauthorized |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **recalculateAllWallets**
+> BulkWalletRecalculationResultDTO recalculateAllWallets()
+
+
+### Example
+
+```typescript
+import {
+    AdminPaymentControllerApi,
+    Configuration
+} from 'ementor-api-client';
+
+const configuration = new Configuration();
+const apiInstance = new AdminPaymentControllerApi(configuration);
+
+const { status, data } = await apiInstance.recalculateAllWallets();
+```
+
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+**BulkWalletRecalculationResultDTO**
+
+### Authorization
+
+[OIDC Authentication](../README.md#OIDC Authentication)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: */*
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Bulk recalculation completed |  -  |
+|**403** | Forbidden |  -  |
+|**401** | Unauthorized |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **recalculateUserWallet**
+> WalletRecalculationResultDTO recalculateUserWallet()
+
+
+### Example
+
+```typescript
+import {
+    AdminPaymentControllerApi,
+    Configuration
+} from 'ementor-api-client';
+
+const configuration = new Configuration();
+const apiInstance = new AdminPaymentControllerApi(configuration);
+
+let userId: string; // (default to undefined)
+
+const { status, data } = await apiInstance.recalculateUserWallet(
+    userId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **userId** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**WalletRecalculationResultDTO**
+
+### Authorization
+
+[OIDC Authentication](../README.md#OIDC Authentication)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: */*
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Recalculation completed |  -  |
+|**403** | Forbidden |  -  |
+|**404** | User not found |  -  |
 |**401** | Unauthorized |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)

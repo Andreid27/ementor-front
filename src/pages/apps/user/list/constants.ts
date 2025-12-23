@@ -4,7 +4,6 @@ export const PAGE_SIZE_OPTIONS = [10, 25, 50]
 
 // ** Default filter values
 export const DEFAULT_FILTERS = {
-  role: '',
   pricing: '',
   status: '',
   searchValue: ''

@@ -7,6 +7,7 @@ import {
   ProfilePictureControllerApi,
   SpecialityControllerApi,
   StudentProfileControllerApi,
+  StudentProfessorRelationshipControllerApi,
   ThumbnailControllerApi,
   UniversityControllerApi,
   UserControllerApi,
@@ -41,7 +42,7 @@ const apiClient = createProfileServiceAxios()
 // Create configuration with our custom axios instance
 const createProfileServiceConfig = () =>
   new Configuration({
-    basePath: process.env.NEXT_PUBLIC_PROD_HOST + '/service2',
+    basePath: 'http://localhost:49202',
     baseOptions: {
       // Any additional axios configuration can go here
     }
@@ -83,6 +84,11 @@ export class ProfileServiceClient {
   // Student Profile APIs
   get studentProfile() {
     return new StudentProfileControllerApi(this.config, undefined, apiClient)
+  }
+
+  // Student Professor Relationship APIs
+  get studentProfessorRelationship() {
+    return new StudentProfessorRelationshipControllerApi(this.config, undefined, apiClient)
   }
 
   // Thumbnail APIs
@@ -127,6 +133,7 @@ export {
   ProfilePictureControllerApi,
   SpecialityControllerApi,
   StudentProfileControllerApi,
+  StudentProfessorRelationshipControllerApi,
   ThumbnailControllerApi,
   UniversityControllerApi,
   InvoiceControllerApi,

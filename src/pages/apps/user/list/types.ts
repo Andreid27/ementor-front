@@ -23,6 +23,9 @@ export interface StudentListItem {
   createdAt: string
   avatarColor?: string
   fullName: string // For compatibility with existing components
+  attributes?: { [key: string]: Array<string> } // Profile picture metadata
+  generation?: string
+  professorId?: string
 }
 
 // ** Component props interfaces
@@ -75,15 +78,22 @@ export interface ApiErrorResponse {
 
 // ** Filter and pagination interfaces
 export interface FilterState {
-  role: string
   pricing: string
   status: string
   searchValue: string
+  generation?: string
 }
 
 export interface PaginationState {
   page: number
   pageSize: number
+}
+
+// ** Tab state for active/inactive students
+export type StudentTabValue = 'active' | 'inactive'
+
+export interface TabState {
+  currentTab: StudentTabValue
 }
 
 // ** Event handler types
@@ -139,11 +149,26 @@ export interface UserStatusObj {
   [key: string]: 'primary' | 'secondary' | 'success' | 'error' | 'warning' | 'info'
 }
 
-// ** Redux store types (if needed)
+// ** Redux store types
 export interface UserStoreState {
-  data: StudentListItem[]
+  data: any
+  total: number
+  params: any
+  tokens: any
+  thumbnailUrl: string
+  allStudents: StudentListItem[]
+  activeStudents: StudentListItem[]
+  inactiveStudents: StudentListItem[]
+  activeStudentsFetchedAt: number | null
   loading: boolean
+  inactiveLoading: boolean
   error: string | null
+  professorProfiles: Record<string, { data: any; cachedAt: number }>
+  professorProfilesLoading: Record<string, boolean>
+  professorProfilesErrors: Record<string, string>
+  generations: string[]
+  generationsLoading: boolean
+  selectedGeneration: string | null
 }
 
 export interface RootState {

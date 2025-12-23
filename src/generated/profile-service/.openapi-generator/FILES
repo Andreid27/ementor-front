@@ -6,6 +6,7 @@ api.ts
 base.ts
 common.ts
 configuration.ts
+docs/AddStudentByEmailRequest.md
 docs/Address.md
 docs/AddressDTO.md
 docs/AdminPaymentControllerApi.md
@@ -15,6 +16,7 @@ docs/BankAccountControllerApi.md
 docs/BankAccountDTO.md
 docs/BankTransferPayment.md
 docs/BankTransferPaymentDTO.md
+docs/BulkWalletRecalculationResultDTO.md
 docs/CreatePaymentRequest.md
 docs/CredentialRepresentation.md
 docs/CredentialRepresentationConfig.md
@@ -43,6 +45,8 @@ docs/InvoiceControllerApi.md
 docs/InvoiceDTO.md
 docs/InvoiceLineItemDTO.md
 docs/InvoicePlatform.md
+docs/JoinByCodeRequest.md
+docs/JoinByCodeResponse.md
 docs/Location.md
 docs/LocationDTO.md
 docs/LocationLevel.md
@@ -63,6 +67,7 @@ docs/PaymentSystemStatisticsDTO.md
 docs/ProfessorPaymentInfoDTO.md
 docs/ProfessorPaymentSummaryDTO.md
 docs/ProfessorPlatformIntegration.md
+docs/ProfessorPreviewDTO.md
 docs/ProfessorProfile.md
 docs/ProfessorProfileControllerApi.md
 docs/ProfessorProfileDTO.md
@@ -95,6 +100,7 @@ docs/UniversityControllerApi.md
 docs/UniversityDTO.md
 docs/UniversitySpecialitiesDTO.md
 docs/UniversitySpeciality.md
+docs/UpdateGenerationRequest.md
 docs/UserConsentRepresentation.md
 docs/UserControllerApi.md
 docs/UserDTO.md
@@ -105,6 +111,7 @@ docs/UserRepresentation.md
 docs/WalletBalanceChangeDTO.md
 docs/WalletControllerApi.md
 docs/WalletDTO.md
+docs/WalletRecalculationResultDTO.md
 docs/WalletSummaryDTO.md
 git_push.sh
 index.ts

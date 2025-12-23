@@ -75,7 +75,6 @@ async function postProcessGeneratedFiles(service) {
 
   const indexContent = `// Auto-generated index file for ${service.name}
 export * from './api';
-export * from './model';
 export * from './configuration';
 export * from './base';
 `

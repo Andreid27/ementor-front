@@ -23,6 +23,7 @@ Name | Type | Description | Notes
 **about** | **string** |  | [optional] [default to undefined]
 **address** | [**AddressDTO**](AddressDTO.md) |  | [optional] [default to undefined]
 **phone** | **string** |  | [optional] [default to undefined]
+**wallet** | [**WalletDTO**](WalletDTO.md) |  | [optional] [default to undefined]
 
 ## Example
 
@@ -48,6 +49,7 @@ const instance: StudentProfileDTO = {
     about,
     address,
     phone,
+    wallet,
 };
 ```
 

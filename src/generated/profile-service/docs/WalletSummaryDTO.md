@@ -7,6 +7,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **wallet** | [**WalletDTO**](WalletDTO.md) |  | [optional] [default to undefined]
 **balanceChanges** | [**Array&lt;WalletBalanceChangeDTO&gt;**](WalletBalanceChangeDTO.md) |  | [optional] [default to undefined]
+**pendingBankTransferPayments** | [**Array&lt;BankTransferPaymentDTO&gt;**](BankTransferPaymentDTO.md) |  | [optional] [default to undefined]
 
 ## Example
 
@@ -16,6 +17,7 @@ import { WalletSummaryDTO } from 'ementor-api-client';
 const instance: WalletSummaryDTO = {
     wallet,
     balanceChanges,
+    pendingBankTransferPayments,
 };
 ```
 

@@ -4,11 +4,11 @@ import { useState } from 'react'
 // ** MUI Imports
 import Drawer from '@mui/material/Drawer'
 import Button from '@mui/material/Button'
-import MenuItem from '@mui/material/MenuItem'
 import { styled } from '@mui/material/styles'
 import IconButton from '@mui/material/IconButton'
 import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
+import CircularProgress from '@mui/material/CircularProgress'
 
 // ** Custom Component Import
 import CustomTextField from 'src/@core/components/mui/text-field'
@@ -22,20 +22,13 @@ import { useForm, Controller } from 'react-hook-form'
 import Icon from 'src/@core/components/icon'
 
 // ** Store Imports
-import { useDispatch, useSelector } from 'react-redux'
+import { useDispatch } from 'react-redux'
 
 // ** Actions Imports
-import { addUser } from 'src/store/apps/user'
+import { addStudentByEmail } from 'src/store/apps/user'
 
-const showErrors = (field, valueLen, min) => {
-  if (valueLen === 0) {
-    return `${field} field is required`
-  } else if (valueLen > 0 && valueLen < min) {
-    return `${field} must be at least ${min} characters`
-  } else {
-    return ''
-  }
-}
+// ** Toast
+import toast from 'react-hot-toast'
 
 const Header = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -45,52 +38,35 @@ const Header = styled(Box)(({ theme }) => ({
 }))
 
 const schema = yup.object().shape({
-  company: yup.string().required(),
-  billing: yup.string().required(),
-  country: yup.string().required(),
-  email: yup.string().email().required(),
-  contact: yup
+  studentEmail: yup.string().email('Invalid email format').required('Email is required'),
+  defaultPricePerSession: yup
     .number()
-    .typeError('Contact Number field is required')
-    .min(10, obj => showErrors('Contact Number', obj.value.length, obj.min))
-    .required(),
-  fullName: yup
-    .string()
-    .min(3, obj => showErrors('First Name', obj.value.length, obj.min))
-    .required(),
-  username: yup
-    .string()
-    .min(3, obj => showErrors('Username', obj.value.length, obj.min))
-    .required()
+    .typeError('Price must be a number')
+    .min(0, 'Price cannot be negative')
+    .nullable()
+    .transform((value, originalValue) => (originalValue === '' ? null : value)),
+  generation: yup.string().nullable()
 })
 
 const defaultValues = {
-  email: '',
-  company: '',
-  country: '',
-  billing: '',
-  fullName: '',
-  username: '',
-  contact: Number('')
+  studentEmail: '',
+  defaultPricePerSession: '',
+  generation: ''
 }
 
-const SidebarAddUser = props => {
+const AddUserDrawer = props => {
   // ** Props
   const { open, toggle } = props
 
   // ** State
-  const [plan, setPlan] = useState('basic')
-  const [role, setRole] = useState('subscriber')
+  const [loading, setLoading] = useState(false)
 
   // ** Hooks
   const dispatch = useDispatch()
-  const store = useSelector(state => state.user)
 
   const {
     reset,
     control,
-    setValue,
-    setError,
     handleSubmit,
     formState: { errors }
   } = useForm({
@@ -99,33 +75,46 @@ const SidebarAddUser = props => {
     resolver: yupResolver(schema)
   })
 
-  const onSubmit = data => {
-    if (store.allData.some(u => u.email === data.email || u.username === data.username)) {
-      store.allData.forEach(u => {
-        if (u.email === data.email) {
-          setError('email', {
-            message: 'Email already exists!'
-          })
-        }
-        if (u.username === data.username) {
-          setError('username', {
-            message: 'Username already exists!'
-          })
-        }
-      })
-    } else {
-      dispatch(addUser({ ...data, role, currentPlan: plan }))
-      toggle()
-      reset()
+  const onSubmit = async data => {
+    try {
+      setLoading(true)
+
+      // Prepare the request data
+      const requestData = {
+        studentEmail: data.studentEmail,
+        ...(data.defaultPricePerSession && { defaultPricePerSession: Number(data.defaultPricePerSession) }),
+        ...(data.generation && { generation: data.generation })
+      }
+
+      await dispatch(addStudentByEmail(requestData)).unwrap()
+
+      toast.success('Student added successfully!')
+      handleClose()
+    } catch (error) {
+      // Error handling based on API response
+      const errorMessage = error?.message || error?.toString() || 'Failed to add student'
+
+      if (error?.status === 409 || errorMessage.includes('already exists')) {
+        toast.error('Student relationship already exists!')
+      } else if (error?.status === 404 || errorMessage.includes('not found')) {
+        toast.error('User not found with the provided email!')
+      } else if (error?.status === 400 || errorMessage.includes('negative')) {
+        toast.error('Invalid request: Price cannot be negative!')
+      } else if (errorMessage.includes('incomplete profile')) {
+        toast.error('Student has an incomplete profile!')
+      } else {
+        toast.error(errorMessage)
+      }
+
+      console.error('Failed to add student:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
   const handleClose = () => {
-    setPlan('basic')
-    setRole('subscriber')
-    setValue('contact', Number(''))
-    toggle()
     reset()
+    toggle()
   }
 
   return (
@@ -138,7 +127,7 @@ const SidebarAddUser = props => {
       sx={{ '& .MuiDrawer-paper': { width: { xs: 300, sm: 400 } } }}
     >
       <Header>
-        <Typography variant='h5'>Add User</Typography>
+        <Typography variant='h5'>Add Student</Typography>
         <IconButton
           size='small'
           onClick={handleClose}
@@ -158,166 +147,68 @@ const SidebarAddUser = props => {
       <Box sx={{ p: theme => theme.spacing(0, 6, 6) }}>
         <form onSubmit={handleSubmit(onSubmit)}>
           <Controller
-            name='fullName'
-            control={control}
-            rules={{ required: true }}
-            render={({ field: { value, onChange } }) => (
-              <CustomTextField
-                fullWidth
-                value={value}
-                sx={{ mb: 4 }}
-                label='Full Name'
-                onChange={onChange}
-                placeholder='John Doe'
-                error={Boolean(errors.fullName)}
-                {...(errors.fullName && { helperText: errors.fullName.message })}
-              />
-            )}
-          />
-          <Controller
-            name='username'
-            control={control}
-            rules={{ required: true }}
-            render={({ field: { value, onChange } }) => (
-              <CustomTextField
-                fullWidth
-                value={value}
-                sx={{ mb: 4 }}
-                label='Username'
-                onChange={onChange}
-                placeholder='johndoe'
-                error={Boolean(errors.username)}
-                {...(errors.username && { helperText: errors.username.message })}
-              />
-            )}
-          />
-          <Controller
-            name='email'
+            name='studentEmail'
             control={control}
             rules={{ required: true }}
             render={({ field: { value, onChange } }) => (
               <CustomTextField
                 fullWidth
                 type='email'
-                label='Email'
+                label='Student Email'
                 value={value}
                 sx={{ mb: 4 }}
                 onChange={onChange}
-                error={Boolean(errors.email)}
-                placeholder='johndoe@email.com'
-                {...(errors.email && { helperText: errors.email.message })}
+                error={Boolean(errors.studentEmail)}
+                placeholder='student@example.com'
+                helperText={errors.studentEmail?.message || 'Enter the email of the student you want to add'}
+                disabled={loading}
               />
             )}
           />
           <Controller
-            name='company'
+            name='defaultPricePerSession'
             control={control}
-            rules={{ required: true }}
-            render={({ field: { value, onChange } }) => (
-              <CustomTextField
-                fullWidth
-                value={value}
-                sx={{ mb: 4 }}
-                label='Company'
-                onChange={onChange}
-                placeholder='Company PVT LTD'
-                error={Boolean(errors.company)}
-                {...(errors.company && { helperText: errors.company.message })}
-              />
-            )}
-          />
-          <Controller
-            name='country'
-            control={control}
-            rules={{ required: true }}
-            render={({ field: { value, onChange } }) => (
-              <CustomTextField
-                fullWidth
-                value={value}
-                sx={{ mb: 4 }}
-                label='Country'
-                onChange={onChange}
-                placeholder='Australia'
-                error={Boolean(errors.country)}
-                {...(errors.country && { helperText: errors.country.message })}
-              />
-            )}
-          />
-          <Controller
-            name='contact'
-            control={control}
-            rules={{ required: true }}
             render={({ field: { value, onChange } }) => (
               <CustomTextField
                 fullWidth
                 type='number'
+                label='Default Price Per Session'
                 value={value}
                 sx={{ mb: 4 }}
-                label='Contact'
                 onChange={onChange}
-                placeholder='(397) 294-5153'
-                error={Boolean(errors.contact)}
-                {...(errors.contact && { helperText: errors.contact.message })}
+                error={Boolean(errors.defaultPricePerSession)}
+                placeholder='0.00'
+                helperText={errors.defaultPricePerSession?.message || 'Optional: Set a default price for sessions'}
+                disabled={loading}
+                InputProps={{
+                  startAdornment: <Typography sx={{ mr: 1, color: 'text.secondary' }}>$</Typography>
+                }}
               />
             )}
           />
           <Controller
-            name='billing'
+            name='generation'
             control={control}
-            rules={{ required: true }}
             render={({ field: { value, onChange } }) => (
               <CustomTextField
-                select
                 fullWidth
-                sx={{ mb: 4 }}
-                label='Billing'
-                id='validation-billing-select'
-                error={Boolean(errors.billing)}
-                aria-describedby='validation-billing-select'
-                {...(errors.billing && { helperText: errors.billing.message })}
-                SelectProps={{ value: value, onChange: e => onChange(e) }}
-              >
-                <MenuItem value=''>Billing</MenuItem>
-                <MenuItem value='Auto Debit'>Auto Debit</MenuItem>
-                <MenuItem value='Manual - Cash'>Manual - Cash</MenuItem>
-                <MenuItem value='Manual - Paypal'>Manual - Paypal</MenuItem>
-                <MenuItem value='Manual - Credit Card'>Manual - Credit Card</MenuItem>
-              </CustomTextField>
+                label='Generation'
+                value={value}
+                sx={{ mb: 6 }}
+                onChange={onChange}
+                error={Boolean(errors.generation)}
+                placeholder='e.g., 2024-2025'
+                helperText={errors.generation?.message || 'Optional: Academic year generation'}
+                disabled={loading}
+              />
             )}
           />
-          <CustomTextField
-            select
-            fullWidth
-            value={role}
-            sx={{ mb: 4 }}
-            label='Select Role'
-            onChange={e => setRole(e.target.value)}
-            SelectProps={{ value: role, onChange: e => setRole(e.target.value) }}
-          >
-            <MenuItem value='admin'>Admin</MenuItem>
-            <MenuItem value='author'>Author</MenuItem>
-            <MenuItem value='editor'>Editor</MenuItem>
-            <MenuItem value='maintainer'>Maintainer</MenuItem>
-            <MenuItem value='subscriber'>Subscriber</MenuItem>
-          </CustomTextField>
-
-          <CustomTextField
-            select
-            fullWidth
-            sx={{ mb: 6 }}
-            label='Select Plan'
-            SelectProps={{ value: plan, onChange: e => setPlan(e.target.value) }}
-          >
-            <MenuItem value='basic'>Basic</MenuItem>
-            <MenuItem value='company'>Company</MenuItem>
-            <MenuItem value='enterprise'>Enterprise</MenuItem>
-            <MenuItem value='team'>Team</MenuItem>
-          </CustomTextField>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Button type='submit' variant='contained' sx={{ mr: 3 }}>
-              Submit
+            <Button type='submit' variant='contained' sx={{ mr: 3 }} disabled={loading}>
+              {loading ? <CircularProgress size={20} sx={{ mr: 2 }} /> : null}
+              {loading ? 'Adding...' : 'Add Student'}
             </Button>
-            <Button variant='tonal' color='secondary' onClick={handleClose}>
+            <Button variant='tonal' color='secondary' onClick={handleClose} disabled={loading}>
               Cancel
             </Button>
           </Box>
@@ -327,4 +218,4 @@ const SidebarAddUser = props => {
   )
 }
 
-export default SidebarAddUser
+export default AddUserDrawer

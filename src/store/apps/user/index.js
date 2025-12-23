@@ -3,7 +3,6 @@ import toast from 'react-hot-toast'
 
 // ** Axios Imports
 import axios from 'axios'
-import apiClient from 'src/@core/axios/axiosEmentor'
 import { profileServiceClient } from 'src/services'
 
 // Helper to check if cache is expired (older than 1 month)
@@ -14,24 +13,70 @@ const isCacheExpired = timestamp => {
   return Date.now() - timestamp > oneMonthInMs
 }
 
-// ** Fetch Users
-export const fetchData = createAsyncThunk('appUsers/fetchData', async () => {
-  const response = await apiClient
-    .get('service3/users/role/STUDENT')
-    .then(response => {
-      return response.data
-    })
-    .catch(error => {
-      console.log(error)
-      toast.error('Nu s-au putut prelua utilizatorii')
+// ** Fetch Active Students
+export const fetchData = createAsyncThunk('appUsers/fetchData', async (_, { rejectWithValue }) => {
+  try {
+    const response = await profileServiceClient.studentProfessorRelationship.getActiveStudentsForCurrentProfessor()
 
-      return []
-    })
+    return {
+      students: response.data || [],
+      fetchedAt: Date.now()
+    }
+  } catch (error) {
+    console.error('Failed to fetch active students:', error)
+    toast.error('Failed to fetch active students')
 
-  return response
+    return rejectWithValue(error.response?.data || error.message)
+  }
 })
 
-// ** Add User
+// ** Fetch Inactive Students (not cached - always fresh)
+export const fetchInactiveStudents = createAsyncThunk(
+  'appUsers/fetchInactiveStudents',
+  async (_, { rejectWithValue }) => {
+    try {
+      // For now, we'll use the same endpoint and filter by status on frontend
+      // When backend adds inactive endpoint, we can update this
+      const response = await profileServiceClient.studentProfessorRelationship.getActiveStudentsForCurrentProfessor()
+
+      // Return just the students array, no caching
+      return response.data || []
+    } catch (error) {
+      console.error('Failed to fetch inactive students:', error)
+      toast.error('Failed to fetch inactive students')
+
+      return rejectWithValue(error.response?.data || error.message)
+    }
+  }
+)
+
+// ** Add Student By Email
+export const addStudentByEmail = createAsyncThunk(
+  'appUsers/addStudentByEmail',
+  async (requestData, { rejectWithValue, dispatch }) => {
+    try {
+      const response = await profileServiceClient.studentProfessorRelationship.addStudentByEmail({
+        addStudentByEmailRequest: requestData
+      })
+
+      // Refresh active students list after adding
+      dispatch(fetchData())
+
+      return response.data
+    } catch (error) {
+      console.error('Failed to add student by email:', error)
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to add student'
+      toast.error(errorMessage)
+
+      return rejectWithValue({
+        message: errorMessage,
+        status: error.response?.status
+      })
+    }
+  }
+)
+
+// ** Add User (legacy - kept for backward compatibility)
 export const addUser = createAsyncThunk('appUsers/addUser', async data => {
   return data
 })
@@ -49,7 +94,105 @@ export const updateTokens = createAsyncThunk('appUsers/updateTokens', async data
   return data
 })
 
-// ** Delete User
+// ** Fetch Professor Generations
+export const fetchProfessorGenerations = createAsyncThunk(
+  'appUsers/fetchProfessorGenerations',
+  async (professorId, { rejectWithValue }) => {
+    try {
+      const response = await profileServiceClient.studentProfessorRelationship.getProfessorGenerations({
+        professorId
+      })
+
+      return response.data || []
+    } catch (error) {
+      console.error('Failed to fetch professor generations:', error)
+      toast.error('Failed to fetch generations')
+
+      return rejectWithValue(error.response?.data || error.message)
+    }
+  }
+)
+
+// ** Fetch Students By Generation
+export const fetchStudentsByGeneration = createAsyncThunk(
+  'appUsers/fetchStudentsByGeneration',
+  async ({ professorId, generation }, { rejectWithValue }) => {
+    try {
+      const response = await profileServiceClient.studentProfessorRelationship.getStudentsByGeneration({
+        professorId,
+        generation
+      })
+
+      return {
+        students: response.data || [],
+        generation
+      }
+    } catch (error) {
+      console.error('Failed to fetch students by generation:', error)
+      toast.error('Failed to fetch students by generation')
+
+      return rejectWithValue(error.response?.data || error.message)
+    }
+  }
+)
+
+// ** Update Student Generation
+export const updateStudentGeneration = createAsyncThunk(
+  'appUsers/updateStudentGeneration',
+  async ({ studentUserId, professorId, generation, validGeneration }, { rejectWithValue, dispatch }) => {
+    try {
+      const response = await profileServiceClient.studentProfessorRelationship.updateGeneration({
+        studentUserId,
+        professorId,
+        updateGenerationRequest: {
+          generation,
+          validGeneration
+        }
+      })
+
+      // Refresh active students list after updating
+      dispatch(fetchData())
+
+      toast.success('Generation updated successfully')
+
+      return response.data
+    } catch (error) {
+      console.error('Failed to update student generation:', error)
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to update generation'
+      toast.error(errorMessage)
+
+      return rejectWithValue(error.response?.data || error.message)
+    }
+  }
+)
+
+// ** Deactivate Student Relationship
+export const deactivateStudentRelationship = createAsyncThunk(
+  'appUsers/deactivateStudentRelationship',
+  async ({ studentUserId, professorId }, { rejectWithValue, dispatch }) => {
+    try {
+      await profileServiceClient.studentProfessorRelationship.deactivateRelationship({
+        studentUserId,
+        professorId
+      })
+
+      // Refresh active students list after deactivating
+      dispatch(fetchData())
+
+      toast.success('Student relationship deactivated successfully')
+
+      return { studentUserId, professorId }
+    } catch (error) {
+      console.error('Failed to deactivate student relationship:', error)
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to deactivate relationship'
+      toast.error(errorMessage)
+
+      return rejectWithValue(error.response?.data || error.message)
+    }
+  }
+)
+
+// ** Delete User (legacy - kept for backward compatibility)
 export const deleteUser = createAsyncThunk('appUsers/deleteUser', async (id, { getState, dispatch }) => {
   const response = await axios.delete('/apps/users/delete', {
     data: id
@@ -121,11 +264,8 @@ export const selectUser = state => state.user.data
 export const selectThumbnail = state => state.user.tokens
 
 export const selectAllStudents = state => {
-  if (!state.user?.allStudents || state.user.allStudents.length === 0) {
-    return fetchData()
-  }
-
-  return state.user.allStudents
+  // Return the allStudents array directly (should be an array)
+  return state.user?.allStudents || []
 }
 
 export const selectProfessorProfile = userId => state => {
@@ -152,18 +292,52 @@ export const appUsersSlice = createSlice({
     tokens: {},
     thumbnailUrl: '',
     allStudents: [],
+    activeStudents: [], // Active students cache
+    inactiveStudents: [], // Inactive students (NOT cached)
+    activeStudentsFetchedAt: null, // Timestamp of last fetch
+    loading: false, // Global loading state
+    inactiveLoading: false, // Loading state for inactive students
+    error: null, // Error state
     professorProfiles: {}, // { userId: { data, cachedAt }, ... }
     professorProfilesLoading: {}, // { userId: boolean, ... }
-    professorProfilesErrors: {} // { userId: error, ... }
+    professorProfilesErrors: {}, // { userId: error, ... }
+    generations: [], // List of available generations
+    generationsLoading: false, // Loading state for generations
+    selectedGeneration: null // Currently selected generation for filtering
   },
   reducers: {},
   extraReducers: builder => {
     builder
+      .addCase(fetchData.pending, state => {
+        state.loading = true
+        state.error = null
+      })
       .addCase(fetchData.fulfilled, (state, action) => {
-        state.data = action.payload.users
-        state.total = action.payload.total
-        state.params = action.payload.params
-        state.allStudents = action.payload.allStudents
+        state.loading = false
+        state.activeStudents = action.payload.students
+        state.activeStudentsFetchedAt = action.payload.fetchedAt
+
+        // For backward compatibility
+        state.allStudents = action.payload.students
+      })
+      .addCase(fetchData.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload || 'Failed to fetch students'
+      })
+      .addCase(fetchInactiveStudents.pending, state => {
+        state.inactiveLoading = true
+        state.error = null
+      })
+      .addCase(fetchInactiveStudents.fulfilled, (state, action) => {
+        state.inactiveLoading = false
+
+        // No caching for inactive students - just set the data
+        state.inactiveStudents = action.payload
+      })
+      .addCase(fetchInactiveStudents.rejected, (state, action) => {
+        state.inactiveLoading = false
+        state.error = action.payload || 'Failed to fetch inactive students'
+        state.inactiveStudents = [] // Clear on error
       })
       .addCase(addUser.fulfilled, (state, action) => {
         state.data = action.payload
@@ -232,6 +406,29 @@ export const appUsersSlice = createSlice({
           state.professorProfilesLoading = {}
           state.professorProfilesErrors = {}
         }
+      })
+      .addCase(fetchProfessorGenerations.pending, state => {
+        state.generationsLoading = true
+      })
+      .addCase(fetchProfessorGenerations.fulfilled, (state, action) => {
+        state.generationsLoading = false
+        state.generations = action.payload
+      })
+      .addCase(fetchProfessorGenerations.rejected, (state, action) => {
+        state.generationsLoading = false
+        state.error = action.payload || 'Failed to fetch generations'
+      })
+      .addCase(fetchStudentsByGeneration.pending, state => {
+        state.loading = true
+      })
+      .addCase(fetchStudentsByGeneration.fulfilled, (state, action) => {
+        state.loading = false
+        state.selectedGeneration = action.payload.generation
+        state.activeStudents = action.payload.students
+      })
+      .addCase(fetchStudentsByGeneration.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload || 'Failed to fetch students by generation'
       })
   }
 })

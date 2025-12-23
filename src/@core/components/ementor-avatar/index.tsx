@@ -15,6 +15,7 @@ import Avatar from 'src/@core/components/mui/avatar'
 // ** Utils
 import extractProfilePicture from 'src/@core/axios/profile-picture-extractor'
 import profilePictureDownloader from 'src/@core/axios/profile-picture-downloader'
+import { photoCacheService } from 'src/@core/services/photo-cache-service-instance'
 
 export enum UserType {
   STUDENT = 'student',
@@ -37,14 +38,18 @@ interface EmentorAvatarProps {
 
 /**
  * Processes picture info and returns the appropriate avatar URL
+ * Now uses PhotoCacheService for unified caching of both API and EXTERNAL photos
  */
 const processAvatarUrl = async (pictureInfo: any, fullSize: boolean): Promise<string | null> => {
   if (pictureInfo.type === 'API') {
-    return await profilePictureDownloader(pictureInfo.url, pictureInfo.userId, fullSize)
+    // Use PhotoCacheService for API photos (replaces profilePictureDownloader)
+    return await photoCacheService.getPhoto('API', pictureInfo.url, pictureInfo.userId, fullSize)
   }
 
   if (pictureInfo.type === 'EXTERNAL') {
-    return pictureInfo.url
+    // Use PhotoCacheService for EXTERNAL photos (Google photos)
+    // This prevents 429 errors by rate limiting and caching as blob URLs
+    return await photoCacheService.getPhoto('EXTERNAL', pictureInfo.url, pictureInfo.userId, fullSize)
   }
 
   return null
@@ -152,7 +157,15 @@ const EmentorAvatar = forwardRef<any, EmentorAvatarProps>(
     // Type assertion needed because custom Avatar component doesn't export proper TypeScript types
     const AvatarComponent = Avatar as any
 
-    return <AvatarComponent ref={ref} {...avatarProps} src={avatarUrl || undefined} />
+    // Add lazy loading and no-referrer policy to prevent 429 errors from Google
+    const imgProps = avatarProps.imgProps || {}
+    const enhancedImgProps = {
+      ...imgProps,
+      loading: 'lazy' as const,
+      referrerPolicy: 'no-referrer' as const // Prevent Google from tracking referrer for rate limiting
+    }
+
+    return <AvatarComponent ref={ref} {...avatarProps} src={avatarUrl || undefined} imgProps={enhancedImgProps} />
   }
 )
 

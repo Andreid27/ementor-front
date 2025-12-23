@@ -47,7 +47,7 @@ npm install PATH_TO_GENERATED_PACKAGE --save
 
 ### Documentation for API Endpoints
 
-All URIs are relative to *https://api.e-mentor.ro//service2*
+All URIs are relative to *http://localhost:49202*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
@@ -64,6 +64,8 @@ Class | Method | HTTP request | Description
 *AdminPaymentControllerApi* | [**getRecentPayments**](docs/AdminPaymentControllerApi.md#getrecentpayments) | **GET** /admin/payment-system/payments/recent | Get recent payments (admin only)
 *AdminPaymentControllerApi* | [**getStudentDebtSummary1**](docs/AdminPaymentControllerApi.md#getstudentdebtsummary1) | **GET** /admin/payment-system/fifo/students/{studentId}/professors/{professorId}/debt-summary | Get student debt summary for administrative review (admin only)
 *AdminPaymentControllerApi* | [**getTotalDebt1**](docs/AdminPaymentControllerApi.md#gettotaldebt1) | **GET** /admin/payment-system/fifo/students/{studentId}/professors/{professorId}/total-debt | Calculate total debt for administrative overview (admin only)
+*AdminPaymentControllerApi* | [**recalculateAllWallets**](docs/AdminPaymentControllerApi.md#recalculateallwallets) | **POST** /admin/payment-system/wallets/recalculate-all | Recalculate all user wallets (admin only - bulk operation)
+*AdminPaymentControllerApi* | [**recalculateUserWallet**](docs/AdminPaymentControllerApi.md#recalculateuserwallet) | **POST** /admin/payment-system/wallets/{userId}/recalculate | Recalculate user wallet based on balance changes (admin only)
 *AdminPaymentControllerApi* | [**syncStudentSoloClients**](docs/AdminPaymentControllerApi.md#syncstudentsoloclients) | **GET** /admin/payment-system/sync-student-solo-clients/{userId} | Sync student solo clients with payment system (admin only)
 *BankAccountControllerApi* | [**getBankAccountsForProfessor**](docs/BankAccountControllerApi.md#getbankaccountsforprofessor) | **GET** /bank-account/professor/{professorId} | Get bank accounts for a professor
 *EventsControllerApi* | [**cancelEventOccurrence**](docs/EventsControllerApi.md#canceleventoccurrence) | **POST** /events/occurrence/cancel | Cancel an event occurrence
@@ -74,7 +76,9 @@ Class | Method | HTTP request | Description
 *EventsControllerApi* | [**getAttendees**](docs/EventsControllerApi.md#getattendees) | **GET** /events/attendees | Get full user DTOs for expected attendees by series or occurrence ID
 *EventsControllerApi* | [**getConsolidatedEvents**](docs/EventsControllerApi.md#getconsolidatedevents) | **GET** /events/consolidated | Get consolidated events for date range
 *EventsControllerApi* | [**getConsolidatedEventsForProfessor**](docs/EventsControllerApi.md#getconsolidatedeventsforprofessor) | **GET** /events/consolidated/professor/{professorId} | Get consolidated events for a specific professor
+*EventsControllerApi* | [**getEventOccurrenceByEventAttendeeId**](docs/EventsControllerApi.md#geteventoccurrencebyeventattendeeid) | **GET** /events/event-occurrence/{eventAttendeeId} | Get event occurrence by event attendee ID
 *EventsControllerApi* | [**getMyEvents**](docs/EventsControllerApi.md#getmyevents) | **GET** /events/my-events | Get my events (for current professor)
+*EventsControllerApi* | [**getMyRecurringSeries**](docs/EventsControllerApi.md#getmyrecurringseries) | **GET** /events/series | Get my recurring series
 *EventsControllerApi* | [**getMySingularEvents**](docs/EventsControllerApi.md#getmysingularevents) | **GET** /events/singular/my-events | Get my singular events
 *EventsControllerApi* | [**getSingularEventsForProfessor**](docs/EventsControllerApi.md#getsingulareventsforprofessor) | **GET** /events/singular/professor/{professorId} | Get singular events for a specific professor
 *EventsControllerApi* | [**modifyEventOccurrence**](docs/EventsControllerApi.md#modifyeventoccurrence) | **POST** /events/occurrence/modify | Modify/reschedule an event occurrence. It will be found by seriesId and originalStartTime.
@@ -111,12 +115,16 @@ Class | Method | HTTP request | Description
 *PaymentControllerApi* | [**getProfessorPaymentInfo**](docs/PaymentControllerApi.md#getprofessorpaymentinfo) | **GET** /payment/professor/{professorId}/info | Get professor payment information including bank accounts
 *PaymentControllerApi* | [**rejectPayment**](docs/PaymentControllerApi.md#rejectpayment) | **POST** /payment/reject | Reject a bank transfer payment
 *PaymentControllerApi* | [**validateReference**](docs/PaymentControllerApi.md#validatereference) | **POST** /payment/references/validate | Validate a payment reference code
+*ProfessorProfileControllerApi* | [**addStudentByEmail1**](docs/ProfessorProfileControllerApi.md#addstudentbyemail1) | **POST** /professor-profile/add-student-by-email | Add student by email address
 *ProfessorProfileControllerApi* | [**create3**](docs/ProfessorProfileControllerApi.md#create3) | **POST** /professor-profile/create | Create a new student profile.
 *ProfessorProfileControllerApi* | [**get3**](docs/ProfessorProfileControllerApi.md#get3) | **GET** /professor-profile/{id} | Get professor profile
 *ProfessorProfileControllerApi* | [**getFull2**](docs/ProfessorProfileControllerApi.md#getfull2) | **GET** /professor-profile/get-full | Get full professor profile by user id
 *ProfessorProfileControllerApi* | [**getFull3**](docs/ProfessorProfileControllerApi.md#getfull3) | **GET** /professor-profile/get-full/{userId} | Get full professor profile by user id
+*ProfessorProfileControllerApi* | [**getInvitationCode**](docs/ProfessorProfileControllerApi.md#getinvitationcode) | **GET** /professor-profile/invitation-code | Get professor\&#39;s invitation code
 *ProfessorProfileControllerApi* | [**getPaginated1**](docs/ProfessorProfileControllerApi.md#getpaginated1) | **POST** /professor-profile/paginated | Get paginated professor profiles
 *ProfessorProfileControllerApi* | [**getUserProfile1**](docs/ProfessorProfileControllerApi.md#getuserprofile1) | **GET** /professor-profile/get | Get current professor profile
+*ProfessorProfileControllerApi* | [**previewByCode**](docs/ProfessorProfileControllerApi.md#previewbycode) | **GET** /professor-profile/preview-by-code/{code} | Preview professor by invitation code (public)
+*ProfessorProfileControllerApi* | [**regenerateInvitationCode**](docs/ProfessorProfileControllerApi.md#regenerateinvitationcode) | **POST** /professor-profile/invitation-code/regenerate | Regenerate professor\&#39;s invitation code
 *ProfessorProfileControllerApi* | [**update2**](docs/ProfessorProfileControllerApi.md#update2) | **PUT** /professor-profile/update | Update a existing student profile.
 *ProfilePictureControllerApi* | [**download2**](docs/ProfilePictureControllerApi.md#download2) | **GET** /profile-image/download/{fileId} | Download file
 *ProfilePictureControllerApi* | [**generateAllThumbnails**](docs/ProfilePictureControllerApi.md#generateallthumbnails) | **GET** /profile-image/generate/all-users | Generate thumbnails for all users
@@ -126,6 +134,7 @@ Class | Method | HTTP request | Description
 *SpecialityControllerApi* | [**get2**](docs/SpecialityControllerApi.md#get2) | **GET** /speciality/{id} | Get speciality
 *SpecialityControllerApi* | [**getAll1**](docs/SpecialityControllerApi.md#getall1) | **GET** /speciality/get | Get all specialities
 *SpecialityControllerApi* | [**register**](docs/SpecialityControllerApi.md#register) | **PUT** /speciality/update | Update a speciality.
+*StudentProfessorRelationshipControllerApi* | [**addStudentByEmail**](docs/StudentProfessorRelationshipControllerApi.md#addstudentbyemail) | **POST** /student-professor-relationships/add-student-by-email | Add student to professor\&#39;s class by email
 *StudentProfessorRelationshipControllerApi* | [**createRelationship**](docs/StudentProfessorRelationshipControllerApi.md#createrelationship) | **POST** /student-professor-relationships | Create a new student-professor relationship
 *StudentProfessorRelationshipControllerApi* | [**deactivateRelationship**](docs/StudentProfessorRelationshipControllerApi.md#deactivaterelationship) | **DELETE** /student-professor-relationships/{studentUserId}/{professorId} | Deactivate student-professor relationship
 *StudentProfessorRelationshipControllerApi* | [**getActiveProfessorsForStudent**](docs/StudentProfessorRelationshipControllerApi.md#getactiveprofessorsforstudent) | **GET** /student-professor-relationships/student/{studentUserId}/professors | Get all active professors for a student
@@ -133,8 +142,13 @@ Class | Method | HTTP request | Description
 *StudentProfessorRelationshipControllerApi* | [**getActiveStudentsForProfessor**](docs/StudentProfessorRelationshipControllerApi.md#getactivestudentsforprofessor) | **GET** /student-professor-relationships/professor/{professorId}/students | Get all active students for a professor
 *StudentProfessorRelationshipControllerApi* | [**getDefaultPrice**](docs/StudentProfessorRelationshipControllerApi.md#getdefaultprice) | **GET** /student-professor-relationships/{studentUserId}/{professorId}/price | Get default price for student-professor relationship
 *StudentProfessorRelationshipControllerApi* | [**getPriceWithFallback**](docs/StudentProfessorRelationshipControllerApi.md#getpricewithfallback) | **GET** /student-professor-relationships/{studentUserId}/{professorId}/price-with-fallback | Get price with fallback logic
+*StudentProfessorRelationshipControllerApi* | [**getProfessorGenerations**](docs/StudentProfessorRelationshipControllerApi.md#getprofessorgenerations) | **GET** /student-professor-relationships/professor/{professorId}/generations | Get professor\&#39;s generation summary
+*StudentProfessorRelationshipControllerApi* | [**getStudentsByGeneration**](docs/StudentProfessorRelationshipControllerApi.md#getstudentsbygeneration) | **GET** /student-professor-relationships/professor/{professorId}/students-by-generation | Get students filtered by generation
 *StudentProfessorRelationshipControllerApi* | [**hasActiveRelationship**](docs/StudentProfessorRelationshipControllerApi.md#hasactiverelationship) | **GET** /student-professor-relationships/{studentUserId}/{professorId}/exists | Check if active relationship exists
+*StudentProfessorRelationshipControllerApi* | [**joinByCode**](docs/StudentProfessorRelationshipControllerApi.md#joinbycode) | **POST** /student-professor-relationships/join-by-code | Student joins professor by invitation code
+*StudentProfessorRelationshipControllerApi* | [**removeStudentFromProfessor**](docs/StudentProfessorRelationshipControllerApi.md#removestudentfromprofessor) | **DELETE** /student-professor-relationships/professor/{professorId}/student/{studentUserId} | Remove student from professor\&#39;s class
 *StudentProfessorRelationshipControllerApi* | [**updateDefaultPrice**](docs/StudentProfessorRelationshipControllerApi.md#updatedefaultprice) | **PUT** /student-professor-relationships/{studentUserId}/{professorId}/price | Update default price for student-professor relationship
+*StudentProfessorRelationshipControllerApi* | [**updateGeneration**](docs/StudentProfessorRelationshipControllerApi.md#updategeneration) | **PUT** /student-professor-relationships/{studentUserId}/{professorId}/generation | Update student generation
 *StudentProfileControllerApi* | [**create1**](docs/StudentProfileControllerApi.md#create1) | **POST** /student-profile/create | Create a new student profile.
 *StudentProfileControllerApi* | [**deactivate**](docs/StudentProfileControllerApi.md#deactivate) | **DELETE** /student-profile/{id} | Deactivate student profile
 *StudentProfileControllerApi* | [**get1**](docs/StudentProfileControllerApi.md#get1) | **GET** /student-profile/{id} | Get student profile
@@ -166,6 +180,7 @@ Class | Method | HTTP request | Description
 
 ### Documentation For Models
 
+ - [AddStudentByEmailRequest](docs/AddStudentByEmailRequest.md)
  - [Address](docs/Address.md)
  - [AddressDTO](docs/AddressDTO.md)
  - [AllocationResultDTO](docs/AllocationResultDTO.md)
@@ -173,6 +188,7 @@ Class | Method | HTTP request | Description
  - [BankAccountDTO](docs/BankAccountDTO.md)
  - [BankTransferPayment](docs/BankTransferPayment.md)
  - [BankTransferPaymentDTO](docs/BankTransferPaymentDTO.md)
+ - [BulkWalletRecalculationResultDTO](docs/BulkWalletRecalculationResultDTO.md)
  - [CreatePaymentRequest](docs/CreatePaymentRequest.md)
  - [CredentialRepresentation](docs/CredentialRepresentation.md)
  - [CredentialRepresentationConfig](docs/CredentialRepresentationConfig.md)
@@ -197,6 +213,8 @@ Class | Method | HTTP request | Description
  - [InvoiceDTO](docs/InvoiceDTO.md)
  - [InvoiceLineItemDTO](docs/InvoiceLineItemDTO.md)
  - [InvoicePlatform](docs/InvoicePlatform.md)
+ - [JoinByCodeRequest](docs/JoinByCodeRequest.md)
+ - [JoinByCodeResponse](docs/JoinByCodeResponse.md)
  - [Location](docs/Location.md)
  - [LocationDTO](docs/LocationDTO.md)
  - [LocationLevel](docs/LocationLevel.md)
@@ -216,6 +234,7 @@ Class | Method | HTTP request | Description
  - [ProfessorPaymentInfoDTO](docs/ProfessorPaymentInfoDTO.md)
  - [ProfessorPaymentSummaryDTO](docs/ProfessorPaymentSummaryDTO.md)
  - [ProfessorPlatformIntegration](docs/ProfessorPlatformIntegration.md)
+ - [ProfessorPreviewDTO](docs/ProfessorPreviewDTO.md)
  - [ProfessorProfile](docs/ProfessorProfile.md)
  - [ProfessorProfileDTO](docs/ProfessorProfileDTO.md)
  - [ProfessorProfileView](docs/ProfessorProfileView.md)
@@ -241,6 +260,7 @@ Class | Method | HTTP request | Description
  - [UniversityDTO](docs/UniversityDTO.md)
  - [UniversitySpecialitiesDTO](docs/UniversitySpecialitiesDTO.md)
  - [UniversitySpeciality](docs/UniversitySpeciality.md)
+ - [UpdateGenerationRequest](docs/UpdateGenerationRequest.md)
  - [UserConsentRepresentation](docs/UserConsentRepresentation.md)
  - [UserDTO](docs/UserDTO.md)
  - [UserProfileAttributeGroupMetadata](docs/UserProfileAttributeGroupMetadata.md)
@@ -249,6 +269,7 @@ Class | Method | HTTP request | Description
  - [UserRepresentation](docs/UserRepresentation.md)
  - [WalletBalanceChangeDTO](docs/WalletBalanceChangeDTO.md)
  - [WalletDTO](docs/WalletDTO.md)
+ - [WalletRecalculationResultDTO](docs/WalletRecalculationResultDTO.md)
  - [WalletSummaryDTO](docs/WalletSummaryDTO.md)
 
 

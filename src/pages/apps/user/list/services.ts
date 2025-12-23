@@ -1,9 +1,8 @@
 // ** API Types
 import { StudentProfessorRelationshipDTO } from 'src/generated/profile-service/api'
 
-// ** Axios Import
-import apiClient from 'src/@core/axios/axiosEmentor'
-import * as apiSpec from 'src/apiSpec'
+// ** Profile Service Client
+import { profileServiceClient } from 'src/services'
 
 // ** Toast Import
 import toast from 'react-hot-toast'
@@ -47,51 +46,28 @@ const toastMethods: ToastMethods = {
   }
 }
 
-// ** Student API Service
-export class StudentApiService {
-  /**
-   * Fetch active students for the current professor
-   */
-  async fetchActiveStudents(): Promise<StudentListItem[]> {
-    try {
-      const response = await apiClient.get(`${apiSpec.PROFILE_SERVICE}/student-professor-relationships/students`)
+// ** Fetch active students using profileServiceClient
+export const fetchActiveStudents = async (): Promise<StudentListItem[]> => {
+  try {
+    const response = await profileServiceClient.studentProfessorRelationship.getActiveStudentsForCurrentProfessor()
 
-      if (response.data && Array.isArray(response.data)) {
-        const transformedData = transformStudentData(response.data as StudentProfessorRelationshipDTO[])
+    if (response.data && Array.isArray(response.data)) {
+      const transformedData = transformStudentData(response.data as StudentProfessorRelationshipDTO[])
 
-        toastMethods.success(`Loaded ${transformedData.length} students successfully`)
-
-        return transformedData
-      } else {
-        toastMethods.warning('No students found for your account')
-        return []
-      }
-    } catch (error) {
-      console.error('Failed to fetch students:', error)
-
-      const apiError = error as ApiErrorResponse
-      handleApiError(apiError, toastMethods)
-
-      // Return empty array on error to prevent UI crashes
+      return transformedData
+    } else {
       return []
     }
-  }
+  } catch (error) {
+    console.error('Failed to fetch students:', error)
 
-  /**
-   * Refresh student data
-   */
-  async refreshStudents(): Promise<StudentListItem[]> {
-    toastMethods.info('Refreshing student data...')
-    return this.fetchActiveStudents()
+    const apiError = error as ApiErrorResponse
+    handleApiError(apiError, toastMethods)
+
+    // Return empty array on error to prevent UI crashes
+    return []
   }
 }
-
-// ** Create singleton instance
-export const studentApiService = new StudentApiService()
-
-// ** Export individual methods for convenience
-export const fetchActiveStudents = () => studentApiService.fetchActiveStudents()
-export const refreshStudents = () => studentApiService.refreshStudents()
 
 // ** Error handling utilities
 export const handleStudentApiError = (error: any): void => {
@@ -113,7 +89,7 @@ export const showStudentLoadInfo = (message: string): void => {
 }
 
 // ** Photo error handling (for compatibility with StudentAvatar)
-export const handlePhotoError = (studentId: string, toast: any): void => {
+export const handlePhotoError = (studentId: string): void => {
   console.warn(`Failed to load photo for student: ${studentId}`)
   // Individual photo failures will just show initials, no toast needed
 }

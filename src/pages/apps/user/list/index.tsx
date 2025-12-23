@@ -17,6 +17,14 @@ import Typography from '@mui/material/Typography'
 import CardHeader from '@mui/material/CardHeader'
 import CardContent from '@mui/material/CardContent'
 import { DataGrid } from '@mui/x-data-grid'
+import Tab from '@mui/material/Tab'
+import TabList from '@mui/lab/TabList'
+import TabContext from '@mui/lab/TabContext'
+import Dialog from '@mui/material/Dialog'
+import DialogTitle from '@mui/material/DialogTitle'
+import DialogContent from '@mui/material/DialogContent'
+import DialogActions from '@mui/material/DialogActions'
+import Button from '@mui/material/Button'
 
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
@@ -34,7 +42,15 @@ import CardStatsHorizontalWithDetails from 'src/@core/components/card-statistics
 import { getInitials } from 'src/@core/utils/get-initials'
 
 // ** Actions Imports
-import { deleteUser } from 'src/store/apps/user'
+import {
+  fetchData,
+  fetchInactiveStudents,
+  deleteUser,
+  fetchProfessorGenerations,
+  fetchStudentsByGeneration,
+  deactivateStudentRelationship,
+  updateStudentGeneration
+} from 'src/store/apps/user'
 
 // ** Third Party Components
 import axios from 'axios'
@@ -62,10 +78,10 @@ import {
   MenuClickHandler,
   StudentGridColumn,
   RootState,
-  ErrorState
+  StudentTabValue
 } from './types'
 
-import { userRoleObj, userStatusObj, filterStudents, sortStudents } from './utils'
+import { userRoleObj, userStatusObj, filterStudents, transformStudentData } from './utils'
 
 import {
   DEFAULT_FILTERS,
@@ -77,11 +93,12 @@ import {
   COLUMN_WIDTHS
 } from './constants'
 
-// ** API Service
-import { fetchActiveStudents } from './services'
-
 // ** Photo Service
-import { preloadPhotos } from './services/photoService'
+import { processStudentPhotos } from './services/photoService'
+import EmentorAvatar from 'src/@core/components/ementor-avatar'
+
+// ** Auth Hook
+import { useAuth } from 'src/hooks/useAuth'
 
 // ** renders client column with photo loading
 const renderClient = (row: StudentListItem, onAvatarClick?: (studentId: string) => void): JSX.Element => {
@@ -90,12 +107,14 @@ const renderClient = (row: StudentListItem, onAvatarClick?: (studentId: string) 
 
 // ** Row Options Component
 interface RowOptionsProps {
-  id: string
+  student: StudentListItem
+  onEditGeneration: (student: StudentListItem) => void
 }
 
-const RowOptions: React.FC<RowOptionsProps> = ({ id }) => {
+const RowOptions: React.FC<RowOptionsProps> = ({ student, onEditGeneration }) => {
   // ** Hooks
   const dispatch = useDispatch()
+  const auth = useAuth()
 
   // ** State
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
@@ -109,8 +128,20 @@ const RowOptions: React.FC<RowOptionsProps> = ({ id }) => {
     setAnchorEl(null)
   }
 
-  const handleDelete = (): void => {
-    dispatch(deleteUser(id) as any)
+  const handleDeactivate = (): void => {
+    if (window.confirm(`Are you sure you want to deactivate ${student.studentName}?`)) {
+      dispatch(
+        deactivateStudentRelationship({
+          studentUserId: student.studentUserId,
+          professorId: auth.user?.userId || student.professorId || ''
+        }) as any
+      )
+    }
+    handleRowOptionsClose()
+  }
+
+  const handleEditGeneration = (): void => {
+    onEditGeneration(student)
     handleRowOptionsClose()
   }
 
@@ -134,26 +165,22 @@ const RowOptions: React.FC<RowOptionsProps> = ({ id }) => {
         }}
         slotProps={{
           paper: {
-            style: { minWidth: '8rem' }
+            style: { minWidth: '10rem' }
           }
         }}
       >
-        <MenuItem
-          component={Link}
-          sx={{ '& svg': { mr: 2 } }}
-          href='/apps/user/view/account'
-          onClick={handleRowOptionsClose}
-        >
-          <Icon icon='tabler:eye' fontSize={20} />
-          View
-        </MenuItem>
         <MenuItem onClick={handleRowOptionsClose} sx={{ '& svg': { mr: 2 } }}>
-          <Icon icon='tabler:edit' fontSize={20} />
-          Edit
+          <Icon icon='tabler:eye' fontSize={20} />
+          View Details
         </MenuItem>
-        <MenuItem onClick={handleDelete} sx={{ '& svg': { mr: 2 } }}>
-          <Icon icon='tabler:trash' fontSize={20} />
-          Delete
+        <MenuItem onClick={handleEditGeneration} sx={{ '& svg': { mr: 2 } }}>
+          <Icon icon='tabler:calendar' fontSize={20} />
+          Edit Generation
+        </MenuItem>
+        <Divider sx={{ my: 1 }} />
+        <MenuItem onClick={handleDeactivate} sx={{ '& svg': { mr: 2 }, color: 'error.main' }}>
+          <Icon icon='tabler:user-x' fontSize={20} />
+          Deactivate
         </MenuItem>
       </Menu>
     </>
@@ -169,63 +196,100 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
     page: 0,
     pageSize: DEFAULT_PAGE_SIZE
   })
-  const [studentState, setStudentState] = useState<ErrorState>({
-    loading: true,
-    error: null,
-    students: []
-  })
+  const [currentTab, setCurrentTab] = useState<StudentTabValue>('active')
   const [filteredStudents, setFilteredStudents] = useState<StudentListItem[]>([])
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false)
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null)
   const [selectedStudentData, setSelectedStudentData] = useState<StudentListItem | null>(null)
+  const [editGenerationOpen, setEditGenerationOpen] = useState<boolean>(false)
+  const [studentToEdit, setStudentToEdit] = useState<StudentListItem | null>(null)
+  const [newGeneration, setNewGeneration] = useState<string>('')
 
   // ** Hooks
   const dispatch = useDispatch()
   const store = useSelector((state: RootState) => state.user)
+  const auth = useAuth()
+  const professorId = auth.user?.userId
 
-  // ** Fetch students on component mount
+  // ** Fetch students on component mount and always refresh
   useEffect(() => {
-    const loadStudents = async () => {
-      setStudentState(prev => ({ ...prev, loading: true, error: null }))
+    // Always fetch fresh data on page access
+    dispatch(fetchData() as any)
 
-      try {
-        const students = await fetchActiveStudents()
-        setStudentState({
-          loading: false,
-          error: null,
-          students
-        })
+    // Fetch generations for filtering
+    if (professorId) {
+      dispatch(fetchProfessorGenerations(professorId) as any)
+    }
+  }, [dispatch, professorId])
 
-        // Preload photos in background
-        if (students.length > 0) {
-          preloadPhotos(students)
+  // ** Get current students based on tab
+  const currentStudents = currentTab === 'active' ? store.activeStudents : store.inactiveStudents
+  const currentLoading = currentTab === 'active' ? store.loading : store.inactiveLoading
+
+  // ** Transform raw data if needed and apply filters
+  useEffect(() => {
+    if (currentStudents && Array.isArray(currentStudents)) {
+      // Check if data needs transformation (has firstName/lastName fields)
+      const needsTransform = currentStudents.some((student: any) => student.firstName || student.lastName)
+      const studentsToFilter = needsTransform ? transformStudentData(currentStudents as any) : currentStudents
+
+      // Apply filters
+      const filtered = filterStudents(studentsToFilter, filters)
+      setFilteredStudents(filtered)
+    } else {
+      setFilteredStudents([])
+    }
+  }, [currentStudents, filters, currentLoading])
+
+  // ** Load photos for current page only (when pagination or filtered data changes)
+  useEffect(() => {
+    const loadPhotosForCurrentPage = async () => {
+      if (filteredStudents.length === 0 || currentLoading) return
+
+      // Calculate which students are on the current page
+      const startIndex = paginationModel.page * paginationModel.pageSize
+      const endIndex = startIndex + paginationModel.pageSize
+      const studentsOnPage = filteredStudents.slice(startIndex, endIndex)
+
+      // Load photos only for students on current page (like ACLPage does)
+      if (studentsOnPage.length > 0) {
+        try {
+          // studentsOnPage already has 'attributes' field preserved from transformation
+          // Pass studentsOnPage as both parameters - they already contain the needed data
+          const studentsWithPhotos = await processStudentPhotos(studentsOnPage, studentsOnPage as any)
+
+          // Update the filtered students with the loaded photos
+          setFilteredStudents(prev => {
+            return prev.map(student => {
+              const studentWithPhoto = studentsWithPhotos.find(s => s.studentUserId === student.studentUserId)
+              return studentWithPhoto || student
+            })
+          })
+        } catch (error) {
+          console.warn('Failed to load photos for current page:', error)
         }
-      } catch (error) {
-        console.error('Failed to load students:', error)
-        setStudentState({
-          loading: false,
-          error: 'Failed to load students',
-          students: []
-        })
       }
     }
 
-    loadStudents()
-  }, [])
+    loadPhotosForCurrentPage()
+  }, [paginationModel.page, paginationModel.pageSize, filteredStudents.length, currentLoading])
 
-  // ** Filter students when filters or student data changes
-  useEffect(() => {
-    const filtered = filterStudents(studentState.students, filters)
-    setFilteredStudents(filtered)
-  }, [studentState.students, filters])
+  // ** Handle tab change
+  const handleTabChange = (event: React.SyntheticEvent, newValue: StudentTabValue): void => {
+    setCurrentTab(newValue)
+
+    // Always fetch fresh inactive students (not cached)
+    if (newValue === 'inactive' && !store.inactiveLoading) {
+      dispatch(fetchInactiveStudents() as any)
+    }
+
+    // Reset pagination when changing tabs
+    setPaginationModel({ page: 0, pageSize: DEFAULT_PAGE_SIZE })
+  }
 
   // ** Event Handlers
   const handleFilter: SearchChangeHandler = useCallback((val: string) => {
     setFilters(prev => ({ ...prev, searchValue: val }))
-  }, [])
-
-  const handleRoleChange: FilterChangeHandler = useCallback(e => {
-    setFilters(prev => ({ ...prev, role: e.target.value }))
   }, [])
 
   const handlePricingChange: FilterChangeHandler = useCallback(e => {
@@ -235,6 +299,22 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
   const handleStatusChange: FilterChangeHandler = useCallback(e => {
     setFilters(prev => ({ ...prev, status: e.target.value }))
   }, [])
+
+  const handleGenerationChange: FilterChangeHandler = useCallback(
+    e => {
+      const generation = e.target.value
+      setFilters(prev => ({ ...prev, generation }))
+
+      // Fetch students by generation if a specific generation is selected
+      if (generation && generation !== '' && professorId) {
+        dispatch(fetchStudentsByGeneration({ professorId, generation }) as any)
+      } else {
+        // If "All Generations" is selected, fetch all students
+        dispatch(fetchData() as any)
+      }
+    },
+    [dispatch, professorId]
+  )
 
   const handlePaginationChange: PaginationChangeHandler = useCallback(model => {
     setPaginationModel(model)
@@ -246,15 +326,15 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
 
   const handleAvatarClick = useCallback(
     (studentUserId: string) => {
-      // Find the student data
-      const student = studentState.students.find(s => s.studentUserId === studentUserId)
+      // Find the student data from current tab
+      const student = filteredStudents.find(s => s.studentUserId === studentUserId)
       if (student) {
         setSelectedStudentId(studentUserId)
         setSelectedStudentData(student)
         setDrawerOpen(true)
       }
     },
-    [studentState.students]
+    [filteredStudents]
   )
 
   const handleDrawerClose = useCallback(() => {
@@ -263,10 +343,37 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
     setSelectedStudentData(null)
   }, [])
 
+  const handleEditGenerationOpen = useCallback((student: StudentListItem) => {
+    setStudentToEdit(student)
+    setNewGeneration(student.generation || '')
+    setEditGenerationOpen(true)
+  }, [])
+
+  const handleEditGenerationClose = useCallback(() => {
+    setEditGenerationOpen(false)
+    setStudentToEdit(null)
+    setNewGeneration('')
+  }, [])
+
+  const handleGenerationUpdate = useCallback(() => {
+    if (!studentToEdit || !professorId) return
+
+    dispatch(
+      updateStudentGeneration({
+        studentUserId: studentToEdit.studentUserId,
+        professorId: professorId,
+        generation: newGeneration,
+        validGeneration: true
+      }) as any
+    )
+
+    handleEditGenerationClose()
+  }, [studentToEdit, professorId, newGeneration, dispatch, handleEditGenerationClose])
+
   // ** Column Definitions
   const columns: StudentGridColumn[] = [
     {
-      flex: 0.25,
+      flex: 0.3,
       minWidth: COLUMN_WIDTHS.USER,
       field: 'fullName',
       headerName: 'Student',
@@ -299,19 +406,15 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
     },
     {
       flex: 0.15,
-      field: 'role',
-      minWidth: COLUMN_WIDTHS.ROLE,
-      headerName: 'Role',
+      minWidth: 120,
+      headerName: 'Generation',
+      field: 'generation',
       renderCell: ({ row }) => {
-        const roleConfig = userRoleObj[row.role] || userRoleObj.student
-
         return (
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <CustomAvatar skin='light' sx={{ mr: 4, width: 30, height: 30 }} color={roleConfig.color}>
-              <Icon icon={roleConfig.icon} />
-            </CustomAvatar>
-            <Typography noWrap sx={{ color: 'text.secondary', textTransform: 'capitalize' }}>
-              {row.role}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Icon icon='tabler:calendar' fontSize={20} />
+            <Typography noWrap sx={{ fontWeight: 500 }}>
+              {row.generation || 'Not set'}
             </Typography>
           </Box>
         )
@@ -326,47 +429,43 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
         const pricingDisplay = row.defaultPricePerSession ? `$${row.defaultPricePerSession}/session` : 'Not set'
 
         return (
-          <Typography
-            noWrap
-            sx={{
-              fontWeight: 500,
-              color: row.defaultPricePerSession ? 'text.primary' : 'text.disabled'
-            }}
-          >
-            {pricingDisplay}
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Icon
+              icon={row.defaultPricePerSession ? 'tabler:currency-dollar' : 'tabler:alert-circle'}
+              fontSize={20}
+              color={row.defaultPricePerSession ? 'inherit' : 'disabled'}
+            />
+            <Typography
+              noWrap
+              sx={{
+                fontWeight: 500,
+                color: row.defaultPricePerSession ? 'text.primary' : 'text.disabled'
+              }}
+            >
+              {pricingDisplay}
+            </Typography>
+          </Box>
         )
       }
     },
     {
       flex: 0.15,
-      minWidth: COLUMN_WIDTHS.BILLING,
-      field: 'billing',
-      headerName: 'Billing',
-      renderCell: ({ row }) => {
-        return (
-          <Typography noWrap sx={{ color: 'text.secondary' }}>
-            {row.billing}
-          </Typography>
-        )
-      }
-    },
-    {
-      flex: 0.1,
       minWidth: COLUMN_WIDTHS.STATUS,
       field: 'status',
       headerName: 'Status',
       renderCell: ({ row }) => {
-        const statusColor = userStatusObj[row.status] || 'secondary'
+        const isActive = row.status === 'active'
+        const statusColor = isActive ? 'success' : 'secondary'
+        const statusLabel = isActive ? 'Active' : row.status || 'Inactive'
 
         return (
           <CustomChip
             rounded
             skin='light'
             size='small'
-            label={row.status}
+            label={statusLabel}
             color={statusColor}
-            sx={{ textTransform: 'capitalize' }}
+            sx={{ textTransform: 'capitalize', fontWeight: 500 }}
           />
         )
       }
@@ -377,30 +476,109 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
       sortable: false,
       field: 'actions',
       headerName: 'Actions',
-      renderCell: ({ row }) => <RowOptions id={row.id} />
+      renderCell: ({ row }) => <RowOptions student={row} onEditGeneration={handleEditGenerationOpen} />
     }
   ]
 
+  // ** Calculate statistics
+  const totalActiveStudents = store.activeStudents.length
+  const studentsWithPricing = store.activeStudents.filter(s => s.defaultPricePerSession && s.defaultPricePerSession > 0).length
+
   return (
     <Grid container spacing={6.5}>
-      {/* Statistics Section - Preserved as requested */}
+      {/* Statistics Section - Student Metrics */}
       <Grid item xs={12}>
-        {apiData && (
-          <Grid container spacing={6}>
-            {apiData.statsHorizontalWithDetails.map((item, index) => {
-              return (
-                <Grid item xs={12} md={3} sm={6} key={index}>
-                  <CardStatsHorizontalWithDetails {...item} />
-                </Grid>
-              )
-            })}
+        <Grid container spacing={6}>
+          {/* Total Active Students */}
+          <Grid item xs={12} md={3} sm={6}>
+            <CardStatsHorizontalWithDetails
+              stats={totalActiveStudents.toString()}
+              title='Total Active Students'
+              icon={<Icon icon='tabler:users' />}
+              color='primary'
+            />
           </Grid>
-        )}
+
+          {/* Students with Pricing Set */}
+          <Grid item xs={12} md={3} sm={6}>
+            <CardStatsHorizontalWithDetails
+              stats={studentsWithPricing.toString()}
+              title='Students with Pricing'
+              icon={<Icon icon='tabler:currency-dollar' />}
+              color='success'
+            />
+          </Grid>
+
+          {/* Placeholder for Pending Payments - Will use API */}
+          <Grid item xs={12} md={3} sm={6}>
+            <CardStatsHorizontalWithDetails
+              stats='--'
+              title='Pending Payments'
+              subtitle='Coming Soon'
+              icon={<Icon icon='tabler:clock' />}
+              color='warning'
+            />
+          </Grid>
+
+          {/* Placeholder for Total Revenue - Will use API */}
+          <Grid item xs={12} md={3} sm={6}>
+            <CardStatsHorizontalWithDetails
+              stats='--'
+              title='Total Revenue'
+              subtitle='Coming Soon'
+              icon={<Icon icon='tabler:chart-line' />}
+              color='info'
+            />
+          </Grid>
+        </Grid>
       </Grid>
 
       {/* Main Content */}
       <Grid item xs={12}>
         <Card>
+          <TabContext value={currentTab}>
+            <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+              <TabList onChange={handleTabChange} aria-label='student status tabs'>
+                <Tab
+                  value='active'
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <Icon icon='tabler:user-check' />
+                      <span>Active Students</span>
+                      {store.activeStudents.length > 0 && (
+                        <CustomChip
+                          rounded
+                          size='small'
+                          skin='light'
+                          color='success'
+                          label={store.activeStudents.length}
+                        />
+                      )}
+                    </Box>
+                  }
+                />
+                <Tab
+                  value='inactive'
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <Icon icon='tabler:user-x' />
+                      <span>Inactive Students</span>
+                      {store.inactiveStudents.length > 0 && (
+                        <CustomChip
+                          rounded
+                          size='small'
+                          skin='light'
+                          color='secondary'
+                          label={store.inactiveStudents.length}
+                        />
+                      )}
+                    </Box>
+                  }
+                />
+              </TabList>
+            </Box>
+          </TabContext>
+
           <CardHeader title='Search Filters' />
           <CardContent>
             <Grid container spacing={6}>
@@ -408,16 +586,17 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
                 <CustomTextField
                   select
                   fullWidth
-                  label='Role'
+                  label='Generation'
                   SelectProps={{
-                    value: filters.role,
+                    value: filters.generation || '',
                     displayEmpty: true,
-                    onChange: handleRoleChange
+                    onChange: handleGenerationChange
                   }}
                 >
-                  {ROLE_OPTIONS.map(option => (
-                    <MenuItem key={option.value} value={option.value}>
-                      {option.label}
+                  <MenuItem value=''>All Generations</MenuItem>
+                  {store.generations?.map(gen => (
+                    <MenuItem key={gen} value={gen}>
+                      {gen}
                     </MenuItem>
                   ))}
                 </CustomTextField>
@@ -467,7 +646,7 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
             rowHeight={62}
             rows={filteredStudents}
             columns={columns}
-            loading={studentState.loading}
+            loading={currentLoading}
             disableRowSelectionOnClick
             pageSizeOptions={PAGE_SIZE_OPTIONS}
             paginationModel={paginationModel}
@@ -482,6 +661,40 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
       {selectedStudentId && (
         <UserViewDrawer open={drawerOpen} onClose={handleDrawerClose} userId={selectedStudentId} tab='account' />
       )}
+
+      {/* Edit Generation Dialog */}
+      <Dialog open={editGenerationOpen} onClose={handleEditGenerationClose} maxWidth='sm' fullWidth>
+        <DialogTitle>Edit Student Generation</DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 2 }}>
+            <Typography variant='body2' sx={{ mb: 4 }}>
+              Update the generation for <strong>{studentToEdit?.studentName}</strong>
+            </Typography>
+            <CustomTextField
+              select
+              fullWidth
+              label='Generation'
+              value={newGeneration}
+              onChange={e => setNewGeneration(e.target.value)}
+            >
+              <MenuItem value=''>None</MenuItem>
+              {store.generations?.map((gen: string) => (
+                <MenuItem key={gen} value={gen}>
+                  {gen}
+                </MenuItem>
+              ))}
+            </CustomTextField>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleEditGenerationClose} color='secondary'>
+            Cancel
+          </Button>
+          <Button onClick={handleGenerationUpdate} variant='contained' disabled={!newGeneration}>
+            Update
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Toast Notifications */}
       <Toaster />

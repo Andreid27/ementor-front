@@ -9,13 +9,13 @@ Name | Type | Description | Notes
 **creation** | **string** |  | [optional] [default to undefined]
 **expires** | **string** |  | [optional] [default to undefined]
 **modified** | **string** |  | [optional] [default to undefined]
-**userId** | **string** |  | [optional] [default to undefined]
 **picture** | [**ProfilePicture**](ProfilePicture.md) |  | [optional] [default to undefined]
 **address** | [**Address**](Address.md) |  | [optional] [default to undefined]
 **university** | [**University**](University.md) |  | [optional] [default to undefined]
 **speciality** | [**Speciality**](Speciality.md) |  | [optional] [default to undefined]
 **fullName** | **string** |  | [optional] [default to undefined]
 **about** | **string** |  | [optional] [default to undefined]
+**invitationCode** | **string** |  | [optional] [default to undefined]
 **bankAccounts** | [**Array&lt;BankAccount&gt;**](BankAccount.md) |  | [optional] [default to undefined]
 **platformIntegration** | [**Array&lt;ProfessorPlatformIntegration&gt;**](ProfessorPlatformIntegration.md) |  | [optional] [default to undefined]
 
@@ -29,13 +29,13 @@ const instance: ProfessorProfile = {
     creation,
     expires,
     modified,
-    userId,
     picture,
     address,
     university,
     speciality,
     fullName,
     about,
+    invitationCode,
     bankAccounts,
     platformIntegration,
 };

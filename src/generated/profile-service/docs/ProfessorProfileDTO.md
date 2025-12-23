@@ -15,6 +15,7 @@ Name | Type | Description | Notes
 **specialityValue** | **string** |  | [optional] [default to undefined]
 **fullName** | **string** |  | [optional] [default to undefined]
 **about** | **string** |  | [optional] [default to undefined]
+**invitationCode** | **string** |  | [optional] [default to undefined]
 **address** | [**AddressDTO**](AddressDTO.md) |  | [optional] [default to undefined]
 **bankAccounts** | [**Array&lt;BankAccountDTO&gt;**](BankAccountDTO.md) |  | [optional] [default to undefined]
 
@@ -34,6 +35,7 @@ const instance: ProfessorProfileDTO = {
     specialityValue,
     fullName,
     about,
+    invitationCode,
     address,
     bankAccounts,
 };

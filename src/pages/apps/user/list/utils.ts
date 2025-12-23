@@ -32,21 +32,28 @@ export const userStatusObj: UserStatusObj = {
 export const transformStudentData: StudentDataTransformer = (
   relationships: StudentProfessorRelationshipDTO[]
 ): StudentListItem[] => {
-  return relationships.map((rel, index) => ({
-    id: rel.id || `student-${index}`,
-    studentUserId: rel.studentUserId || '',
-    studentName: rel.studentName || 'Unknown Student',
-    email: '', // Will be populated from profile data if needed
-    avatar: '', // Will be loaded using profile picture extraction
-    role: 'student',
-    pricing: rel.defaultPricePerSession ? `$${rel.defaultPricePerSession}/session` : 'Not set',
-    billing: 'Per Session', // Default billing type
-    status: rel.status || 'active',
-    defaultPricePerSession: rel.defaultPricePerSession,
-    createdAt: rel.createdAt || new Date().toISOString(),
-    avatarColor: getRandomAvatarColor(),
-    fullName: rel.studentName || 'Unknown Student' // For compatibility
-  }))
+  return relationships.map((rel, index) => {
+    const firstName = rel.firstName || ''
+    const lastName = rel.lastName || ''
+    const fullName = [firstName, lastName].filter(Boolean).join(' ') || 'Unknown Student'
+
+    return {
+      id: rel.id || `student-${index}`,
+      studentUserId: rel.studentId || '',
+      studentName: fullName,
+      email: rel.email || '',
+      avatar: '', // Will be loaded using profile picture extraction
+      role: 'student',
+      pricing: rel.defaultPricePerSession ? `$${rel.defaultPricePerSession}/session` : 'Not set',
+      billing: 'Per Session', // Default billing type
+      status: rel.status || 'active',
+      defaultPricePerSession: rel.defaultPricePerSession,
+      createdAt: new Date().toISOString(),
+      avatarColor: getRandomAvatarColor(),
+      fullName, // For compatibility
+      attributes: rel.attributes // Preserve attributes for profile picture extraction
+    }
+  })
 }
 
 // ** Generate random avatar color
@@ -103,18 +110,12 @@ export const handleBatchPhotoError = (failedCount: number, totalCount: number, t
 export const filterStudents = (
   students: StudentListItem[],
   filters: {
-    role: string
     pricing: string
     status: string
     searchValue: string
   }
 ): StudentListItem[] => {
   return students.filter(student => {
-    // Role filter
-    if (filters.role && student.role !== filters.role) {
-      return false
-    }
-
     // Status filter
     if (filters.status && student.status !== filters.status) {
       return false

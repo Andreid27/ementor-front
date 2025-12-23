@@ -25,6 +25,7 @@ import { BankTransferPaymentDTO, BankTransferPaymentDTOStatusEnum } from 'src/ge
 import { profileServiceClient } from 'src/services'
 import profilePictureDownloader from 'src/@core/axios/profile-picture-downloader'
 import extractProfilePicture from 'src/@core/axios/profile-picture-extractor'
+import { photoCacheService } from 'src/@core/services/photo-cache-service-instance'
 import PaymentDetailCard from './PaymentDetailCard'
 
 // Define a user interface that matches the actual user data structure
@@ -149,11 +150,14 @@ const PaymentConfirmationHistory = forwardRef<PaymentConfirmationHistoryRef, Pay
       const result = await Promise.all(
         processedUsersList.map(async profilePicture => {
           if (profilePicture.type === 'API') {
-            const avatar = await profilePictureDownloader(profilePicture.url, profilePicture.userId)
-
+            // Use PhotoCacheService for API-based profile pictures
+            const avatar = await photoCacheService.getPhoto('API', profilePicture.url, profilePicture.userId)
             return { ...profilePicture, avatar: avatar || null }
           } else if (profilePicture.type === 'EXTERNAL') {
-            return { ...profilePicture, avatar: profilePicture.url }
+            // Use PhotoCacheService for EXTERNAL photos (Google photos)
+            // Rate limiting prevents 429 errors, blob caching improves subsequent loads
+            const avatar = await photoCacheService.getPhoto('EXTERNAL', profilePicture.url, profilePicture.userId)
+            return { ...profilePicture, avatar }
           } else {
             return { ...profilePicture, avatar: null }
           }

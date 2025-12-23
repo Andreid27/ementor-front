@@ -1,6 +1,6 @@
 # ThumbnailControllerApi
 
-All URIs are relative to *https://api.e-mentor.ro//service2*
+All URIs are relative to *http://localhost:49202*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
