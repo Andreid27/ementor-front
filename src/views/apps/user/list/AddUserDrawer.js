@@ -1,5 +1,5 @@
 // ** React Imports
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 
 // ** MUI Imports
 import Drawer from '@mui/material/Drawer'
@@ -9,6 +9,7 @@ import IconButton from '@mui/material/IconButton'
 import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
 import CircularProgress from '@mui/material/CircularProgress'
+import MenuItem from '@mui/material/MenuItem'
 
 // ** Custom Component Import
 import CustomTextField from 'src/@core/components/mui/text-field'
@@ -22,10 +23,13 @@ import { useForm, Controller } from 'react-hook-form'
 import Icon from 'src/@core/components/icon'
 
 // ** Store Imports
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 
 // ** Actions Imports
 import { addStudentByEmail } from 'src/store/apps/user'
+
+// ** Utils
+import { generateSchoolYearOptions } from 'src/pages/apps/user/list/utils'
 
 // ** Toast
 import toast from 'react-hot-toast'
@@ -45,7 +49,13 @@ const schema = yup.object().shape({
     .min(0, 'Price cannot be negative')
     .nullable()
     .transform((value, originalValue) => (originalValue === '' ? null : value)),
-  generation: yup.string().nullable()
+  generation: yup
+    .string()
+    .nullable()
+    .test('valid-format', 'Generation must be in YYYY-YYYY format (e.g., 2024-2025)', value => {
+      if (!value) return true // Allow empty
+      return /^\d{4}-\d{4}$/.test(value)
+    })
 })
 
 const defaultValues = {
@@ -60,9 +70,14 @@ const AddUserDrawer = props => {
 
   // ** State
   const [loading, setLoading] = useState(false)
+  const [isCustomGeneration, setIsCustomGeneration] = useState(false)
 
   // ** Hooks
   const dispatch = useDispatch()
+  const store = useSelector(state => state.user)
+
+  // ** Generate school year options
+  const schoolYearOptions = useMemo(() => generateSchoolYearOptions(), [])
 
   const {
     reset,
@@ -114,6 +129,7 @@ const AddUserDrawer = props => {
 
   const handleClose = () => {
     reset()
+    setIsCustomGeneration(false)
     toggle()
   }
 
@@ -190,17 +206,80 @@ const AddUserDrawer = props => {
             name='generation'
             control={control}
             render={({ field: { value, onChange } }) => (
-              <CustomTextField
-                fullWidth
-                label='Generation'
-                value={value}
-                sx={{ mb: 6 }}
-                onChange={onChange}
-                error={Boolean(errors.generation)}
-                placeholder='e.g., 2024-2025'
-                helperText={errors.generation?.message || 'Optional: Academic year generation'}
-                disabled={loading}
-              />
+              <>
+                {!isCustomGeneration ? (
+                  <CustomTextField
+                    select
+                    fullWidth
+                    label='Generation'
+                    value={value}
+                    sx={{ mb: 4 }}
+                    onChange={e => {
+                      if (e.target.value === 'custom') {
+                        setIsCustomGeneration(true)
+                        onChange('')
+                      } else {
+                        onChange(e.target.value)
+                      }
+                    }}
+                    error={Boolean(errors.generation)}
+                    helperText={errors.generation?.message || 'Optional: Select academic year generation'}
+                    disabled={loading}
+                  >
+                    <MenuItem value=''>None</MenuItem>
+                    {schoolYearOptions.map(year => (
+                      <MenuItem key={year} value={year}>
+                        {year}
+                      </MenuItem>
+                    ))}
+                    <MenuItem value='custom' sx={{ fontStyle: 'italic', color: 'primary.main' }}>
+                      Custom Year Range...
+                    </MenuItem>
+                  </CustomTextField>
+                ) : (
+                  <Box sx={{ mb: 4 }}>
+                    <CustomTextField
+                      fullWidth
+                      label='Custom Generation'
+                      value={value}
+                      onChange={e => {
+                        let input = e.target.value
+                        // Remove any non-digit characters except hyphen
+                        input = input.replace(/[^\d-]/g, '')
+
+                        // Auto-format: when user types 4 digits, add hyphen
+                        if (input.length === 4 && !input.includes('-')) {
+                          input = input + '-'
+                        }
+
+                        // Limit to YYYY-YYYY format (9 characters max)
+                        if (input.length <= 9) {
+                          onChange(input)
+                        }
+                      }}
+                      error={Boolean(errors.generation)}
+                      placeholder='YYYY-YYYY (e.g., 2025-2027)'
+                      helperText={
+                        errors.generation?.message ||
+                        'Enter start year, hyphen will be added automatically'
+                      }
+                      disabled={loading}
+                      inputProps={{ maxLength: 9 }}
+                    />
+                    <Button
+                      size='small'
+                      variant='text'
+                      onClick={() => {
+                        setIsCustomGeneration(false)
+                        onChange('')
+                      }}
+                      sx={{ mt: 1 }}
+                    >
+                      Back to standard options
+                    </Button>
+                  </Box>
+                )}
+              </>
             )}
           />
           <Box sx={{ display: 'flex', alignItems: 'center' }}>

@@ -1,5 +1,5 @@
 // Profile Service API Wrapper - Integrates generated APIs with custom axios interceptor
-import { Configuration } from './profile-service/configuration'
+import { Configuration } from './profile-service-client/configuration'
 import {
   BankAccountControllerApi,
   EventsControllerApi,
@@ -14,7 +14,7 @@ import {
   PaymentControllerApi,
   InvoiceControllerApi,
   WalletControllerApi
-} from './profile-service/api'
+} from './profile-service-client/api'
 
 // Import our custom axios instance
 // @ts-ignore - Suppress TS error for JS import
@@ -143,7 +143,7 @@ export {
 }
 
 // Export types
-export * from './profile-service'
+export * from './profile-service-client'
 
 // Default export
 export default profileServiceClient

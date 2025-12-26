@@ -1,5 +1,5 @@
 // ** React Imports
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 
 // ** Next Imports
 import Link from 'next/link'
@@ -40,13 +40,13 @@ import CardStatsHorizontalWithDetails from 'src/@core/components/card-statistics
 
 // ** Utils Import
 import { getInitials } from 'src/@core/utils/get-initials'
+import { generateSchoolYearOptions } from './utils'
 
 // ** Actions Imports
 import {
   fetchData,
   fetchInactiveStudents,
   deleteUser,
-  fetchProfessorGenerations,
   fetchStudentsByGeneration,
   deactivateStudentRelationship,
   updateStudentGeneration
@@ -83,22 +83,11 @@ import {
 
 import { userRoleObj, userStatusObj, filterStudents, transformStudentData } from './utils'
 
-import {
-  DEFAULT_FILTERS,
-  DEFAULT_PAGE_SIZE,
-  PAGE_SIZE_OPTIONS,
-  ROLE_OPTIONS,
-  STATUS_OPTIONS,
-  PRICING_OPTIONS,
-  COLUMN_WIDTHS
-} from './constants'
+import { DEFAULT_FILTERS, DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS, COLUMN_WIDTHS } from './constants'
 
 // ** Photo Service
 import { processStudentPhotos } from './services/photoService'
 import EmentorAvatar from 'src/@core/components/ementor-avatar'
-
-// ** Auth Hook
-import { useAuth } from 'src/hooks/useAuth'
 
 // ** renders client column with photo loading
 const renderClient = (row: StudentListItem, onAvatarClick?: (studentId: string) => void): JSX.Element => {
@@ -109,13 +98,10 @@ const renderClient = (row: StudentListItem, onAvatarClick?: (studentId: string) 
 interface RowOptionsProps {
   student: StudentListItem
   onEditGeneration: (student: StudentListItem) => void
+  onDeactivate: (student: StudentListItem) => void
 }
 
-const RowOptions: React.FC<RowOptionsProps> = ({ student, onEditGeneration }) => {
-  // ** Hooks
-  const dispatch = useDispatch()
-  const auth = useAuth()
-
+const RowOptions: React.FC<RowOptionsProps> = ({ student, onEditGeneration, onDeactivate }) => {
   // ** State
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const rowOptionsOpen = Boolean(anchorEl)
@@ -129,14 +115,7 @@ const RowOptions: React.FC<RowOptionsProps> = ({ student, onEditGeneration }) =>
   }
 
   const handleDeactivate = (): void => {
-    if (window.confirm(`Are you sure you want to deactivate ${student.studentName}?`)) {
-      dispatch(
-        deactivateStudentRelationship({
-          studentUserId: student.studentUserId,
-          professorId: auth.user?.userId || student.professorId || ''
-        }) as any
-      )
-    }
+    onDeactivate(student)
     handleRowOptionsClose()
   }
 
@@ -204,27 +183,46 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
   const [editGenerationOpen, setEditGenerationOpen] = useState<boolean>(false)
   const [studentToEdit, setStudentToEdit] = useState<StudentListItem | null>(null)
   const [newGeneration, setNewGeneration] = useState<string>('')
+  const [isCustomGenerationEdit, setIsCustomGenerationEdit] = useState<boolean>(false)
+  const [isUpdatingGeneration, setIsUpdatingGeneration] = useState<boolean>(false)
+  const [deactivateDialogOpen, setDeactivateDialogOpen] = useState<boolean>(false)
+  const [studentToDeactivate, setStudentToDeactivate] = useState<StudentListItem | null>(null)
+  const [dateFilter, setDateFilter] = useState<string>('')
 
   // ** Hooks
   const dispatch = useDispatch()
   const store = useSelector((state: RootState) => state.user)
-  const auth = useAuth()
-  const professorId = auth.user?.userId
+  const professorId = store.data?.id
+
+  // ** Generate school year options
+  const schoolYearOptions = useMemo(() => generateSchoolYearOptions(), [])
 
   // ** Fetch students on component mount and always refresh
   useEffect(() => {
     // Always fetch fresh data on page access
     dispatch(fetchData() as any)
-
-    // Fetch generations for filtering
-    if (professorId) {
-      dispatch(fetchProfessorGenerations(professorId) as any)
-    }
-  }, [dispatch, professorId])
+  }, [dispatch])
 
   // ** Get current students based on tab
   const currentStudents = currentTab === 'active' ? store.activeStudents : store.inactiveStudents
   const currentLoading = currentTab === 'active' ? store.loading : store.inactiveLoading
+
+  // ** Extract unique filter options from dataset
+  const uniqueGenerations = useMemo(() => {
+    if (!currentStudents || currentStudents.length === 0) return []
+    const generations = currentStudents
+      .map((s: any) => s.generation)
+      .filter((gen): gen is string => Boolean(gen))
+    return Array.from(new Set(generations)).sort()
+  }, [currentStudents])
+
+  const uniquePricingRanges = useMemo(() => {
+    if (!currentStudents || currentStudents.length === 0) return []
+    const pricings = currentStudents
+      .map((s: any) => s.pricing)
+      .filter((pricing): pricing is string => Boolean(pricing))
+    return Array.from(new Set(pricings)).sort()
+  }, [currentStudents])
 
   // ** Transform raw data if needed and apply filters
   useEffect(() => {
@@ -241,7 +239,9 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
     }
   }, [currentStudents, filters, currentLoading])
 
-  // ** Load photos for current page only (when pagination or filtered data changes)
+  // ** Load photos for current page only (when pagination changes)
+  // Note: We intentionally omit filteredStudents from dependencies to avoid infinite loops
+  // The effect runs when page/pageSize changes or when currentStudents change (via currentLoading)
   useEffect(() => {
     const loadPhotosForCurrentPage = async () => {
       if (filteredStudents.length === 0 || currentLoading) return
@@ -261,7 +261,7 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
           // Update the filtered students with the loaded photos
           setFilteredStudents(prev => {
             return prev.map(student => {
-              const studentWithPhoto = studentsWithPhotos.find(s => s.studentUserId === student.studentUserId)
+              const studentWithPhoto = studentsWithPhotos.find(s => s.id === student.id)
               return studentWithPhoto || student
             })
           })
@@ -272,19 +272,29 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
     }
 
     loadPhotosForCurrentPage()
-  }, [paginationModel.page, paginationModel.pageSize, filteredStudents.length, currentLoading])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paginationModel.page, paginationModel.pageSize, currentLoading])
 
   // ** Handle tab change
   const handleTabChange = (event: React.SyntheticEvent, newValue: StudentTabValue): void => {
     setCurrentTab(newValue)
 
-    // Always fetch fresh inactive students (not cached)
-    if (newValue === 'inactive' && !store.inactiveLoading) {
-      dispatch(fetchInactiveStudents() as any)
-    }
-
     // Reset pagination when changing tabs
     setPaginationModel({ page: 0, pageSize: DEFAULT_PAGE_SIZE })
+
+    // Always fetch fresh inactive students with server-side pagination
+    if (newValue === 'inactive' && !store.inactiveLoading && professorId) {
+      dispatch(
+        fetchInactiveStudents({
+          professorId,
+          params: {
+            page: 0,
+            size: DEFAULT_PAGE_SIZE,
+            generation: filters.generation || undefined
+          }
+        }) as any
+      )
+    }
   }
 
   // ** Event Handlers
@@ -296,29 +306,57 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
     setFilters(prev => ({ ...prev, pricing: e.target.value }))
   }, [])
 
-  const handleStatusChange: FilterChangeHandler = useCallback(e => {
-    setFilters(prev => ({ ...prev, status: e.target.value }))
-  }, [])
-
   const handleGenerationChange: FilterChangeHandler = useCallback(
     e => {
       const generation = e.target.value
       setFilters(prev => ({ ...prev, generation }))
 
-      // Fetch students by generation if a specific generation is selected
-      if (generation && generation !== '' && professorId) {
-        dispatch(fetchStudentsByGeneration({ professorId, generation }) as any)
-      } else {
-        // If "All Generations" is selected, fetch all students
-        dispatch(fetchData() as any)
+      if (currentTab === 'active') {
+        // Active tab: use existing logic
+        if (generation && generation !== '' && professorId) {
+          dispatch(fetchStudentsByGeneration({ professorId, generation }) as any)
+        } else {
+          dispatch(fetchData() as any)
+        }
+      } else if (currentTab === 'inactive' && professorId) {
+        // Inactive tab: fetch with server-side filtering
+        dispatch(
+          fetchInactiveStudents({
+            professorId,
+            params: {
+              page: 0,
+              size: paginationModel.pageSize,
+              generation: generation || undefined
+            }
+          }) as any
+        )
+        // Reset to first page when filtering
+        setPaginationModel(prev => ({ ...prev, page: 0 }))
       }
     },
-    [dispatch, professorId]
+    [dispatch, professorId, currentTab, paginationModel.pageSize]
   )
 
-  const handlePaginationChange: PaginationChangeHandler = useCallback(model => {
-    setPaginationModel(model)
-  }, [])
+  const handlePaginationChange: PaginationChangeHandler = useCallback(
+    model => {
+      setPaginationModel(model)
+
+      // For inactive tab, fetch new page from server
+      if (currentTab === 'inactive' && professorId) {
+        dispatch(
+          fetchInactiveStudents({
+            professorId,
+            params: {
+              page: model.page,
+              size: model.pageSize,
+              generation: filters.generation || undefined
+            }
+          }) as any
+        )
+      }
+    },
+    [currentTab, professorId, dispatch, filters.generation]
+  )
 
   const toggleAddUserDrawer = (): void => {
     setAddUserOpen(!addUserOpen)
@@ -327,9 +365,10 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
   const handleAvatarClick = useCallback(
     (studentUserId: string) => {
       // Find the student data from current tab
-      const student = filteredStudents.find(s => s.studentUserId === studentUserId)
+      const student = filteredStudents.find(s => s.id === studentUserId)
+
       if (student) {
-        setSelectedStudentId(studentUserId)
+        setSelectedStudentId(student.id)
         setSelectedStudentData(student)
         setDrawerOpen(true)
       }
@@ -353,22 +392,126 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
     setEditGenerationOpen(false)
     setStudentToEdit(null)
     setNewGeneration('')
+    setIsCustomGenerationEdit(false)
+    setIsUpdatingGeneration(false)
   }, [])
 
-  const handleGenerationUpdate = useCallback(() => {
-    if (!studentToEdit || !professorId) return
+  const handleDeactivateOpen = useCallback((student: StudentListItem) => {
+    setStudentToDeactivate(student)
+    setDeactivateDialogOpen(true)
+  }, [])
+
+  const handleDeactivateClose = useCallback(() => {
+    setDeactivateDialogOpen(false)
+    setStudentToDeactivate(null)
+  }, [])
+
+  const handleDeactivateConfirm = useCallback(() => {
+    if (!studentToDeactivate || !professorId) return
+
+    const effectiveProfessorId = professorId || studentToDeactivate.professorId || ''
 
     dispatch(
-      updateStudentGeneration({
-        studentUserId: studentToEdit.studentUserId,
-        professorId: professorId,
-        generation: newGeneration,
-        validGeneration: true
+      deactivateStudentRelationship({
+        studentUserId: studentToDeactivate.studentUserId,
+        professorId: effectiveProfessorId
       }) as any
     )
 
-    handleEditGenerationClose()
-  }, [studentToEdit, professorId, newGeneration, dispatch, handleEditGenerationClose])
+    handleDeactivateClose()
+  }, [studentToDeactivate, professorId, dispatch, handleDeactivateClose])
+
+  const handleDateFilterChange: FilterChangeHandler = useCallback(
+    e => {
+      const value = e.target.value
+      setDateFilter(value)
+
+      if (currentTab === 'inactive' && professorId) {
+        let modifiedAfter: string | undefined
+
+        if (value === 'last30days') {
+          const date = new Date()
+          date.setDate(date.getDate() - 30)
+          modifiedAfter = date.toISOString()
+        } else if (value === 'last90days') {
+          const date = new Date()
+          date.setDate(date.getDate() - 90)
+          modifiedAfter = date.toISOString()
+        } else if (value === 'last6months') {
+          const date = new Date()
+          date.setMonth(date.getMonth() - 6)
+          modifiedAfter = date.toISOString()
+        }
+
+        dispatch(
+          fetchInactiveStudents({
+            professorId,
+            params: {
+              page: 0,
+              size: paginationModel.pageSize,
+              generation: filters.generation || undefined,
+              modifiedAfter
+            }
+          }) as any
+        )
+        setPaginationModel(prev => ({ ...prev, page: 0 }))
+      }
+    },
+    [currentTab, professorId, dispatch, paginationModel.pageSize, filters.generation]
+  )
+
+  const handleGenerationUpdate = useCallback(async () => {
+    // Use professorId from Redux store.data.id (current logged-in professor)
+    const effectiveProfessorId = professorId || studentToEdit?.professorId
+
+    if (!studentToEdit || !effectiveProfessorId) {
+      console.error('Missing required data for generation update:', {
+        studentToEdit,
+        professorId,
+        effectiveProfessorId,
+        storeData: store.data
+      })
+      return
+    }
+
+    if (!newGeneration) {
+      console.error('No generation value provided')
+      return
+    }
+
+    // Validate generation format if custom generation is provided
+    if (newGeneration && !/^\d{4}-\d{4}$/.test(newGeneration)) {
+      console.error('Invalid generation format:', newGeneration)
+      return
+    }
+
+    setIsUpdatingGeneration(true)
+
+    try {
+      console.log('Updating generation with data:', {
+        studentUserId: studentToEdit.studentUserId,
+        professorId: effectiveProfessorId,
+        generation: newGeneration,
+        validGeneration: true
+      })
+
+      await dispatch(
+        updateStudentGeneration({
+          studentUserId: studentToEdit.studentUserId,
+          professorId: effectiveProfessorId,
+          generation: newGeneration,
+          validGeneration: true
+        }) as any
+      ).unwrap()
+
+      console.log('Generation updated successfully')
+      handleEditGenerationClose()
+    } catch (error) {
+      console.error('Failed to update generation:', error)
+      // Error toast is already shown by the Redux action
+      setIsUpdatingGeneration(false)
+    }
+  }, [studentToEdit, professorId, newGeneration, dispatch, handleEditGenerationClose, store.data])
 
   // ** Column Definitions
   const columns: StudentGridColumn[] = [
@@ -449,24 +592,32 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
       }
     },
     {
-      flex: 0.15,
-      minWidth: COLUMN_WIDTHS.STATUS,
-      field: 'status',
-      headerName: 'Status',
+      flex: 0.12,
+      minWidth: 110,
+      headerName: 'Balance',
+      field: 'walletBalance',
       renderCell: ({ row }) => {
-        const isActive = row.status === 'active'
-        const statusColor = isActive ? 'success' : 'secondary'
-        const statusLabel = isActive ? 'Active' : row.status || 'Inactive'
+        const balance = row.walletBalance ?? 0
+        const isNegative = balance < 0
+        const isPositive = balance > 0
 
         return (
-          <CustomChip
-            rounded
-            skin='light'
-            size='small'
-            label={statusLabel}
-            color={statusColor}
-            sx={{ textTransform: 'capitalize', fontWeight: 500 }}
-          />
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Icon
+              icon={isNegative ? 'tabler:arrow-down' : isPositive ? 'tabler:arrow-up' : 'tabler:minus'}
+              fontSize={20}
+              color={isNegative ? 'error' : isPositive ? 'success' : 'disabled'}
+            />
+            <Typography
+              noWrap
+              sx={{
+                fontWeight: 500,
+                color: isNegative ? 'error.main' : isPositive ? 'success.main' : 'text.secondary'
+              }}
+            >
+              {Math.abs(balance).toFixed(2)} RON
+            </Typography>
+          </Box>
         )
       }
     },
@@ -476,13 +627,53 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
       sortable: false,
       field: 'actions',
       headerName: 'Actions',
-      renderCell: ({ row }) => <RowOptions student={row} onEditGeneration={handleEditGenerationOpen} />
+      renderCell: ({ row }) => (
+        <RowOptions student={row} onEditGeneration={handleEditGenerationOpen} onDeactivate={handleDeactivateOpen} />
+      )
     }
   ]
 
   // ** Calculate statistics
   const totalActiveStudents = store.activeStudents.length
   const studentsWithPricing = store.activeStudents.filter(s => s.defaultPricePerSession && s.defaultPricePerSession > 0).length
+
+  // Calculate percentage of students with pricing
+  const pricingPercentage = totalActiveStudents > 0
+    ? Math.round((studentsWithPricing / totalActiveStudents) * 100)
+    : 0
+
+  // Calculate total debt (sum of negative balances)
+  const totalDebt = store.activeStudents.reduce((sum, student) => {
+    const balance = student.walletBalance ?? 0
+    return balance < 0 ? sum + Math.abs(balance) : sum
+  }, 0)
+
+  // Calculate number of students in debt
+  const studentsInDebt = store.activeStudents.filter(s => (s.walletBalance ?? 0) < 0).length
+  const debtPercentage = totalActiveStudents > 0
+    ? Math.round((studentsInDebt / totalActiveStudents) * 100)
+    : 0
+
+  // ** Calculate students in current generation
+  const studentsInCurrentGeneration = useMemo(() => {
+    // If a generation filter is selected, count students matching that generation
+    if (filters.generation) {
+      return store.activeStudents.filter(s => s.generation === filters.generation).length
+    }
+
+    // Otherwise, count students in the current school year (first option in dropdown)
+    const currentSchoolYear = schoolYearOptions[0]
+    if (currentSchoolYear) {
+      return store.activeStudents.filter(s => s.generation === currentSchoolYear).length
+    }
+
+    return 0
+  }, [store.activeStudents, filters.generation, schoolYearOptions])
+
+  // Calculate percentage of students in current generation
+  const generationPercentage = totalActiveStudents > 0
+    ? Math.round((studentsInCurrentGeneration / totalActiveStudents) * 100)
+    : 0
 
   return (
     <Grid container spacing={6.5}>
@@ -494,8 +685,11 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
             <CardStatsHorizontalWithDetails
               stats={totalActiveStudents.toString()}
               title='Total Active Students'
-              icon={<Icon icon='tabler:users' />}
-              color='primary'
+              icon='tabler:users'
+              avatarColor='primary'
+              trendDiff={100}
+              trend='positive'
+              subtitle='All active students'
             />
           </Grid>
 
@@ -504,30 +698,37 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
             <CardStatsHorizontalWithDetails
               stats={studentsWithPricing.toString()}
               title='Students with Pricing'
-              icon={<Icon icon='tabler:currency-dollar' />}
-              color='success'
+              icon='tabler:currency-dollar'
+              avatarColor='success'
+              trendDiff={pricingPercentage}
+              trend='positive'
+              subtitle={`${pricingPercentage}% of total students`}
             />
           </Grid>
 
-          {/* Placeholder for Pending Payments - Will use API */}
+          {/* Total Student Debt */}
           <Grid item xs={12} md={3} sm={6}>
             <CardStatsHorizontalWithDetails
-              stats='--'
-              title='Pending Payments'
-              subtitle='Coming Soon'
-              icon={<Icon icon='tabler:clock' />}
-              color='warning'
+              stats={`${totalDebt.toFixed(2)} RON`}
+              title='Total Student Debt'
+              icon='tabler:alert-circle'
+              avatarColor='error'
+              trendDiff={debtPercentage}
+              trend='negative'
+              subtitle={`${studentsInDebt} students in debt`}
             />
           </Grid>
 
-          {/* Placeholder for Total Revenue - Will use API */}
+          {/* Students in Current Generation */}
           <Grid item xs={12} md={3} sm={6}>
             <CardStatsHorizontalWithDetails
-              stats='--'
-              title='Total Revenue'
-              subtitle='Coming Soon'
-              icon={<Icon icon='tabler:chart-line' />}
-              color='info'
+              stats={studentsInCurrentGeneration.toString()}
+              title='Students in Current Generation'
+              subtitle={filters.generation || schoolYearOptions[0] || 'N/A'}
+              icon='tabler:school'
+              avatarColor='info'
+              trendDiff={generationPercentage}
+              trend='positive'
             />
           </Grid>
         </Grid>
@@ -563,13 +764,13 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                       <Icon icon='tabler:user-x' />
                       <span>Inactive Students</span>
-                      {store.inactiveStudents.length > 0 && (
+                      {store.inactiveTotalElements > 0 && (
                         <CustomChip
                           rounded
                           size='small'
                           skin='light'
                           color='secondary'
-                          label={store.inactiveStudents.length}
+                          label={store.inactiveTotalElements}
                         />
                       )}
                     </Box>
@@ -582,7 +783,7 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
           <CardHeader title='Search Filters' />
           <CardContent>
             <Grid container spacing={6}>
-              <Grid item sm={4} xs={12}>
+              <Grid item sm={currentTab === 'inactive' ? 4 : 6} xs={12}>
                 <CustomTextField
                   select
                   fullWidth
@@ -594,14 +795,33 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
                   }}
                 >
                   <MenuItem value=''>All Generations</MenuItem>
-                  {store.generations?.map(gen => (
+                  {uniqueGenerations.map(gen => (
                     <MenuItem key={gen} value={gen}>
                       {gen}
                     </MenuItem>
                   ))}
                 </CustomTextField>
               </Grid>
-              <Grid item sm={4} xs={12}>
+              {currentTab === 'inactive' && (
+                <Grid item sm={4} xs={12}>
+                  <CustomTextField
+                    select
+                    fullWidth
+                    label='Deactivated'
+                    SelectProps={{
+                      value: dateFilter,
+                      displayEmpty: true,
+                      onChange: handleDateFilterChange
+                    }}
+                  >
+                    <MenuItem value=''>All Time</MenuItem>
+                    <MenuItem value='last30days'>Last 30 Days</MenuItem>
+                    <MenuItem value='last90days'>Last 90 Days</MenuItem>
+                    <MenuItem value='last6months'>Last 6 Months</MenuItem>
+                  </CustomTextField>
+                </Grid>
+              )}
+              <Grid item sm={currentTab === 'inactive' ? 4 : 6} xs={12}>
                 <CustomTextField
                   select
                   fullWidth
@@ -612,27 +832,10 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
                     onChange: handlePricingChange
                   }}
                 >
-                  {PRICING_OPTIONS.map(option => (
-                    <MenuItem key={option.value} value={option.value}>
-                      {option.label}
-                    </MenuItem>
-                  ))}
-                </CustomTextField>
-              </Grid>
-              <Grid item sm={4} xs={12}>
-                <CustomTextField
-                  select
-                  fullWidth
-                  label='Status'
-                  SelectProps={{
-                    value: filters.status,
-                    displayEmpty: true,
-                    onChange: handleStatusChange
-                  }}
-                >
-                  {STATUS_OPTIONS.map(option => (
-                    <MenuItem key={option.value} value={option.value}>
-                      {option.label}
+                  <MenuItem value=''>All Pricing</MenuItem>
+                  {uniquePricingRanges.map(pricing => (
+                    <MenuItem key={pricing} value={pricing}>
+                      {pricing}
                     </MenuItem>
                   ))}
                 </CustomTextField>
@@ -651,6 +854,8 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
             pageSizeOptions={PAGE_SIZE_OPTIONS}
             paginationModel={paginationModel}
             onPaginationModelChange={handlePaginationChange}
+            paginationMode={currentTab === 'inactive' ? 'server' : 'client'}
+            rowCount={currentTab === 'inactive' ? store.inactiveTotalElements : filteredStudents.length}
           />
         </Card>
       </Grid>
@@ -670,28 +875,100 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
             <Typography variant='body2' sx={{ mb: 4 }}>
               Update the generation for <strong>{studentToEdit?.studentName}</strong>
             </Typography>
-            <CustomTextField
-              select
-              fullWidth
-              label='Generation'
-              value={newGeneration}
-              onChange={e => setNewGeneration(e.target.value)}
-            >
-              <MenuItem value=''>None</MenuItem>
-              {store.generations?.map((gen: string) => (
-                <MenuItem key={gen} value={gen}>
-                  {gen}
+            {!isCustomGenerationEdit ? (
+              <CustomTextField
+                select
+                fullWidth
+                label='Generation'
+                value={newGeneration}
+                onChange={e => {
+                  if (e.target.value === 'custom') {
+                    setIsCustomGenerationEdit(true)
+                    setNewGeneration('')
+                  } else {
+                    setNewGeneration(e.target.value)
+                  }
+                }}
+              >
+                <MenuItem value=''>None</MenuItem>
+                {schoolYearOptions.map(year => (
+                  <MenuItem key={year} value={year}>
+                    {year}
+                  </MenuItem>
+                ))}
+                <MenuItem value='custom' sx={{ fontStyle: 'italic', color: 'primary.main' }}>
+                  Custom Year Range...
                 </MenuItem>
-              ))}
-            </CustomTextField>
+              </CustomTextField>
+            ) : (
+              <Box>
+                <CustomTextField
+                  fullWidth
+                  label='Custom Generation'
+                  value={newGeneration}
+                  onChange={e => {
+                    let input = e.target.value
+                    // Remove any non-digit characters except hyphen
+                    input = input.replace(/[^\d-]/g, '')
+
+                    // Auto-format: when user types 4 digits, add hyphen
+                    if (input.length === 4 && !input.includes('-')) {
+                      input = input + '-'
+                    }
+
+                    // Limit to YYYY-YYYY format (9 characters max)
+                    if (input.length <= 9) {
+                      setNewGeneration(input)
+                    }
+                  }}
+                  placeholder='YYYY-YYYY (e.g., 2025-2027)'
+                  helperText='Enter start year, hyphen will be added automatically'
+                  inputProps={{ maxLength: 9 }}
+                />
+                <Button
+                  size='small'
+                  variant='text'
+                  onClick={() => {
+                    setIsCustomGenerationEdit(false)
+                    setNewGeneration('')
+                  }}
+                  sx={{ mt: 1 }}
+                >
+                  Back to standard options
+                </Button>
+              </Box>
+            )}
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleEditGenerationClose} color='secondary'>
+          <Button onClick={handleEditGenerationClose} color='secondary' disabled={isUpdatingGeneration}>
             Cancel
           </Button>
-          <Button onClick={handleGenerationUpdate} variant='contained' disabled={!newGeneration}>
-            Update
+          <Button onClick={handleGenerationUpdate} variant='contained' disabled={!newGeneration || isUpdatingGeneration}>
+            {isUpdatingGeneration ? 'Updating...' : 'Update'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Deactivate Confirmation Dialog */}
+      <Dialog open={deactivateDialogOpen} onClose={handleDeactivateClose} maxWidth='sm' fullWidth>
+        <DialogTitle>Deactivate Student</DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 2 }}>
+            <Typography variant='body1'>
+              Are you sure you want to deactivate <strong>{studentToDeactivate?.studentName}</strong>?
+            </Typography>
+            <Typography variant='body2' sx={{ mt: 2, color: 'text.secondary' }}>
+              This will remove the student from your active students list. You can reactivate them later if needed.
+            </Typography>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeactivateClose} color='secondary'>
+            Cancel
+          </Button>
+          <Button onClick={handleDeactivateConfirm} variant='contained' color='error'>
+            Deactivate
           </Button>
         </DialogActions>
       </Dialog>

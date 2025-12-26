@@ -9,10 +9,11 @@ import Grid from '@mui/material/Grid'
 import { useMediaQuery, Box } from '@mui/material'
 import CardActivityTimeline from './components/Timeline'
 import { useDispatch, useSelector } from 'react-redux'
-import { selectAllStudents, updateAllStudents } from 'src/store/apps/user'
+import { selectAllStudents, fetchData } from 'src/store/apps/user'
 import apiClient from 'src/@core/axios/axiosEmentor'
 import { fetchNotifications } from 'src/store/apps/notifications'
 import * as apiSpec from '../../apiSpec'
+import toast from 'react-hot-toast'
 import { loadPhotosForUsers } from 'src/@core/services/photo-loader'
 import PaymentTimeline from './components/PaymentTimeline'
 import PaymentConfirmationHistory from './components/PaymentConfirmationHistory'
@@ -24,13 +25,14 @@ import { profileServiceClient } from 'src/services'
 
 const ACLPage = () => {
   const dispatch = useDispatch()
-  const [users, setUsers] = useState(useSelector(selectAllStudents))
+  const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [quizzesData, setQuizzesData] = useState([])
   const paymentHistoryRef = useRef(null)
   const eventsWidgetRef = useRef(null)
   const [addEventSidebarOpen, setAddEventSidebarOpen] = useState(false)
-  const store = useSelector(state => state.calendar)
+  const calendarStore = useSelector(state => state.calendar)
+  const userStore = useSelector(state => state.user)
   const mdAbove = useMediaQuery(theme => theme.breakpoints.up('md'))
 
   const quizServiceRequestParams = {
@@ -50,30 +52,39 @@ const ACLPage = () => {
   }
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchDataFromAPIs = async () => {
       try {
-        const [userServiceResponse, quizServiceResponse] = await Promise.all([
-          apiClient.get('service3/users/role/STUDENT'),
-          apiClient.post(apiSpec.QUIZ_SERVICE + '/assigned-paginated', {
-            filters: quizServiceRequestParams.filters,
-            sorters: quizServiceRequestParams.sorters,
-            page: 0,
-            pageSize: 10
-          })
-        ])
-        dispatch(updateAllStudents(userServiceResponse.data))
-        setUsers(userServiceResponse.data)
-        const processedData = await processStudentQuizzesData(quizServiceResponse.data.data, userServiceResponse.data)
-        setQuizzesData(processedData)
+        // Fetch all active students (needed by EventsWidget, PaymentHistory, etc.)
+        await dispatch(fetchData()).unwrap()
+
+        // Quiz data can be fetched in parallel
+        const quizServiceResponse = await apiClient.post(apiSpec.QUIZ_SERVICE + '/assigned-paginated', {
+          filters: quizServiceRequestParams.filters,
+          sorters: quizServiceRequestParams.sorters,
+          page: 0,
+          pageSize: 10
+        })
+
         dispatch(fetchNotifications())
         setLoading(false)
+
+        // Process quiz data will happen in a separate useEffect when activeStudents updates
+        const processedData = await processStudentQuizzesData(quizServiceResponse.data.data, userStore.activeStudents)
+        setQuizzesData(processedData)
       } catch (error) {
         console.error(error)
+        toast.error('Failed to load dashboard data')
+        setLoading(false)
       }
     }
 
-    fetchData()
+    fetchDataFromAPIs()
   }, [])
+
+  // Update users when activeStudents changes
+  useEffect(() => {
+    setUsers(userStore.activeStudents || [])
+  }, [userStore.activeStudents])
 
   const processStudentQuizzesData = async (data, users) => {
     // Use universal photo loader - much simpler!
@@ -219,7 +230,7 @@ const ACLPage = () => {
         <Grid item md={6} xs={12}>
           <CardActivityTimeline quizzesData={quizzesData} users={users} loading={loading} />
           <Box sx={{ mt: 6 }}>
-            <EventsWidget ref={eventsWidgetRef} onCompleteEvent={handleCompleteEventFromWidget} users={users} />
+            <EventsWidget ref={eventsWidgetRef} onCompleteEvent={handleCompleteEventFromWidget} />
           </Box>
         </Grid>
         <Grid item md={6} xs={12}>
@@ -230,7 +241,7 @@ const ACLPage = () => {
 
       {/* Add Event Sidebar for completing events */}
       <AddEventSidebar
-        store={store}
+        store={calendarStore}
         dispatch={dispatch}
         addEvent={addEvent}
         updateEvent={updateEvent}

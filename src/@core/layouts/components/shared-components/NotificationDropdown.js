@@ -29,7 +29,7 @@ import { selectNotifications, updateNotification } from 'src/store/apps/notifica
 import timeAgo from 'src/@core/utils/time-ago'
 import { selectAllStudents } from 'src/store/apps/user'
 import extractProfilePicture from 'src/@core/axios/profile-picture-extractor'
-import profilePictureDownloader from 'src/@core/axios/profile-picture-downloader'
+import { photoCacheService } from 'src/@core/services/photo-cache-service-instance'
 import TimelineDot from 'src/@core/components/mui/timeline-dot'
 import notificationMapping from 'src/@core/layouts/components/shared-components/notificationMapping'
 import { useRouter } from 'next/router'
@@ -148,11 +148,14 @@ const NotificationDropdown = props => {
           if (user) {
             const profilePicture = extractProfilePicture(user)
             if (profilePicture.type === 'API') {
-              const avatar = await profilePictureDownloader(profilePicture.url, profilePicture.userId)
+              // Use PhotoCacheService for unified caching (prevents duplicate fetches)
+              const avatar = await photoCacheService.getPhoto('API', profilePicture.url, profilePicture.userId)
 
               return { ...notification, avatarImg: avatar }
             } else if (profilePicture.type === 'EXTERNAL') {
-              return { ...notification, avatarImg: profilePicture.url }
+              // Use PhotoCacheService for EXTERNAL photos to prevent 429 errors
+              const avatar = await photoCacheService.getPhoto('EXTERNAL', profilePicture.url, profilePicture.userId)
+              return { ...notification, avatarImg: avatar }
             }
           }
         }

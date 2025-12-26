@@ -1,7 +1,6 @@
 import { useState, useEffect, forwardRef, useImperativeHandle } from 'react'
 import Box from '@mui/material/Box'
 import Card from '@mui/material/Card'
-import Avatar from '@mui/material/Avatar'
 import { Button } from '@mui/material'
 import Chip from '@mui/material/Chip'
 import { styled } from '@mui/material/styles'
@@ -27,12 +26,10 @@ import {
 import Icon from 'src/@core/components/icon'
 import { EventOccurrenceDTO } from 'src/generated/profile-service'
 import { profileServiceClient } from 'src/services'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { handleSelectEvent } from 'src/store/apps/calendar'
 import { format, parseISO } from 'date-fns'
-import profilePictureDownloader from 'src/@core/axios/profile-picture-downloader'
-import extractProfilePicture from 'src/@core/axios/profile-picture-extractor'
-import { photoCacheService } from 'src/@core/services/photo-cache-service-instance'
+import EmentorAvatar, { UserType } from 'src/@core/components/ementor-avatar'
 
 const CardHeader = styled(MuiCardHeader)(({ theme }) => ({
   '& .MuiTypography-root': {
@@ -48,12 +45,6 @@ const CardHeader = styled(MuiCardHeader)(({ theme }) => ({
 
 interface EventsWidgetProps {
   onCompleteEvent?: (event: EventOccurrenceDTO) => void
-  users?: any[] // Array of users with avatars
-}
-
-interface EnhancedEventData extends EventOccurrenceDTO {
-  attendeeAvatars?: (string | null)[]
-  attendeeNames?: string[]
 }
 
 export interface EventsWidgetRef {
@@ -80,13 +71,14 @@ const getDefaultDateRange = () => {
   }
 }
 
-const EventsWidget = forwardRef<EventsWidgetRef, EventsWidgetProps>(({ onCompleteEvent, users = [] }, ref) => {
+const EventsWidget = forwardRef<EventsWidgetRef, EventsWidgetProps>(({ onCompleteEvent }, ref) => {
   const defaultDates = getDefaultDateRange()
   const [loading, setLoading] = useState<boolean>(true)
-  const [eventsData, setEventsData] = useState<EnhancedEventData[]>([])
+  const [eventsData, setEventsData] = useState<EventOccurrenceDTO[]>([])
   const [startDate, setStartDate] = useState<string>(defaultDates.start)
   const [endDate, setEndDate] = useState<string>(defaultDates.end)
   const dispatch = useDispatch()
+  const activeStudents = useSelector((state: any) => state.user.activeStudents || [])
 
   // Expose refresh method to parent components
   useImperativeHandle(ref, () => ({
@@ -100,19 +92,6 @@ const EventsWidget = forwardRef<EventsWidgetRef, EventsWidgetProps>(({ onComplet
     fetchEvents()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-
-  // Re-fetch when users change (e.g., when avatars are loaded)
-  useEffect(() => {
-    if (users.length > 0 && eventsData.length > 0) {
-      // Only re-process event data with new user info, don't re-fetch from API
-      const reprocessEvents = async () => {
-        const processedEvents = await processEventData(eventsData, users)
-        setEventsData(processedEvents)
-      }
-      reprocessEvents()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [users])
 
   const fetchEvents = async () => {
     if (!startDate || !endDate) return
@@ -137,9 +116,7 @@ const EventsWidget = forwardRef<EventsWidgetRef, EventsWidgetProps>(({ onComplet
         return dateB - dateA // Descending order
       })
 
-      // Process events data with user information (same pattern as PaymentConfirmationHistory)
-      const processedEvents = await processEventData(sortedEvents, users)
-      setEventsData(processedEvents)
+      setEventsData(sortedEvents)
     } catch (error) {
       console.error('Failed to fetch events:', error)
       setEventsData([])
@@ -148,70 +125,6 @@ const EventsWidget = forwardRef<EventsWidgetRef, EventsWidgetProps>(({ onComplet
     }
   }
 
-  const processEventData = async (events: EventOccurrenceDTO[], users: any[]) => {
-    // Collect all unique attendee IDs
-    const allAttendeeIds = new Set<string>()
-    events.forEach(event => {
-      event.eventAttendees?.forEach(attendee => {
-        if (attendee.attendeeId) {
-          allAttendeeIds.add(attendee.attendeeId)
-        }
-      })
-    })
-
-    const uniqueUserIds = Array.from(allAttendeeIds)
-    const processedUsersList = []
-
-    // Extract profile pictures for all users
-    for (const userId of uniqueUserIds) {
-      const user = users.find((u: any) => u.id === userId)
-      if (user) {
-        const processedUser = extractProfilePicture(user)
-        processedUsersList.push(processedUser)
-      }
-    }
-
-    // Download avatars using PhotoCacheService for unified caching and rate limiting
-    const usersWithAvatars = await Promise.all(
-      processedUsersList.map(async profilePicture => {
-        if (profilePicture.type === 'API') {
-          // Use PhotoCacheService for API-based profile pictures
-          const avatar = await photoCacheService.getPhoto('API', profilePicture.url, profilePicture.userId)
-          return { ...profilePicture, avatar: avatar || null }
-        } else if (profilePicture.type === 'EXTERNAL') {
-          // Use PhotoCacheService for EXTERNAL photos (Google photos)
-          // Rate limiting prevents 429 errors, blob caching improves subsequent loads
-          const avatar = await photoCacheService.getPhoto('EXTERNAL', profilePicture.url, profilePicture.userId)
-          return { ...profilePicture, avatar }
-        } else {
-          return { ...profilePicture, avatar: null }
-        }
-      })
-    )
-
-    // Map events with attendee avatars and names
-    return events.map(event => {
-      const eventAttendees = event.eventAttendees || []
-      const attendeeAvatars: (string | null)[] = []
-      const attendeeNames: string[] = []
-
-      eventAttendees.forEach(attendee => {
-        const userWithAvatar = usersWithAvatars.find(u => u.userId === attendee.attendeeId)
-        const user = users.find((u: any) => u.id === attendee.attendeeId)
-
-        if (user) {
-          attendeeAvatars.push(userWithAvatar?.avatar || null)
-          attendeeNames.push(`${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Unknown')
-        }
-      })
-
-      return {
-        ...event,
-        attendeeAvatars,
-        attendeeNames
-      } as EnhancedEventData
-    })
-  }
 
   const handleApplyDateRange = () => {
     fetchEvents()
@@ -255,8 +168,7 @@ const EventsWidget = forwardRef<EventsWidgetRef, EventsWidgetProps>(({ onComplet
         return dateB - dateA
       })
 
-      const processedEvents = await processEventData(sortedEvents, users)
-      setEventsData(processedEvents)
+      setEventsData(sortedEvents)
     } catch (error) {
       console.error('Failed to fetch events:', error)
       setEventsData([])
@@ -265,7 +177,7 @@ const EventsWidget = forwardRef<EventsWidgetRef, EventsWidgetProps>(({ onComplet
     }
   }
 
-  const getEventStatus = (event: EnhancedEventData) => {
+  const getEventStatus = (event: EventOccurrenceDTO) => {
     if (event.completed) return { label: 'Finished', color: 'success' as const }
     if (event.cancelled) return { label: 'Cancelled', color: 'error' as const }
     if (event.rescheduled) return { label: 'Rescheduled', color: 'warning' as const }
@@ -274,7 +186,7 @@ const EventsWidget = forwardRef<EventsWidgetRef, EventsWidgetProps>(({ onComplet
     return { label: 'Scheduled', color: 'info' as const }
   }
 
-  const handleCompleteEvent = (event: EnhancedEventData) => {
+  const handleCompleteEvent = (event: EventOccurrenceDTO) => {
     // Set the selected event in Redux store
     dispatch(handleSelectEvent(event))
 
@@ -305,7 +217,7 @@ const EventsWidget = forwardRef<EventsWidgetRef, EventsWidgetProps>(({ onComplet
     }
   }
 
-  const formatEventDuration = (event: EnhancedEventData) => {
+  const formatEventDuration = (event: EventOccurrenceDTO) => {
     const durationString = event.duration as any
 
     // First try to parse the duration field if it exists
@@ -352,7 +264,7 @@ const EventsWidget = forwardRef<EventsWidgetRef, EventsWidgetProps>(({ onComplet
     return 'N/A'
   }
 
-  const getTitle = (event: EnhancedEventData) => {
+  const getTitle = (event: EventOccurrenceDTO) => {
     // SingularEvents don't have seriesTitle, so check seriesTitle first (recurring), then fallback
     return event.seriesTitle || 'Event'
   }
@@ -549,54 +461,46 @@ const EventsWidget = forwardRef<EventsWidgetRef, EventsWidgetProps>(({ onComplet
                       </TableCell>
                       <TableCell align='center' sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
-                          {event.attendeeAvatars && event.attendeeAvatars.length > 0 ? (
+                          {event.eventAttendees && event.eventAttendees.length > 0 ? (
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                               <Box sx={{ display: 'flex', alignItems: 'center', ml: -0.5 }}>
-                                {event.attendeeAvatars.slice(0, 3).map((avatar, idx) => {
-                                  const hasValidAvatar = avatar && avatar.trim() !== ''
-                                  const attendeeName = event.attendeeNames?.[idx] || 'Attendee'
-                                  const initials = attendeeName
-                                    .split(' ')
-                                    .map(n => n.charAt(0))
-                                    .join('')
-                                    .toUpperCase()
-                                    .slice(0, 2)
+                                {event.eventAttendees.slice(0, 3).map((attendee, idx) => {
+                                  const student = activeStudents.find((s: any) => s.id === attendee.attendeeId)
+                                  const attendeeName = student
+                                    ? `${student.firstName || ''} ${student.lastName || ''}`.trim()
+                                    : 'Unknown'
 
                                   return (
                                     <Tooltip key={idx} title={attendeeName}>
-                                      <Avatar
-                                        src={hasValidAvatar ? avatar : undefined}
-                                        alt={attendeeName}
-                                        sx={{
-                                          width: 24,
-                                          height: 24,
-                                          fontSize: '0.625rem',
-                                          fontWeight: 600,
-                                          border: '2px solid',
-                                          borderColor: 'background.paper',
-                                          ml: idx > 0 ? -1 : 0
-                                        }}
-                                      >
-                                        {!hasValidAvatar ? initials : null}
-                                      </Avatar>
+                                      <Box>
+                                        <EmentorAvatar
+                                          userId={attendee.attendeeId}
+                                          userType={UserType.STUDENT}
+                                          sx={{
+                                            width: 24,
+                                            height: 24,
+                                            fontSize: '0.625rem',
+                                            fontWeight: 600,
+                                            border: '2px solid',
+                                            borderColor: 'background.paper',
+                                            ml: idx > 0 ? -1 : 0
+                                          }}
+                                          alt={attendeeName}
+                                        />
+                                      </Box>
                                     </Tooltip>
                                   )
                                 })}
                               </Box>
-                              {event.attendeeAvatars.length > 3 && (
+                              {event.eventAttendees.length > 3 && (
                                 <Tooltip
                                   title={
                                     <Box sx={{ py: 0.5 }}>
-                                      {event.attendeeNames?.slice(3).map((name, idx) => {
-                                        const avatarIdx = idx + 3
-                                        const avatar = event.attendeeAvatars?.[avatarIdx]
-                                        const hasValidAvatar = avatar && avatar.trim() !== ''
-                                        const initials = name
-                                          .split(' ')
-                                          .map(n => n.charAt(0))
-                                          .join('')
-                                          .toUpperCase()
-                                          .slice(0, 2)
+                                      {event.eventAttendees.slice(3).map((attendee, idx) => {
+                                        const student = activeStudents.find((s: any) => s.id === attendee.attendeeId)
+                                        const attendeeName = student
+                                          ? `${student.firstName || ''} ${student.lastName || ''}`.trim()
+                                          : 'Unknown'
 
                                         return (
                                           <Box
@@ -608,18 +512,17 @@ const EventsWidget = forwardRef<EventsWidgetRef, EventsWidgetProps>(({ onComplet
                                               py: 0.5
                                             }}
                                           >
-                                            <Avatar
-                                              src={hasValidAvatar ? avatar : undefined}
-                                              alt={name}
+                                            <EmentorAvatar
+                                              userId={attendee.attendeeId}
+                                              userType={UserType.STUDENT}
                                               sx={{
                                                 width: 28,
                                                 height: 28,
                                                 fontSize: '0.688rem',
                                                 fontWeight: 600
                                               }}
-                                            >
-                                              {!hasValidAvatar ? initials : null}
-                                            </Avatar>
+                                              alt={attendeeName}
+                                            />
                                             <Typography
                                               variant='body2'
                                               sx={{
@@ -629,7 +532,7 @@ const EventsWidget = forwardRef<EventsWidgetRef, EventsWidgetProps>(({ onComplet
                                                 fontWeight: 500
                                               }}
                                             >
-                                              {name}
+                                              {attendeeName}
                                             </Typography>
                                           </Box>
                                         )
@@ -686,7 +589,7 @@ const EventsWidget = forwardRef<EventsWidgetRef, EventsWidgetProps>(({ onComplet
                                         color: 'text.secondary'
                                       }}
                                     >
-                                      +{event.attendeeAvatars.length - 3}
+                                      +{event.eventAttendees.length - 3}
                                     </Typography>
                                   </Box>
                                 </Tooltip>

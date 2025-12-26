@@ -71,6 +71,10 @@ const CardActivityTimeline = props => {
   const getStudentName = quizStudent => {
     const student = props.users.find(user => user.id === quizStudent.studentId)
 
+    if (!student) {
+      return 'Unknown Student'
+    }
+
     return `${student.firstName} ${student.lastName}`
   }
 

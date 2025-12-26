@@ -73,13 +73,32 @@ interface CrmLastTransactionProps {
    * Default: 'student' (preserves existing behavior)
    */
   userRole?: 'student' | 'professor'
+  /**
+   * Optional userId to fetch balance history for a specific user (admin/professor view)
+   * When provided, uses /wallet/history/user/{userId} instead of /wallet/history
+   * Default: undefined (uses current user's history)
+   */
+  userId?: string
+  /**
+   * Optional user display name for PaymentDetailCard
+   * Used when viewing another user's transactions
+   */
+  userName?: string
+  /**
+   * Optional user avatar URL for PaymentDetailCard
+   * Used when viewing another user's transactions
+   */
+  userAvatarUrl?: string
 }
 
 const CrmLastTransaction: React.FC<CrmLastTransactionProps> = ({
   showPaymentButton = true,
   disableCardWrapper = false,
   onWalletLoaded,
-  userRole = 'student'
+  userRole = 'student',
+  userId,
+  userName,
+  userAvatarUrl
 }) => {
   const router = useRouter()
   const [anchorEl, setAnchorEl] = useState(null)
@@ -127,16 +146,44 @@ const CrmLastTransaction: React.FC<CrmLastTransactionProps> = ({
   }
 
   useEffect(() => {
-    profileServiceClient.wallet
-      .getMyBalanceHistory()
-      .then(response => {
-        setWalletSummary(response.data)
-        if (typeof onWalletLoaded === 'function') onWalletLoaded(response.data)
-      })
-      .catch(error => {
-        console.error('Error fetching balance history:', error)
-      })
-  }, [])
+    if (userId) {
+      // For admin/professor view: fetch user's balance history (returns Array<WalletBalanceChangeDTO>)
+      profileServiceClient.wallet
+        .getUserBalanceHistory({ userId })
+        .then(response => {
+          const balanceChanges = response.data
+
+          // Transform to WalletSummaryDTO structure
+          const transformedData: WalletSummaryDTO = {
+            wallet: balanceChanges.length > 0 && balanceChanges[0].balanceAfter !== undefined
+              ? {
+                  balance: balanceChanges[0].balanceAfter,
+                  currency: 'RON'
+                }
+              : { balance: 0, currency: 'RON' },
+            balanceChanges: balanceChanges,
+            pendingBankTransferPayments: [] // Admin view doesn't show pending payments
+          }
+
+          setWalletSummary(transformedData)
+          if (typeof onWalletLoaded === 'function') onWalletLoaded(transformedData)
+        })
+        .catch(error => {
+          console.error('Error fetching balance history:', error)
+        })
+    } else {
+      // For self view: use getMyBalanceHistory (returns WalletSummaryDTO)
+      profileServiceClient.wallet
+        .getMyBalanceHistory()
+        .then(response => {
+          setWalletSummary(response.data)
+          if (typeof onWalletLoaded === 'function') onWalletLoaded(response.data)
+        })
+        .catch(error => {
+          console.error('Error fetching balance history:', error)
+        })
+    }
+  }, [userId])
 
   // Handle click on bank transfer transaction to show payment details
   const handleTransactionClick = (transaction: WalletBalanceChangeDTO) => {
@@ -149,7 +196,9 @@ const CrmLastTransaction: React.FC<CrmLastTransactionProps> = ({
     const payment: BankTransferPaymentDTO = {
       id: transaction.referenceId,
       amount: transaction.amount,
-      confirmedAt: transaction.creation
+      confirmedAt: transaction.creation,
+      // Include payerId so PaymentDetailCard can display the correct user name/avatar
+      payerId: userId || undefined
     }
 
     setSelectedPayment(payment)
@@ -161,17 +210,25 @@ const CrmLastTransaction: React.FC<CrmLastTransactionProps> = ({
     setSelectedPayment(null)
   }
 
-  // Helper function to get user name (placeholder - extend based on your user data structure)
-  const getUserName = (userId: string | undefined): string => {
-    if (!userId) return 'Utilizator necunoscut'
-    // TODO: Implement user lookup when user data is available
+  // Helper function to get user name
+  const getUserName = (userIdParam: string | undefined): string => {
+    if (!userIdParam) return 'Utilizator necunoscut'
+    // If userName prop is provided (from parent component) and we're viewing a specific user, use it
+    // The userIdParam should match the userId we're viewing (the student in the drawer)
+    if (userName && userId && userIdParam === userId) {
+      return userName
+    }
     return 'Student'
   }
 
-  // Helper function to get user avatar (placeholder - extend based on your user data structure)
-  const getUserAvatar = (userId: string | undefined): string | undefined => {
-    if (!userId) return undefined
-    // TODO: Implement avatar lookup when user data is available
+  // Helper function to get user avatar
+  const getUserAvatar = (userIdParam: string | undefined): string | undefined => {
+    if (!userIdParam) return undefined
+    // If userAvatarUrl prop is provided (from parent component) and we're viewing a specific user, use it
+    // The userIdParam should match the userId we're viewing (the student in the drawer)
+    if (userAvatarUrl && userId && userIdParam === userId) {
+      return userAvatarUrl
+    }
     return undefined
   }
 
@@ -234,7 +291,7 @@ const CrmLastTransaction: React.FC<CrmLastTransactionProps> = ({
       >
         <CardHeader title='Istoric Tranzactii' />
         <CardContent>
-          <TableContainer>
+          <TableContainer sx={{ maxHeight: 'calc(10 * 73px + 48px)', overflow: 'auto' }}>
             <Table>
               <TableHead>
                 <TableRow

@@ -22,12 +22,9 @@ const TableHeader = props => {
         display: 'flex',
         flexWrap: 'wrap',
         alignItems: 'center',
-        justifyContent: 'space-between'
+        justifyContent: 'flex-end'
       }}
     >
-      <Button color='secondary' variant='tonal' startIcon={<Icon icon='tabler:upload' />}>
-        Export
-      </Button>
       <Box sx={{ rowGap: 2, display: 'flex', flexWrap: 'wrap', alignItems: 'center' }}>
         <CustomTextField
           value={value}

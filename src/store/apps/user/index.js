@@ -4,6 +4,7 @@ import toast from 'react-hot-toast'
 // ** Axios Imports
 import axios from 'axios'
 import { profileServiceClient } from 'src/services'
+import { transformStudentData } from 'src/pages/apps/user/list/utils'
 
 // Helper to check if cache is expired (older than 1 month)
 const isCacheExpired = timestamp => {
@@ -18,8 +19,11 @@ export const fetchData = createAsyncThunk('appUsers/fetchData', async (_, { reje
   try {
     const response = await profileServiceClient.studentProfessorRelationship.getActiveStudentsForCurrentProfessor()
 
+    // Transform raw DTOs to StudentListItem format for consistency
+    const transformedStudents = transformStudentData(response.data || [])
+
     return {
-      students: response.data || [],
+      students: transformedStudents,
       fetchedAt: Date.now()
     }
   } catch (error) {
@@ -30,22 +34,118 @@ export const fetchData = createAsyncThunk('appUsers/fetchData', async (_, { reje
   }
 })
 
-// ** Fetch Inactive Students (not cached - always fresh)
+// ** Fetch Inactive Students with Server-Side Pagination
 export const fetchInactiveStudents = createAsyncThunk(
   'appUsers/fetchInactiveStudents',
-  async (_, { rejectWithValue }) => {
+  async ({ professorId, params = {} }, { rejectWithValue }) => {
     try {
-      // For now, we'll use the same endpoint and filter by status on frontend
-      // When backend adds inactive endpoint, we can update this
-      const response = await profileServiceClient.studentProfessorRelationship.getActiveStudentsForCurrentProfessor()
+      const response = await profileServiceClient.studentProfessorRelationship.getInactiveStudentsForProfessor({
+        professorId,
+        page: params.page !== undefined ? params.page : 0,
+        size: params.size || 10,
+        sort: params.sort || 'modifiedAt,desc',
+        generation: params.generation || undefined,
+        createdAfter: params.createdAfter || undefined,
+        createdBefore: params.createdBefore || undefined,
+        modifiedAfter: params.modifiedAfter || undefined,
+        modifiedBefore: params.modifiedBefore || undefined
+      })
 
-      // Return just the students array, no caching
-      return response.data || []
+      return {
+        students: response.data?.content || [],
+        totalElements: response.data?.totalElements || 0,
+        totalPages: response.data?.totalPages || 0,
+        currentPage: response.data?.number || 0,
+        pageSize: response.data?.size || 10
+      }
     } catch (error) {
       console.error('Failed to fetch inactive students:', error)
       toast.error('Failed to fetch inactive students')
 
       return rejectWithValue(error.response?.data || error.message)
+    }
+  }
+)
+
+// ** Fetch Students By IDs (Smart 3-Tier Lookup)
+export const fetchStudentsByIds = createAsyncThunk(
+  'appUsers/fetchStudentsByIds',
+  async ({ studentIds }, { getState, dispatch, rejectWithValue }) => {
+    try {
+      // 1. Get professor ID and active students from state
+      const state = getState()
+      const professorId = state.user.data?.id
+      const activeStudents = state.user.activeStudents || []
+
+      if (!professorId) {
+        throw new Error('Professor ID not found. Please log in again.')
+      }
+
+      // Handle empty input
+      if (!studentIds || studentIds.length === 0) {
+        return { students: [], source: 'empty' }
+      }
+
+      // Deduplicate student IDs
+      const uniqueIds = [...new Set(studentIds)]
+
+      // 2. TIER 1: Check cache (use id field which now contains studentId)
+      const studentMap = new Map(activeStudents.map(s => [s.id, s]))
+      let foundStudents = uniqueIds.map(id => studentMap.get(id)).filter(Boolean)
+      let missingIds = uniqueIds.filter(id => !studentMap.has(id))
+
+      console.debug('[fetchStudentsByIds] Tier 1 - Cache hit:', foundStudents.length, '/', uniqueIds.length)
+
+      // 3. TIER 2: Refresh cache if needed
+      if (missingIds.length > 0) {
+        console.debug('[fetchStudentsByIds] Tier 2 - Refreshing cache for missing IDs:', missingIds.length)
+        await dispatch(fetchData()).unwrap()
+        const updatedState = getState()
+        const updatedStudents = updatedState.user.activeStudents || []
+        const updatedMap = new Map(updatedStudents.map(s => [s.id, s]))
+
+        const newlyFound = missingIds.map(id => updatedMap.get(id)).filter(Boolean)
+        foundStudents = [...foundStudents, ...newlyFound]
+        missingIds = missingIds.filter(id => !updatedMap.has(id))
+
+        console.debug('[fetchStudentsByIds] Tier 2 - After refresh, found:', newlyFound.length, ', still missing:', missingIds.length)
+      }
+
+      // 4. TIER 3: Batch API for remaining IDs (likely inactive students)
+      if (missingIds.length > 0) {
+        console.debug('[fetchStudentsByIds] Tier 3 - Calling batch API for:', missingIds.length, 'IDs')
+        try {
+          const response = await profileServiceClient.studentProfessorRelationship
+            .getRelationshipsByStudentIds({
+              getRelationshipsByStudentIdsRequest: {
+                studentIds: missingIds,
+                professorId: professorId,
+                includeInactive: true
+              }
+            })
+
+          const batchStudents = transformStudentData(response.data || [])
+          foundStudents = [...foundStudents, ...batchStudents]
+          console.debug('[fetchStudentsByIds] Tier 3 - Batch API returned:', batchStudents.length, 'students')
+        } catch (batchError) {
+          console.warn('[fetchStudentsByIds] Tier 3 - Batch API failed:', batchError)
+          toast.error('Some student information could not be loaded')
+
+          // Continue with partial results
+        }
+      }
+
+      const source = missingIds.length > 0 ? 'batch' : foundStudents.length === uniqueIds.length ? 'cache' : 'refresh'
+
+      return {
+        students: foundStudents,
+        source: source
+      }
+    } catch (error) {
+      console.error('[fetchStudentsByIds] Failed:', error)
+      toast.error('Failed to load student information')
+
+      return rejectWithValue(error.message)
     }
   }
 )
@@ -93,25 +193,6 @@ export const updateUserHasProfile = createAsyncThunk('appUsers/updateUserHasProf
 export const updateTokens = createAsyncThunk('appUsers/updateTokens', async data => {
   return data
 })
-
-// ** Fetch Professor Generations
-export const fetchProfessorGenerations = createAsyncThunk(
-  'appUsers/fetchProfessorGenerations',
-  async (professorId, { rejectWithValue }) => {
-    try {
-      const response = await profileServiceClient.studentProfessorRelationship.getProfessorGenerations({
-        professorId
-      })
-
-      return response.data || []
-    } catch (error) {
-      console.error('Failed to fetch professor generations:', error)
-      toast.error('Failed to fetch generations')
-
-      return rejectWithValue(error.response?.data || error.message)
-    }
-  }
-)
 
 // ** Fetch Students By Generation
 export const fetchStudentsByGeneration = createAsyncThunk(
@@ -207,6 +288,7 @@ export const deleteTokens = createAsyncThunk('appUsers/deleteTokens', () => {
 })
 
 // ** Update allStudents which containts Students users.
+// @deprecated Use fetchStudentsByIds instead for better performance and smart caching
 export const updateAllStudents = createAsyncThunk('appUsers/updateAllStudents', async data => {
   return data
 })
@@ -294,6 +376,10 @@ export const appUsersSlice = createSlice({
     allStudents: [],
     activeStudents: [], // Active students cache
     inactiveStudents: [], // Inactive students (NOT cached)
+    inactiveTotalElements: 0, // Total inactive students count
+    inactiveTotalPages: 0, // Total pages for inactive students
+    inactiveCurrentPage: 0, // Current page for inactive students
+    inactivePageSize: 10, // Page size for inactive students
     activeStudentsFetchedAt: null, // Timestamp of last fetch
     loading: false, // Global loading state
     inactiveLoading: false, // Loading state for inactive students
@@ -331,13 +417,36 @@ export const appUsersSlice = createSlice({
       .addCase(fetchInactiveStudents.fulfilled, (state, action) => {
         state.inactiveLoading = false
 
-        // No caching for inactive students - just set the data
-        state.inactiveStudents = action.payload
+        // Set paginated data
+        state.inactiveStudents = action.payload.students
+        state.inactiveTotalElements = action.payload.totalElements
+        state.inactiveTotalPages = action.payload.totalPages
+        state.inactiveCurrentPage = action.payload.currentPage
+        state.inactivePageSize = action.payload.pageSize
       })
       .addCase(fetchInactiveStudents.rejected, (state, action) => {
         state.inactiveLoading = false
         state.error = action.payload || 'Failed to fetch inactive students'
         state.inactiveStudents = [] // Clear on error
+        state.inactiveTotalElements = 0
+        state.inactiveTotalPages = 0
+        state.inactiveCurrentPage = 0
+      })
+      .addCase(fetchStudentsByIds.pending, state => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(fetchStudentsByIds.fulfilled, (state, action) => {
+        state.loading = false
+
+        // Merge batch results into allStudents for backward compatibility (use id field)
+        const existingIds = new Set(state.allStudents.map(s => s.id))
+        const newStudents = action.payload.students.filter(s => !existingIds.has(s.id))
+        state.allStudents = [...state.allStudents, ...newStudents]
+      })
+      .addCase(fetchStudentsByIds.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload || 'Failed to fetch students by IDs'
       })
       .addCase(addUser.fulfilled, (state, action) => {
         state.data = action.payload
@@ -406,17 +515,6 @@ export const appUsersSlice = createSlice({
           state.professorProfilesLoading = {}
           state.professorProfilesErrors = {}
         }
-      })
-      .addCase(fetchProfessorGenerations.pending, state => {
-        state.generationsLoading = true
-      })
-      .addCase(fetchProfessorGenerations.fulfilled, (state, action) => {
-        state.generationsLoading = false
-        state.generations = action.payload
-      })
-      .addCase(fetchProfessorGenerations.rejected, (state, action) => {
-        state.generationsLoading = false
-        state.error = action.payload || 'Failed to fetch generations'
       })
       .addCase(fetchStudentsByGeneration.pending, state => {
         state.loading = true

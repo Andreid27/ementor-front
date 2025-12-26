@@ -4,10 +4,9 @@ import { useEffect, useState } from 'react'
 import TestsTable from 'src/pages/all-quizzes/componets/table'
 import QuizPreview from '../quizzes/componets/quiz-preview'
 import { useRouter } from 'next/router'
-import apiClient from 'src/@core/axios/axiosEmentor'
 import toast from 'react-hot-toast'
-import { useDispatch } from 'react-redux'
-import { updateAllStudents } from 'src/store/apps/user'
+import { useDispatch, useSelector } from 'react-redux'
+import { fetchData } from 'src/store/apps/user'
 
 const QuizzesPage = () => {
   const router = useRouter()
@@ -20,6 +19,7 @@ const QuizzesPage = () => {
 
   const [users, setUsers] = useState([])
   const dispatch = useDispatch()
+  const store = useSelector(state => state.user)
 
   const createTest = () => {
     router.push('/edit-quiz/new')
@@ -38,9 +38,9 @@ const QuizzesPage = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await apiClient.get('service3/users/role/STUDENT')
-        setUsers(response.data)
-        dispatch(updateAllStudents(response.data))
+        // For quiz preview, we need all active students
+        // Use the existing fetchData action to get all active students
+        await dispatch(fetchData()).unwrap()
       } catch (error) {
         console.log(error)
         toast.error('Nu s-au putut prelua utilizatorii')
@@ -48,7 +48,12 @@ const QuizzesPage = () => {
     }
 
     fetchUsers()
-  }, [])
+  }, [dispatch])
+
+  // Update users when activeStudents changes
+  useEffect(() => {
+    setUsers(store.activeStudents || [])
+  }, [store.activeStudents])
 
   return (
     <>

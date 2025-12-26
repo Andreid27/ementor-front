@@ -6,6 +6,7 @@ import CircularProgress from '@mui/material/CircularProgress'
 // ** Demo Components Imports
 import UserViewLeft from './UserViewLeft'
 import UserViewRight from './UserViewRight'
+import CrmLastTransaction from '../../../views/dashboards/crm/CrmLastTransaction'
 
 // ** API and Utility Imports
 import apiClient from 'src/@core/axios/axiosEmentor'
@@ -88,7 +89,7 @@ const UserViewDrawer = ({ tab, userId, open, onClose }) => {
       anchor='right'
       open={open}
       onClose={onClose}
-      sx={{ '& .MuiDrawer-paper': { width: { xs: 375, sm: 500, md: 800 }, maxWidth: '100vw' } }} // Ensure drawer has max width of viewport
+      sx={{ '& .MuiDrawer-paper': { width: { xs: 375, sm: 600, md: 1000, lg: 1200 }, maxWidth: '100vw' } }} // Ensure drawer has max width of viewport
     >
       {loading ? (
         <CircularProgress sx={{ m: 'auto' }} />
@@ -126,6 +127,18 @@ const UserViewDrawer = ({ tab, userId, open, onClose }) => {
                 quizStats={quizStats}
                 lessonStats={lessonStats}
                 quizzesData={quizzesData}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <CrmLastTransaction
+                userId={userId}
+                showPaymentButton={false}
+                disableCardWrapper={false}
+                userRole='professor'
+                userName={profileData?.firstName && profileData?.lastName
+                  ? `${profileData.firstName} ${profileData.lastName}`
+                  : profileData?.email || 'Student'}
+                userAvatarUrl={profilePictureUrl}
               />
             </Grid>
           </Grid>

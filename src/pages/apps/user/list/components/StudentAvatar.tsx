@@ -16,8 +16,12 @@ import { AVATAR_SETTINGS } from '../constants'
 const StudentAvatar: React.FC<StudentAvatarProps> = ({ student, onClick }) => {
   // ** Handle avatar click
   const handleAvatarClick = () => {
-    if (onClick && student.studentUserId) {
-      onClick(student.studentUserId)
+    if (onClick) {
+      // Use id field which contains the actual student user ID
+      const userId = student.id || student.studentUserId
+      if (userId) {
+        onClick(userId)
+      }
     }
   }
 

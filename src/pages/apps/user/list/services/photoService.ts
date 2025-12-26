@@ -25,7 +25,8 @@ export const processStudentPhotos = async (
   fullStudentData?: any[]
 ): Promise<StudentListItem[]> => {
   // Extract unique user IDs from current page
-  const usersOnPage = students.map(student => student.studentUserId)
+  // Use student.id which contains the studentId after transformation
+  const usersOnPage = students.map(student => student.id)
   const uniqueUserIds = Array.from(new Set(usersOnPage))
 
   // Process profile pictures for unique users
@@ -37,9 +38,9 @@ export const processStudentPhotos = async (
 
   for (const userId of uniqueUserIds) {
     // Try to find student data with attributes (from API response or transformed data)
-    // Match by: studentId (raw data), studentUserId (transformed data), or id (relationship ID)
+    // Match by: id (transformed data contains studentId), studentUserId (legacy), or studentId (raw data)
     const studentData = fullStudentData?.find(
-      (s: any) => s.studentUserId === userId || s.studentId === userId || s.id === userId
+      (s: any) => s.id === userId || s.studentUserId === userId || s.studentId === userId
     )
 
     if (studentData && studentData.attributes) {
@@ -80,13 +81,21 @@ export const processStudentPhotos = async (
   )
 
   // Map avatars back to students
+  // IMPORTANT: Match by student.id (which contains studentId after transformation)
   return students.map(student => {
-    const userWithAvatar = result.find(user => user.userId === student.studentUserId)
+    const userWithAvatar = result.find(user => user.userId === student.id)
 
-    return {
-      ...student,
-      avatar: userWithAvatar?.avatar || ''
+    // Only return a new object if we actually have a photo to add
+    // This prevents unnecessary re-renders and maintains object identity
+    if (userWithAvatar?.avatar) {
+      return {
+        ...student,
+        avatar: userWithAvatar.avatar
+      }
     }
+
+    // If no avatar, return the original student object to maintain identity
+    return student
   })
 }
 

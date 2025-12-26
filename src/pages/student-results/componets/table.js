@@ -26,7 +26,7 @@ import componentTypes from 'src/pages/student-results/componets/componentsType.j
 import { Button, LinearProgress } from '@mui/material'
 import AssignationModal from './assignationModal'
 import { useDispatch } from 'react-redux'
-import { updateAllStudents } from 'src/store/apps/user'
+import { fetchStudentsByIds } from 'src/store/apps/user'
 import Router from 'next/router'
 import DeleteDialogTransition from './DeleteDialogTransition'
 import extractProfilePicture from 'src/@core/axios/profile-picture-extractor'
@@ -37,6 +37,15 @@ import UserViewDrawer from 'src/pages/student-profile/components/UserViewDrawer'
 const renderClient = (params, user) => {
   const { row } = params
   const states = ['success', 'error', 'warning', 'info', 'primary', 'secondary']
+
+  // Handle case where user is not found
+  if (!user) {
+    return (
+      <CustomAvatar skin='light' color='primary' sx={{ mr: 3, fontSize: '.8rem', width: '1.875rem', height: '1.875rem' }}>
+        ??
+      </CustomAvatar>
+    )
+  }
 
   // Use the user ID as a seed to generate a consistent index
   const stateNum = parseInt(user.id, 16) % states.length
@@ -105,6 +114,17 @@ const StudentsResultsTable = () => {
       renderCell: params => {
         const { row } = params
         const user = users.find(user => user.id === row.studentId)
+
+        // Handle case where user is not found
+        if (!user) {
+          return (
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Typography noWrap variant='body2' sx={{ color: 'text.secondary' }}>
+                Unknown User
+              </Typography>
+            </Box>
+          )
+        }
 
         return (
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -250,23 +270,32 @@ const StudentsResultsTable = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [userServiceResponse, quizServiceResponse] = await Promise.all([
-          apiClient.get('service3/users/role/STUDENT'),
-          apiClient.post(apiSpec.QUIZ_SERVICE + '/assigned-paginated', {
-            filters: [],
-            sorters: getSorters(),
-            page: paginationModel.page,
-            pageSize: paginationModel.pageSize
-          })
-        ])
-        dispatch(updateAllStudents(userServiceResponse.data))
-        setUsers(userServiceResponse.data)
-        const processedData = await processStudentQuizzesData(quizServiceResponse.data.data, userServiceResponse.data)
+        // Fetch quiz results first
+        const quizServiceResponse = await apiClient.post(apiSpec.QUIZ_SERVICE + '/assigned-paginated', {
+          filters: [],
+          sorters: getSorters(),
+          page: paginationModel.page,
+          pageSize: paginationModel.pageSize
+        })
+
+        // Extract student IDs from quiz results
+        const studentIds = [...new Set(
+          quizServiceResponse.data.data.map(quiz => quiz.studentId).filter(Boolean)
+        )]
+
+        // Fetch students by IDs using smart lookup
+        const result = await dispatch(fetchStudentsByIds({ studentIds })).unwrap()
+        setUsers(result.students)
+
+        // Process quiz data with student info
+        const processedData = await processStudentQuizzesData(quizServiceResponse.data.data, result.students)
         setData(processedData)
         setTotalCount(quizServiceResponse.data.totalCount)
         setLoading(false)
       } catch (error) {
         console.error(error)
+        toast.error('Failed to load quiz results')
+        setLoading(false)
       }
     }
 
@@ -282,7 +311,13 @@ const StudentsResultsTable = () => {
 
     // Define the async function
     const fetchAndProcessData = async () => {
+      setLoading(true)
+
+      // Don't clear data - keep old content visible while loading to prevent page jump
+      // setData([])
+
       try {
+        // Fetch quiz data for the current page
         const response = await apiClient.post(apiSpec.QUIZ_SERVICE + '/assigned-paginated', {
           filters: [],
           sorters: getSorters(),
@@ -290,19 +325,32 @@ const StudentsResultsTable = () => {
           pageSize: paginationModel.pageSize
         })
 
-        // Await the processing of student quizzes data
-        const processedData = await processStudentQuizzesData(response.data.data, users)
+        // Extract student IDs from the NEW page of quiz results
+        const studentIds = [...new Set(
+          response.data.data.map(quiz => quiz.studentId).filter(Boolean)
+        )]
+
+        // Fetch students by IDs for this page
+        const result = await dispatch(fetchStudentsByIds({ studentIds })).unwrap()
+        setUsers(result.students)
+
+        // Process quiz data with the newly fetched student info
+        const processedData = await processStudentQuizzesData(response.data.data, result.students)
 
         // Set the processed data to the state
         setData(processedData)
         setTotalCount(response.data.totalCount)
+        setLoading(false)
       } catch (error) {
         console.log(error)
+        toast.error('Failed to load quiz results')
+        setLoading(false)
       }
     }
 
     // Call the async function
     fetchAndProcessData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paginationModel, filteredData, sortModel])
 
   const getSorters = () => {
@@ -343,7 +391,7 @@ const StudentsResultsTable = () => {
     return data.map(row => {
       const user = result.find(user => user.userId === row.studentId)
 
-      return { ...row, avatar: user.avatar }
+      return { ...row, avatar: user?.avatar || null }
     })
   }
 
@@ -413,63 +461,56 @@ const StudentsResultsTable = () => {
             Aici puteți vedea rezultatele studenților la testele pe care le-ați creat.
           </Typography>
         </Box>
-        {loading ? (
-          <>
-            <LinearProgress />
-          </>
-        ) : (
-          <>
-            {dialogOpen && dialogOpenRow && (
-              <DeleteDialogTransition
-                open={dialogOpen}
-                handleClose={handleCloseDialog}
-                handleConfirm={handleConfirmation}
-                dialogOpenRow={dialogOpenRow}
-              />
-            )}
-
-            {profileDrawerOpen && (
-              <UserViewDrawer
-                open={profileDrawerOpen}
-                onClose={handleCloseDialog}
-                userId={selectedStudentId}
-                tab='account'
-              />
-            )}
-            <DataGrid
-              autoHeight
-              columns={columns}
-              pageSizeOptions={[10, 35, 70]}
-              sortingMode='server'
-              filterMode='server'
-              paginationMode='server'
-              paginationModel={paginationModel}
-              sortModel={sortModel}
-              slots={{ toolbar: QuickSearchToolbar }}
-              onPaginationModelChange={newModel => setPaginationModel(newModel)}
-              onSortModelChange={newModel => setSortModel(newModel)}
-              rows={filteredData.length ? filteredData : data}
-              rowCount={totalCount}
-              sx={{
-                '& .MuiSvgIcon-root': {
-                  fontSize: '1.125rem'
-                }
-              }}
-              slotProps={{
-                baseButton: {
-                  size: 'medium',
-                  variant: 'outlined'
-                },
-                toolbar: {
-                  value: searchText,
-                  clearSearch: () => handleSearch(''),
-                  onChange: event => handleSearch(event.target.value)
-                }
-              }}
-              onCellClick={handleViewAttempt}
-            />
-          </>
+        {dialogOpen && dialogOpenRow && (
+          <DeleteDialogTransition
+            open={dialogOpen}
+            handleClose={handleCloseDialog}
+            handleConfirm={handleConfirmation}
+            dialogOpenRow={dialogOpenRow}
+          />
         )}
+
+        {profileDrawerOpen && (
+          <UserViewDrawer
+            open={profileDrawerOpen}
+            onClose={handleCloseDialog}
+            userId={selectedStudentId}
+            tab='account'
+          />
+        )}
+        <DataGrid
+          autoHeight
+          loading={loading}
+          columns={columns}
+          pageSizeOptions={[10, 35, 70]}
+          sortingMode='server'
+          filterMode='server'
+          paginationMode='server'
+          paginationModel={paginationModel}
+          sortModel={sortModel}
+          slots={{ toolbar: QuickSearchToolbar }}
+          onPaginationModelChange={newModel => setPaginationModel(newModel)}
+          onSortModelChange={newModel => setSortModel(newModel)}
+          rows={filteredData.length ? filteredData : data}
+          rowCount={totalCount}
+          sx={{
+            '& .MuiSvgIcon-root': {
+              fontSize: '1.125rem'
+            }
+          }}
+          slotProps={{
+            baseButton: {
+              size: 'medium',
+              variant: 'outlined'
+            },
+            toolbar: {
+              value: searchText,
+              clearSearch: () => handleSearch(''),
+              onChange: event => handleSearch(event.target.value)
+            }
+          }}
+          onCellClick={handleViewAttempt}
+        />
       </Card>
     </>
   )

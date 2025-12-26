@@ -37,6 +37,31 @@ interface EmentorAvatarProps {
 // ** Helper Functions (Single Responsibility Principle)
 
 /**
+ * Available avatar colors for MUI Avatar component
+ */
+const AVATAR_COLORS = ['primary', 'secondary', 'error', 'warning', 'info', 'success'] as const
+
+/**
+ * Generate a consistent color based on user ID
+ * Uses a simple hash function to convert ID to a color index
+ */
+const getAvatarColor = (userId: string | null | undefined): typeof AVATAR_COLORS[number] => {
+  if (!userId) return 'primary'
+
+  // Simple hash function to convert string to number
+  let hash = 0
+  for (let i = 0; i < userId.length; i++) {
+    const char = userId.charCodeAt(i)
+    hash = ((hash << 5) - hash) + char
+    hash = hash & hash // Convert to 32-bit integer
+  }
+
+  // Get absolute value and map to color index
+  const index = Math.abs(hash) % AVATAR_COLORS.length
+  return AVATAR_COLORS[index]
+}
+
+/**
  * Processes picture info and returns the appropriate avatar URL
  * Now uses PhotoCacheService for unified caching of both API and EXTERNAL photos
  */
@@ -144,7 +169,7 @@ const useAvatarUrl = (
 }
 
 const EmentorAvatar = forwardRef<any, EmentorAvatarProps>(
-  ({ userId, userType, fullSize = false, avatarSrc, ...avatarProps }, ref) => {
+  ({ userId, userType, fullSize = false, avatarSrc, alt, ...avatarProps }, ref) => {
     // Determine if we should fetch profile from API
     const shouldFetchProfile = userType === UserType.PROFESSOR && !!userId && avatarSrc === undefined
 
@@ -154,8 +179,31 @@ const EmentorAvatar = forwardRef<any, EmentorAvatarProps>(
     // Get avatar URL
     const { avatarUrl } = useAvatarUrl(userId, userType, fullSize, avatarSrc, profile)
 
+    // Generate initials from profile or alt text
+    const getInitials = () => {
+      if (profile?.firstName || profile?.lastName) {
+        const firstName = profile.firstName || ''
+        const lastName = profile.lastName || ''
+        return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
+      }
+
+      // Fallback to alt text if provided
+      if (alt) {
+        const parts = alt.trim().split(' ')
+        if (parts.length >= 2) {
+          return `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(0)}`.toUpperCase()
+        }
+        return alt.substring(0, 2).toUpperCase()
+      }
+
+      return '??'
+    }
+
     // Type assertion needed because custom Avatar component doesn't export proper TypeScript types
     const AvatarComponent = Avatar as any
+
+    // Generate consistent color based on user ID
+    const avatarColor = getAvatarColor(userId)
 
     // Add lazy loading and no-referrer policy to prevent 429 errors from Google
     const imgProps = avatarProps.imgProps || {}
@@ -165,7 +213,25 @@ const EmentorAvatar = forwardRef<any, EmentorAvatarProps>(
       referrerPolicy: 'no-referrer' as const // Prevent Google from tracking referrer for rate limiting
     }
 
-    return <AvatarComponent ref={ref} {...avatarProps} src={avatarUrl || undefined} imgProps={enhancedImgProps} />
+    // Merge color into sx prop only if no avatar image is available
+    const sxWithColor = !avatarUrl ? {
+      ...avatarProps.sx,
+      bgcolor: `${avatarColor}.main`,
+      color: `${avatarColor}.contrastText`
+    } : avatarProps.sx
+
+    return (
+      <AvatarComponent
+        ref={ref}
+        {...avatarProps}
+        sx={sxWithColor}
+        src={avatarUrl || undefined}
+        imgProps={enhancedImgProps}
+        alt={alt}
+      >
+        {!avatarUrl && getInitials()}
+      </AvatarComponent>
+    )
   }
 )
 

@@ -33,14 +33,26 @@ export const transformStudentData: StudentDataTransformer = (
   relationships: StudentProfessorRelationshipDTO[]
 ): StudentListItem[] => {
   return relationships.map((rel, index) => {
+    // Check if data is already transformed (has studentUserId field)
+    // If so, return it as-is (it's already a StudentListItem)
+    if ('studentUserId' in rel && rel.studentUserId) {
+      return rel as any as StudentListItem
+    }
+
     const firstName = rel.firstName || ''
     const lastName = rel.lastName || ''
     const fullName = [firstName, lastName].filter(Boolean).join(' ') || 'Unknown Student'
 
+    // For raw API data: rel.studentId contains the student UUID
+    // For already-transformed data: rel.id contains the student UUID
+    const studentId = rel.studentId || rel.id || `student-${index}`
+
     return {
-      id: rel.id || `student-${index}`,
-      studentUserId: rel.studentId || '',
+      id: studentId, // Use studentId which contains the student user UUID
+      studentUserId: studentId,
       studentName: fullName,
+      firstName: firstName, // Add firstName for backward compatibility
+      lastName: lastName, // Add lastName for backward compatibility
       email: rel.email || '',
       avatar: '', // Will be loaded using profile picture extraction
       role: 'student',
@@ -48,10 +60,13 @@ export const transformStudentData: StudentDataTransformer = (
       billing: 'Per Session', // Default billing type
       status: rel.status || 'active',
       defaultPricePerSession: rel.defaultPricePerSession,
+      walletBalance: rel.walletBalance,
       createdAt: new Date().toISOString(),
       avatarColor: getRandomAvatarColor(),
       fullName, // For compatibility
-      attributes: rel.attributes // Preserve attributes for profile picture extraction
+      attributes: rel.attributes, // Preserve attributes for profile picture extraction
+      generation: rel.generation, // Include generation from API
+      professorId: rel.professorId // Include professorId from API
     }
   })
 }
@@ -194,4 +209,27 @@ export const formatPricing = (defaultPricePerSession?: number): string => {
 // ** Generate status display color
 export const getStatusColor = (status: string): 'success' | 'warning' | 'secondary' => {
   return (userStatusObj[status] as 'success' | 'warning' | 'secondary') || 'secondary'
+}
+
+// ** Generate school year options (YYYY-YYYY format)
+// Returns current school year and previous 5 years
+// School year starts in September (month 8 in 0-indexed system)
+export const generateSchoolYearOptions = (): string[] => {
+  const today = new Date()
+  const currentYear = today.getFullYear()
+  const currentMonth = today.getMonth() // 0-indexed (0 = January, 8 = September)
+
+  // If we're before September, the school year is (currentYear-1)-(currentYear)
+  // If we're in or after September, the school year is (currentYear)-(currentYear+1)
+  const schoolYearStartYear = currentMonth >= 8 ? currentYear : currentYear - 1
+
+  // Generate current year and previous 5 years (total of 6 options)
+  const schoolYears: string[] = []
+  for (let i = 0; i < 6; i++) {
+    const startYear = schoolYearStartYear - i
+    const endYear = startYear + 1
+    schoolYears.push(`${startYear}-${endYear}`)
+  }
+
+  return schoolYears
 }

@@ -13,6 +13,8 @@ export interface StudentListItem {
   id: string
   studentUserId: string
   studentName: string
+  firstName?: string // For backward compatibility with components
+  lastName?: string // For backward compatibility with components
   email: string
   avatar?: string
   role: string
@@ -20,6 +22,7 @@ export interface StudentListItem {
   billing: string
   status: string
   defaultPricePerSession?: number
+  walletBalance?: number
   createdAt: string
   avatarColor?: string
   fullName: string // For compatibility with existing components
@@ -159,6 +162,10 @@ export interface UserStoreState {
   allStudents: StudentListItem[]
   activeStudents: StudentListItem[]
   inactiveStudents: StudentListItem[]
+  inactiveTotalElements: number
+  inactiveTotalPages: number
+  inactiveCurrentPage: number
+  inactivePageSize: number
   activeStudentsFetchedAt: number | null
   loading: boolean
   inactiveLoading: boolean
