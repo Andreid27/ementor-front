@@ -9,7 +9,7 @@ Name | Type | Description | Notes
 **fullName** | **string** |  | [optional] [default to undefined]
 **university** | **string** |  | [optional] [default to undefined]
 **speciality** | **string** |  | [optional] [default to undefined]
-**pictureUrl** | **string** |  | [optional] [default to undefined]
+**attributes** | **{ [key: string]: Array&lt;string&gt;; }** |  | [optional] [default to undefined]
 **invitationCode** | **string** |  | [optional] [default to undefined]
 **about** | **string** |  | [optional] [default to undefined]
 
@@ -23,7 +23,7 @@ const instance: ProfessorPreviewDTO = {
     fullName,
     university,
     speciality,
-    pictureUrl,
+    attributes,
     invitationCode,
     about,
 };

@@ -21,12 +21,12 @@ Name | Type | Description | Notes
 **creation** | **string** |  | [optional] [default to undefined]
 **modified** | **string** |  | [optional] [default to undefined]
 **eventAttendees** | [**Array&lt;EventAttendeeDTO&gt;**](EventAttendeeDTO.md) |  | [optional] [default to undefined]
-**effectiveStartTime** | **string** |  | [optional] [default to undefined]
-**rescheduled** | **boolean** |  | [optional] [default to undefined]
-**effectiveEndTime** | **string** |  | [optional] [default to undefined]
 **upcoming** | **boolean** |  | [optional] [default to undefined]
 **missed** | **boolean** |  | [optional] [default to undefined]
 **cancelled** | **boolean** |  | [optional] [default to undefined]
+**effectiveStartTime** | **string** |  | [optional] [default to undefined]
+**rescheduled** | **boolean** |  | [optional] [default to undefined]
+**effectiveEndTime** | **string** |  | [optional] [default to undefined]
 **virtual** | **boolean** |  | [optional] [default to undefined]
 **completed** | **boolean** |  | [optional] [default to undefined]
 
@@ -52,12 +52,12 @@ const instance: EventOccurrenceDTO = {
     creation,
     modified,
     eventAttendees,
-    effectiveStartTime,
-    rescheduled,
-    effectiveEndTime,
     upcoming,
     missed,
     cancelled,
+    effectiveStartTime,
+    rescheduled,
+    effectiveEndTime,
     virtual,
     completed,
 };

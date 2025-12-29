@@ -41,6 +41,10 @@ npm run generate:apis
 npm run generate:api user-service http://localhost:8081/v3/api-docs
 ```
 
+```bash
+node scripts/generate-single-api.js profile-service-client http://localhost:49202/e-docs
+```
+
 ## Usage
 
 ### Basic Usage

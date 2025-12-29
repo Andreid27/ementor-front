@@ -989,6 +989,12 @@ export interface EventAttendee {
     'expected'?: boolean;
     /**
      * 
+     * @type {boolean}
+     * @memberof EventAttendee
+     */
+    'attended'?: boolean;
+    /**
+     * 
      * @type {number}
      * @memberof EventAttendee
      */
@@ -999,12 +1005,6 @@ export interface EventAttendee {
      * @memberof EventAttendee
      */
     'effectiveCustomPrice'?: number;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof EventAttendee
-     */
-    'attended'?: boolean;
     /**
      * 
      * @type {boolean}
@@ -1383,24 +1383,6 @@ export interface EventOccurrenceDTO {
     'eventAttendees'?: Array<EventAttendeeDTO>;
     /**
      * 
-     * @type {string}
-     * @memberof EventOccurrenceDTO
-     */
-    'effectiveStartTime'?: string;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof EventOccurrenceDTO
-     */
-    'rescheduled'?: boolean;
-    /**
-     * 
-     * @type {string}
-     * @memberof EventOccurrenceDTO
-     */
-    'effectiveEndTime'?: string;
-    /**
-     * 
      * @type {boolean}
      * @memberof EventOccurrenceDTO
      */
@@ -1417,6 +1399,24 @@ export interface EventOccurrenceDTO {
      * @memberof EventOccurrenceDTO
      */
     'cancelled'?: boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof EventOccurrenceDTO
+     */
+    'effectiveStartTime'?: string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof EventOccurrenceDTO
+     */
+    'rescheduled'?: boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof EventOccurrenceDTO
+     */
+    'effectiveEndTime'?: string;
     /**
      * 
      * @type {boolean}
@@ -2395,12 +2395,6 @@ export interface PageBankTransferPaymentDTO {
     'totalElements'?: number;
     /**
      * 
-     * @type {PageableObject}
-     * @memberof PageBankTransferPaymentDTO
-     */
-    'pageable'?: PageableObject;
-    /**
-     * 
      * @type {boolean}
      * @memberof PageBankTransferPaymentDTO
      */
@@ -2417,6 +2411,12 @@ export interface PageBankTransferPaymentDTO {
      * @memberof PageBankTransferPaymentDTO
      */
     'numberOfElements'?: number;
+    /**
+     * 
+     * @type {PageableObject}
+     * @memberof PageBankTransferPaymentDTO
+     */
+    'pageable'?: PageableObject;
     /**
      * 
      * @type {number}
@@ -2468,12 +2468,6 @@ export interface PageStudentProfessorRelationshipDTO {
     'totalElements'?: number;
     /**
      * 
-     * @type {PageableObject}
-     * @memberof PageStudentProfessorRelationshipDTO
-     */
-    'pageable'?: PageableObject;
-    /**
-     * 
      * @type {boolean}
      * @memberof PageStudentProfessorRelationshipDTO
      */
@@ -2490,6 +2484,12 @@ export interface PageStudentProfessorRelationshipDTO {
      * @memberof PageStudentProfessorRelationshipDTO
      */
     'numberOfElements'?: number;
+    /**
+     * 
+     * @type {PageableObject}
+     * @memberof PageStudentProfessorRelationshipDTO
+     */
+    'pageable'?: PageableObject;
     /**
      * 
      * @type {number}
@@ -2541,12 +2541,6 @@ export interface PageWalletDTO {
     'totalElements'?: number;
     /**
      * 
-     * @type {PageableObject}
-     * @memberof PageWalletDTO
-     */
-    'pageable'?: PageableObject;
-    /**
-     * 
      * @type {boolean}
      * @memberof PageWalletDTO
      */
@@ -2563,6 +2557,12 @@ export interface PageWalletDTO {
      * @memberof PageWalletDTO
      */
     'numberOfElements'?: number;
+    /**
+     * 
+     * @type {PageableObject}
+     * @memberof PageWalletDTO
+     */
+    'pageable'?: PageableObject;
     /**
      * 
      * @type {number}
@@ -2602,18 +2602,6 @@ export interface PageWalletDTO {
 export interface PageableObject {
     /**
      * 
-     * @type {number}
-     * @memberof PageableObject
-     */
-    'pageNumber'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof PageableObject
-     */
-    'pageSize'?: number;
-    /**
-     * 
      * @type {boolean}
      * @memberof PageableObject
      */
@@ -2624,6 +2612,18 @@ export interface PageableObject {
      * @memberof PageableObject
      */
     'unpaged'?: boolean;
+    /**
+     * 
+     * @type {number}
+     * @memberof PageableObject
+     */
+    'pageNumber'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof PageableObject
+     */
+    'pageSize'?: number;
     /**
      * 
      * @type {number}
@@ -3489,10 +3489,10 @@ export interface ProfessorPreviewDTO {
     'speciality'?: string;
     /**
      * 
-     * @type {string}
+     * @type {{ [key: string]: Array<string>; }}
      * @memberof ProfessorPreviewDTO
      */
-    'pictureUrl'?: string;
+    'attributes'?: { [key: string]: Array<string>; };
     /**
      * 
      * @type {string}
@@ -3675,6 +3675,12 @@ export interface ProfessorProfileDTO {
      * @memberof ProfessorProfileDTO
      */
     'bankAccounts'?: Array<BankAccountDTO>;
+    /**
+     * 
+     * @type {{ [key: string]: Array<string>; }}
+     * @memberof ProfessorProfileDTO
+     */
+    'attributes'?: { [key: string]: Array<string>; };
 }
 /**
  * 
@@ -4261,13 +4267,13 @@ export interface SortObject {
      * @type {boolean}
      * @memberof SortObject
      */
-    'sorted'?: boolean;
+    'unsorted'?: boolean;
     /**
      * 
      * @type {boolean}
      * @memberof SortObject
      */
-    'unsorted'?: boolean;
+    'sorted'?: boolean;
     /**
      * 
      * @type {boolean}

@@ -176,8 +176,8 @@ const EmentorAvatar = forwardRef<any, EmentorAvatarProps>(
     // Get user profile (conditionally fetches only what's needed based on userType)
     const profile = useUserProfile(userId, userType, shouldFetchProfile)
 
-    // Get avatar URL
-    const { avatarUrl } = useAvatarUrl(userId, userType, fullSize, avatarSrc, profile)
+    // Get avatar URL and loading state
+    const { avatarUrl, isLoading } = useAvatarUrl(userId, userType, fullSize, avatarSrc, profile)
 
     // Generate initials from profile or alt text
     const getInitials = () => {
@@ -229,7 +229,25 @@ const EmentorAvatar = forwardRef<any, EmentorAvatarProps>(
         imgProps={enhancedImgProps}
         alt={alt}
       >
-        {!avatarUrl && getInitials()}
+        {isLoading ? (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" opacity="0.25" />
+              <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round">
+                <animateTransform
+                  attributeName="transform"
+                  type="rotate"
+                  from="0 12 12"
+                  to="360 12 12"
+                  dur="1s"
+                  repeatCount="indefinite"
+                />
+              </path>
+            </svg>
+          </div>
+        ) : !avatarUrl ? (
+          getInitials()
+        ) : null}
       </AvatarComponent>
     )
   }

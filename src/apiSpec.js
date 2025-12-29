@@ -1,4 +1,4 @@
-export const LOCAL_HOST = 'http://localhost'
+export const LOCAL_HOST = 'http://localhost:49202'
 
 export const PROD_HOST = process.env.NEXT_PUBLIC_PROD_HOST
 

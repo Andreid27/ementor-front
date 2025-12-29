@@ -15,9 +15,9 @@ Name | Type | Description | Notes
 **hasCustomPricing** | **boolean** |  | [optional] [default to undefined]
 **customPrice** | **number** |  | [optional] [default to undefined]
 **expected** | **boolean** |  | [optional] [default to undefined]
+**attended** | **boolean** |  | [optional] [default to undefined]
 **customPricing** | **number** |  | [optional] [default to undefined]
 **effectiveCustomPrice** | **number** |  | [optional] [default to undefined]
-**attended** | **boolean** |  | [optional] [default to undefined]
 **eventOccurrenceAttendee** | **boolean** |  | [optional] [default to undefined]
 **recurringSeriesAttendee** | **boolean** |  | [optional] [default to undefined]
 **effectiveEventId** | **string** |  | [optional] [default to undefined]
@@ -38,9 +38,9 @@ const instance: EventAttendee = {
     hasCustomPricing,
     customPrice,
     expected,
+    attended,
     customPricing,
     effectiveCustomPrice,
-    attended,
     eventOccurrenceAttendee,
     recurringSeriesAttendee,
     effectiveEventId,

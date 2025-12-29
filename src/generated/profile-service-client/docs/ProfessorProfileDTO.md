@@ -18,6 +18,7 @@ Name | Type | Description | Notes
 **invitationCode** | **string** |  | [optional] [default to undefined]
 **address** | [**AddressDTO**](AddressDTO.md) |  | [optional] [default to undefined]
 **bankAccounts** | [**Array&lt;BankAccountDTO&gt;**](BankAccountDTO.md) |  | [optional] [default to undefined]
+**attributes** | **{ [key: string]: Array&lt;string&gt;; }** |  | [optional] [default to undefined]
 
 ## Example
 
@@ -38,6 +39,7 @@ const instance: ProfessorProfileDTO = {
     invitationCode,
     address,
     bankAccounts,
+    attributes,
 };
 ```
 

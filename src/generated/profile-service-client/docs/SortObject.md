@@ -5,8 +5,8 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**sorted** | **boolean** |  | [optional] [default to undefined]
 **unsorted** | **boolean** |  | [optional] [default to undefined]
+**sorted** | **boolean** |  | [optional] [default to undefined]
 **empty** | **boolean** |  | [optional] [default to undefined]
 
 ## Example
@@ -15,8 +15,8 @@ Name | Type | Description | Notes
 import { SortObject } from 'ementor-api-client';
 
 const instance: SortObject = {
-    sorted,
     unsorted,
+    sorted,
     empty,
 };
 ```
