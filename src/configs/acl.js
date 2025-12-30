@@ -14,8 +14,12 @@ const defineRulesFor = (role, profileCompleted, subject) => {
   if (role === 'ADMIN') {
     can('manage', 'all')
   } else if (role === 'PROFESSOR') {
-    can(['read'], 'acl-page')
-    can(['read'], 'professor-pages')
+    if (profileCompleted) {
+      can(['read'], 'acl-page')
+      can(['read'], 'professor-pages')
+    } else {
+      can(['read'], 'professor-profile-complete-page')
+    }
   } else if (role === 'STUDENT') {
     if (profileCompleted) {
       can(['read'], 'student-pages')
@@ -23,7 +27,9 @@ const defineRulesFor = (role, profileCompleted, subject) => {
       can(['read'], 'student-profile-complete-page')
     }
   } else {
-    can(['read', 'create', 'update', 'delete'], subject)
+    // Users without a role (new users) should have access to complete their profile
+    can(['read'], 'student-profile-complete-page')
+    can(['read'], 'professor-profile-complete-page')
   }
 
   return rules

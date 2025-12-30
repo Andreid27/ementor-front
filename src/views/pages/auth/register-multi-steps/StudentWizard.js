@@ -250,7 +250,8 @@ const StudentWizard = ({ onBack }) => {
         router.replace(redirectURL)
       } catch (tokenError) {
         console.error('Token refresh error:', tokenError)
-        auth.logout()
+        toast.error('Profil creat, dar a apărut o eroare la autentificare. Vă rugăm să vă reconectați.')
+        // Don't logout - let the user stay on the page
       }
     } catch (error) {
       setSubmitLoading(false)

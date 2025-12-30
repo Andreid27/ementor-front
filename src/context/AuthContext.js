@@ -61,15 +61,21 @@ const AuthProvider = ({ children }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const extractUserData = (decodedToken) => ({
-    email: decodedToken.email,
-    firstName: decodedToken.given_name,
-    lastName: decodedToken.family_name,
-    role: decodedToken.realm_access.roles.includes('ADMIN') ? 'ADMIN' : decodedToken.realm_access.roles.includes('PROFESSOR') ? 'PROFESSOR' : 'STUDENT',
-    profilePicture: decodedToken.picture,
-    profileCompleted: decodedToken.profile_completed ? decodedToken.profile_completed : false,
-    id: decodedToken.sub
-  });
+  const extractUserData = (decodedToken) => {
+    // Handle users without realm_access (new users without roles yet)
+    const roles = decodedToken.realm_access?.roles || []
+    const role = roles.includes('ADMIN') ? 'ADMIN' : roles.includes('PROFESSOR') ? 'PROFESSOR' : roles.includes('STUDENT') ? 'STUDENT' : null
+
+    return {
+      email: decodedToken.email,
+      firstName: decodedToken.given_name,
+      lastName: decodedToken.family_name,
+      role: role,
+      profilePicture: decodedToken.picture,
+      profileCompleted: decodedToken.profile_completed ? decodedToken.profile_completed : false,
+      id: decodedToken.sub
+    }
+  };
 
   const handleLogin = (params, errorCallback) => {
     const parsedToken = jwt.decode(params.access_token);

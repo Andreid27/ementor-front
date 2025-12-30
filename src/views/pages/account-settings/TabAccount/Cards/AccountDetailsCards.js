@@ -13,9 +13,10 @@ import countryCodes from '../../../auth/register-multi-steps/countryCodes.json'
 import { addUser, updateTokens } from 'src/store/apps/user'
 import { useDispatch } from 'react-redux'
 
-const AccountDetailsCard = ({ fullProfile, setFullProfile }, ref) => {
+const AccountDetailsCard = ({ fullProfile, setFullProfile, userRole }, ref) => {
   const dispatch = useDispatch()
   const [loading, setLoading] = useState(false)
+  const isProfessor = userRole === 'PROFESSOR'
   const phoneNumber = fullProfile?.phone ? fullProfile.phone.substring(fullProfile.phone.length - 9) : ''
   const prefix = fullProfile?.phone ? fullProfile.phone.substring(0, fullProfile.phone.length - 9) : ''
 
@@ -124,51 +125,53 @@ const AccountDetailsCard = ({ fullProfile, setFullProfile }, ref) => {
           />
         </Grid>
 
-        <Grid item xs={12} sm={6}>
-          <Grid container spacing={1}>
-            <Grid item xs={3} sm={2} style={{ marginRight: '70px' }}>
-              <Controller
-                name='prefix'
-                control={control}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField select onChange={onChange} value={value} name='prefix' label='Țară'>
-                    {countryCodes.map(country => (
-                      <MenuItem key={country.code} value={country.dial_code}>
-                        {country.emoji + country.dial_code}
-                      </MenuItem>
-                    ))}
-                  </CustomTextField>
-                )}
-              />
-            </Grid>
+        {!isProfessor && (
+          <Grid item xs={12} sm={6}>
+            <Grid container spacing={1}>
+              <Grid item xs={3} sm={2} style={{ marginRight: '70px' }}>
+                <Controller
+                  name='prefix'
+                  control={control}
+                  render={({ field: { value, onChange } }) => (
+                    <CustomTextField select onChange={onChange} value={value} name='prefix' label='Țară'>
+                      {countryCodes.map(country => (
+                        <MenuItem key={country.code} value={country.dial_code}>
+                          {country.emoji + country.dial_code}
+                        </MenuItem>
+                      ))}
+                    </CustomTextField>
+                  )}
+                />
+              </Grid>
 
-            <Grid item xs={7} sm={6}>
-              <Controller
-                name='phone'
-                control={control}
-                rules={{
-                  required: true,
-                  pattern: {
-                    value: /^[0-9]{9}$/, // You can adjust the regex pattern for your specific phone number format
-                    message: 'Acest număr de telefonu este valid.'
-                  }
-                }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
-                    fullWidth
-                    value={value}
-                    label='Număr de telefon'
-                    onChange={onChange}
-                    placeholder='740123123'
-                    error={Boolean(errors.phone)}
-                    aria-describedby='validation-async-phone'
-                    {...(errors.phone && { helperText: errors.phone.message })}
-                  />
-                )}
-              />
+              <Grid item xs={7} sm={6}>
+                <Controller
+                  name='phone'
+                  control={control}
+                  rules={{
+                    required: true,
+                    pattern: {
+                      value: /^[0-9]{9}$/, // You can adjust the regex pattern for your specific phone number format
+                      message: 'Acest număr de telefonu este valid.'
+                    }
+                  }}
+                  render={({ field: { value, onChange } }) => (
+                    <CustomTextField
+                      fullWidth
+                      value={value}
+                      label='Număr de telefon'
+                      onChange={onChange}
+                      placeholder='740123123'
+                      error={Boolean(errors.phone)}
+                      aria-describedby='validation-async-phone'
+                      {...(errors.phone && { helperText: errors.phone.message })}
+                    />
+                  )}
+                />
+              </Grid>
             </Grid>
           </Grid>
-        </Grid>
+        )}
       </Grid>
     </form>
   )

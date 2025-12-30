@@ -126,6 +126,7 @@ const ProfessorWizard = ({ onBack }) => {
   })
 
   const [profile, setProfile] = useState({
+    fullName: '',
     university: 'choose',
     speciality: 'choose',
     profilePicture: null,
@@ -176,6 +177,7 @@ const ProfessorWizard = ({ onBack }) => {
     }
 
     const requestBody = {
+      fullName: profile.fullName,
       pictureId: profile.profilePicture,
       universityId: profile.university,
       specialityId: profile.speciality,
@@ -186,7 +188,8 @@ const ProfessorWizard = ({ onBack }) => {
     }
 
     try {
-      await apiClient.post(apiSpec.PROD_HOST + '/professor-profile/create', requestBody)
+      // await apiClient.post(apiSpec.PROD_HOST + '/professor-profile/create', requestBody)
+      await apiClient.post(apiSpec.LOCAL_HOST + '/professor-profile/create', requestBody)
 
       toast.success('Profil de profesor creat cu succes!')
 
@@ -210,7 +213,10 @@ const ProfessorWizard = ({ onBack }) => {
           router.replace(redirectURL)
         })
         .catch(error => {
-          auth.logout()
+          console.error('Token refresh error:', error)
+          toast.error('Profil creat, dar a apărut o eroare la autentificare. Vă rugăm să vă reconectați.')
+
+          // Don't logout - let the user stay on the page
         })
     } catch (error) {
       setSubmitLoading(false)

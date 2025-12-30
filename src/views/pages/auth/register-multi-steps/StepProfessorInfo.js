@@ -36,7 +36,8 @@ const StepProfessorInfo = ({ handleNext, handlePrev, initPrerequire, setInitPrer
   const auth = useAuth()
 
   useEffect(() => {
-    apiClient.get(apiSpec.PROD_HOST + apiSpec.STUDENT_PROFILE_CONTROLLER + '/profile-prerequire').then(response => {
+    // apiClient.get(apiSpec.PROD_HOST + apiSpec.STUDENT_PROFILE_CONTROLLER + '/profile-prerequire').then(response => {
+    apiClient.get(apiSpec.LOCAL_HOST + '/student-profile/profile-prerequire').then(response => {
       setInitPrerequire(response.data)
     })
     setUniversityId(profile.university)
@@ -50,11 +51,15 @@ const StepProfessorInfo = ({ handleNext, handlePrev, initPrerequire, setInitPrer
   } = useForm({ defaultValues: profile })
 
   const onSubmit = async data => {
-    if (!profile.profilePicture || validateProfilePicture(profile)) {
-      setImageValidationError(true)
+    // Allow either uploaded profile picture OR existing Google profile picture
+    const hasUploadedPicture = profile.profilePicture && !validateProfilePicture(profile)
+    const hasGooglePicture = user.profilePicture && user.profilePicture.trim().length > 0
 
+    if (!hasUploadedPicture && !hasGooglePicture) {
+      setImageValidationError(true)
       return
     }
+
     setLoading(true)
     data.profilePicture = profile.profilePicture
     setLoading(false)
@@ -131,9 +136,7 @@ const StepProfessorInfo = ({ handleNext, handlePrev, initPrerequire, setInitPrer
           <Typography variant='h3' sx={{ mb: 1.5 }}>
             Informații profesor
           </Typography>
-          <Typography sx={{ color: 'text.secondary' }}>
-            Completați detaliile profilului dvs. academic
-          </Typography>
+          <Typography sx={{ color: 'text.secondary' }}>Completați detaliile profilului dvs. academic</Typography>
         </Box>
 
         <Grid container spacing={5}>
@@ -179,7 +182,29 @@ const StepProfessorInfo = ({ handleNext, handlePrev, initPrerequire, setInitPrer
 
           <Grid item xs={12} sm={6}>
             <Grid container spacing={5}>
-              <Grid item xs={12} sm={12}></Grid>
+              <Grid item xs={12} sm={12}>
+                <Controller
+                  name='fullName'
+                  control={control}
+                  rules={{
+                    required: 'Numele complet este obligatoriu',
+                    minLength: { value: 3, message: 'Numele trebuie să conțină cel puțin 3 caractere' },
+                    maxLength: { value: 100, message: 'Numele nu poate depăși 100 de caractere' }
+                  }}
+                  render={({ field: { value, onChange } }) => (
+                    <CustomTextField
+                      fullWidth
+                      value={value}
+                      label='Nume complet (cu titluri academice)'
+                      onChange={onChange}
+                      placeholder='Conf. Dr. Ing. Popescu Ion'
+                      error={Boolean(errors.fullName)}
+                      aria-describedby='validation-fullname'
+                      {...(errors.fullName && { helperText: errors.fullName.message })}
+                    />
+                  )}
+                />
+              </Grid>
 
               <Grid item xs={3} sm={2} style={{ marginRight: '25%' }}>
                 <Controller
