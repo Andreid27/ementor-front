@@ -13,6 +13,8 @@ export const getStaticPaths = () => {
     paths: [
       { params: { tab: 'account' } },
       { params: { tab: 'security' } },
+      { params: { tab: 'payment' } },
+      { params: { tab: 'e-factura' } },
 
       // { params: { tab: 'billing' } }, TODO add when is needed, for now commented by me
       { params: { tab: 'notifications' } },

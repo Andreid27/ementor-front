@@ -241,11 +241,12 @@ const TabAccount = () => {
 
     let accountDetailsData = accountDetailsRef.current.getValues()
     let personalInfoData = personalInfoRef.current.getValues()
-    let addressInfoData = addressInfoRef.current.getValues()
+    // let addressInfoData = addressInfoRef.current.getValues() // Moved to conditional
     accountDetailsData.phone = accountDetailsData.prefix + accountDetailsData.phone
 
     if (isStudent) {
       // Student request body structure
+      let addressInfoData = addressInfoRef.current.getValues()
       personalInfoData.user = accountDetailsData
       personalInfoData.address = addressInfoData
 
@@ -266,12 +267,16 @@ const TabAccount = () => {
     } else if (isProfessor) {
       // Professor request body structure
       const requestBody = {
+        ...fullProfile, // Preserve existing fields (e.g. bankAccounts)
         fullName: personalInfoData.fullName,
         universityId: personalInfoData.universityId,
         specialityId: personalInfoData.specialityId,
         about: personalInfoData.about || null,
-        user: accountDetailsData,
-        address: addressInfoData,
+        user: {
+          ...fullProfile.user, // Preserve existing user fields
+          ...accountDetailsData
+        },
+        address: fullProfile.address, // Keep address as is (managed in E-Invoice tab)
         pictureId: fullProfile.pictureId
       }
 
@@ -320,7 +325,8 @@ const TabAccount = () => {
     } else {
       const updateEndpoint = isStudent
         ? apiSpec.STUDENT_PROFILE_CONTROLLER + '/update'
-        : apiSpec.PROD_HOST + '/professor-profile/update'
+        : // : apiSpec.PROD_HOST + apiSpec.PROFILE_SERVICE +'/professor-profile/update'
+          'http://localhost:49202' + '/professor-profile/update'
 
       apiClient
         .put(updateEndpoint, requestBody)
@@ -425,7 +431,6 @@ const TabAccount = () => {
       )}
       <Grid item xs={12}>
         <Card>
-          <CardHeader title='Profile Details' />
           <CardContent sx={{ pt: 0 }}>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <Box padding={5}>
@@ -479,11 +484,13 @@ const TabAccount = () => {
           <CardContent>
             <Grid container spacing={5}>
               <Grid item xs={12}>
-                <AddressInfoCard
-                  address={fullProfile.address}
-                  counties={initPrerequire.counties}
-                  ref={addressInfoRef}
-                />
+                {userData.data.role !== 'PROFESSOR' && (
+                  <AddressInfoCard
+                    address={fullProfile.address}
+                    counties={initPrerequire.counties}
+                    ref={addressInfoRef}
+                  />
+                )}
               </Grid>
             </Grid>
             <Grid item xs={12} sx={{ pt: theme => `${theme.spacing(6.5)} !important` }}>

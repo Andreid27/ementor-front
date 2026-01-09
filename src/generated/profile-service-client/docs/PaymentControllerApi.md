@@ -10,7 +10,7 @@ All URIs are relative to *http://localhost:49202*
 |[**generateReference**](#generatereference) | **POST** /payment/references/generate | Generate payment reference code|
 |[**getConfirmationHistory**](#getconfirmationhistory) | **GET** /payment/confirmation-history | Get payment confirmation history for current professor|
 |[**getConfirmationResult**](#getconfirmationresult) | **GET** /payment/confirmation-result/{paymentId} | Get payment confirmation result with FIFO allocation details|
-|[**getMyPayments**](#getmypayments) | **GET** /payment/my | Get payments for current student|
+|[**getMyPayments1**](#getmypayments1) | **GET** /payment/my | Get payments for current student|
 |[**getPaymentById**](#getpaymentbyid) | **GET** /payment/{paymentId} | Get specific payment by ID|
 |[**getPaymentForConfirmation**](#getpaymentforconfirmation) | **GET** /payment/confirmation/{paymentId} | Get payment details for confirmation|
 |[**getPendingPayments**](#getpendingpayments) | **GET** /payment/pending | Get pending payments for current professor|
@@ -343,8 +343,8 @@ const { status, data } = await apiInstance.getConfirmationResult(
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **getMyPayments**
-> Array<BankTransferPaymentDTO> getMyPayments()
+# **getMyPayments1**
+> Array<BankTransferPaymentDTO> getMyPayments1()
 
 
 ### Example
@@ -358,7 +358,7 @@ import {
 const configuration = new Configuration();
 const apiInstance = new PaymentControllerApi(configuration);
 
-const { status, data } = await apiInstance.getMyPayments();
+const { status, data } = await apiInstance.getMyPayments1();
 ```
 
 ### Parameters

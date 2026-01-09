@@ -1,33 +1,32 @@
-# InvoiceControllerApi
+# ProfessorPaymentControllerApi
 
 All URIs are relative to *http://localhost:49202*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**callback**](#callback) | **POST** /invoices/callback | |
-|[**downloadInvoiceById**](#downloadinvoicebyid) | **GET** /invoices/{id}/download | Download invoice by ID|
-|[**getAuthUrl**](#getauthurl) | **POST** /invoices/authUrl | |
-|[**getMyInvoices**](#getmyinvoices) | **GET** /invoices/my | Get invoices for the current user|
+|[**createPortalSession**](#createportalsession) | **POST** /subscriptions/portal | Create Stripe Customer Portal session for billing management|
+|[**getMyPayments**](#getmypayments) | **GET** /subscriptions/payments | Get my payments|
+|[**getSubscriptionStatus**](#getsubscriptionstatus) | **GET** /subscriptions/my | Get current subscription status|
 
-# **callback**
-> string callback()
+# **createPortalSession**
+> { [key: string]: string; } createPortalSession()
 
 
 ### Example
 
 ```typescript
 import {
-    InvoiceControllerApi,
+    ProfessorPaymentControllerApi,
     Configuration
 } from 'ementor-api-client';
 
 const configuration = new Configuration();
-const apiInstance = new InvoiceControllerApi(configuration);
+const apiInstance = new ProfessorPaymentControllerApi(configuration);
 
-let code: string; // (default to undefined)
+let returnUrl: string; // (default to undefined)
 
-const { status, data } = await apiInstance.callback(
-    code
+const { status, data } = await apiInstance.createPortalSession(
+    returnUrl
 );
 ```
 
@@ -35,12 +34,12 @@ const { status, data } = await apiInstance.callback(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **code** | [**string**] |  | defaults to undefined|
+| **returnUrl** | [**string**] |  | defaults to undefined|
 
 
 ### Return type
 
-**string**
+**{ [key: string]: string; }**
 
 ### Authorization
 
@@ -59,25 +58,27 @@ const { status, data } = await apiInstance.callback(
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **downloadInvoiceById**
-> File downloadInvoiceById()
+# **getMyPayments**
+> PageProfessorPaymentDTO getMyPayments()
 
 
 ### Example
 
 ```typescript
 import {
-    InvoiceControllerApi,
+    ProfessorPaymentControllerApi,
     Configuration
 } from 'ementor-api-client';
 
 const configuration = new Configuration();
-const apiInstance = new InvoiceControllerApi(configuration);
+const apiInstance = new ProfessorPaymentControllerApi(configuration);
 
-let id: string; // (default to undefined)
+let page: number; // (optional) (default to 0)
+let size: number; // (optional) (default to 10)
 
-const { status, data } = await apiInstance.downloadInvoiceById(
-    id
+const { status, data } = await apiInstance.getMyPayments(
+    page,
+    size
 );
 ```
 
@@ -85,58 +86,13 @@ const { status, data } = await apiInstance.downloadInvoiceById(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **id** | [**string**] |  | defaults to undefined|
+| **page** | [**number**] |  | (optional) defaults to 0|
+| **size** | [**number**] |  | (optional) defaults to 10|
 
 
 ### Return type
 
-**File**
-
-### Authorization
-
-[OIDC Authentication](../README.md#OIDC Authentication)
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: */*
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**404** | Not Found |  -  |
-|**403** | Forbidden |  -  |
-|**200** | Request successful |  -  |
-|**401** | Unauthorized |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **getAuthUrl**
-> string getAuthUrl()
-
-
-### Example
-
-```typescript
-import {
-    InvoiceControllerApi,
-    Configuration
-} from 'ementor-api-client';
-
-const configuration = new Configuration();
-const apiInstance = new InvoiceControllerApi(configuration);
-
-const { status, data } = await apiInstance.getAuthUrl();
-```
-
-### Parameters
-This endpoint does not have any parameters.
-
-
-### Return type
-
-**string**
+**PageProfessorPaymentDTO**
 
 ### Authorization
 
@@ -155,22 +111,22 @@ This endpoint does not have any parameters.
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **getMyInvoices**
-> Array<InvoiceDTO> getMyInvoices()
+# **getSubscriptionStatus**
+> ProfessorSubscriptionDTO getSubscriptionStatus()
 
 
 ### Example
 
 ```typescript
 import {
-    InvoiceControllerApi,
+    ProfessorPaymentControllerApi,
     Configuration
 } from 'ementor-api-client';
 
 const configuration = new Configuration();
-const apiInstance = new InvoiceControllerApi(configuration);
+const apiInstance = new ProfessorPaymentControllerApi(configuration);
 
-const { status, data } = await apiInstance.getMyInvoices();
+const { status, data } = await apiInstance.getSubscriptionStatus();
 ```
 
 ### Parameters
@@ -179,7 +135,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**Array<InvoiceDTO>**
+**ProfessorSubscriptionDTO**
 
 ### Authorization
 
@@ -194,9 +150,7 @@ This endpoint does not have any parameters.
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**403** | Forbidden |  -  |
-|**200** | Request successful |  -  |
-|**401** | Unauthorized |  -  |
+|**200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

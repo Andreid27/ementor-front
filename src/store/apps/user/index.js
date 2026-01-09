@@ -3,7 +3,10 @@ import toast from 'react-hot-toast'
 
 // ** Axios Imports
 import axios from 'axios'
-import { profileServiceClient } from 'src/services'
+import * as apiSpec from 'src/apiSpec'
+// NOTE: profileServiceClient import may cause circular dependency warnings during dev
+// but is needed for other thunks. Subscription uses direct axios to avoid issues.
+// import { profileServiceClient } from 'src/services'
 import { transformStudentData } from 'src/pages/apps/user/list/utils'
 
 // Helper to check if cache is expired (older than 1 month)
@@ -14,9 +17,19 @@ const isCacheExpired = timestamp => {
   return Date.now() - timestamp > oneMonthInMs
 }
 
+// Helper to check if subscription cache is expired (older than 2 hours)
+const isSubscriptionCacheExpired = timestamp => {
+  if (!timestamp) return true
+  const twoHoursInMs = 2 * 60 * 60 * 1000 // 2 hours
+
+  return Date.now() - timestamp > twoHoursInMs
+}
+
 // ** Fetch Active Students
 export const fetchData = createAsyncThunk('appUsers/fetchData', async (_, { rejectWithValue }) => {
   try {
+    // Dynamic import to avoid circular dependency
+    const { profileServiceClient } = await import('src/services')
     const response = await profileServiceClient.studentProfessorRelationship.getActiveStudentsForCurrentProfessor()
 
     // Transform raw DTOs to StudentListItem format for consistency
@@ -39,6 +52,8 @@ export const fetchInactiveStudents = createAsyncThunk(
   'appUsers/fetchInactiveStudents',
   async ({ professorId, params = {} }, { rejectWithValue }) => {
     try {
+      // Dynamic import to avoid circular dependency
+      const { profileServiceClient } = await import('src/services')
       const response = await profileServiceClient.studentProfessorRelationship.getInactiveStudentsForProfessor({
         professorId,
         page: params.page !== undefined ? params.page : 0,
@@ -108,21 +123,25 @@ export const fetchStudentsByIds = createAsyncThunk(
         foundStudents = [...foundStudents, ...newlyFound]
         missingIds = missingIds.filter(id => !updatedMap.has(id))
 
-        console.debug('[fetchStudentsByIds] Tier 2 - After refresh, found:', newlyFound.length, ', still missing:', missingIds.length)
+        console.debug(
+          '[fetchStudentsByIds] Tier 2 - After refresh, found:',
+          newlyFound.length,
+          ', still missing:',
+          missingIds.length
+        )
       }
 
       // 4. TIER 3: Batch API for remaining IDs (likely inactive students)
       if (missingIds.length > 0) {
         console.debug('[fetchStudentsByIds] Tier 3 - Calling batch API for:', missingIds.length, 'IDs')
         try {
-          const response = await profileServiceClient.studentProfessorRelationship
-            .getRelationshipsByStudentIds({
-              getRelationshipsByStudentIdsRequest: {
-                studentIds: missingIds,
-                professorId: professorId,
-                includeInactive: true
-              }
-            })
+          const response = await profileServiceClient.studentProfessorRelationship.getRelationshipsByStudentIds({
+            getRelationshipsByStudentIdsRequest: {
+              studentIds: missingIds,
+              professorId: professorId,
+              includeInactive: true
+            }
+          })
 
           const batchStudents = transformStudentData(response.data || [])
           foundStudents = [...foundStudents, ...batchStudents]
@@ -339,6 +358,61 @@ export const clearProfessorCache = createAsyncThunk('appUsers/clearProfessorCach
   return userId
 })
 
+// ** Fetch Subscription Status with 2-hour cache (only for active subscriptions)
+// NOTE: Using direct axios call instead of profileServiceClient to avoid circular dependency
+export const fetchSubscriptionStatus = createAsyncThunk(
+  'appUsers/fetchSubscriptionStatus',
+  async (_, { getState, rejectWithValue }) => {
+    try {
+      // Check if we have a valid cached subscription
+      const state = getState()
+      const cachedSubscription = state.user.subscription
+      const subscriptionFetchedAt = state.user.subscriptionFetchedAt
+
+      // Only use cache if subscription is ACTIVE and cache is not expired
+      // If subscription is inactive or missing, always refetch (user might have paid)
+      if (
+        cachedSubscription &&
+        cachedSubscription.active === true &&
+        !isSubscriptionCacheExpired(subscriptionFetchedAt)
+      ) {
+        // Return cached data for active subscriptions
+        return { subscription: cachedSubscription, cached: true }
+      }
+
+      // Fetch from API for inactive/missing subscriptions or expired cache
+      // Using direct axios call to avoid circular dependency with profileServiceClient
+      const token = window.localStorage.getItem('accessToken')
+      const response = await axios.get(`http://localhost:49202/subscriptions/my`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      })
+
+      return {
+        subscription: response.data,
+        cached: false,
+        fetchedAt: Date.now()
+      }
+    } catch (error) {
+      console.error('Failed to fetch subscription status:', error)
+      // Show warning but don't block - user requested to proceed with warning on API errors
+      toast.error('Nu s-a putut verifica starea abonamentului. Continuați cu atenție.', {
+        duration: 5000,
+        icon: '⚠️'
+      })
+
+      return rejectWithValue({
+        message: error.response?.data?.message || error.message,
+        status: error.response?.status
+      })
+    }
+  }
+)
+
+// ** Clear Subscription Cache (used on logout)
+export const clearSubscriptionCache = createAsyncThunk('appUsers/clearSubscriptionCache', async () => {
+  return null
+})
+
 export const selectTokens = state => state.user.tokens
 
 export const selectUser = state => state.user.data
@@ -365,6 +439,26 @@ export const selectProfessorProfileLoading = userId => state => {
   return state.user.professorProfilesLoading?.[userId] || false
 }
 
+// ** Subscription Selectors
+export const selectSubscription = state => state.user.subscription
+
+export const selectSubscriptionLoading = state => state.user.subscriptionLoading || false
+
+export const selectSubscriptionError = state => state.user.subscriptionError
+
+export const selectHasActiveSubscription = state => {
+  const subscription = state.user.subscription
+  if (!subscription) return false
+  return subscription.active === true
+}
+
+export const selectIsSubscriptionCacheValid = state => {
+  const subscription = state.user.subscription
+  const fetchedAt = state.user.subscriptionFetchedAt
+  // Cache is only valid if subscription is active AND not expired
+  return subscription?.active === true && fetchedAt && !isSubscriptionCacheExpired(fetchedAt)
+}
+
 export const appUsersSlice = createSlice({
   name: 'appUsers',
   initialState: {
@@ -389,7 +483,12 @@ export const appUsersSlice = createSlice({
     professorProfilesErrors: {}, // { userId: error, ... }
     generations: [], // List of available generations
     generationsLoading: false, // Loading state for generations
-    selectedGeneration: null // Currently selected generation for filtering
+    selectedGeneration: null, // Currently selected generation for filtering
+    // Subscription state (2-hour cache)
+    subscription: null, // ProfessorSubscriptionDTO
+    subscriptionFetchedAt: null, // Timestamp of last subscription fetch
+    subscriptionLoading: false, // Loading state for subscription
+    subscriptionError: null // Error state for subscription
   },
   reducers: {},
   extraReducers: builder => {
@@ -527,6 +626,30 @@ export const appUsersSlice = createSlice({
       .addCase(fetchStudentsByGeneration.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload || 'Failed to fetch students by generation'
+      })
+      // ** Subscription Status Reducers
+      .addCase(fetchSubscriptionStatus.pending, state => {
+        state.subscriptionLoading = true
+        state.subscriptionError = null
+      })
+      .addCase(fetchSubscriptionStatus.fulfilled, (state, action) => {
+        state.subscriptionLoading = false
+        // Only update if it's a fresh fetch (not from cache)
+        if (!action.payload.cached) {
+          state.subscription = action.payload.subscription
+          state.subscriptionFetchedAt = action.payload.fetchedAt
+        }
+      })
+      .addCase(fetchSubscriptionStatus.rejected, (state, action) => {
+        state.subscriptionLoading = false
+        state.subscriptionError = action.payload?.message || 'Failed to fetch subscription'
+        // On error, allow user to proceed (as per user request) - don't clear existing subscription
+      })
+      .addCase(clearSubscriptionCache.fulfilled, state => {
+        state.subscription = null
+        state.subscriptionFetchedAt = null
+        state.subscriptionLoading = false
+        state.subscriptionError = null
       })
   }
 })

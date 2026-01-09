@@ -18,15 +18,18 @@ const AddressInfoCard = ({ address, counties }, ref) => {
     getValues
   } = useForm({ defaultValues: address })
 
-  const onSubmit = async data => {
-  }
+  const onSubmit = async data => {}
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <Box sx={{ mb: 6 }}>
-        <Typography variant='h3' sx={{ mb: 1.5 }}>
-          Informații educaționale
-        </Typography>
+      <Box sx={{ mb: 6, display: 'flex', alignItems: 'center' }}>
+        <Box
+          component='img'
+          src='/images/cards/address_round_icon.png'
+          alt='Address'
+          sx={{ height: 40, width: 40, mr: 3, borderRadius: '50%' }}
+        />
+        <Typography variant='h6'>Adresă</Typography>
       </Box>
       <Grid container spacing={5}>
         <Grid item xs={12} sm={6}>

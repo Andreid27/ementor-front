@@ -24,6 +24,11 @@ import TabAccount from 'src/views/pages/account-settings/TabAccount/TabAccount'
 
 // import TabBilling from 'src/views/pages/account-settings/TabBilling'
 import TabSecurity from 'src/views/pages/account-settings/TabSecurity'
+import TabPayment from 'src/views/pages/account-settings/TabPayment'
+import TabEInvoice from 'src/views/pages/account-settings/TabEInvoice'
+
+// ** Hooks
+import { useAuth } from 'src/hooks/useAuth'
 
 // import TabConnections from 'src/views/pages/account-settings/TabConnections'
 // import TabNotifications from 'src/views/pages/account-settings/TabNotifications'
@@ -64,7 +69,11 @@ const AccountSettings = ({ tab }) => {
 
   // ** Hooks
   const router = useRouter()
+  const auth = useAuth()
   const hideText = useMediaQuery(theme => theme.breakpoints.down('md'))
+
+  // Check if user is professor
+  const isProfessor = auth.user?.role === 'PROFESSOR'
 
   const handleChange = (event, value) => {
     setIsLoading(true)
@@ -79,7 +88,11 @@ const AccountSettings = ({ tab }) => {
 
   const tabContentList = {
     account: <TabAccount />,
-    security: <TabSecurity />
+    security: isProfessor ? undefined : <TabSecurity />,
+    ...(isProfessor && {
+      payment: <TabPayment />,
+      'e-factura': <TabEInvoice />
+    })
 
     // connections: <TabConnections />,
     // notifications: <TabNotifications />,
@@ -103,19 +116,45 @@ const AccountSettings = ({ tab }) => {
                   label={
                     <Box sx={{ display: 'flex', alignItems: 'center', ...(!hideText && { '& svg': { mr: 2 } }) }}>
                       <Icon fontSize='1.25rem' icon='tabler:users' />
-                      {!hideText && 'Account'}
+                      {!hideText && 'Cont'}
                     </Box>
                   }
                 />
-                <Tab
-                  value='security'
-                  label={
-                    <Box sx={{ display: 'flex', alignItems: 'center', ...(!hideText && { '& svg': { mr: 2 } }) }}>
-                      <Icon fontSize='1.25rem' icon='tabler:lock' />
-                      {!hideText && 'Security'}
-                    </Box>
-                  }
-                />
+                {!isProfessor && (
+                  <Tab
+                    value='security'
+                    label={
+                      <Box sx={{ display: 'flex', alignItems: 'center', ...(!hideText && { '& svg': { mr: 2 } }) }}>
+                        <Icon fontSize='1.25rem' icon='tabler:lock' />
+                        {!hideText && 'Securitate'}
+                      </Box>
+                    }
+                  />
+                )}
+                {/* E-factura tab - replaces security for professors */}
+                {isProfessor && (
+                  <Tab
+                    value='e-factura'
+                    label={
+                      <Box sx={{ display: 'flex', alignItems: 'center', ...(!hideText && { '& svg': { mr: 2 } }) }}>
+                        <Icon fontSize='1.25rem' icon='tabler:file-invoice' />
+                        {!hideText && 'E-factura'}
+                      </Box>
+                    }
+                  />
+                )}
+                {/* Payment tab - only for professors */}
+                {isProfessor && (
+                  <Tab
+                    value='payment'
+                    label={
+                      <Box sx={{ display: 'flex', alignItems: 'center', ...(!hideText && { '& svg': { mr: 2 } }) }}>
+                        <Icon fontSize='1.25rem' icon='tabler:credit-card' />
+                        {!hideText && 'Abonament'}
+                      </Box>
+                    }
+                  />
+                )}
                 {/* <Tab
                   value='billing'
                   label={

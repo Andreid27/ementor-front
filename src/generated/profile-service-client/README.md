@@ -67,7 +67,11 @@ Class | Method | HTTP request | Description
 *AdminPaymentControllerApi* | [**recalculateAllWallets**](docs/AdminPaymentControllerApi.md#recalculateallwallets) | **POST** /admin/payment-system/wallets/recalculate-all | Recalculate all user wallets (admin only - bulk operation)
 *AdminPaymentControllerApi* | [**recalculateUserWallet**](docs/AdminPaymentControllerApi.md#recalculateuserwallet) | **POST** /admin/payment-system/wallets/{userId}/recalculate | Recalculate user wallet based on balance changes (admin only)
 *AdminPaymentControllerApi* | [**syncStudentSoloClients**](docs/AdminPaymentControllerApi.md#syncstudentsoloclients) | **GET** /admin/payment-system/sync-student-solo-clients/{userId} | Sync student solo clients with payment system (admin only)
+*AdminSubscriptionControllerApi* | [**getGlobalPayments**](docs/AdminSubscriptionControllerApi.md#getglobalpayments) | **GET** /api/v1/admin/subscriptions/payments | Get global payments history
+*AdminSubscriptionControllerApi* | [**getProfessorsWithSubscription**](docs/AdminSubscriptionControllerApi.md#getprofessorswithsubscription) | **POST** /api/v1/admin/subscriptions/professors | Get paginated professor profiles with subscription info
+*AdminSubscriptionControllerApi* | [**overrideSubscription**](docs/AdminSubscriptionControllerApi.md#overridesubscription) | **POST** /api/v1/admin/subscriptions/professor/{professorId}/override | Override subscription expiration date
 *BankAccountControllerApi* | [**getBankAccountsForProfessor**](docs/BankAccountControllerApi.md#getbankaccountsforprofessor) | **GET** /bank-account/professor/{professorId} | Get bank accounts for a professor
+*CallbackControllerApi* | [**handleStripeWebhook**](docs/CallbackControllerApi.md#handlestripewebhook) | **POST** /callbacks/stripe | Stripe Webhook Endpoint
 *EventsControllerApi* | [**cancelEventOccurrence**](docs/EventsControllerApi.md#canceleventoccurrence) | **POST** /events/occurrence/cancel | Cancel an event occurrence
 *EventsControllerApi* | [**completeEventOccurrence**](docs/EventsControllerApi.md#completeeventoccurrence) | **POST** /events/occurrence/complete | Complete an event occurrence with attendance
 *EventsControllerApi* | [**createRecurringSeries**](docs/EventsControllerApi.md#createrecurringseries) | **POST** /events/series | Create a new recurring series
@@ -100,21 +104,29 @@ Class | Method | HTTP request | Description
 *HostFileControllerApi* | [**delete2**](docs/HostFileControllerApi.md#delete2) | **DELETE** /host-file/{id} | Delete a speciality by ID.
 *HostFileControllerApi* | [**download3**](docs/HostFileControllerApi.md#download3) | **GET** /host-file/download/{fileId} | Download file
 *HostFileControllerApi* | [**upload1**](docs/HostFileControllerApi.md#upload1) | **POST** /host-file/upload | Upload a document
+*InvoiceControllerApi* | [**callback**](docs/InvoiceControllerApi.md#callback) | **POST** /invoices/callback | 
 *InvoiceControllerApi* | [**downloadInvoiceById**](docs/InvoiceControllerApi.md#downloadinvoicebyid) | **GET** /invoices/{id}/download | Download invoice by ID
+*InvoiceControllerApi* | [**getAuthUrl**](docs/InvoiceControllerApi.md#getauthurl) | **POST** /invoices/authUrl | 
 *InvoiceControllerApi* | [**getMyInvoices**](docs/InvoiceControllerApi.md#getmyinvoices) | **GET** /invoices/my | Get invoices for the current user
+*OrganisationControllerApi* | [**createOrUpdateOrganisation**](docs/OrganisationControllerApi.md#createorupdateorganisation) | **PUT** /organisations/{professorId} | Create or update organisation
+*OrganisationControllerApi* | [**deleteOrganisation**](docs/OrganisationControllerApi.md#deleteorganisation) | **DELETE** /organisations/{professorId} | Delete organisation
+*OrganisationControllerApi* | [**getOrganisation**](docs/OrganisationControllerApi.md#getorganisation) | **GET** /organisations/{professorId} | Get organisation by professor ID
 *PaymentControllerApi* | [**canConfirmPayment**](docs/PaymentControllerApi.md#canconfirmpayment) | **GET** /payment/can-confirm/{paymentId} | Check if payment can be confirmed
 *PaymentControllerApi* | [**confirmPayment**](docs/PaymentControllerApi.md#confirmpayment) | **POST** /payment/confirm | Confirm a bank transfer payment
 *PaymentControllerApi* | [**createPayment**](docs/PaymentControllerApi.md#createpayment) | **POST** /payment | Create a new bank transfer payment
 *PaymentControllerApi* | [**generateReference**](docs/PaymentControllerApi.md#generatereference) | **POST** /payment/references/generate | Generate payment reference code
 *PaymentControllerApi* | [**getConfirmationHistory**](docs/PaymentControllerApi.md#getconfirmationhistory) | **GET** /payment/confirmation-history | Get payment confirmation history for current professor
 *PaymentControllerApi* | [**getConfirmationResult**](docs/PaymentControllerApi.md#getconfirmationresult) | **GET** /payment/confirmation-result/{paymentId} | Get payment confirmation result with FIFO allocation details
-*PaymentControllerApi* | [**getMyPayments**](docs/PaymentControllerApi.md#getmypayments) | **GET** /payment/my | Get payments for current student
+*PaymentControllerApi* | [**getMyPayments1**](docs/PaymentControllerApi.md#getmypayments1) | **GET** /payment/my | Get payments for current student
 *PaymentControllerApi* | [**getPaymentById**](docs/PaymentControllerApi.md#getpaymentbyid) | **GET** /payment/{paymentId} | Get specific payment by ID
 *PaymentControllerApi* | [**getPaymentForConfirmation**](docs/PaymentControllerApi.md#getpaymentforconfirmation) | **GET** /payment/confirmation/{paymentId} | Get payment details for confirmation
 *PaymentControllerApi* | [**getPendingPayments**](docs/PaymentControllerApi.md#getpendingpayments) | **GET** /payment/pending | Get pending payments for current professor
 *PaymentControllerApi* | [**getProfessorPaymentInfo**](docs/PaymentControllerApi.md#getprofessorpaymentinfo) | **GET** /payment/professor/{professorId}/info | Get professor payment information including bank accounts
 *PaymentControllerApi* | [**rejectPayment**](docs/PaymentControllerApi.md#rejectpayment) | **POST** /payment/reject | Reject a bank transfer payment
 *PaymentControllerApi* | [**validateReference**](docs/PaymentControllerApi.md#validatereference) | **POST** /payment/references/validate | Validate a payment reference code
+*ProfessorPaymentControllerApi* | [**createPortalSession**](docs/ProfessorPaymentControllerApi.md#createportalsession) | **POST** /subscriptions/portal | Create Stripe Customer Portal session for billing management
+*ProfessorPaymentControllerApi* | [**getMyPayments**](docs/ProfessorPaymentControllerApi.md#getmypayments) | **GET** /subscriptions/payments | Get my payments
+*ProfessorPaymentControllerApi* | [**getSubscriptionStatus**](docs/ProfessorPaymentControllerApi.md#getsubscriptionstatus) | **GET** /subscriptions/my | Get current subscription status
 *ProfessorProfileControllerApi* | [**addStudentByEmail1**](docs/ProfessorProfileControllerApi.md#addstudentbyemail1) | **POST** /professor-profile/add-student-by-email | Add student by email address
 *ProfessorProfileControllerApi* | [**create3**](docs/ProfessorProfileControllerApi.md#create3) | **POST** /professor-profile/create | Create a new student profile.
 *ProfessorProfileControllerApi* | [**get3**](docs/ProfessorProfileControllerApi.md#get3) | **GET** /professor-profile/{id} | Get professor profile
@@ -185,6 +197,7 @@ Class | Method | HTTP request | Description
  - [AddStudentByEmailRequest](docs/AddStudentByEmailRequest.md)
  - [Address](docs/Address.md)
  - [AddressDTO](docs/AddressDTO.md)
+ - [AdminProfessorProfileDTO](docs/AdminProfessorProfileDTO.md)
  - [AllocationResultDTO](docs/AllocationResultDTO.md)
  - [BankAccount](docs/BankAccount.md)
  - [BankAccountDTO](docs/BankAccountDTO.md)
@@ -221,11 +234,14 @@ Class | Method | HTTP request | Description
  - [Location](docs/Location.md)
  - [LocationDTO](docs/LocationDTO.md)
  - [LocationLevel](docs/LocationLevel.md)
+ - [OrganisationDto](docs/OrganisationDto.md)
  - [PageBankTransferPaymentDTO](docs/PageBankTransferPaymentDTO.md)
+ - [PageProfessorPaymentDTO](docs/PageProfessorPaymentDTO.md)
  - [PageStudentProfessorRelationshipDTO](docs/PageStudentProfessorRelationshipDTO.md)
  - [PageWalletDTO](docs/PageWalletDTO.md)
  - [PageableObject](docs/PageableObject.md)
  - [PaginatedRequest](docs/PaginatedRequest.md)
+ - [PaginatedResponseAdminProfessorProfileDTO](docs/PaginatedResponseAdminProfessorProfileDTO.md)
  - [PaginatedResponseProfessorProfileView](docs/PaginatedResponseProfessorProfileView.md)
  - [PaginatedResponseStudentProfileView](docs/PaginatedResponseStudentProfileView.md)
  - [PaymentAllocationDetailDTO](docs/PaymentAllocationDetailDTO.md)
@@ -235,6 +251,7 @@ Class | Method | HTTP request | Description
  - [PaymentEventAssociation](docs/PaymentEventAssociation.md)
  - [PaymentReferenceDTO](docs/PaymentReferenceDTO.md)
  - [PaymentSystemStatisticsDTO](docs/PaymentSystemStatisticsDTO.md)
+ - [ProfessorPaymentDTO](docs/ProfessorPaymentDTO.md)
  - [ProfessorPaymentInfoDTO](docs/ProfessorPaymentInfoDTO.md)
  - [ProfessorPaymentSummaryDTO](docs/ProfessorPaymentSummaryDTO.md)
  - [ProfessorPlatformIntegration](docs/ProfessorPlatformIntegration.md)
@@ -242,6 +259,7 @@ Class | Method | HTTP request | Description
  - [ProfessorProfile](docs/ProfessorProfile.md)
  - [ProfessorProfileDTO](docs/ProfessorProfileDTO.md)
  - [ProfessorProfileView](docs/ProfessorProfileView.md)
+ - [ProfessorSubscriptionDTO](docs/ProfessorSubscriptionDTO.md)
  - [ProfilePicture](docs/ProfilePicture.md)
  - [ProfilePrerequrireDTO](docs/ProfilePrerequrireDTO.md)
  - [RecurringSeries](docs/RecurringSeries.md)

@@ -6,18 +6,18 @@ import { createContext, useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 
 // ** Axios
-import jwt from 'jsonwebtoken';
+import jwt from 'jsonwebtoken'
 
 // ** Config
 import authConfig from 'src/configs/auth'
 
 // ** Redux Imports
 import { useDispatch, useSelector } from 'react-redux'
-import { addUser, deleteTokens, deleteUser, updateTokens } from '../store/apps/user/index' // import addUser and deleteUser actions
+import { addUser, deleteTokens, deleteUser, updateTokens, clearSubscriptionCache } from '../store/apps/user/index'
 import { fetchData } from 'src/store/apps/dashboard'
 import Cookies from 'universal-cookie'
-import session from 'redux-persist/lib/storage/session';
-import axios from 'axios';
+import session from 'redux-persist/lib/storage/session'
+import axios from 'axios'
 import store from '../store/index'
 
 // ** Defaults
@@ -61,10 +61,16 @@ const AuthProvider = ({ children }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const extractUserData = (decodedToken) => {
+  const extractUserData = decodedToken => {
     // Handle users without realm_access (new users without roles yet)
     const roles = decodedToken.realm_access?.roles || []
-    const role = roles.includes('ADMIN') ? 'ADMIN' : roles.includes('PROFESSOR') ? 'PROFESSOR' : roles.includes('STUDENT') ? 'STUDENT' : null
+    const role = roles.includes('ADMIN')
+      ? 'ADMIN'
+      : roles.includes('PROFESSOR')
+      ? 'PROFESSOR'
+      : roles.includes('STUDENT')
+      ? 'STUDENT'
+      : null
 
     return {
       email: decodedToken.email,
@@ -75,12 +81,11 @@ const AuthProvider = ({ children }) => {
       profileCompleted: decodedToken.profile_completed ? decodedToken.profile_completed : false,
       id: decodedToken.sub
     }
-  };
+  }
 
   const handleLogin = (params, errorCallback) => {
-    const parsedToken = jwt.decode(params.access_token);
-    const extractedUserData = extractUserData(parsedToken);
-
+    const parsedToken = jwt.decode(params.access_token)
+    const extractedUserData = extractUserData(parsedToken)
 
     window.localStorage.setItem(authConfig.storageTokenKeyName, params.access_token)
     window.localStorage.setItem('userData', extractedUserData)
@@ -91,29 +96,37 @@ const AuthProvider = ({ children }) => {
       secure: true
     })
     setUser({ ...extractedUserData })
-    dispatch(updateTokens({ accessToken: params.access_token, refreshToken: params.refresh_token, sessionState: params.session_state })) // dispatch updateTokens action with tokens
+    dispatch(
+      updateTokens({
+        accessToken: params.access_token,
+        refreshToken: params.refresh_token,
+        sessionState: params.session_state
+      })
+    ) // dispatch updateTokens action with tokens
     dispatch(addUser(extractedUserData)) // dispatch addUser action with user data
     const returnUrl = router.query.returnUrl
     const redirectURL = returnUrl && returnUrl !== '/' ? returnUrl : '/'
     router.replace(redirectURL)
     dispatch(fetchData())
-
   }
 
   const handleLogout = () => {
-    var querystring = require('querystring');
-    axios.post(authConfig.logoutEndpoint, querystring.stringify({
-      client_id: 'e-mentor',
-      refresh_token: getRefreshToken()
-    }),
+    var querystring = require('querystring')
+    axios.post(
+      authConfig.logoutEndpoint,
+      querystring.stringify({
+        client_id: 'e-mentor',
+        refresh_token: getRefreshToken()
+      }),
       {
         headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
+          'Content-Type': 'application/x-www-form-urlencoded'
         }
       }
     )
     dispatch(deleteUser()) // dispatch deleteUser action with no payload
-    dispatch(deleteTokens()) // dispatch deleteUser action with no payload
+    dispatch(deleteTokens()) // dispatch deleteTokens action with no payload
+    dispatch(clearSubscriptionCache()) // clear subscription cache on logout
     setUser(null)
     window.localStorage.removeItem('userData')
     window.localStorage.removeItem(authConfig.storageTokenKeyName)

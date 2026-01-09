@@ -16,14 +16,16 @@ const ProfessorInfoCard = ({ fullProfile, initPrerequire }, ref) => {
     control,
     handleSubmit,
     formState: { errors },
-    getValues
+    getValues,
+    reset
   } = useForm({ defaultValues: fullProfile })
 
   const onSubmit = async data => {}
 
   useEffect(() => {
+    reset(fullProfile)
     setSpecialitiesByUniversityId()
-  }, [initPrerequire, universityId])
+  }, [initPrerequire, universityId, fullProfile, reset])
 
   const setSpecialitiesByUniversityId = () => {
     if (

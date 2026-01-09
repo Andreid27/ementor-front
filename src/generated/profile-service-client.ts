@@ -13,7 +13,9 @@ import {
   UserControllerApi,
   PaymentControllerApi,
   InvoiceControllerApi,
-  WalletControllerApi
+  WalletControllerApi,
+  ProfessorPaymentControllerApi,
+  OrganisationControllerApi
 } from './profile-service-client/api'
 
 // Import our custom axios instance
@@ -66,6 +68,11 @@ export class ProfileServiceClient {
     return new EventsControllerApi(this.config, undefined, apiClient)
   }
 
+  // Organisation APIs
+  get organisation() {
+    return new OrganisationControllerApi(this.config, undefined, apiClient)
+  }
+
   // Professor Profile APIs
   get professorProfile() {
     return new ProfessorProfileControllerApi(this.config, undefined, apiClient)
@@ -111,6 +118,11 @@ export class ProfileServiceClient {
     return new PaymentControllerApi(this.config, undefined, apiClient)
   }
 
+  // Professor Payment APIs
+  get professorPayment() {
+    return new ProfessorPaymentControllerApi(this.config, undefined, apiClient)
+  }
+
   // Wallet APIs
   get wallet() {
     return new WalletControllerApi(this.config, undefined, apiClient)
@@ -139,7 +151,8 @@ export {
   InvoiceControllerApi,
   UserControllerApi,
   PaymentControllerApi,
-  WalletControllerApi
+  WalletControllerApi,
+  OrganisationControllerApi
 }
 
 // Export types

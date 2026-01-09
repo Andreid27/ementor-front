@@ -14,6 +14,7 @@ import { buildAbilityFor } from 'src/configs/acl'
 import NotAuthorized from 'src/pages/401'
 import Spinner from 'src/@core/components/spinner'
 import BlankLayout from 'src/@core/layouts/BlankLayout'
+import ProfessorSubscriptionGuard from 'src/@core/components/auth/ProfessorSubscriptionGuard'
 
 // ** Hooks
 import { useAuth } from 'src/hooks/useAuth'
@@ -61,6 +62,18 @@ const AclGuard = props => {
   if (ability && auth.user && ability.can(aclAbilities.action, aclAbilities.subject)) {
     if (router.route === '/') {
       return <Spinner />
+    }
+
+    // For professor pages (except subscription-required), wrap with subscription guard
+    const isProfessorPage = aclAbilities.subject === 'professor-pages'
+    const isSubscriptionRequiredPage = router.pathname === '/subscription-required'
+
+    if (isProfessorPage && !isSubscriptionRequiredPage) {
+      return (
+        <AbilityContext.Provider value={ability}>
+          <ProfessorSubscriptionGuard>{children}</ProfessorSubscriptionGuard>
+        </AbilityContext.Provider>
+      )
     }
 
     return <AbilityContext.Provider value={ability}>{children}</AbilityContext.Provider>

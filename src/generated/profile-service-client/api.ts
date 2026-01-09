@@ -191,6 +191,55 @@ export interface AddressDTO {
 /**
  * 
  * @export
+ * @interface AdminProfessorProfileDTO
+ */
+export interface AdminProfessorProfileDTO {
+    /**
+     * 
+     * @type {string}
+     * @memberof AdminProfessorProfileDTO
+     */
+    'id'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AdminProfessorProfileDTO
+     */
+    'userId'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AdminProfessorProfileDTO
+     */
+    'fullName'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AdminProfessorProfileDTO
+     */
+    'university'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AdminProfessorProfileDTO
+     */
+    'speciality'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AdminProfessorProfileDTO
+     */
+    'creation'?: string;
+    /**
+     * 
+     * @type {ProfessorSubscriptionDTO}
+     * @memberof AdminProfessorProfileDTO
+     */
+    'subscription'?: ProfessorSubscriptionDTO;
+}
+/**
+ * 
+ * @export
  * @interface AllocationResultDTO
  */
 export interface AllocationResultDTO {
@@ -2378,6 +2427,68 @@ export interface LocationLevel {
 /**
  * 
  * @export
+ * @interface OrganisationDto
+ */
+export interface OrganisationDto {
+    /**
+     * 
+     * @type {string}
+     * @memberof OrganisationDto
+     */
+    'id'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof OrganisationDto
+     */
+    'registryNumber'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof OrganisationDto
+     */
+    'tradeRegisterNo'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof OrganisationDto
+     */
+    'name'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof OrganisationDto
+     */
+    'organisationType'?: OrganisationDtoOrganisationTypeEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof OrganisationDto
+     */
+    'creation'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof OrganisationDto
+     */
+    'modified'?: string;
+}
+
+export const OrganisationDtoOrganisationTypeEnum = {
+    Pfa: 'PFA',
+    Srl: 'SRL',
+    Sa: 'SA',
+    Ii: 'II',
+    If: 'IF',
+    Ong: 'ONG',
+    Alte: 'ALTE'
+} as const;
+
+export type OrganisationDtoOrganisationTypeEnum = typeof OrganisationDtoOrganisationTypeEnum[keyof typeof OrganisationDtoOrganisationTypeEnum];
+
+/**
+ * 
+ * @export
  * @interface PageBankTransferPaymentDTO
  */
 export interface PageBankTransferPaymentDTO {
@@ -2445,6 +2556,79 @@ export interface PageBankTransferPaymentDTO {
      * 
      * @type {boolean}
      * @memberof PageBankTransferPaymentDTO
+     */
+    'empty'?: boolean;
+}
+/**
+ * 
+ * @export
+ * @interface PageProfessorPaymentDTO
+ */
+export interface PageProfessorPaymentDTO {
+    /**
+     * 
+     * @type {number}
+     * @memberof PageProfessorPaymentDTO
+     */
+    'totalPages'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof PageProfessorPaymentDTO
+     */
+    'totalElements'?: number;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof PageProfessorPaymentDTO
+     */
+    'first'?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof PageProfessorPaymentDTO
+     */
+    'last'?: boolean;
+    /**
+     * 
+     * @type {number}
+     * @memberof PageProfessorPaymentDTO
+     */
+    'numberOfElements'?: number;
+    /**
+     * 
+     * @type {PageableObject}
+     * @memberof PageProfessorPaymentDTO
+     */
+    'pageable'?: PageableObject;
+    /**
+     * 
+     * @type {number}
+     * @memberof PageProfessorPaymentDTO
+     */
+    'size'?: number;
+    /**
+     * 
+     * @type {Array<ProfessorPaymentDTO>}
+     * @memberof PageProfessorPaymentDTO
+     */
+    'content'?: Array<ProfessorPaymentDTO>;
+    /**
+     * 
+     * @type {number}
+     * @memberof PageProfessorPaymentDTO
+     */
+    'number'?: number;
+    /**
+     * 
+     * @type {SortObject}
+     * @memberof PageProfessorPaymentDTO
+     */
+    'sort'?: SortObject;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof PageProfessorPaymentDTO
      */
     'empty'?: boolean;
 }
@@ -2667,6 +2851,49 @@ export interface PaginatedRequest {
      * @memberof PaginatedRequest
      */
     'pageSize'?: number;
+}
+/**
+ * 
+ * @export
+ * @interface PaginatedResponseAdminProfessorProfileDTO
+ */
+export interface PaginatedResponseAdminProfessorProfileDTO {
+    /**
+     * 
+     * @type {Array<AdminProfessorProfileDTO>}
+     * @memberof PaginatedResponseAdminProfessorProfileDTO
+     */
+    'data'?: Array<AdminProfessorProfileDTO>;
+    /**
+     * 
+     * @type {number}
+     * @memberof PaginatedResponseAdminProfessorProfileDTO
+     */
+    'page'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof PaginatedResponseAdminProfessorProfileDTO
+     */
+    'totalPages'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof PaginatedResponseAdminProfessorProfileDTO
+     */
+    'totalCount'?: number;
+    /**
+     * 
+     * @type {Array<FilterOptionObject>}
+     * @memberof PaginatedResponseAdminProfessorProfileDTO
+     */
+    'filterOptions'?: Array<FilterOptionObject>;
+    /**
+     * 
+     * @type {PaginatedRequest}
+     * @memberof PaginatedResponseAdminProfessorProfileDTO
+     */
+    'currentRequest'?: PaginatedRequest;
 }
 /**
  * 
@@ -3259,6 +3486,49 @@ export interface PaymentSystemStatisticsDTO {
 /**
  * 
  * @export
+ * @interface ProfessorPaymentDTO
+ */
+export interface ProfessorPaymentDTO {
+    /**
+     * 
+     * @type {string}
+     * @memberof ProfessorPaymentDTO
+     */
+    'id'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProfessorPaymentDTO
+     */
+    'subscriptionId'?: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof ProfessorPaymentDTO
+     */
+    'amount'?: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProfessorPaymentDTO
+     */
+    'currency'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProfessorPaymentDTO
+     */
+    'status'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProfessorPaymentDTO
+     */
+    'paymentDate'?: string;
+}
+/**
+ * 
+ * @export
  * @interface ProfessorPaymentInfoDTO
  */
 export interface ProfessorPaymentInfoDTO {
@@ -3443,12 +3713,14 @@ export interface ProfessorPlatformIntegration {
 export const ProfessorPlatformIntegrationAuthMethodEnum = {
     Oauth: 'OAUTH',
     UsernamePassword: 'USERNAME_PASSWORD',
-    ApiKey: 'API_KEY'
+    ApiKey: 'API_KEY',
+    SystemManaged: 'SYSTEM_MANAGED'
 } as const;
 
 export type ProfessorPlatformIntegrationAuthMethodEnum = typeof ProfessorPlatformIntegrationAuthMethodEnum[keyof typeof ProfessorPlatformIntegrationAuthMethodEnum];
 export const ProfessorPlatformIntegrationStatusEnum = {
     PendingSetup: 'PENDING_SETUP',
+    PendingApproval: 'PENDING_APPROVAL',
     Connected: 'CONNECTED',
     AuthExpired: 'AUTH_EXPIRED',
     Error: 'ERROR',
@@ -3730,6 +4002,55 @@ export interface ProfessorProfileView {
      * @memberof ProfessorProfileView
      */
     'creation'?: string;
+}
+/**
+ * 
+ * @export
+ * @interface ProfessorSubscriptionDTO
+ */
+export interface ProfessorSubscriptionDTO {
+    /**
+     * 
+     * @type {string}
+     * @memberof ProfessorSubscriptionDTO
+     */
+    'id'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProfessorSubscriptionDTO
+     */
+    'professorId'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProfessorSubscriptionDTO
+     */
+    'status'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProfessorSubscriptionDTO
+     */
+    'currentPeriodEnd'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProfessorSubscriptionDTO
+     */
+    'tier'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProfessorSubscriptionDTO
+     */
+    'modified'?: string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ProfessorSubscriptionDTO
+     */
+    'active'?: boolean;
 }
 /**
  * 
@@ -7337,6 +7658,377 @@ export type GetAllPaymentsStatusEnum = typeof GetAllPaymentsStatusEnum[keyof typ
 
 
 /**
+ * AdminSubscriptionControllerApi - axios parameter creator
+ * @export
+ */
+export const AdminSubscriptionControllerApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @summary Get global payments history
+         * @param {number} [page] 
+         * @param {number} [size] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getGlobalPayments: async (page?: number, size?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/v1/admin/subscriptions/payments`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OIDC Authentication required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OIDC Authentication", [], configuration)
+
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
+            }
+
+            if (size !== undefined) {
+                localVarQueryParameter['size'] = size;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get paginated professor profiles with subscription info
+         * @param {PaginatedRequest} paginatedRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getProfessorsWithSubscription: async (paginatedRequest: PaginatedRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'paginatedRequest' is not null or undefined
+            assertParamExists('getProfessorsWithSubscription', 'paginatedRequest', paginatedRequest)
+            const localVarPath = `/api/v1/admin/subscriptions/professors`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OIDC Authentication required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OIDC Authentication", [], configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(paginatedRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Override subscription expiration date
+         * @param {string} professorId 
+         * @param {string} newEndDate 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        overrideSubscription: async (professorId: string, newEndDate: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'professorId' is not null or undefined
+            assertParamExists('overrideSubscription', 'professorId', professorId)
+            // verify required parameter 'newEndDate' is not null or undefined
+            assertParamExists('overrideSubscription', 'newEndDate', newEndDate)
+            const localVarPath = `/api/v1/admin/subscriptions/professor/{professorId}/override`
+                .replace(`{${"professorId"}}`, encodeURIComponent(String(professorId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OIDC Authentication required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OIDC Authentication", [], configuration)
+
+            if (newEndDate !== undefined) {
+                localVarQueryParameter['newEndDate'] = (newEndDate as any instanceof Date) ?
+                    (newEndDate as any).toISOString() :
+                    newEndDate;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * AdminSubscriptionControllerApi - functional programming interface
+ * @export
+ */
+export const AdminSubscriptionControllerApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = AdminSubscriptionControllerApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @summary Get global payments history
+         * @param {number} [page] 
+         * @param {number} [size] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getGlobalPayments(page?: number, size?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PageProfessorPaymentDTO>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getGlobalPayments(page, size, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AdminSubscriptionControllerApi.getGlobalPayments']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Get paginated professor profiles with subscription info
+         * @param {PaginatedRequest} paginatedRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getProfessorsWithSubscription(paginatedRequest: PaginatedRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PaginatedResponseAdminProfessorProfileDTO>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getProfessorsWithSubscription(paginatedRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AdminSubscriptionControllerApi.getProfessorsWithSubscription']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Override subscription expiration date
+         * @param {string} professorId 
+         * @param {string} newEndDate 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async overrideSubscription(professorId: string, newEndDate: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.overrideSubscription(professorId, newEndDate, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['AdminSubscriptionControllerApi.overrideSubscription']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * AdminSubscriptionControllerApi - factory interface
+ * @export
+ */
+export const AdminSubscriptionControllerApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = AdminSubscriptionControllerApiFp(configuration)
+    return {
+        /**
+         * 
+         * @summary Get global payments history
+         * @param {AdminSubscriptionControllerApiGetGlobalPaymentsRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getGlobalPayments(requestParameters: AdminSubscriptionControllerApiGetGlobalPaymentsRequest = {}, options?: RawAxiosRequestConfig): AxiosPromise<PageProfessorPaymentDTO> {
+            return localVarFp.getGlobalPayments(requestParameters.page, requestParameters.size, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Get paginated professor profiles with subscription info
+         * @param {AdminSubscriptionControllerApiGetProfessorsWithSubscriptionRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getProfessorsWithSubscription(requestParameters: AdminSubscriptionControllerApiGetProfessorsWithSubscriptionRequest, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedResponseAdminProfessorProfileDTO> {
+            return localVarFp.getProfessorsWithSubscription(requestParameters.paginatedRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Override subscription expiration date
+         * @param {AdminSubscriptionControllerApiOverrideSubscriptionRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        overrideSubscription(requestParameters: AdminSubscriptionControllerApiOverrideSubscriptionRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.overrideSubscription(requestParameters.professorId, requestParameters.newEndDate, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * AdminSubscriptionControllerApi - interface
+ * @export
+ * @interface AdminSubscriptionControllerApi
+ */
+export interface AdminSubscriptionControllerApiInterface {
+    /**
+     * 
+     * @summary Get global payments history
+     * @param {AdminSubscriptionControllerApiGetGlobalPaymentsRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof AdminSubscriptionControllerApiInterface
+     */
+    getGlobalPayments(requestParameters?: AdminSubscriptionControllerApiGetGlobalPaymentsRequest, options?: RawAxiosRequestConfig): AxiosPromise<PageProfessorPaymentDTO>;
+
+    /**
+     * 
+     * @summary Get paginated professor profiles with subscription info
+     * @param {AdminSubscriptionControllerApiGetProfessorsWithSubscriptionRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof AdminSubscriptionControllerApiInterface
+     */
+    getProfessorsWithSubscription(requestParameters: AdminSubscriptionControllerApiGetProfessorsWithSubscriptionRequest, options?: RawAxiosRequestConfig): AxiosPromise<PaginatedResponseAdminProfessorProfileDTO>;
+
+    /**
+     * 
+     * @summary Override subscription expiration date
+     * @param {AdminSubscriptionControllerApiOverrideSubscriptionRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof AdminSubscriptionControllerApiInterface
+     */
+    overrideSubscription(requestParameters: AdminSubscriptionControllerApiOverrideSubscriptionRequest, options?: RawAxiosRequestConfig): AxiosPromise<void>;
+
+}
+
+/**
+ * Request parameters for getGlobalPayments operation in AdminSubscriptionControllerApi.
+ * @export
+ * @interface AdminSubscriptionControllerApiGetGlobalPaymentsRequest
+ */
+export interface AdminSubscriptionControllerApiGetGlobalPaymentsRequest {
+    /**
+     * 
+     * @type {number}
+     * @memberof AdminSubscriptionControllerApiGetGlobalPayments
+     */
+    readonly page?: number
+
+    /**
+     * 
+     * @type {number}
+     * @memberof AdminSubscriptionControllerApiGetGlobalPayments
+     */
+    readonly size?: number
+}
+
+/**
+ * Request parameters for getProfessorsWithSubscription operation in AdminSubscriptionControllerApi.
+ * @export
+ * @interface AdminSubscriptionControllerApiGetProfessorsWithSubscriptionRequest
+ */
+export interface AdminSubscriptionControllerApiGetProfessorsWithSubscriptionRequest {
+    /**
+     * 
+     * @type {PaginatedRequest}
+     * @memberof AdminSubscriptionControllerApiGetProfessorsWithSubscription
+     */
+    readonly paginatedRequest: PaginatedRequest
+}
+
+/**
+ * Request parameters for overrideSubscription operation in AdminSubscriptionControllerApi.
+ * @export
+ * @interface AdminSubscriptionControllerApiOverrideSubscriptionRequest
+ */
+export interface AdminSubscriptionControllerApiOverrideSubscriptionRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof AdminSubscriptionControllerApiOverrideSubscription
+     */
+    readonly professorId: string
+
+    /**
+     * 
+     * @type {string}
+     * @memberof AdminSubscriptionControllerApiOverrideSubscription
+     */
+    readonly newEndDate: string
+}
+
+/**
+ * AdminSubscriptionControllerApi - object-oriented interface
+ * @export
+ * @class AdminSubscriptionControllerApi
+ * @extends {BaseAPI}
+ */
+export class AdminSubscriptionControllerApi extends BaseAPI implements AdminSubscriptionControllerApiInterface {
+    /**
+     * 
+     * @summary Get global payments history
+     * @param {AdminSubscriptionControllerApiGetGlobalPaymentsRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof AdminSubscriptionControllerApi
+     */
+    public getGlobalPayments(requestParameters: AdminSubscriptionControllerApiGetGlobalPaymentsRequest = {}, options?: RawAxiosRequestConfig) {
+        return AdminSubscriptionControllerApiFp(this.configuration).getGlobalPayments(requestParameters.page, requestParameters.size, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get paginated professor profiles with subscription info
+     * @param {AdminSubscriptionControllerApiGetProfessorsWithSubscriptionRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof AdminSubscriptionControllerApi
+     */
+    public getProfessorsWithSubscription(requestParameters: AdminSubscriptionControllerApiGetProfessorsWithSubscriptionRequest, options?: RawAxiosRequestConfig) {
+        return AdminSubscriptionControllerApiFp(this.configuration).getProfessorsWithSubscription(requestParameters.paginatedRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Override subscription expiration date
+     * @param {AdminSubscriptionControllerApiOverrideSubscriptionRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof AdminSubscriptionControllerApi
+     */
+    public overrideSubscription(requestParameters: AdminSubscriptionControllerApiOverrideSubscriptionRequest, options?: RawAxiosRequestConfig) {
+        return AdminSubscriptionControllerApiFp(this.configuration).overrideSubscription(requestParameters.professorId, requestParameters.newEndDate, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+
+/**
  * BankAccountControllerApi - axios parameter creator
  * @export
  */
@@ -7475,6 +8167,166 @@ export class BankAccountControllerApi extends BaseAPI implements BankAccountCont
      */
     public getBankAccountsForProfessor(requestParameters: BankAccountControllerApiGetBankAccountsForProfessorRequest, options?: RawAxiosRequestConfig) {
         return BankAccountControllerApiFp(this.configuration).getBankAccountsForProfessor(requestParameters.professorId, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+
+/**
+ * CallbackControllerApi - axios parameter creator
+ * @export
+ */
+export const CallbackControllerApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @summary Stripe Webhook Endpoint
+         * @param {string} stripeSignature 
+         * @param {string} body 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        handleStripeWebhook: async (stripeSignature: string, body: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'stripeSignature' is not null or undefined
+            assertParamExists('handleStripeWebhook', 'stripeSignature', stripeSignature)
+            // verify required parameter 'body' is not null or undefined
+            assertParamExists('handleStripeWebhook', 'body', body)
+            const localVarPath = `/callbacks/stripe`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OIDC Authentication required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OIDC Authentication", [], configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            if (stripeSignature != null) {
+                localVarHeaderParameter['Stripe-Signature'] = String(stripeSignature);
+            }
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(body, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * CallbackControllerApi - functional programming interface
+ * @export
+ */
+export const CallbackControllerApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = CallbackControllerApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @summary Stripe Webhook Endpoint
+         * @param {string} stripeSignature 
+         * @param {string} body 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async handleStripeWebhook(stripeSignature: string, body: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.handleStripeWebhook(stripeSignature, body, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CallbackControllerApi.handleStripeWebhook']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * CallbackControllerApi - factory interface
+ * @export
+ */
+export const CallbackControllerApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = CallbackControllerApiFp(configuration)
+    return {
+        /**
+         * 
+         * @summary Stripe Webhook Endpoint
+         * @param {CallbackControllerApiHandleStripeWebhookRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        handleStripeWebhook(requestParameters: CallbackControllerApiHandleStripeWebhookRequest, options?: RawAxiosRequestConfig): AxiosPromise<string> {
+            return localVarFp.handleStripeWebhook(requestParameters.stripeSignature, requestParameters.body, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * CallbackControllerApi - interface
+ * @export
+ * @interface CallbackControllerApi
+ */
+export interface CallbackControllerApiInterface {
+    /**
+     * 
+     * @summary Stripe Webhook Endpoint
+     * @param {CallbackControllerApiHandleStripeWebhookRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CallbackControllerApiInterface
+     */
+    handleStripeWebhook(requestParameters: CallbackControllerApiHandleStripeWebhookRequest, options?: RawAxiosRequestConfig): AxiosPromise<string>;
+
+}
+
+/**
+ * Request parameters for handleStripeWebhook operation in CallbackControllerApi.
+ * @export
+ * @interface CallbackControllerApiHandleStripeWebhookRequest
+ */
+export interface CallbackControllerApiHandleStripeWebhookRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof CallbackControllerApiHandleStripeWebhook
+     */
+    readonly stripeSignature: string
+
+    /**
+     * 
+     * @type {string}
+     * @memberof CallbackControllerApiHandleStripeWebhook
+     */
+    readonly body: string
+}
+
+/**
+ * CallbackControllerApi - object-oriented interface
+ * @export
+ * @class CallbackControllerApi
+ * @extends {BaseAPI}
+ */
+export class CallbackControllerApi extends BaseAPI implements CallbackControllerApiInterface {
+    /**
+     * 
+     * @summary Stripe Webhook Endpoint
+     * @param {CallbackControllerApiHandleStripeWebhookRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CallbackControllerApi
+     */
+    public handleStripeWebhook(requestParameters: CallbackControllerApiHandleStripeWebhookRequest, options?: RawAxiosRequestConfig) {
+        return CallbackControllerApiFp(this.configuration).handleStripeWebhook(requestParameters.stripeSignature, requestParameters.body, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
@@ -11176,6 +12028,46 @@ export const InvoiceControllerApiAxiosParamCreator = function (configuration?: C
     return {
         /**
          * 
+         * @param {string} code 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        callback: async (code: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'code' is not null or undefined
+            assertParamExists('callback', 'code', code)
+            const localVarPath = `/invoices/callback`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OIDC Authentication required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OIDC Authentication", [], configuration)
+
+            if (code !== undefined) {
+                localVarQueryParameter['code'] = code;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @summary Download invoice by ID
          * @param {string} id 
          * @param {*} [options] Override http request option.
@@ -11194,6 +12086,39 @@ export const InvoiceControllerApiAxiosParamCreator = function (configuration?: C
             }
 
             const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OIDC Authentication required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OIDC Authentication", [], configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getAuthUrl: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/invoices/authUrl`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -11258,6 +12183,18 @@ export const InvoiceControllerApiFp = function(configuration?: Configuration) {
     return {
         /**
          * 
+         * @param {string} code 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async callback(code: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.callback(code, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['InvoiceControllerApi.callback']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @summary Download invoice by ID
          * @param {string} id 
          * @param {*} [options] Override http request option.
@@ -11267,6 +12204,17 @@ export const InvoiceControllerApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.downloadInvoiceById(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['InvoiceControllerApi.downloadInvoiceById']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getAuthUrl(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getAuthUrl(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['InvoiceControllerApi.getAuthUrl']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -11293,6 +12241,15 @@ export const InvoiceControllerApiFactory = function (configuration?: Configurati
     return {
         /**
          * 
+         * @param {InvoiceControllerApiCallbackRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        callback(requestParameters: InvoiceControllerApiCallbackRequest, options?: RawAxiosRequestConfig): AxiosPromise<string> {
+            return localVarFp.callback(requestParameters.code, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @summary Download invoice by ID
          * @param {InvoiceControllerApiDownloadInvoiceByIdRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
@@ -11300,6 +12257,14 @@ export const InvoiceControllerApiFactory = function (configuration?: Configurati
          */
         downloadInvoiceById(requestParameters: InvoiceControllerApiDownloadInvoiceByIdRequest, options?: RawAxiosRequestConfig): AxiosPromise<File> {
             return localVarFp.downloadInvoiceById(requestParameters.id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getAuthUrl(options?: RawAxiosRequestConfig): AxiosPromise<string> {
+            return localVarFp.getAuthUrl(options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -11321,6 +12286,15 @@ export const InvoiceControllerApiFactory = function (configuration?: Configurati
 export interface InvoiceControllerApiInterface {
     /**
      * 
+     * @param {InvoiceControllerApiCallbackRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof InvoiceControllerApiInterface
+     */
+    callback(requestParameters: InvoiceControllerApiCallbackRequest, options?: RawAxiosRequestConfig): AxiosPromise<string>;
+
+    /**
+     * 
      * @summary Download invoice by ID
      * @param {InvoiceControllerApiDownloadInvoiceByIdRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
@@ -11331,6 +12305,14 @@ export interface InvoiceControllerApiInterface {
 
     /**
      * 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof InvoiceControllerApiInterface
+     */
+    getAuthUrl(options?: RawAxiosRequestConfig): AxiosPromise<string>;
+
+    /**
+     * 
      * @summary Get invoices for the current user
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -11338,6 +12320,20 @@ export interface InvoiceControllerApiInterface {
      */
     getMyInvoices(options?: RawAxiosRequestConfig): AxiosPromise<Array<InvoiceDTO>>;
 
+}
+
+/**
+ * Request parameters for callback operation in InvoiceControllerApi.
+ * @export
+ * @interface InvoiceControllerApiCallbackRequest
+ */
+export interface InvoiceControllerApiCallbackRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof InvoiceControllerApiCallback
+     */
+    readonly code: string
 }
 
 /**
@@ -11363,6 +12359,17 @@ export interface InvoiceControllerApiDownloadInvoiceByIdRequest {
 export class InvoiceControllerApi extends BaseAPI implements InvoiceControllerApiInterface {
     /**
      * 
+     * @param {InvoiceControllerApiCallbackRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof InvoiceControllerApi
+     */
+    public callback(requestParameters: InvoiceControllerApiCallbackRequest, options?: RawAxiosRequestConfig) {
+        return InvoiceControllerApiFp(this.configuration).callback(requestParameters.code, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
      * @summary Download invoice by ID
      * @param {InvoiceControllerApiDownloadInvoiceByIdRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
@@ -11375,6 +12382,16 @@ export class InvoiceControllerApi extends BaseAPI implements InvoiceControllerAp
 
     /**
      * 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof InvoiceControllerApi
+     */
+    public getAuthUrl(options?: RawAxiosRequestConfig) {
+        return InvoiceControllerApiFp(this.configuration).getAuthUrl(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
      * @summary Get invoices for the current user
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -11382,6 +12399,358 @@ export class InvoiceControllerApi extends BaseAPI implements InvoiceControllerAp
      */
     public getMyInvoices(options?: RawAxiosRequestConfig) {
         return InvoiceControllerApiFp(this.configuration).getMyInvoices(options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+
+/**
+ * OrganisationControllerApi - axios parameter creator
+ * @export
+ */
+export const OrganisationControllerApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @summary Create or update organisation
+         * @param {string} professorId 
+         * @param {OrganisationDto} organisationDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        createOrUpdateOrganisation: async (professorId: string, organisationDto: OrganisationDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'professorId' is not null or undefined
+            assertParamExists('createOrUpdateOrganisation', 'professorId', professorId)
+            // verify required parameter 'organisationDto' is not null or undefined
+            assertParamExists('createOrUpdateOrganisation', 'organisationDto', organisationDto)
+            const localVarPath = `/organisations/{professorId}`
+                .replace(`{${"professorId"}}`, encodeURIComponent(String(professorId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OIDC Authentication required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OIDC Authentication", [], configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(organisationDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Delete organisation
+         * @param {string} professorId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        deleteOrganisation: async (professorId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'professorId' is not null or undefined
+            assertParamExists('deleteOrganisation', 'professorId', professorId)
+            const localVarPath = `/organisations/{professorId}`
+                .replace(`{${"professorId"}}`, encodeURIComponent(String(professorId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OIDC Authentication required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OIDC Authentication", [], configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get organisation by professor ID
+         * @param {string} professorId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getOrganisation: async (professorId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'professorId' is not null or undefined
+            assertParamExists('getOrganisation', 'professorId', professorId)
+            const localVarPath = `/organisations/{professorId}`
+                .replace(`{${"professorId"}}`, encodeURIComponent(String(professorId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OIDC Authentication required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OIDC Authentication", [], configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * OrganisationControllerApi - functional programming interface
+ * @export
+ */
+export const OrganisationControllerApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = OrganisationControllerApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @summary Create or update organisation
+         * @param {string} professorId 
+         * @param {OrganisationDto} organisationDto 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async createOrUpdateOrganisation(professorId: string, organisationDto: OrganisationDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<OrganisationDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.createOrUpdateOrganisation(professorId, organisationDto, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['OrganisationControllerApi.createOrUpdateOrganisation']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Delete organisation
+         * @param {string} professorId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async deleteOrganisation(professorId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.deleteOrganisation(professorId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['OrganisationControllerApi.deleteOrganisation']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Get organisation by professor ID
+         * @param {string} professorId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getOrganisation(professorId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<OrganisationDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getOrganisation(professorId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['OrganisationControllerApi.getOrganisation']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * OrganisationControllerApi - factory interface
+ * @export
+ */
+export const OrganisationControllerApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = OrganisationControllerApiFp(configuration)
+    return {
+        /**
+         * 
+         * @summary Create or update organisation
+         * @param {OrganisationControllerApiCreateOrUpdateOrganisationRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        createOrUpdateOrganisation(requestParameters: OrganisationControllerApiCreateOrUpdateOrganisationRequest, options?: RawAxiosRequestConfig): AxiosPromise<OrganisationDto> {
+            return localVarFp.createOrUpdateOrganisation(requestParameters.professorId, requestParameters.organisationDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Delete organisation
+         * @param {OrganisationControllerApiDeleteOrganisationRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        deleteOrganisation(requestParameters: OrganisationControllerApiDeleteOrganisationRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.deleteOrganisation(requestParameters.professorId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Get organisation by professor ID
+         * @param {OrganisationControllerApiGetOrganisationRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getOrganisation(requestParameters: OrganisationControllerApiGetOrganisationRequest, options?: RawAxiosRequestConfig): AxiosPromise<OrganisationDto> {
+            return localVarFp.getOrganisation(requestParameters.professorId, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * OrganisationControllerApi - interface
+ * @export
+ * @interface OrganisationControllerApi
+ */
+export interface OrganisationControllerApiInterface {
+    /**
+     * 
+     * @summary Create or update organisation
+     * @param {OrganisationControllerApiCreateOrUpdateOrganisationRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof OrganisationControllerApiInterface
+     */
+    createOrUpdateOrganisation(requestParameters: OrganisationControllerApiCreateOrUpdateOrganisationRequest, options?: RawAxiosRequestConfig): AxiosPromise<OrganisationDto>;
+
+    /**
+     * 
+     * @summary Delete organisation
+     * @param {OrganisationControllerApiDeleteOrganisationRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof OrganisationControllerApiInterface
+     */
+    deleteOrganisation(requestParameters: OrganisationControllerApiDeleteOrganisationRequest, options?: RawAxiosRequestConfig): AxiosPromise<void>;
+
+    /**
+     * 
+     * @summary Get organisation by professor ID
+     * @param {OrganisationControllerApiGetOrganisationRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof OrganisationControllerApiInterface
+     */
+    getOrganisation(requestParameters: OrganisationControllerApiGetOrganisationRequest, options?: RawAxiosRequestConfig): AxiosPromise<OrganisationDto>;
+
+}
+
+/**
+ * Request parameters for createOrUpdateOrganisation operation in OrganisationControllerApi.
+ * @export
+ * @interface OrganisationControllerApiCreateOrUpdateOrganisationRequest
+ */
+export interface OrganisationControllerApiCreateOrUpdateOrganisationRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof OrganisationControllerApiCreateOrUpdateOrganisation
+     */
+    readonly professorId: string
+
+    /**
+     * 
+     * @type {OrganisationDto}
+     * @memberof OrganisationControllerApiCreateOrUpdateOrganisation
+     */
+    readonly organisationDto: OrganisationDto
+}
+
+/**
+ * Request parameters for deleteOrganisation operation in OrganisationControllerApi.
+ * @export
+ * @interface OrganisationControllerApiDeleteOrganisationRequest
+ */
+export interface OrganisationControllerApiDeleteOrganisationRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof OrganisationControllerApiDeleteOrganisation
+     */
+    readonly professorId: string
+}
+
+/**
+ * Request parameters for getOrganisation operation in OrganisationControllerApi.
+ * @export
+ * @interface OrganisationControllerApiGetOrganisationRequest
+ */
+export interface OrganisationControllerApiGetOrganisationRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof OrganisationControllerApiGetOrganisation
+     */
+    readonly professorId: string
+}
+
+/**
+ * OrganisationControllerApi - object-oriented interface
+ * @export
+ * @class OrganisationControllerApi
+ * @extends {BaseAPI}
+ */
+export class OrganisationControllerApi extends BaseAPI implements OrganisationControllerApiInterface {
+    /**
+     * 
+     * @summary Create or update organisation
+     * @param {OrganisationControllerApiCreateOrUpdateOrganisationRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof OrganisationControllerApi
+     */
+    public createOrUpdateOrganisation(requestParameters: OrganisationControllerApiCreateOrUpdateOrganisationRequest, options?: RawAxiosRequestConfig) {
+        return OrganisationControllerApiFp(this.configuration).createOrUpdateOrganisation(requestParameters.professorId, requestParameters.organisationDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Delete organisation
+     * @param {OrganisationControllerApiDeleteOrganisationRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof OrganisationControllerApi
+     */
+    public deleteOrganisation(requestParameters: OrganisationControllerApiDeleteOrganisationRequest, options?: RawAxiosRequestConfig) {
+        return OrganisationControllerApiFp(this.configuration).deleteOrganisation(requestParameters.professorId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get organisation by professor ID
+     * @param {OrganisationControllerApiGetOrganisationRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof OrganisationControllerApi
+     */
+    public getOrganisation(requestParameters: OrganisationControllerApiGetOrganisationRequest, options?: RawAxiosRequestConfig) {
+        return OrganisationControllerApiFp(this.configuration).getOrganisation(requestParameters.professorId, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
@@ -11643,7 +13012,7 @@ export const PaymentControllerApiAxiosParamCreator = function (configuration?: C
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getMyPayments: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        getMyPayments1: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/payment/my`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -11994,10 +13363,10 @@ export const PaymentControllerApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getMyPayments(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<BankTransferPaymentDTO>>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.getMyPayments(options);
+        async getMyPayments1(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<BankTransferPaymentDTO>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getMyPayments1(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['PaymentControllerApi.getMyPayments']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['PaymentControllerApi.getMyPayments1']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -12153,8 +13522,8 @@ export const PaymentControllerApiFactory = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getMyPayments(options?: RawAxiosRequestConfig): AxiosPromise<Array<BankTransferPaymentDTO>> {
-            return localVarFp.getMyPayments(options).then((request) => request(axios, basePath));
+        getMyPayments1(options?: RawAxiosRequestConfig): AxiosPromise<Array<BankTransferPaymentDTO>> {
+            return localVarFp.getMyPayments1(options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -12291,7 +13660,7 @@ export interface PaymentControllerApiInterface {
      * @throws {RequiredError}
      * @memberof PaymentControllerApiInterface
      */
-    getMyPayments(options?: RawAxiosRequestConfig): AxiosPromise<Array<BankTransferPaymentDTO>>;
+    getMyPayments1(options?: RawAxiosRequestConfig): AxiosPromise<Array<BankTransferPaymentDTO>>;
 
     /**
      * 
@@ -12601,8 +13970,8 @@ export class PaymentControllerApi extends BaseAPI implements PaymentControllerAp
      * @throws {RequiredError}
      * @memberof PaymentControllerApi
      */
-    public getMyPayments(options?: RawAxiosRequestConfig) {
-        return PaymentControllerApiFp(this.configuration).getMyPayments(options).then((request) => request(this.axios, this.basePath));
+    public getMyPayments1(options?: RawAxiosRequestConfig) {
+        return PaymentControllerApiFp(this.configuration).getMyPayments1(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -12674,6 +14043,339 @@ export class PaymentControllerApi extends BaseAPI implements PaymentControllerAp
      */
     public validateReference(requestParameters: PaymentControllerApiValidateReferenceRequest, options?: RawAxiosRequestConfig) {
         return PaymentControllerApiFp(this.configuration).validateReference(requestParameters.referenceValidationRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+
+/**
+ * ProfessorPaymentControllerApi - axios parameter creator
+ * @export
+ */
+export const ProfessorPaymentControllerApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @summary Create Stripe Customer Portal session for billing management
+         * @param {string} returnUrl 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        createPortalSession: async (returnUrl: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'returnUrl' is not null or undefined
+            assertParamExists('createPortalSession', 'returnUrl', returnUrl)
+            const localVarPath = `/subscriptions/portal`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OIDC Authentication required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OIDC Authentication", [], configuration)
+
+            if (returnUrl !== undefined) {
+                localVarQueryParameter['returnUrl'] = returnUrl;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get my payments
+         * @param {number} [page] 
+         * @param {number} [size] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getMyPayments: async (page?: number, size?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/subscriptions/payments`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OIDC Authentication required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OIDC Authentication", [], configuration)
+
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
+            }
+
+            if (size !== undefined) {
+                localVarQueryParameter['size'] = size;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get current subscription status
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getSubscriptionStatus: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/subscriptions/my`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OIDC Authentication required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OIDC Authentication", [], configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * ProfessorPaymentControllerApi - functional programming interface
+ * @export
+ */
+export const ProfessorPaymentControllerApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = ProfessorPaymentControllerApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @summary Create Stripe Customer Portal session for billing management
+         * @param {string} returnUrl 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async createPortalSession(returnUrl: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<{ [key: string]: string; }>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.createPortalSession(returnUrl, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ProfessorPaymentControllerApi.createPortalSession']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Get my payments
+         * @param {number} [page] 
+         * @param {number} [size] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getMyPayments(page?: number, size?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PageProfessorPaymentDTO>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getMyPayments(page, size, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ProfessorPaymentControllerApi.getMyPayments']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Get current subscription status
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getSubscriptionStatus(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ProfessorSubscriptionDTO>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getSubscriptionStatus(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ProfessorPaymentControllerApi.getSubscriptionStatus']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * ProfessorPaymentControllerApi - factory interface
+ * @export
+ */
+export const ProfessorPaymentControllerApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = ProfessorPaymentControllerApiFp(configuration)
+    return {
+        /**
+         * 
+         * @summary Create Stripe Customer Portal session for billing management
+         * @param {ProfessorPaymentControllerApiCreatePortalSessionRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        createPortalSession(requestParameters: ProfessorPaymentControllerApiCreatePortalSessionRequest, options?: RawAxiosRequestConfig): AxiosPromise<{ [key: string]: string; }> {
+            return localVarFp.createPortalSession(requestParameters.returnUrl, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Get my payments
+         * @param {ProfessorPaymentControllerApiGetMyPaymentsRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getMyPayments(requestParameters: ProfessorPaymentControllerApiGetMyPaymentsRequest = {}, options?: RawAxiosRequestConfig): AxiosPromise<PageProfessorPaymentDTO> {
+            return localVarFp.getMyPayments(requestParameters.page, requestParameters.size, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Get current subscription status
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getSubscriptionStatus(options?: RawAxiosRequestConfig): AxiosPromise<ProfessorSubscriptionDTO> {
+            return localVarFp.getSubscriptionStatus(options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * ProfessorPaymentControllerApi - interface
+ * @export
+ * @interface ProfessorPaymentControllerApi
+ */
+export interface ProfessorPaymentControllerApiInterface {
+    /**
+     * 
+     * @summary Create Stripe Customer Portal session for billing management
+     * @param {ProfessorPaymentControllerApiCreatePortalSessionRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProfessorPaymentControllerApiInterface
+     */
+    createPortalSession(requestParameters: ProfessorPaymentControllerApiCreatePortalSessionRequest, options?: RawAxiosRequestConfig): AxiosPromise<{ [key: string]: string; }>;
+
+    /**
+     * 
+     * @summary Get my payments
+     * @param {ProfessorPaymentControllerApiGetMyPaymentsRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProfessorPaymentControllerApiInterface
+     */
+    getMyPayments(requestParameters?: ProfessorPaymentControllerApiGetMyPaymentsRequest, options?: RawAxiosRequestConfig): AxiosPromise<PageProfessorPaymentDTO>;
+
+    /**
+     * 
+     * @summary Get current subscription status
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProfessorPaymentControllerApiInterface
+     */
+    getSubscriptionStatus(options?: RawAxiosRequestConfig): AxiosPromise<ProfessorSubscriptionDTO>;
+
+}
+
+/**
+ * Request parameters for createPortalSession operation in ProfessorPaymentControllerApi.
+ * @export
+ * @interface ProfessorPaymentControllerApiCreatePortalSessionRequest
+ */
+export interface ProfessorPaymentControllerApiCreatePortalSessionRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof ProfessorPaymentControllerApiCreatePortalSession
+     */
+    readonly returnUrl: string
+}
+
+/**
+ * Request parameters for getMyPayments operation in ProfessorPaymentControllerApi.
+ * @export
+ * @interface ProfessorPaymentControllerApiGetMyPaymentsRequest
+ */
+export interface ProfessorPaymentControllerApiGetMyPaymentsRequest {
+    /**
+     * 
+     * @type {number}
+     * @memberof ProfessorPaymentControllerApiGetMyPayments
+     */
+    readonly page?: number
+
+    /**
+     * 
+     * @type {number}
+     * @memberof ProfessorPaymentControllerApiGetMyPayments
+     */
+    readonly size?: number
+}
+
+/**
+ * ProfessorPaymentControllerApi - object-oriented interface
+ * @export
+ * @class ProfessorPaymentControllerApi
+ * @extends {BaseAPI}
+ */
+export class ProfessorPaymentControllerApi extends BaseAPI implements ProfessorPaymentControllerApiInterface {
+    /**
+     * 
+     * @summary Create Stripe Customer Portal session for billing management
+     * @param {ProfessorPaymentControllerApiCreatePortalSessionRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProfessorPaymentControllerApi
+     */
+    public createPortalSession(requestParameters: ProfessorPaymentControllerApiCreatePortalSessionRequest, options?: RawAxiosRequestConfig) {
+        return ProfessorPaymentControllerApiFp(this.configuration).createPortalSession(requestParameters.returnUrl, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get my payments
+     * @param {ProfessorPaymentControllerApiGetMyPaymentsRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProfessorPaymentControllerApi
+     */
+    public getMyPayments(requestParameters: ProfessorPaymentControllerApiGetMyPaymentsRequest = {}, options?: RawAxiosRequestConfig) {
+        return ProfessorPaymentControllerApiFp(this.configuration).getMyPayments(requestParameters.page, requestParameters.size, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get current subscription status
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProfessorPaymentControllerApi
+     */
+    public getSubscriptionStatus(options?: RawAxiosRequestConfig) {
+        return ProfessorPaymentControllerApiFp(this.configuration).getSubscriptionStatus(options).then((request) => request(this.axios, this.basePath));
     }
 }
 

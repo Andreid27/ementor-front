@@ -10,6 +10,8 @@ docs/AddStudentByEmailRequest.md
 docs/Address.md
 docs/AddressDTO.md
 docs/AdminPaymentControllerApi.md
+docs/AdminProfessorProfileDTO.md
+docs/AdminSubscriptionControllerApi.md
 docs/AllocationResultDTO.md
 docs/BankAccount.md
 docs/BankAccountControllerApi.md
@@ -17,6 +19,7 @@ docs/BankAccountDTO.md
 docs/BankTransferPayment.md
 docs/BankTransferPaymentDTO.md
 docs/BulkWalletRecalculationResultDTO.md
+docs/CallbackControllerApi.md
 docs/CreatePaymentRequest.md
 docs/CredentialRepresentation.md
 docs/CredentialRepresentationConfig.md
@@ -51,11 +54,15 @@ docs/JoinByCodeResponse.md
 docs/Location.md
 docs/LocationDTO.md
 docs/LocationLevel.md
+docs/OrganisationControllerApi.md
+docs/OrganisationDto.md
 docs/PageBankTransferPaymentDTO.md
+docs/PageProfessorPaymentDTO.md
 docs/PageStudentProfessorRelationshipDTO.md
 docs/PageWalletDTO.md
 docs/PageableObject.md
 docs/PaginatedRequest.md
+docs/PaginatedResponseAdminProfessorProfileDTO.md
 docs/PaginatedResponseProfessorProfileView.md
 docs/PaginatedResponseStudentProfileView.md
 docs/PaymentAllocationDetailDTO.md
@@ -66,6 +73,8 @@ docs/PaymentDetailDTO.md
 docs/PaymentEventAssociation.md
 docs/PaymentReferenceDTO.md
 docs/PaymentSystemStatisticsDTO.md
+docs/ProfessorPaymentControllerApi.md
+docs/ProfessorPaymentDTO.md
 docs/ProfessorPaymentInfoDTO.md
 docs/ProfessorPaymentSummaryDTO.md
 docs/ProfessorPlatformIntegration.md
@@ -74,6 +83,7 @@ docs/ProfessorProfile.md
 docs/ProfessorProfileControllerApi.md
 docs/ProfessorProfileDTO.md
 docs/ProfessorProfileView.md
+docs/ProfessorSubscriptionDTO.md
 docs/ProfilePicture.md
 docs/ProfilePictureControllerApi.md
 docs/ProfilePrerequrireDTO.md
