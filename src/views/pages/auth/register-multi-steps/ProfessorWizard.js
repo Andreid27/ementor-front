@@ -188,8 +188,9 @@ const ProfessorWizard = ({ onBack }) => {
     }
 
     try {
-      // await apiClient.post(apiSpec.PROD_HOST + '/professor-profile/create', requestBody)
-      await apiClient.post(apiSpec.LOCAL_HOST + '/professor-profile/create', requestBody)
+      await apiClient.post(apiSpec.PROFESSOR_PROFILE_CONTROLLER + '/create', requestBody)
+
+      // await apiClient.post(apiSpec.LOCAL_HOST + '/professor-profile/create', requestBody)
 
       toast.success('Profil de profesor creat cu succes!')
 

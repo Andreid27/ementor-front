@@ -39,7 +39,7 @@ const StepInvitationCode = ({ handleNext, invitationData, setInvitationData }) =
     setError('')
 
     try {
-      const response = await apiClient.get(`http://localhost:49202/professor-profile/preview-by-code/${code.trim()}`)
+      const response = await apiClient.get(`${apiSpec.PROFESSOR_PROFILE_CONTROLLER}/preview-by-code/${code.trim()}`)
 
       setProfessorPreview(response.data)
       setInvitationData({

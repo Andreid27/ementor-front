@@ -1,4 +1,4 @@
-export const LOCAL_HOST = 'http://localhost:49202'
+export const LOCAL_HOST = 'http://localhost'
 
 export const PROD_HOST = process.env.NEXT_PUBLIC_PROD_HOST
 
@@ -9,6 +9,8 @@ export const PROFILE_SERVICE = '/service2'
 export const THUMBNAIL_CONTROLLER = PROFILE_SERVICE + '/thumbnail'
 
 export const STUDENT_PROFILE_CONTROLLER = PROFILE_SERVICE + '/student-profile'
+
+export const PROFESSOR_PROFILE_CONTROLLER = PROFILE_SERVICE + '/professor-profile'
 
 export const PROFILE_IMAGE_CONTROLLER = PROFILE_SERVICE + '/profile-image'
 

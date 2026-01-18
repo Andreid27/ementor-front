@@ -145,8 +145,9 @@ const TabAccount = () => {
       if (isStudent) {
         fullProfileResponse = await apiClient.get(apiSpec.STUDENT_PROFILE_CONTROLLER + '/get-full')
       } else if (isProfessor) {
-        // fullProfileResponse = await apiClient.get(apiSpec.PROD_HOST + '/professor-profile/get-full')
-        fullProfileResponse = await apiClient.get(apiSpec.LOCAL_HOST + '/professor-profile/get-full')
+        fullProfileResponse = await apiClient.get(apiSpec.PROFESSOR_PROFILE_CONTROLLER + '/get-full')
+
+        // fullProfileResponse = await apiClient.get(apiSpec.LOCAL_HOST + '/professor-profile/get-full')
       } else {
         throw new Error('Unknown user role')
       }
@@ -241,6 +242,7 @@ const TabAccount = () => {
 
     let accountDetailsData = accountDetailsRef.current.getValues()
     let personalInfoData = personalInfoRef.current.getValues()
+
     // let addressInfoData = addressInfoRef.current.getValues() // Moved to conditional
     accountDetailsData.phone = accountDetailsData.prefix + accountDetailsData.phone
 
@@ -325,8 +327,7 @@ const TabAccount = () => {
     } else {
       const updateEndpoint = isStudent
         ? apiSpec.STUDENT_PROFILE_CONTROLLER + '/update'
-        : // : apiSpec.PROD_HOST + apiSpec.PROFILE_SERVICE +'/professor-profile/update'
-          'http://localhost:49202' + '/professor-profile/update'
+        : apiSpec.PROD_HOST + apiSpec.PROFILE_SERVICE + '/professor-profile/update'
 
       apiClient
         .put(updateEndpoint, requestBody)

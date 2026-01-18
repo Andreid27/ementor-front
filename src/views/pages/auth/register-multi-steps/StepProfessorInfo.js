@@ -37,7 +37,7 @@ const StepProfessorInfo = ({ handleNext, handlePrev, initPrerequire, setInitPrer
 
   useEffect(() => {
     // apiClient.get(apiSpec.PROD_HOST + apiSpec.STUDENT_PROFILE_CONTROLLER + '/profile-prerequire').then(response => {
-    apiClient.get(apiSpec.LOCAL_HOST + '/student-profile/profile-prerequire').then(response => {
+    apiClient.get(apiSpec.STUDENT_PROFILE_CONTROLLER + '/profile-prerequire').then(response => {
       setInitPrerequire(response.data)
     })
     setUniversityId(profile.university)
@@ -57,6 +57,7 @@ const StepProfessorInfo = ({ handleNext, handlePrev, initPrerequire, setInitPrer
 
     if (!hasUploadedPicture && !hasGooglePicture) {
       setImageValidationError(true)
+
       return
     }
 

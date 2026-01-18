@@ -189,8 +189,9 @@ const StudentWizard = ({ onBack }) => {
       // Step 1: Create student profile
       console.log('Creating student profile...')
 
-      // await apiClient.post(apiSpec.PROD_HOST + apiSpec.STUDENT_PROFILE_CONTROLLER + '/create', requestBody)
-      await apiClient.post(apiSpec.LOCAL_HOST + '/student-profile/create', requestBody)
+      await apiClient.post(apiSpec.PROD_HOST + apiSpec.STUDENT_PROFILE_CONTROLLER + '/create', requestBody)
+
+      // await apiClient.post(apiSpec.LOCAL_HOST + '/student-profile/create', requestBody)
       console.log('Student profile created successfully')
 
       // Step 2: If invitation code exists, join professor
@@ -220,7 +221,9 @@ const StudentWizard = ({ onBack }) => {
           } else if (joinError.response?.status === 409) {
             toast.warning('Profil creat. Sunteți deja conectat la acest profesor.')
           } else if (joinError.message?.includes('CORS') || joinError.message?.includes('Network Error')) {
-            toast.error('Profil creat, dar există o problemă de configurare pe server. Vă rugăm contactați administratorul.')
+            toast.error(
+              'Profil creat, dar există o problemă de configurare pe server. Vă rugăm contactați administratorul.'
+            )
           } else {
             toast.warning('Profil creat, dar nu am putut să vă conectăm la profesor.')
           }
@@ -251,6 +254,7 @@ const StudentWizard = ({ onBack }) => {
       } catch (tokenError) {
         console.error('Token refresh error:', tokenError)
         toast.error('Profil creat, dar a apărut o eroare la autentificare. Vă rugăm să vă reconectați.')
+
         // Don't logout - let the user stay on the page
       }
     } catch (error) {
