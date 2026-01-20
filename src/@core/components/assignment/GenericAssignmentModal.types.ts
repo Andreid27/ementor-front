@@ -161,9 +161,6 @@ export interface GenericAssignmentModalProps<T extends AssignableEntity> {
   // LIST #2: User & Grouping Configuration
   // ========================================
 
-  /** All available users */
-  users: UserDTO[]
-
   /** Series for grouping users */
   recurringSeries: RecurringSeriesDTO[]
 

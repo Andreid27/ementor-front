@@ -10,7 +10,6 @@ import * as apiSpec from '../../../apiSpec'
 import lessonServiceClient, { PaginatedRequest } from 'src/generated/lesson-service-client'
 
 // ** Type Imports
-import type { UserDTO } from 'src/generated/profile-service/api'
 import type { LessonView } from 'src/generated/lesson-service/api'
 
 // ** Store Hooks
@@ -32,10 +31,9 @@ type AssignableLesson = LessonView & { id: string }
  *
  * This component uses the new GenericAssignmentModal with:
  * - List #1: Lessons (entities)
- * - List #2: Users grouped by recurring series
+ * - List #2: Users grouped by recurring series (fetched internally by GenericAssignmentModal)
  */
 interface AssignationModalProps {
-  users: UserDTO[]
   onAssignSuccess?: () => void
 }
 
@@ -174,8 +172,7 @@ const AssignationModal = (props: AssignationModalProps) => {
       // List #1: Entities (Lessons)
       entities={lessons}
       entityConfig={entityConfig}
-      // List #2: Users grouped by recurring series
-      users={props.users}
+      // List #2: Users grouped by recurring series (fetched internally from store)
       recurringSeries={recurringSeries}
       // Assignment Configuration
       assignmentConfig={assignmentConfig}

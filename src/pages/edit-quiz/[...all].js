@@ -87,7 +87,7 @@ const QuizPage = () => {
             <>
               <CardHeader title='Vizualizare test'
                 action={
-                  <AssignationModal users={users} initialValues={[quiz.id]} />
+                  <AssignationModal initialValues={[quiz.id]} />
                 } />
               <QuizView quiz={quiz} setIsEdit={setIsEdit} />
             </>

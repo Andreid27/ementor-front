@@ -453,7 +453,7 @@ const StudentsResultsTable = () => {
 
   return (
     <>
-      <AssignationModal users={users} onAssignSuccess={refreshTableData} />
+      <AssignationModal onAssignSuccess={refreshTableData} />
       <Card>
         <CardHeader title='Rezultate studenți' />
         <Box sx={{ px: 3, pb: 3, pl: '1.7%' }}>

@@ -2,14 +2,11 @@
 import { useEffect, useState } from 'react'
 
 // ** MUI Imports
-import { Button, LinearProgress } from '@mui/material'
+import { Button } from '@mui/material'
 
 // ** API Imports
 import apiClient from 'src/@core/axios/axiosEmentor'
 import * as apiSpec from '../../../apiSpec'
-
-// ** Type Imports
-import type { UserDTO } from 'src/generated/profile-service/api'
 
 // ** Store Hooks
 import { useMyRecurringSeries } from 'src/store/apps/calendar/hooks'
@@ -35,10 +32,9 @@ type AssignableQuiz = QuizView & { id: string }
  *
  * This component uses the new GenericAssignmentModal with:
  * - List #1: Quizzes (entities)
- * - List #2: Users grouped by recurring series
+ * - List #2: Users grouped by recurring series (fetched internally by GenericAssignmentModal)
  */
 interface AssignationModalProps {
-  users: UserDTO[]
   onAssignSuccess?: () => void
 }
 
@@ -166,8 +162,7 @@ const AssignationModal = (props: AssignationModalProps) => {
       // List #1: Entities (Quizzes)
       entities={quizzes}
       entityConfig={entityConfig}
-      // List #2: Users grouped by recurring series
-      users={props.users}
+      // List #2: Users grouped by recurring series (fetched internally from store)
       recurringSeries={recurringSeries}
       // Assignment Configuration
       assignmentConfig={assignmentConfig}

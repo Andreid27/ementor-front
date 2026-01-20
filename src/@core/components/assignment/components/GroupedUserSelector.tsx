@@ -55,6 +55,9 @@ const GroupedUserSelector = ({
   // COMPUTED VALUES
   // ========================================
 
+  // Special ID for unassigned section
+  const UNASSIGNED_SECTION_ID = '__unassigned__'
+
   /**
    * Group users by their recurring series
    */
@@ -80,6 +83,28 @@ const GroupedUserSelector = ({
 
     return groups
   }, [users, recurringSeries])
+
+  /**
+   * Find users not assigned to any recurring series
+   */
+  const unassignedUsers = useMemo(() => {
+    // Collect all attendee IDs from all series
+    const allAttendeeIds = new Set<string>()
+    recurringSeries.forEach(series => {
+      series.eventAttendees?.forEach(attendee => {
+        if (attendee.attendeeId) {
+          allAttendeeIds.add(attendee.attendeeId)
+        }
+      })
+    })
+
+    // Filter users not in any series
+    return users.filter(user => {
+      const userId = (user as any).id || user.userId
+      return userId && !allAttendeeIds.has(userId)
+    })
+  }, [users, recurringSeries])
+
   /**
    * Filter groups based on search query
    */
@@ -98,6 +123,19 @@ const GroupedUserSelector = ({
       }))
       .filter(group => group.users.length > 0)
   }, [groupedUsers, searchQuery])
+
+  /**
+   * Filter unassigned users based on search query
+   */
+  const filteredUnassignedUsers = useMemo(() => {
+    if (!searchQuery.trim()) return unassignedUsers
+
+    const query = searchQuery.toLowerCase()
+    return unassignedUsers.filter(user => {
+      const fullName = `${user.firstName} ${user.lastName}`.toLowerCase()
+      return fullName.includes(query)
+    })
+  }, [unassignedUsers, searchQuery])
 
   // ========================================
   // HELPER FUNCTIONS
@@ -145,6 +183,39 @@ const GroupedUserSelector = ({
     if (!group) return 0
 
     return group.users.filter(user => {
+      const userId = (user as any).id || user.userId
+      return isUserSelected(userId || '')
+    }).length
+  }
+
+  /**
+   * Check if the unassigned section is fully selected
+   */
+  const isUnassignedFullySelected = (): boolean => {
+    if (unassignedUsers.length === 0) return false
+    return unassignedUsers.every(user => {
+      const userId = (user as any).id || user.userId
+      return isUserSelected(userId || '')
+    })
+  }
+
+  /**
+   * Check if the unassigned section is partially selected
+   */
+  const isUnassignedPartiallySelected = (): boolean => {
+    if (unassignedUsers.length === 0) return false
+    const selectedCount = unassignedUsers.filter(user => {
+      const userId = (user as any).id || user.userId
+      return isUserSelected(userId || '')
+    }).length
+    return selectedCount > 0 && selectedCount < unassignedUsers.length
+  }
+
+  /**
+   * Get selected count for unassigned section
+   */
+  const getUnassignedSelectedCount = (): number => {
+    return unassignedUsers.filter(user => {
       const userId = (user as any).id || user.userId
       return isUserSelected(userId || '')
     }).length
@@ -224,6 +295,57 @@ const GroupedUserSelector = ({
     }
   }
 
+  /**
+   * Handle unassigned section checkbox (select all unassigned users)
+   */
+  const handleUnassignedCheckbox = () => {
+    const isFullySelected = isUnassignedFullySelected()
+
+    if (isFullySelected) {
+      // Deselect all unassigned users
+      const unassignedIds = new Set(unassignedUsers.map(u => (u as any).id || u.userId))
+      const newSelection = selectedUsers.filter(su => !unassignedIds.has(su.userId))
+      onSelectionChange(newSelection)
+    } else {
+      // Select all unassigned users
+      const newUsers: SelectedUser[] = unassignedUsers.map(user => {
+        const userId = (user as any).id || user.userId
+        return {
+          userId: userId || '',
+          userInfo: user,
+          seriesId: undefined,
+          seriesInfo: undefined
+        }
+      })
+
+      // Remove existing unassigned selections and add new ones
+      const unassignedIds = new Set(unassignedUsers.map(u => (u as any).id || u.userId))
+      const filteredSelection = selectedUsers.filter(su => !unassignedIds.has(su.userId))
+      onSelectionChange([...filteredSelection, ...newUsers])
+    }
+  }
+
+  /**
+   * Handle individual unassigned user checkbox
+   */
+  const handleUnassignedUserCheckbox = (user: UserDTO) => {
+    const userId = (user as any).id || user.userId || ''
+    const isSelected = isUserSelected(userId)
+
+    if (isSelected) {
+      const newSelection = selectedUsers.filter(su => su.userId !== userId)
+      onSelectionChange(newSelection)
+    } else {
+      const newUser: SelectedUser = {
+        userId,
+        userInfo: user,
+        seriesId: undefined,
+        seriesInfo: undefined
+      }
+      onSelectionChange([...selectedUsers, newUser])
+    }
+  }
+
   // ========================================
   // RENDER
   // ========================================
@@ -271,29 +393,125 @@ const GroupedUserSelector = ({
           borderRadius: 1
         }}
       >
-        {filteredGroups.length === 0 ? (
+        {filteredGroups.length === 0 && filteredUnassignedUsers.length === 0 ? (
           <Box sx={{ p: 3, textAlign: 'center' }}>
             <Typography variant='body2' color='text.secondary'>
-              {searchQuery ? 'Nu s-au găsit utilizatori' : 'Nu există serii cu utilizatori'}
+              {searchQuery ? 'Nu s-au găsit utilizatori' : 'Nu există utilizatori disponibili'}
             </Typography>
           </Box>
         ) : (
-          filteredGroups.map(group => {
-            const isExpanded = expandedSeries.includes(group.series.id)
-            const selectedCount = getSeriesSelectedCount(group.series.id)
-            const isFullySelected = isSeriesFullySelected(group.series.id)
-            const isPartiallySelected = isSeriesPartiallySelected(group.series.id)
+          <>
+            {/* Recurring Series Groups */}
+            {filteredGroups.map(group => {
+              const isExpanded = expandedSeries.includes(group.series.id)
+              const selectedCount = getSeriesSelectedCount(group.series.id)
+              const isFullySelected = isSeriesFullySelected(group.series.id)
+              const isPartiallySelected = isSeriesPartiallySelected(group.series.id)
 
-            return (
+              return (
+                <Accordion
+                  key={group.series.id}
+                  expanded={isExpanded}
+                  onChange={() => handleToggleSeries(group.series.id)}
+                  disableGutters
+                  elevation={0}
+                  sx={{
+                    '&:before': { display: 'none' },
+                    '&.Mui-expanded': { margin: 0 }
+                  }}
+                >
+                  <AccordionSummary
+                    expandIcon={<Icon icon='mdi:chevron-down' />}
+                    sx={{
+                      borderBottom: '1px solid',
+                      borderColor: 'divider',
+                      '&.Mui-expanded': { minHeight: 48 }
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', pr: 2 }}>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={isFullySelected}
+                            indeterminate={isPartiallySelected}
+                            onChange={e => {
+                              e.stopPropagation()
+                              handleSeriesCheckbox(group.series.id)
+                            }}
+                            onClick={e => e.stopPropagation()}
+                          />
+                        }
+                        label={
+                          <Box>
+                            <Typography variant='body2' fontWeight={500}>
+                              {group.series.title}
+                            </Typography>
+                            {group.series.pattern && (
+                              <Typography variant='caption' color='text.secondary'>
+                                {group.series.pattern}
+                              </Typography>
+                            )}
+                          </Box>
+                        }
+                        sx={{ mr: 'auto' }}
+                      />
+                      <Badge badgeContent={selectedCount > 0 ? selectedCount : null} color='primary' sx={{ mr: 2 }}>
+                        <Chip size='small' label={`${group.users.length} utilizatori`} variant='outlined' />
+                      </Badge>
+                    </Box>
+                  </AccordionSummary>
+
+                  <AccordionDetails sx={{ p: 0 }}>
+                    <List disablePadding>
+                      {group.users.map(user => {
+                        const userId = (user as any).id || user.userId || ''
+                        const isSelected = isUserSelected(userId)
+
+                        return (
+                          <ListItem key={userId} disablePadding>
+                            <ListItemButton onClick={() => handleUserCheckbox(user, group.series.id)} dense>
+                              <Checkbox checked={isSelected} sx={{ mr: 1 }} />
+                              {showAvatars && (
+                                <ListItemAvatar>
+                                  <EmentorAvatar
+                                    userId={userId}
+                                    userType={UserType.STUDENT}
+                                    alt={user.firstName}
+                                    sx={{ width: 32, height: 32 }}
+                                  >
+                                    {user.firstName?.[0]}
+                                    {user.lastName?.[0]}
+                                  </EmentorAvatar>
+                                </ListItemAvatar>
+                              )}
+                              <ListItemText
+                                primary={`${user.lastName} ${user.firstName}`}
+                                primaryTypographyProps={{
+                                  variant: 'body2'
+                                }}
+                              />
+                            </ListItemButton>
+                          </ListItem>
+                        )
+                      })}
+                    </List>
+                  </AccordionDetails>
+                </Accordion>
+              )
+            })}
+
+            {/* Unassigned Students Section */}
+            {filteredUnassignedUsers.length > 0 && (
               <Accordion
-                key={group.series.id}
-                expanded={isExpanded}
-                onChange={() => handleToggleSeries(group.series.id)}
+                key={UNASSIGNED_SECTION_ID}
+                expanded={expandedSeries.includes(UNASSIGNED_SECTION_ID)}
+                onChange={() => handleToggleSeries(UNASSIGNED_SECTION_ID)}
                 disableGutters
                 elevation={0}
                 sx={{
                   '&:before': { display: 'none' },
-                  '&.Mui-expanded': { margin: 0 }
+                  '&.Mui-expanded': { margin: 0 },
+                  backgroundColor: 'action.hover'
                 }}
               >
                 <AccordionSummary
@@ -308,11 +526,11 @@ const GroupedUserSelector = ({
                     <FormControlLabel
                       control={
                         <Checkbox
-                          checked={isFullySelected}
-                          indeterminate={isPartiallySelected}
+                          checked={isUnassignedFullySelected()}
+                          indeterminate={isUnassignedPartiallySelected()}
                           onChange={e => {
                             e.stopPropagation()
-                            handleSeriesCheckbox(group.series.id)
+                            handleUnassignedCheckbox()
                           }}
                           onClick={e => e.stopPropagation()}
                         />
@@ -320,32 +538,39 @@ const GroupedUserSelector = ({
                       label={
                         <Box>
                           <Typography variant='body2' fontWeight={500}>
-                            {group.series.title}
+                            Studenți neasignați
                           </Typography>
-                          {group.series.pattern && (
-                            <Typography variant='caption' color='text.secondary'>
-                              {group.series.pattern}
-                            </Typography>
-                          )}
+                          <Typography variant='caption' color='text.secondary'>
+                            Nu fac parte din nicio serie recurentă
+                          </Typography>
                         </Box>
                       }
                       sx={{ mr: 'auto' }}
                     />
-                    <Badge badgeContent={selectedCount > 0 ? selectedCount : null} color='primary' sx={{ mr: 2 }}>
-                      <Chip size='small' label={`${group.users.length} utilizatori`} variant='outlined' />
+                    <Badge
+                      badgeContent={getUnassignedSelectedCount() > 0 ? getUnassignedSelectedCount() : null}
+                      color='warning'
+                      sx={{ mr: 2 }}
+                    >
+                      <Chip
+                        size='small'
+                        label={`${filteredUnassignedUsers.length} utilizatori`}
+                        variant='outlined'
+                        color='warning'
+                      />
                     </Badge>
                   </Box>
                 </AccordionSummary>
 
                 <AccordionDetails sx={{ p: 0 }}>
                   <List disablePadding>
-                    {group.users.map(user => {
+                    {filteredUnassignedUsers.map(user => {
                       const userId = (user as any).id || user.userId || ''
                       const isSelected = isUserSelected(userId)
 
                       return (
                         <ListItem key={userId} disablePadding>
-                          <ListItemButton onClick={() => handleUserCheckbox(user, group.series.id)} dense>
+                          <ListItemButton onClick={() => handleUnassignedUserCheckbox(user)} dense>
                             <Checkbox checked={isSelected} sx={{ mr: 1 }} />
                             {showAvatars && (
                               <ListItemAvatar>
@@ -373,8 +598,8 @@ const GroupedUserSelector = ({
                   </List>
                 </AccordionDetails>
               </Accordion>
-            )
-          })
+            )}
+          </>
         )}
       </Box>
     </Box>

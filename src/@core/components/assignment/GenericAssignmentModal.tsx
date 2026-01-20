@@ -1,5 +1,5 @@
 // ** React Imports
-import { useState, Fragment } from 'react'
+import { useState, Fragment, useEffect } from 'react'
 
 // ** MUI Imports
 import {
@@ -19,6 +19,10 @@ import {
   alpha
 } from '@mui/material'
 import { styled } from '@mui/material/styles'
+
+// ** Redux Imports
+import { useDispatch, useSelector } from 'react-redux'
+import { fetchData } from 'src/store/apps/user'
 
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
@@ -105,7 +109,6 @@ function GenericAssignmentModal<T extends AssignableEntity>({
   entityConfig,
 
   // List #2: User & Grouping Configuration
-  users,
   recurringSeries,
 
   // Assignment Configuration (Optional)
@@ -148,6 +151,20 @@ function GenericAssignmentModal<T extends AssignableEntity>({
 
   // Loading state during assignment
   const [isAssigning, setIsAssigning] = useState<boolean>(false)
+
+  // ========================================
+  // REDUX - Fetch ALL active students directly from store
+  // ========================================
+
+  const dispatch = useDispatch()
+  const activeStudents = useSelector((state: any) => state.user.activeStudents || [])
+
+  // Fetch active students when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      dispatch(fetchData() as any)
+    }
+  }, [dispatch, isOpen])
 
   // ========================================
   // HANDLERS
@@ -363,7 +380,7 @@ function GenericAssignmentModal<T extends AssignableEntity>({
                     Utilizatori
                   </SectionTitle>
                   <GroupedUserSelector
-                    users={users}
+                    users={activeStudents}
                     recurringSeries={recurringSeries}
                     selectedUsers={selectedUsers}
                     onSelectionChange={setSelectedUsers}
