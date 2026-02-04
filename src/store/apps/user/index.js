@@ -176,6 +176,9 @@ export const addStudentByEmail = createAsyncThunk(
   'appUsers/addStudentByEmail',
   async (requestData, { rejectWithValue, dispatch }) => {
     try {
+      // Dynamic import to avoid circular dependency
+      const { profileServiceClient } = await import('src/services')
+
       const response = await profileServiceClient.studentProfessorRelationship.addStudentByEmail({
         addStudentByEmailRequest: requestData
       })

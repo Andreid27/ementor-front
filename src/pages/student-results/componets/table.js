@@ -443,7 +443,17 @@ const StudentsResultsTable = () => {
         pageSize: paginationModel.pageSize
       })
 
-      const processedData = await processStudentQuizzesData(response.data.data, users)
+      // Extract student IDs from the new quiz results
+      const studentIds = [...new Set(
+        response.data.data.map(quiz => quiz.studentId).filter(Boolean)
+      )]
+
+      // Fetch students by IDs to get any new students from assignments
+      const result = await dispatch(fetchStudentsByIds({ studentIds })).unwrap()
+      setUsers(result.students)
+
+      // Process quiz data with the updated student info
+      const processedData = await processStudentQuizzesData(response.data.data, result.students)
       setData(processedData)
       setTotalCount(response.data.totalCount)
     } catch (error) {
