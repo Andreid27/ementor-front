@@ -16,6 +16,7 @@ import invoice from 'src/store/apps/invoice'
 import calendarReducer from 'src/store/apps/calendar/index'
 import permissions from 'src/store/apps/permissions'
 import notifications from 'src/store/apps/notifications'
+import wallet from 'src/store/apps/wallet'
 
 // ** Logger import
 import { createLogger } from 'redux-logger'
@@ -45,7 +46,8 @@ const persistedReducer = persistReducer(
     invoice,
     calendar: calendarReducer,
     permissions,
-    notifications
+    notifications,
+    wallet
   })
 )
 

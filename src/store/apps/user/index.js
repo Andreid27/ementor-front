@@ -137,6 +137,8 @@ export const fetchStudentsByIds = createAsyncThunk(
       if (missingIds.length > 0) {
         console.debug('[fetchStudentsByIds] Tier 3 - Calling batch API for:', missingIds.length, 'IDs')
         try {
+          const { profileServiceClient } = await import('src/services')
+
           const response = await profileServiceClient.studentProfessorRelationship.getRelationshipsByStudentIds({
             getRelationshipsByStudentIdsRequest: {
               studentIds: missingIds,
@@ -223,6 +225,8 @@ export const fetchStudentsByGeneration = createAsyncThunk(
   'appUsers/fetchStudentsByGeneration',
   async ({ professorId, generation }, { rejectWithValue }) => {
     try {
+      const { profileServiceClient } = await import('src/services')
+
       const response = await profileServiceClient.studentProfessorRelationship.getStudentsByGeneration({
         professorId,
         generation
@@ -246,6 +250,8 @@ export const updateStudentGeneration = createAsyncThunk(
   'appUsers/updateStudentGeneration',
   async ({ studentUserId, professorId, generation, validGeneration }, { rejectWithValue, dispatch }) => {
     try {
+      const { profileServiceClient } = await import('src/services')
+
       const response = await profileServiceClient.studentProfessorRelationship.updateGeneration({
         studentUserId,
         professorId,
@@ -337,6 +343,8 @@ export const fetchProfessorProfile = createAsyncThunk(
       }
 
       // Fetch from API
+      const { profileServiceClient } = await import('src/services')
+
       const response = await profileServiceClient.professorProfile.get3({ id: userId })
 
       return {

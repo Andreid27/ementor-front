@@ -6,7 +6,7 @@ import { createContext, useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 
 // ** JWT
-import { jwtDecode } from 'jwt-decode'
+import jwtDecode from 'jwt-decode'
 
 // ** Config
 import authConfig from 'src/configs/auth'
@@ -64,6 +64,7 @@ const AuthProvider = ({ children }) => {
   const extractUserData = decodedToken => {
     // Handle users without realm_access (new users without roles yet)
     const roles = decodedToken.realm_access?.roles || []
+
     const role = roles.includes('ADMIN')
       ? 'ADMIN'
       : roles.includes('PROFESSOR')

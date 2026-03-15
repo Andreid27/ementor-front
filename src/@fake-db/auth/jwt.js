@@ -1,5 +1,5 @@
 // ** JWT import
-import { jwtDecode } from 'jwt-decode'
+import jwtDecode from 'jwt-decode'
 
 // ** Mock Adapter
 import mock from 'src/@fake-db/mock'

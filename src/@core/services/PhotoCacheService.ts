@@ -173,6 +173,16 @@ class RequestQueue {
    * Handle network or CORS errors
    */
   private async handleError(request: QueuedRequest, error: Error): Promise<void> {
+    // CORS / network errors from fetch() surface as TypeError("Failed to fetch").
+    // Retrying these is pointless — the browser blocks them deterministically.
+    const isCorsOrNetwork =
+      error instanceof TypeError && error.message.toLowerCase().includes('failed to fetch')
+
+    if (isCorsOrNetwork) {
+      request.reject(error)
+      return
+    }
+
     const retryConfig = this.config.retryConfig
     if (!retryConfig || request.retries >= retryConfig.maxRetries) {
       // Max retries exceeded
@@ -395,10 +405,11 @@ export class PhotoCacheService {
       const blob = await response.blob()
       return URL.createObjectURL(blob)
     } catch (error) {
-      // If CORS fails, log warning and return original URL as fallback
-      if (error instanceof TypeError && error.message.includes('CORS')) {
-        console.warn(`[PhotoCache] CORS blocked for ${url}, using direct URL`)
-        // Return original URL as fallback (won't be cached as blob)
+      // CORS failures surface as TypeError("Failed to fetch") in browsers.
+      // Fall back to the original URL so <img> can load it directly (no CORS needed for <img>).
+      if (error instanceof TypeError && error.message.toLowerCase().includes('failed to fetch')) {
+        console.warn(`[PhotoCache] CORS/network blocked for ${url}, falling back to direct URL`)
+
         return url
       }
 

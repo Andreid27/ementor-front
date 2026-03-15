@@ -66,11 +66,26 @@ const ACLPage = () => {
         })
 
         dispatch(fetchNotifications())
+
+        // Show quiz data immediately (without avatars) so the timeline is not empty
+        const rawQuizData = quizServiceResponse.data.data || []
+        setQuizzesData(rawQuizData)
         setLoading(false)
 
-        // Process quiz data will happen in a separate useEffect when activeStudents updates
-        const processedData = await processStudentQuizzesData(quizServiceResponse.data.data, userStore.activeStudents)
-        setQuizzesData(processedData)
+        // Then load photos in the background and update quizzesData with avatars
+        const activeStudents = userStore.activeStudents || []
+        if (activeStudents.length > 0 && rawQuizData.length > 0) {
+          loadPhotosForUsers(activeStudents)
+            .then(usersWithPhotos => {
+              setQuizzesData(prevData =>
+                prevData.map(row => {
+                  const user = usersWithPhotos.find(u => u.id === row.studentId)
+                  return user?.avatar ? { ...row, avatar: user.avatar } : row
+                })
+              )
+            })
+            .catch(err => console.error('[ACL] Background photo load failed:', err))
+        }
       } catch (error) {
         console.error(error)
         toast.error('Failed to load dashboard data')
@@ -85,17 +100,6 @@ const ACLPage = () => {
   useEffect(() => {
     setUsers(userStore.activeStudents || [])
   }, [userStore.activeStudents])
-
-  const processStudentQuizzesData = async (data, users) => {
-    // Use universal photo loader - much simpler!
-    const usersWithPhotos = await loadPhotosForUsers(users)
-
-    // Map photos to quiz data
-    return data.map(row => {
-      const user = usersWithPhotos.find(u => u.id === row.studentId)
-      return { ...row, avatar: user?.avatar }
-    })
-  }
 
   const handlePaymentConfirmed = () => {
     // Refresh the confirmation history when a payment is confirmed

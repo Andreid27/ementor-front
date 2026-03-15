@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
 import useMediaQuery from '@mui/material/useMediaQuery';
+import { useDispatch } from 'react-redux';
 
 // ** Layout Imports
 // !Do not remove this Layout import
@@ -18,16 +19,26 @@ import HorizontalNavItems from 'src/navigation/horizontal';
 import VerticalAppBarContent from './components/vertical/AppBarContent';
 import HorizontalAppBarContent from './components/horizontal/AppBarContent';
 
+// ** Wallet Warning Components (student only)
+import StudentWalletWarningBanner from 'src/components/wallet/StudentWalletWarningBanner';
+import StudentWalletWarningModal from 'src/components/wallet/StudentWalletWarningModal';
+import { fetchWalletBalance } from 'src/store/apps/wallet';
+
 // ** Hook Import
 import { useSettings } from 'src/@core/hooks/useSettings';
 import { useAppBar } from 'src/context/AppBarContext';
+import { useAuth } from 'src/hooks/useAuth';
 
 const UserLayout = ({ children, contentHeightFixed }) => {
   // ** Hooks
   const { settings, saveSettings } = useSettings();
   const { clearComponents } = useAppBar();
+  const { user } = useAuth();
+  const dispatch = useDispatch();
   const router = useRouter();
   const hidden = useMediaQuery(theme => theme.breakpoints.down('lg'));
+
+  const isStudent = user?.role === 'STUDENT';
 
   useEffect(() => {
     const handleRouteChange = () => {
@@ -40,6 +51,13 @@ const UserLayout = ({ children, contentHeightFixed }) => {
       router.events.off('routeChangeStart', handleRouteChange);
     };
   }, [router.events, clearComponents]);
+
+  // Fetch wallet balance on mount for students
+  useEffect(() => {
+    if (isStudent) {
+      dispatch(fetchWalletBalance());
+    }
+  }, [isStudent, dispatch]);
 
   if (hidden && settings.layout === 'horizontal') {
     settings.layout = 'vertical';
@@ -77,7 +95,9 @@ const UserLayout = ({ children, contentHeightFixed }) => {
         },
       })}
     >
+      {isStudent && <StudentWalletWarningBanner />}
       {children}
+      {isStudent && <StudentWalletWarningModal />}
     </Layout>
   );
 };
