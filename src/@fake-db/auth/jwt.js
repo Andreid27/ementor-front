@@ -1,5 +1,5 @@
 // ** JWT import
-import jwt from 'jsonwebtoken'
+import { jwtDecode } from 'jwt-decode'
 
 // ** Mock Adapter
 import mock from 'src/@fake-db/mock'
@@ -26,12 +26,14 @@ const users = [
   }
 ]
 
-// ! These two secrets should be in .env file and not in any other file
-const jwtConfig = {
-  secret: process.env.NEXT_PUBLIC_JWT_SECRET,
-  expirationTime: process.env.NEXT_PUBLIC_JWT_EXPIRATION,
-  refreshTokenSecret: process.env.NEXT_PUBLIC_JWT_REFRESH_TOKEN_SECRET
+// Simple base64 token helper for fake-db (no real signing needed)
+const createFakeToken = payload => {
+  const header = btoa(JSON.stringify({ alg: 'none', typ: 'JWT' }))
+  const body = btoa(JSON.stringify(payload))
+
+  return `${header}.${body}.fakesignature`
 }
+
 mock.onPost('/jwt/login').reply(request => {
   const { email, password } = JSON.parse(request.data)
 
@@ -40,7 +42,7 @@ mock.onPost('/jwt/login').reply(request => {
   }
   const user = users.find(u => u.email === email && u.password === password)
   if (user) {
-    const accessToken = jwt.sign({ id: user.id }, jwtConfig.secret, { expiresIn: jwtConfig.expirationTime })
+    const accessToken = createFakeToken({ id: user.id })
 
     const response = {
       accessToken,
@@ -83,7 +85,7 @@ mock.onPost('/jwt/register').reply(request => {
         role: 'admin'
       }
       users.push(userData)
-      const accessToken = jwt.sign({ id: userData.id }, jwtConfig.secret)
+      const accessToken = createFakeToken({ id: userData.id })
       const user = { ...userData }
       delete user.password
       const response = { accessToken }
@@ -104,50 +106,40 @@ mock.onGet('/auth/me').reply(config => {
   // ** Default response
   let response = [200, {}]
 
-  // ** Checks if the token is valid or expired
-  jwt.verify(token, jwtConfig.secret, (err, decoded) => {
-    // ** If token is expired
-    if (err) {
-      // ** If onTokenExpiration === 'logout' then send 401 error
-      if (defaultAuthConfig.onTokenExpiration === 'logout') {
-        // ** 401 response will logout user from AuthContext file
-        response = [401, { error: { error: 'Invalid User' } }]
-      } else {
-        // ** If onTokenExpiration === 'refreshToken' then generate the new token
-        const oldTokenDecoded = jwt.decode(token, { complete: true })
+  try {
+    const decoded = jwtDecode(token)
 
-        // ** Get user id from old token
+    // @ts-ignore
+    const userId = decoded.id
+
+    // ** Get user that matches id in token
+    const userData = JSON.parse(JSON.stringify(users.find(u => u.id === userId)))
+    delete userData.password
+
+    // ** return 200 with user data
+    response = [200, { userData }]
+  } catch (err) {
+    // ** If token is invalid
+    if (defaultAuthConfig.onTokenExpiration === 'logout') {
+      response = [401, { error: { error: 'Invalid User' } }]
+    } else {
+      // ** Try to decode and refresh
+      try {
+        const decoded = jwtDecode(token)
+
         // @ts-ignore
-        const { id: userId } = oldTokenDecoded.payload
-
-        // ** Get user that matches id in token
+        const userId = decoded.id
         const user = users.find(u => u.id === userId)
+        const accessToken = createFakeToken({ id: userId })
 
-        // ** Sign a new token
-        const accessToken = jwt.sign({ id: userId }, jwtConfig.secret, {
-          expiresIn: jwtConfig.expirationTime
-        })
-
-        // ** Set new token in localStorage
         window.localStorage.setItem(defaultAuthConfig.storageTokenKeyName, accessToken)
         const obj = { userData: { ...user, password: undefined } }
-
-        // ** return 200 with user data
         response = [200, obj]
+      } catch {
+        response = [401, { error: { error: 'Invalid User' } }]
       }
-    } else {
-      // ** If token is valid do nothing
-      // @ts-ignore
-      const userId = decoded.id
-
-      // ** Get user that matches id in token
-      const userData = JSON.parse(JSON.stringify(users.find(u => u.id === userId)))
-      delete userData.password
-
-      // ** return 200 with user data
-      response = [200, { userData }]
     }
-  })
+  }
 
   return response
 })
