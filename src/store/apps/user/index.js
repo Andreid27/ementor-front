@@ -276,6 +276,7 @@ export const deactivateStudentRelationship = createAsyncThunk(
   'appUsers/deactivateStudentRelationship',
   async ({ studentUserId, professorId }, { rejectWithValue, dispatch }) => {
     try {
+      const { profileServiceClient } = await import('src/services')
       await profileServiceClient.studentProfessorRelationship.deactivateRelationship({
         studentUserId,
         professorId

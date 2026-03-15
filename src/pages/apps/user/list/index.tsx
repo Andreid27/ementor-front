@@ -55,8 +55,6 @@ import {
 // ** Third Party Components
 import axios from 'axios'
 
-// ** Toast Import
-import { Toaster } from 'react-hot-toast'
 
 // ** Custom Table Components Imports
 import TableHeader from 'src/views/apps/user/list/TableHeader'
@@ -972,9 +970,6 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
           </Button>
         </DialogActions>
       </Dialog>
-
-      {/* Toast Notifications */}
-      <Toaster />
     </Grid>
   )
 }

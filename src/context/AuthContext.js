@@ -5,8 +5,8 @@ import { createContext, useEffect, useState } from 'react'
 // ** Next Import
 import { useRouter } from 'next/router'
 
-// ** Axios
-import jwt from 'jsonwebtoken'
+// ** JWT
+import { jwtDecode } from 'jwt-decode'
 
 // ** Config
 import authConfig from 'src/configs/auth'
@@ -84,7 +84,7 @@ const AuthProvider = ({ children }) => {
   }
 
   const handleLogin = (params, errorCallback) => {
-    const parsedToken = jwt.decode(params.access_token)
+    const parsedToken = jwtDecode(params.access_token)
     const extractedUserData = extractUserData(parsedToken)
 
     window.localStorage.setItem(authConfig.storageTokenKeyName, params.access_token)
