@@ -40,7 +40,16 @@ const UserView = ({ tab, userId, invoiceData }) => {
     ]
   }
 
+  // Reset state immediately when userId changes so the previous student's
+  // data (especially the avatar) is never shown for the new student.
   useEffect(() => {
+    setLoading(true)
+    setProfilePictureUrl(null)
+    setProfileData({})
+    setQuizzesData([])
+    setQuizStats({})
+    setLessonStats({})
+
     const fetchData = async () => {
       try {
         const [profileServiceResponse, quizzesResponse, quizStatsResponse, lessonStatsResponse] = await Promise.all([

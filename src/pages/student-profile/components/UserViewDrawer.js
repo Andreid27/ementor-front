@@ -41,7 +41,18 @@ const UserViewDrawer = ({ tab, userId, open, onClose }) => {
     sorters: [{ key: 'startedAt', direction: 'DESC' }]
   }
 
+  // Reset state immediately when userId changes so the previous student's
+  // data (especially the avatar) is never shown for the new student.
   useEffect(() => {
+    if (!userId) return
+
+    setLoading(true)
+    setProfilePictureUrl(null)
+    setProfileData({})
+    setQuizzesData([])
+    setQuizStats({})
+    setLessonStats({})
+
     const fetchData = async () => {
       try {
         const [profileServiceResponse, quizzesResponse, quizStatsResponse, lessonStatsResponse] = await Promise.all([
@@ -81,7 +92,7 @@ const UserViewDrawer = ({ tab, userId, open, onClose }) => {
       }
     }
 
-    if (userId) fetchData()
+    fetchData()
   }, [userId])
 
   return userId && open ? (
