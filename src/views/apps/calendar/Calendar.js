@@ -18,8 +18,12 @@ import {
   isVirtualRecurringSeries
 } from './utils/eventTypeUtils'
 
-// ** Third Party Style Import
+// ** Third Party Imports
+import toast from 'react-hot-toast'
 import 'bootstrap-icons/font/bootstrap-icons.css'
+
+// ** Error Handling
+import { resolveCalendarError } from './utils/calendarErrors'
 
 const blankEvent = {
   title: '',
@@ -399,16 +403,32 @@ const Calendar = props => {
               ? Docs: https://fullcalendar.io/docs/eventDrop
               ? We can use `eventDragStop` but it doesn't return updated event so we have to use `eventDrop` which returns updated event
             */
-      eventDrop({ event: droppedEvent }) {
-        dispatch(updateEvent(droppedEvent))
+      async eventDrop({ event: droppedEvent, revert }) {
+        try {
+          await dispatch(updateEvent(droppedEvent)).unwrap()
+        } catch (error) {
+          // Put the event back where it was: the grid must not keep showing a
+          // move the backend refused.
+          const resolved = resolveCalendarError(error)
+          console.error('Calendar - eventDrop failed:', resolved.backendMessage || error, error)
+          revert()
+          toast.error(resolved.message, { duration: 8000 })
+        }
       },
 
       /*
               Handle event resize
               ? Docs: https://fullcalendar.io/docs/eventResize
             */
-      eventResize({ event: resizedEvent }) {
-        dispatch(updateEvent(resizedEvent))
+      async eventResize({ event: resizedEvent, revert }) {
+        try {
+          await dispatch(updateEvent(resizedEvent)).unwrap()
+        } catch (error) {
+          const resolved = resolveCalendarError(error)
+          console.error('Calendar - eventResize failed:', resolved.backendMessage || error, error)
+          revert()
+          toast.error(resolved.message, { duration: 8000 })
+        }
       },
       ref: calendarRef,
       datesSet(info) {

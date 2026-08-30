@@ -2,8 +2,12 @@
 import React from 'react'
 
 // ** MUI Imports
+import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
 import Drawer from '@mui/material/Drawer'
+
+// ** Third Party Imports
+import toast from 'react-hot-toast'
 
 // ** Styled Components
 import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker'
@@ -23,6 +27,9 @@ import { DRAWER_STYLES, SIDEBAR_BODY_STYLES } from './constants'
 
 // ** Hooks
 import { useEventData, useEventActions } from './hooks'
+
+// ** Error Handling
+import { resolveCalendarError } from './utils/calendarErrors'
 
 /**
  * AddEventSidebar - Refactored and Improved
@@ -95,7 +102,9 @@ const AddEventSidebar: React.FC<AddEventSidebarProps> = props => {
   const {
     handleSubmit: handleFormSubmit,
     handleDelete,
-    canEdit
+    canEdit,
+    submitError,
+    clearSubmitError
   } = useEventActions({
     values,
     store,
@@ -108,6 +117,12 @@ const AddEventSidebar: React.FC<AddEventSidebarProps> = props => {
     eventTypeInfo,
     editingScope
   })
+
+  // A backend rejection belongs to the submission that produced it: drop it when
+  // the sidebar is reopened or pointed at a different event.
+  React.useEffect(() => {
+    clearSubmitError()
+  }, [addEventSidebarOpen, store.selectedEvent, clearSubmitError])
 
   // Event handlers
   const handleEdit = React.useCallback(() => {
@@ -159,8 +174,11 @@ const AddEventSidebar: React.FC<AddEventSidebarProps> = props => {
         // Success! Let the wizard show the success screen
         // Don't close the sidebar here - the wizard will handle it
       } catch (error) {
-        console.error('AddEventSidebar - Error completing event:', error)
-        // Re-throw the error so the wizard can catch it and show the error screen
+        const resolved = resolveCalendarError(error)
+        console.error('AddEventSidebar - Error completing event:', resolved.backendMessage || error, error)
+
+        // Re-throw so the wizard shows its error screen; it resolves the message
+        // through the same mapping.
         throw error
       } finally {
         setActionLoading(false)
@@ -194,7 +212,11 @@ const AddEventSidebar: React.FC<AddEventSidebarProps> = props => {
       setConfirmDialogOpen(false)
       handleSidebarClose()
     } catch (error) {
-      console.error('Error canceling event:', error)
+      // The dialog stays open on failure so the professor sees the action did
+      // not go through and can retry or back out.
+      const resolved = resolveCalendarError(error)
+      console.error('Error canceling event:', resolved.backendMessage || error, error)
+      toast.error(resolved.message, { duration: 8000 })
     } finally {
       setActionLoading(false)
     }
@@ -250,6 +272,14 @@ const AddEventSidebar: React.FC<AddEventSidebarProps> = props => {
       <Box className='sidebar-body' sx={SIDEBAR_BODY_STYLES}>
         <DatePickerWrapper>
           <form onSubmit={handleSubmit(handleFormSubmit)} autoComplete='off'>
+            {/* Backend rejection for the last submit. The toast fades; this does
+                not, so the reason stays visible while the form is corrected. */}
+            {submitError && (
+              <Alert severity='error' onClose={clearSubmitError} sx={{ mb: 4 }}>
+                {submitError.message}
+              </Alert>
+            )}
+
             <SidebarContentContainer
               store={store}
               dispatch={dispatch}

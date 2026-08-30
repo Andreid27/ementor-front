@@ -1,8 +1,10 @@
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
+import toast from 'react-hot-toast'
 import { useAuth } from 'src/hooks/useAuth'
 import { useSelector } from 'react-redux'
 import { RecurringSeriesDTO } from 'src/generated/profile-service'
 import { EventFormValues, FormData } from '../types'
+import { resolveCalendarError, CalendarErrorInfo } from '../utils/calendarErrors'
 import {
   EventTypeInfo,
   EditingScope,
@@ -48,6 +50,10 @@ export const useEventActions = ({
 }: UseEventActionsProps) => {
   const auth = useAuth()
 
+  // Last backend rejection, kept so the sidebar can show it next to the form as
+  // well as in the toast.
+  const [submitError, setSubmitError] = useState<CalendarErrorInfo | null>(null)
+
   const formatDurationToISO8601 = useCallback((hours: number, minutes: number): string => {
     let duration = 'PT'
     if (hours > 0) duration += `${hours}H`
@@ -58,6 +64,8 @@ export const useEventActions = ({
 
   const handleSubmit = useCallback(
     async (data: FormData) => {
+      setSubmitError(null)
+
       console.log('useEventActions - handleSubmit called with:', {
         formData: data,
         values: values,
@@ -72,114 +80,154 @@ export const useEventActions = ({
         }))
       })
 
-      if (values.isRecurring) {
-        const durationISO8601 = formatDurationToISO8601(values.durationHours, values.durationMinutes)
+      // Every mutation below can fail on the backend. The sidebar must stay
+      // open when it does, otherwise the professor loses the edits and never
+      // learns why nothing was saved.
+      try {
+        if (values.isRecurring) {
+          const durationISO8601 = formatDurationToISO8601(values.durationHours, values.durationMinutes)
 
-        // Clean up attendee data: remove customPrice if hasCustomPricing is false
-        const cleanedAttendees = values.attendees?.map(attendee => {
-          // Create base attendee object with only the required fields
-          const baseAttendee = {
-            attendeeId: attendee.attendeeId,
-            expected: attendee.expected,
-            hasCustomPricing: attendee.hasCustomPricing,
-            attended: attendee.attended
-          }
-
-          // Only include customPrice if hasCustomPricing is true
-          if (attendee.hasCustomPricing && attendee.customPrice !== undefined) {
-            return { ...baseAttendee, customPrice: attendee.customPrice }
-          }
-
-          return baseAttendee
-        })
-
-        // Check if this is editing an existing recurring series/occurrence
-        const isEditingRecurring =
-          store.selectedEvent !== null &&
-          (store.selectedEvent.recurringSeriesId ||
-            store.selectedEvent.seriesTitle ||
-            store.selectedEvent.seriesDescription ||
-            (store.selectedEvent.extendedProps && store.selectedEvent.extendedProps.recurringSeriesId))
-
-        if (isEditingRecurring) {
-          // Log event type distinction details
-          console.log('useEventActions - Event type distinction analysis:', {
-            eventTypeInfo,
-            selectedEvent: store.selectedEvent,
-            eventClassification: {
-              classification: getEventClassification(store.selectedEvent),
-              recurringSeriesId: store.selectedEvent?.recurringSeriesId,
-              virtual: store.selectedEvent?.virtual,
-              isSingularEvent: isSingularEvent(store.selectedEvent),
-              isEventOccurrence: isRecurringSeriesOccurrence(store.selectedEvent),
-              isVirtualSeries: isVirtualRecurringSeries(store.selectedEvent)
+          // Clean up attendee data: remove customPrice if hasCustomPricing is false
+          const cleanedAttendees = values.attendees?.map(attendee => {
+            // Create base attendee object with only the required fields
+            const baseAttendee = {
+              attendeeId: attendee.attendeeId,
+              expected: attendee.expected,
+              hasCustomPricing: attendee.hasCustomPricing,
+              attended: attendee.attended
             }
+
+            // Only include customPrice if hasCustomPricing is true
+            if (attendee.hasCustomPricing && attendee.customPrice !== undefined) {
+              return { ...baseAttendee, customPrice: attendee.customPrice }
+            }
+
+            return baseAttendee
           })
 
-          // Determine if we're modifying occurrence vs. series based on editingScope
-          if (editingScope === 'occurrence' && eventTypeInfo) {
-            console.log('useEventActions - Modifying event occurrence:', {
-              editingScope,
+          // Check if this is editing an existing recurring series/occurrence
+          const isEditingRecurring =
+            store.selectedEvent !== null &&
+            (store.selectedEvent.recurringSeriesId ||
+              store.selectedEvent.seriesTitle ||
+              store.selectedEvent.seriesDescription ||
+              (store.selectedEvent.extendedProps && store.selectedEvent.extendedProps.recurringSeriesId))
+
+          if (isEditingRecurring) {
+            // Log event type distinction details
+            console.log('useEventActions - Event type distinction analysis:', {
               eventTypeInfo,
               selectedEvent: store.selectedEvent,
-              selectedEventStart: store.selectedEvent.start,
-              selectedEventStartStr: store.selectedEvent.startStr,
-              extendedProps: store.selectedEvent.extendedProps,
-              newStartTime: values.startDate.toISOString()
-            })
-
-            // Use modifyEventOccurrence for occurrence-specific changes
-            const seriesId =
-              store.selectedEvent.recurringSeriesId ||
-              store.selectedEvent.extendedProps?.recurringSeriesId ||
-              eventTypeInfo.recurringSeriesId
-
-            // Get originalStartTime from EventOccurrenceDTO
-            const originalStartTime = store.selectedEvent.originalStartTime
-
-            console.log('useEventActions - originalStartTime determination:', {
-              selectedEventOriginalStartTime: store.selectedEvent.originalStartTime,
-              extractedOriginalStartTime: originalStartTime,
-              seriesId,
-              durationCalculation: {
-                isAllDay: values.allDay,
-                durationHours: values.durationHours,
-                durationMinutes: values.durationMinutes,
-                durationISO8601: durationISO8601,
-                finalDuration: values.allDay ? undefined : durationISO8601
+              eventClassification: {
+                classification: getEventClassification(store.selectedEvent),
+                recurringSeriesId: store.selectedEvent?.recurringSeriesId,
+                virtual: store.selectedEvent?.virtual,
+                isSingularEvent: isSingularEvent(store.selectedEvent),
+                isEventOccurrence: isRecurringSeriesOccurrence(store.selectedEvent),
+                isVirtualSeries: isVirtualRecurringSeries(store.selectedEvent)
               }
             })
 
-            const occurrencePayload = {
-              seriesId: seriesId,
-              originalStartTime,
-              newStartTime: values.startDate.toISOString(),
-              eventAttendeeDTO: cleanedAttendees,
-              duration: values.allDay ? undefined : durationISO8601,
-              newPrice: values.price,
-              newMeetingLink: values.meetingLink
-              // Note: title and description are not supported by modifyEventOccurrence API
+            // Determine if we're modifying occurrence vs. series based on editingScope
+            if (editingScope === 'occurrence' && eventTypeInfo) {
+              console.log('useEventActions - Modifying event occurrence:', {
+                editingScope,
+                eventTypeInfo,
+                selectedEvent: store.selectedEvent,
+                selectedEventStart: store.selectedEvent.start,
+                selectedEventStartStr: store.selectedEvent.startStr,
+                extendedProps: store.selectedEvent.extendedProps,
+                newStartTime: values.startDate.toISOString()
+              })
+
+              // Use modifyEventOccurrence for occurrence-specific changes
+              const seriesId =
+                store.selectedEvent.recurringSeriesId ||
+                store.selectedEvent.extendedProps?.recurringSeriesId ||
+                eventTypeInfo.recurringSeriesId
+
+              // Get originalStartTime from EventOccurrenceDTO
+              const originalStartTime = store.selectedEvent.originalStartTime
+
+              console.log('useEventActions - originalStartTime determination:', {
+                selectedEventOriginalStartTime: store.selectedEvent.originalStartTime,
+                extractedOriginalStartTime: originalStartTime,
+                seriesId,
+                durationCalculation: {
+                  isAllDay: values.allDay,
+                  durationHours: values.durationHours,
+                  durationMinutes: values.durationMinutes,
+                  durationISO8601: durationISO8601,
+                  finalDuration: values.allDay ? undefined : durationISO8601
+                }
+              })
+
+              const occurrencePayload = {
+                seriesId: seriesId,
+                originalStartTime,
+                newStartTime: values.startDate.toISOString(),
+                eventAttendeeDTO: cleanedAttendees,
+                duration: values.allDay ? undefined : durationISO8601,
+                newPrice: values.price,
+                newMeetingLink: values.meetingLink
+                // Note: title and description are not supported by modifyEventOccurrence API
+              }
+
+              console.log('useEventActions - About to call modify occurrence:', {
+                payload: occurrencePayload,
+                cleanedAttendeesDebug: cleanedAttendees?.map(a => ({
+                  attendeeId: a.attendeeId,
+                  expected: a.expected,
+                  hasCustomPricing: a.hasCustomPricing,
+                  customPrice: (a as any).customPrice || 'NOT_INCLUDED',
+                  hasCustomPriceField: 'customPrice' in a
+                }))
+              })
+
+              await modifyEventOccurrence(occurrencePayload)
+            } else {
+              // Use updateEvent for series-wide changes (editingScope === 'series')
+              console.log('useEventActions - Updating recurring series:', {
+                editingScope,
+                eventTypeInfo
+              })
+
+              const recurringSeriesDTO: RecurringSeriesDTO = {
+                title: data.title,
+                description: values.description,
+                startTime: values.startDate.toISOString(),
+                duration: durationISO8601 as any,
+                pattern: values.pattern,
+                price: values.price,
+                meetingLink: values.meetingLink,
+                endRecurrence: values.endRecurrence?.toISOString()
+              }
+
+              const seriesPayload = {
+                recurringSeriesDTO,
+                isRecurring: true,
+                attendees: cleanedAttendees,
+                id:
+                  store.selectedEvent.recurringSeriesId ||
+                  store.selectedEvent.extendedProps?.recurringSeriesId ||
+                  store.selectedEvent.id
+              }
+
+              console.log('useEventActions - About to dispatch update series:', {
+                payload: seriesPayload,
+                cleanedAttendeesDebug: cleanedAttendees?.map(a => ({
+                  attendeeId: a.attendeeId,
+                  expected: a.expected,
+                  hasCustomPricing: a.hasCustomPricing,
+                  customPrice: (a as any).customPrice || 'NOT_INCLUDED',
+                  hasCustomPriceField: 'customPrice' in a
+                }))
+              })
+
+              await dispatch(updateEvent(seriesPayload)).unwrap()
             }
-
-            console.log('useEventActions - About to call modify occurrence:', {
-              payload: occurrencePayload,
-              cleanedAttendeesDebug: cleanedAttendees?.map(a => ({
-                attendeeId: a.attendeeId,
-                expected: a.expected,
-                hasCustomPricing: a.hasCustomPricing,
-                customPrice: (a as any).customPrice || 'NOT_INCLUDED',
-                hasCustomPriceField: 'customPrice' in a
-              }))
-            })
-
-            await modifyEventOccurrence(occurrencePayload)
           } else {
-            // Use updateEvent for series-wide changes (editingScope === 'series')
-            console.log('useEventActions - Updating recurring series:', {
-              editingScope,
-              eventTypeInfo
-            })
-
+            // Creating new recurring series
             const recurringSeriesDTO: RecurringSeriesDTO = {
               title: data.title,
               description: values.description,
@@ -191,131 +239,117 @@ export const useEventActions = ({
               endRecurrence: values.endRecurrence?.toISOString()
             }
 
-            const seriesPayload = {
+            const eventPayload = {
               recurringSeriesDTO,
               isRecurring: true,
-              attendees: cleanedAttendees,
-              id:
-                store.selectedEvent.recurringSeriesId ||
-                store.selectedEvent.extendedProps?.recurringSeriesId ||
-                store.selectedEvent.id
+              attendees: cleanedAttendees
             }
 
-            console.log('useEventActions - About to dispatch update series:', {
-              payload: seriesPayload,
-              cleanedAttendeesDebug: cleanedAttendees?.map(a => ({
-                attendeeId: a.attendeeId,
-                expected: a.expected,
-                hasCustomPricing: a.hasCustomPricing,
-                customPrice: (a as any).customPrice || 'NOT_INCLUDED',
-                hasCustomPriceField: 'customPrice' in a
-              }))
+            console.log('useEventActions - Creating new recurring series:', {
+              payload: eventPayload
             })
 
-            await dispatch(updateEvent(seriesPayload))
+            await dispatch(addEvent(eventPayload)).unwrap()
           }
         } else {
-          // Creating new recurring series
-          const recurringSeriesDTO: RecurringSeriesDTO = {
+          // Clean up attendee data: remove customPrice if hasCustomPricing is false
+          const cleanedAttendees = values.attendees?.map(attendee => {
+            // Create base attendee object with only the required fields
+            const baseAttendee = {
+              attendeeId: attendee.attendeeId,
+              expected: attendee.expected,
+              hasCustomPricing: attendee.hasCustomPricing,
+              attended: attendee.attended
+            }
+
+            // Only include customPrice if hasCustomPricing is true
+            if (attendee.hasCustomPricing && attendee.customPrice !== undefined) {
+              return { ...baseAttendee, customPrice: attendee.customPrice }
+            }
+
+            return baseAttendee
+          })
+
+          const modifiedEvent = {
+            display: 'block',
             title: data.title,
-            description: values.description,
-            startTime: values.startDate.toISOString(),
-            duration: durationISO8601 as any,
-            pattern: values.pattern,
-            price: values.price,
-            meetingLink: values.meetingLink,
-            endRecurrence: values.endRecurrence?.toISOString()
+            end: values.endDate,
+            allDay: values.allDay,
+            start: values.startDate,
+            extendedProps: {
+              description: values.description.length ? values.description : undefined,
+              meetingLink: values.meetingLink,
+              price: values.price,
+              // Use only EventAttendeeDTO format with cleaned data
+              attendees: cleanedAttendees
+            }
           }
 
-          const eventPayload = {
-            recurringSeriesDTO,
-            isRecurring: true,
-            attendees: cleanedAttendees
-          }
+          // Check if this is editing an existing single event
+          // For singular events: recurringSeriesId should be null/undefined
+          // Note: seriesTitle can be present even for singular events (it's just the event title)
+          const isEditingSingleEvent = store.selectedEvent !== null && !store.selectedEvent.recurringSeriesId
 
-          console.log('useEventActions - Creating new recurring series:', {
-            payload: eventPayload
+          console.log('🔍 Singular event action decision:', {
+            selectedEvent: store.selectedEvent,
+            selectedEventId: store.selectedEvent?.id,
+            'selectedEvent.id type': typeof store.selectedEvent?.id,
+            'selectedEvent.id toString()': store.selectedEvent?.id ? store.selectedEvent.id.toString() : 'N/A',
+            hasRecurringSeriesId: !!store.selectedEvent?.recurringSeriesId,
+            hasSeriesTitle: !!store.selectedEvent?.seriesTitle,
+            isEditingSingleEvent,
+            actionToTake: isEditingSingleEvent ? 'UPDATE (dispatch updateEvent)' : 'CREATE (dispatch addEvent)',
+            modifiedEvent
           })
 
-          dispatch(addEvent(eventPayload))
-        }
-      } else {
-        // Clean up attendee data: remove customPrice if hasCustomPricing is false
-        const cleanedAttendees = values.attendees?.map(attendee => {
-          // Create base attendee object with only the required fields
-          const baseAttendee = {
-            attendeeId: attendee.attendeeId,
-            expected: attendee.expected,
-            hasCustomPricing: attendee.hasCustomPricing,
-            attended: attendee.attended
-          }
-
-          // Only include customPrice if hasCustomPricing is true
-          if (attendee.hasCustomPricing && attendee.customPrice !== undefined) {
-            return { ...baseAttendee, customPrice: attendee.customPrice }
-          }
-
-          return baseAttendee
-        })
-
-        const modifiedEvent = {
-          display: 'block',
-          title: data.title,
-          end: values.endDate,
-          allDay: values.allDay,
-          start: values.startDate,
-          extendedProps: {
-            description: values.description.length ? values.description : undefined,
-            meetingLink: values.meetingLink,
-            price: values.price,
-            // Use only EventAttendeeDTO format with cleaned data
-            attendees: cleanedAttendees
+          if (isEditingSingleEvent) {
+            // Update existing single event - ALWAYS use the Redux store as single source of truth
+            console.log('📝 Calling updateEvent for singular event:', {
+              selectedEventId: store.selectedEvent.id,
+              modifiedEvent,
+              payloadToSend: { id: store.selectedEvent.id, ...modifiedEvent }
+            })
+            await dispatch(updateEvent({ id: store.selectedEvent.id, ...modifiedEvent })).unwrap()
+            // Redux store automatically handles data refresh and selectedEvent update
+          } else {
+            // Create new single event
+            console.log('🆕 Calling addEvent for new singular event:', modifiedEvent)
+            await dispatch(addEvent(modifiedEvent)).unwrap()
           }
         }
 
-        // Check if this is editing an existing single event
-        // For singular events: recurringSeriesId should be null/undefined
-        // Note: seriesTitle can be present even for singular events (it's just the event title)
-        const isEditingSingleEvent = store.selectedEvent !== null && !store.selectedEvent.recurringSeriesId
+        onClose()
+      } catch (error) {
+        const resolved = resolveCalendarError(error)
+        console.error('useEventActions - submit failed:', resolved.backendMessage || error, error)
+        setSubmitError(resolved)
+        toast.error(resolved.message, { duration: 8000 })
 
-        console.log('🔍 Singular event action decision:', {
-          selectedEvent: store.selectedEvent,
-          selectedEventId: store.selectedEvent?.id,
-          'selectedEvent.id type': typeof store.selectedEvent?.id,
-          'selectedEvent.id toString()': store.selectedEvent?.id ? store.selectedEvent.id.toString() : 'N/A',
-          hasRecurringSeriesId: !!store.selectedEvent?.recurringSeriesId,
-          hasSeriesTitle: !!store.selectedEvent?.seriesTitle,
-          isEditingSingleEvent,
-          actionToTake: isEditingSingleEvent ? 'UPDATE (dispatch updateEvent)' : 'CREATE (dispatch addEvent)',
-          modifiedEvent
-        })
-
-        if (isEditingSingleEvent) {
-          // Update existing single event - ALWAYS use the Redux store as single source of truth
-          console.log('📝 Calling updateEvent for singular event:', {
-            selectedEventId: store.selectedEvent.id,
-            modifiedEvent,
-            payloadToSend: { id: store.selectedEvent.id, ...modifiedEvent }
-          })
-          await dispatch(updateEvent({ id: store.selectedEvent.id, ...modifiedEvent }))
-          // Redux store automatically handles data refresh and selectedEvent update
-        } else {
-          // Create new single event
-          console.log('🆕 Calling addEvent for new singular event:', modifiedEvent)
-          dispatch(addEvent(modifiedEvent))
-        }
+        // Deliberately no onClose(): the form keeps the unsaved values so the
+        // professor can correct them and submit again.
       }
-
-      onClose()
     },
     [values, store.selectedEvent, dispatch, addEvent, updateEvent, onClose, formatDurationToISO8601]
   )
 
-  const handleDelete = useCallback(() => {
-    if (store.selectedEvent) {
-      dispatch(deleteEvent(store.selectedEvent.id))
+  const clearSubmitError = useCallback(() => setSubmitError(null), [])
+
+  const handleDelete = useCallback(async () => {
+    if (!store.selectedEvent) {
+      onClose()
+
+      return
     }
-    onClose()
+
+    try {
+      await dispatch(deleteEvent(store.selectedEvent.id)).unwrap()
+      onClose()
+    } catch (error) {
+      const resolved = resolveCalendarError(error)
+      console.error('useEventActions - delete failed:', resolved.backendMessage || error, error)
+      setSubmitError(resolved)
+      toast.error(resolved.message, { duration: 8000 })
+    }
   }, [store.selectedEvent, dispatch, deleteEvent, onClose])
 
   const canEdit = auth?.user?.role === 'PROFESSOR' || auth?.user?.role === 'ADMIN'
@@ -324,6 +358,8 @@ export const useEventActions = ({
     handleSubmit,
     handleDelete,
     canEdit,
-    formatDurationToISO8601
+    formatDurationToISO8601,
+    submitError,
+    clearSubmitError
   }
 }

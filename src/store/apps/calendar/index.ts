@@ -17,6 +17,24 @@ import { extractAttendeePrices, eventAttendeeDTOsToStudentIds } from 'src/views/
 // ** Types
 import { profileServiceClient } from 'src/services'
 
+// ** Error Handling
+import {
+  resolveCalendarError,
+  isCalendarErrorInfo,
+  CalendarErrorInfo
+} from 'src/views/apps/calendar/utils/calendarErrors'
+
+/**
+ * Rejected value shared by every calendar thunk.
+ *
+ * The profile service answers business errors with a bare HTTP 500 whose body
+ * holds the real reason, so `action.error.message` is always the useless
+ * "Request failed with status code 500". Each thunk below funnels its failure
+ * through `resolveCalendarError` and rejects with the resolved info instead, so
+ * both `state.error` and `.unwrap()` callers get a message worth showing.
+ */
+export type CalendarThunkConfig = { rejectValue: CalendarErrorInfo }
+
 /**
  * ✅ CORRECT API USAGE:
  *
@@ -51,9 +69,9 @@ export interface CalendarState {
 }
 
 // ** Fetch Events
-export const fetchEvents = createAsyncThunk<EventOccurrenceDTO[]>(
+export const fetchEvents = createAsyncThunk<EventOccurrenceDTO[], void, CalendarThunkConfig>(
   'appCalendar/fetchEvents',
-  async (_, { getState }) => {
+  async (_, { getState, rejectWithValue }) => {
     try {
       const state = getState() as any
       const { periodStart, periodEnd } = state.calendar
@@ -65,14 +83,30 @@ export const fetchEvents = createAsyncThunk<EventOccurrenceDTO[]>(
 
       return response.data
     } catch (error) {
-      console.error('fetchEvents API error:', error)
-      throw error
+      const resolved = resolveCalendarError(error)
+      console.error('fetchEvents API error:', resolved.backendMessage || error, error)
+
+      return rejectWithValue(resolved)
     }
   }
 )
 
 // ** Add Event
-export const addEvent = createAsyncThunk<any, any>('appCalendar/addEvent', async (event: any, { dispatch }) => {
+export const addEvent = createAsyncThunk<any, any, CalendarThunkConfig>(
+  'appCalendar/addEvent',
+  async (event: any, { dispatch, rejectWithValue }) => {
+    try {
+      return await createEvent(event, dispatch)
+    } catch (error) {
+      const resolved = resolveCalendarError(error)
+      console.error('addEvent API error:', resolved.backendMessage || error, error)
+
+      return rejectWithValue(resolved)
+    }
+  }
+)
+
+const createEvent = async (event: any, dispatch: any) => {
   if (event.isRecurring && event.recurringSeriesDTO) {
     // Create recurring series with complete attendee information
     const recurringSeriesDTO: RecurringSeriesDTO = {
@@ -120,121 +154,130 @@ export const addEvent = createAsyncThunk<any, any>('appCalendar/addEvent', async
     await dispatch(fetchEvents())
     return response.data
   }
-})
+}
 
 // ** Update Event
-export const updateEvent = createAsyncThunk<any, any>(
+export const updateEvent = createAsyncThunk<any, any, CalendarThunkConfig>(
   'appCalendar/updateEvent',
-  async (event: any, { dispatch, getState }) => {
-    console.log('🏪 Store updateEvent called with:', {
-      event,
-      eventId: event.id,
-      isRecurring: event.isRecurring,
-      hasRecurringSeriesDTO: !!event.recurringSeriesDTO,
-      pathToTake: event.isRecurring && event.recurringSeriesDTO ? 'RECURRING_SERIES' : 'SINGULAR_EVENT'
-    })
+  async (event: any, { dispatch, getState, rejectWithValue }) => {
+    try {
+      return await performUpdateEvent(event, dispatch, getState)
+    } catch (error) {
+      const resolved = resolveCalendarError(error)
+      console.error('updateEvent API error:', resolved.backendMessage || error, error)
 
-    if (event.isRecurring && event.recurringSeriesDTO) {
-      // Update recurring series with complete attendee information
-      const recurringSeriesDTO: RecurringSeriesDTO = {
-        ...event.recurringSeriesDTO,
-        // Ensure attendees are included with complete pricing information
-        eventAttendees: event.attendees || event.extendedProps?.attendees || []
-      }
-
-      const response = await profileServiceClient.events.updateRecurringSeries({
-        seriesId: event.id,
-        recurringSeriesDTO
-      })
-
-      await dispatch(fetchEvents())
-      await dispatch(fetchMyRecurringSeries({ forceRefresh: true }))
-      return response.data
-    } else {
-      // Update singular event with complete attendee information
-      // Calculate duration in ISO 8601 format to match recurring series format
-      const durationSeconds = event.allDay
-        ? 86400
-        : Math.floor((new Date(event.end).getTime() - new Date(event.start).getTime()) / 1000)
-
-      const durationHours = Math.floor(durationSeconds / 3600)
-      const durationMinutes = Math.floor((durationSeconds % 3600) / 60)
-
-      let durationISO8601 = 'PT'
-      if (durationHours > 0) durationISO8601 += `${durationHours}H`
-      if (durationMinutes > 0) durationISO8601 += `${durationMinutes}M`
-      const finalDuration = durationISO8601 || 'PT0M'
-
-      const singularEventDTO: SingularEventDTO = {
-        title: event.title,
-        description: event.extendedProps?.description,
-        startTime: event.start instanceof Date ? event.start.toISOString() : event.start,
-        duration: finalDuration as any, // Use ISO 8601 duration format like recurring series
-        price: event.extendedProps?.price || 0,
-        meetingLink: event.extendedProps?.meetingLink,
-        // Include complete attendee information with pricing in the main payload
-        eventAttendees: event.extendedProps?.attendees || event.attendees || []
-      }
-
-      // ⚠️ CRITICAL: For singular events, ALWAYS use Redux selectedEvent as single source of truth
-      const state = getState() as any
-      const selectedEvent = state.calendar?.selectedEvent
-
-      // For singular events, prioritize the selectedEvent ID from Redux store
-      let eventIdToUse: string | null = null
-
-      if (selectedEvent && !selectedEvent.recurringSeriesId) {
-        // This is a singular event - use the Redux store ID as single source of truth
-        eventIdToUse = selectedEvent.id
-        console.log('🏪 Using Redux selectedEvent.id as single source of truth:', selectedEvent.id)
-      } else {
-        // Fallback to event.id if provided
-        eventIdToUse = event.id || null
-        console.log('🏪 Using event.id as fallback:', event.id)
-      }
-
-      console.log('🏪 Store DETAILED ID ANALYSIS:', {
-        'selectedEvent exists': !!selectedEvent,
-        'selectedEvent.id': selectedEvent?.id,
-        'selectedEvent.recurringSeriesId': selectedEvent?.recurringSeriesId,
-        'event.id (raw)': event.id,
-        'eventIdToUse (final)': eventIdToUse,
-        decision: selectedEvent && !selectedEvent.recurringSeriesId ? 'USING_REDUX_STORE' : 'USING_EVENT_PAYLOAD'
-      })
-
-      const hasEventId = Boolean(eventIdToUse)
-
-      console.log('🏪 Store singular event decision:', {
-        eventId: eventIdToUse,
-        hasEventId,
-        action: hasEventId ? 'UPDATE (PUT /events/singular/{id})' : 'ERROR - NO ID AVAILABLE',
-        singularEventDTO
-      })
-
-      if (hasEventId) {
-        // UPDATE existing singular event
-        console.log('📝 Store updating singular event:', {
-          eventId: eventIdToUse,
-          endpoint: 'PUT /events/singular/{eventId}',
-          singularEventDTO
-        })
-
-        const response = await profileServiceClient.events.updateSingularEvent({
-          eventId: eventIdToUse.toString(),
-          singularEventDTO
-        })
-
-        await dispatch(fetchEvents())
-        return response.data
-      } else {
-        // This should never happen for updateEvent
-        throw new Error(
-          '❌ CRITICAL ERROR: updateEvent called but no event ID found anywhere! Cannot update without ID.'
-        )
-      }
+      return rejectWithValue(resolved)
     }
   }
 )
+
+const performUpdateEvent = async (event: any, dispatch: any, getState: any) => {
+  console.log('🏪 Store updateEvent called with:', {
+    event,
+    eventId: event.id,
+    isRecurring: event.isRecurring,
+    hasRecurringSeriesDTO: !!event.recurringSeriesDTO,
+    pathToTake: event.isRecurring && event.recurringSeriesDTO ? 'RECURRING_SERIES' : 'SINGULAR_EVENT'
+  })
+
+  if (event.isRecurring && event.recurringSeriesDTO) {
+    // Update recurring series with complete attendee information
+    const recurringSeriesDTO: RecurringSeriesDTO = {
+      ...event.recurringSeriesDTO,
+      // Ensure attendees are included with complete pricing information
+      eventAttendees: event.attendees || event.extendedProps?.attendees || []
+    }
+
+    const response = await profileServiceClient.events.updateRecurringSeries({
+      seriesId: event.id,
+      recurringSeriesDTO
+    })
+
+    await dispatch(fetchEvents())
+    await dispatch(fetchMyRecurringSeries({ forceRefresh: true }))
+    return response.data
+  } else {
+    // Update singular event with complete attendee information
+    // Calculate duration in ISO 8601 format to match recurring series format
+    const durationSeconds = event.allDay
+      ? 86400
+      : Math.floor((new Date(event.end).getTime() - new Date(event.start).getTime()) / 1000)
+
+    const durationHours = Math.floor(durationSeconds / 3600)
+    const durationMinutes = Math.floor((durationSeconds % 3600) / 60)
+
+    let durationISO8601 = 'PT'
+    if (durationHours > 0) durationISO8601 += `${durationHours}H`
+    if (durationMinutes > 0) durationISO8601 += `${durationMinutes}M`
+    const finalDuration = durationISO8601 || 'PT0M'
+
+    const singularEventDTO: SingularEventDTO = {
+      title: event.title,
+      description: event.extendedProps?.description,
+      startTime: event.start instanceof Date ? event.start.toISOString() : event.start,
+      duration: finalDuration as any, // Use ISO 8601 duration format like recurring series
+      price: event.extendedProps?.price || 0,
+      meetingLink: event.extendedProps?.meetingLink,
+      // Include complete attendee information with pricing in the main payload
+      eventAttendees: event.extendedProps?.attendees || event.attendees || []
+    }
+
+    // ⚠️ CRITICAL: For singular events, ALWAYS use Redux selectedEvent as single source of truth
+    const state = getState() as any
+    const selectedEvent = state.calendar?.selectedEvent
+
+    // For singular events, prioritize the selectedEvent ID from Redux store
+    let eventIdToUse: string | null = null
+
+    if (selectedEvent && !selectedEvent.recurringSeriesId) {
+      // This is a singular event - use the Redux store ID as single source of truth
+      eventIdToUse = selectedEvent.id
+      console.log('🏪 Using Redux selectedEvent.id as single source of truth:', selectedEvent.id)
+    } else {
+      // Fallback to event.id if provided
+      eventIdToUse = event.id || null
+      console.log('🏪 Using event.id as fallback:', event.id)
+    }
+
+    console.log('🏪 Store DETAILED ID ANALYSIS:', {
+      'selectedEvent exists': !!selectedEvent,
+      'selectedEvent.id': selectedEvent?.id,
+      'selectedEvent.recurringSeriesId': selectedEvent?.recurringSeriesId,
+      'event.id (raw)': event.id,
+      'eventIdToUse (final)': eventIdToUse,
+      decision: selectedEvent && !selectedEvent.recurringSeriesId ? 'USING_REDUX_STORE' : 'USING_EVENT_PAYLOAD'
+    })
+
+    const hasEventId = Boolean(eventIdToUse)
+
+    console.log('🏪 Store singular event decision:', {
+      eventId: eventIdToUse,
+      hasEventId,
+      action: hasEventId ? 'UPDATE (PUT /events/singular/{id})' : 'ERROR - NO ID AVAILABLE',
+      singularEventDTO
+    })
+
+    if (hasEventId) {
+      // UPDATE existing singular event
+      console.log('📝 Store updating singular event:', {
+        eventId: eventIdToUse,
+        endpoint: 'PUT /events/singular/{eventId}',
+        singularEventDTO
+      })
+
+      const response = await profileServiceClient.events.updateSingularEvent({
+        eventId: eventIdToUse.toString(),
+        singularEventDTO
+      })
+
+      await dispatch(fetchEvents())
+      return response.data
+    } else {
+      // This should never happen for updateEvent
+      throw new Error('❌ CRITICAL ERROR: updateEvent called but no event ID found anywhere! Cannot update without ID.')
+    }
+  }
+}
 
 // ** Modify Event Occurrence
 export const modifyEventOccurrence = createAsyncThunk<
@@ -249,121 +292,186 @@ export const modifyEventOccurrence = createAsyncThunk<
     newMeetingLink?: string
     title?: string
     description?: string
-  }
->('appCalendar/modifyEventOccurrence', async (payload, { dispatch }) => {
+  },
+  CalendarThunkConfig
+>('appCalendar/modifyEventOccurrence', async (payload, { dispatch, rejectWithValue }) => {
   console.log('Redux modifyEventOccurrence action called with:', payload)
 
-  const response = await profileServiceClient.events.modifyEventOccurrence({
-    seriesId: payload.seriesId,
-    originalStartTime: payload.originalStartTime,
-    newStartTime: payload.newStartTime,
-    eventAttendeeDTO: payload.eventAttendeeDTO,
-    duration: payload.duration,
-    newPrice: payload.newPrice,
-    newMeetingLink: payload.newMeetingLink
-  })
+  try {
+    const response = await profileServiceClient.events.modifyEventOccurrence({
+      seriesId: payload.seriesId,
+      originalStartTime: payload.originalStartTime,
+      newStartTime: payload.newStartTime,
+      eventAttendeeDTO: payload.eventAttendeeDTO,
+      duration: payload.duration,
+      newPrice: payload.newPrice,
+      newMeetingLink: payload.newMeetingLink
+    })
 
-  console.log('Redux modifyEventOccurrence API response:', response.data)
-  await dispatch(fetchEvents())
+    console.log('Redux modifyEventOccurrence API response:', response.data)
+    await dispatch(fetchEvents())
 
-  return response.data
+    return response.data
+  } catch (error) {
+    const resolved = resolveCalendarError(error)
+    console.error('modifyEventOccurrence API error:', resolved.backendMessage || error, error)
+
+    return rejectWithValue(resolved)
+  }
 })
 
 export const cancelEventOccurrence = createAsyncThunk<
   RecurringSeriesDTO,
-  { seriesId: string | number; occurrenceStartTime: string }
->('appCalendar/cancelEventOccurrence', async ({ seriesId, occurrenceStartTime }, { dispatch }) => {
-  const response = await profileServiceClient.events.cancelEventOccurrence({
-    seriesId: seriesId.toString(),
-    originalStartTime: occurrenceStartTime
-  })
-  await dispatch(fetchEvents())
-
-  return response.data
-})
-
-// ** Delete Event
-export const deleteEvent = createAsyncThunk<any, string | number>(
-  'appCalendar/deleteEvent',
-  async (id: string | number, { dispatch }) => {
-    const response = await profileServiceClient.events.deleteSingularEvent({ eventId: id.toString() })
+  { seriesId: string | number; occurrenceStartTime: string },
+  CalendarThunkConfig
+>('appCalendar/cancelEventOccurrence', async ({ seriesId, occurrenceStartTime }, { dispatch, rejectWithValue }) => {
+  try {
+    const response = await profileServiceClient.events.cancelEventOccurrence({
+      seriesId: seriesId.toString(),
+      originalStartTime: occurrenceStartTime
+    })
     await dispatch(fetchEvents())
 
     return response.data
+  } catch (error) {
+    const resolved = resolveCalendarError(error)
+    console.error('cancelEventOccurrence API error:', resolved.backendMessage || error, error)
+
+    return rejectWithValue(resolved)
+  }
+})
+
+// ** Delete Event
+export const deleteEvent = createAsyncThunk<any, string | number, CalendarThunkConfig>(
+  'appCalendar/deleteEvent',
+  async (id: string | number, { dispatch, rejectWithValue }) => {
+    try {
+      const response = await profileServiceClient.events.deleteSingularEvent({ eventId: id.toString() })
+      await dispatch(fetchEvents())
+
+      return response.data
+    } catch (error) {
+      const resolved = resolveCalendarError(error)
+      console.error('deleteEvent API error:', resolved.backendMessage || error, error)
+
+      return rejectWithValue(resolved)
+    }
   }
 )
 
 // ** Get Attendees - Get full user DTOs for expected attendees
-export const getAttendees = createAsyncThunk<UserDTO[], { seriesId?: string; occurrenceId?: string }>(
-  'appCalendar/getAttendees',
-  async ({ seriesId, occurrenceId }) => {
+export const getAttendees = createAsyncThunk<
+  UserDTO[],
+  { seriesId?: string; occurrenceId?: string },
+  CalendarThunkConfig
+>('appCalendar/getAttendees', async ({ seriesId, occurrenceId }, { rejectWithValue }) => {
+  try {
     const response = await profileServiceClient.events.getAttendees({
       seriesId,
       occurrenceId
     })
 
     return response.data
+  } catch (error) {
+    const resolved = resolveCalendarError(error)
+    console.error('getAttendees API error:', resolved.backendMessage || error, error)
+
+    return rejectWithValue(resolved)
   }
-)
+})
 
 // ** Get Consolidated Events for Professor
 export const getConsolidatedEventsForProfessor = createAsyncThunk<
   EventOccurrenceDTO[],
-  { professorId: string; startDate: string; endDate: string }
->('appCalendar/getConsolidatedEventsForProfessor', async ({ professorId, startDate, endDate }) => {
-  const response = await profileServiceClient.events.getConsolidatedEventsForProfessor({
-    professorId,
-    startDate,
-    endDate
-  })
-
-  return response.data
-})
-
-// ** Get My Events
-export const getMyEvents = createAsyncThunk<EventsDTO, { startDate: string; endDate: string }>(
-  'appCalendar/getMyEvents',
-  async ({ startDate, endDate }) => {
-    const response = await profileServiceClient.events.getMyEvents({
+  { professorId: string; startDate: string; endDate: string },
+  CalendarThunkConfig
+>('appCalendar/getConsolidatedEventsForProfessor', async ({ professorId, startDate, endDate }, { rejectWithValue }) => {
+  try {
+    const response = await profileServiceClient.events.getConsolidatedEventsForProfessor({
+      professorId,
       startDate,
       endDate
     })
 
     return response.data
+  } catch (error) {
+    const resolved = resolveCalendarError(error)
+    console.error('getConsolidatedEventsForProfessor API error:', resolved.backendMessage || error, error)
+
+    return rejectWithValue(resolved)
+  }
+})
+
+// ** Get My Events
+export const getMyEvents = createAsyncThunk<EventsDTO, { startDate: string; endDate: string }, CalendarThunkConfig>(
+  'appCalendar/getMyEvents',
+  async ({ startDate, endDate }, { rejectWithValue }) => {
+    try {
+      const response = await profileServiceClient.events.getMyEvents({
+        startDate,
+        endDate
+      })
+
+      return response.data
+    } catch (error) {
+      const resolved = resolveCalendarError(error)
+      console.error('getMyEvents API error:', resolved.backendMessage || error, error)
+
+      return rejectWithValue(resolved)
+    }
   }
 )
 
 // ** Get My Singular Events
-export const getMySingularEvents = createAsyncThunk<SingularEventDTO[], { startDate: string; endDate: string }>(
-  'appCalendar/getMySingularEvents',
-  async ({ startDate, endDate }) => {
+export const getMySingularEvents = createAsyncThunk<
+  SingularEventDTO[],
+  { startDate: string; endDate: string },
+  CalendarThunkConfig
+>('appCalendar/getMySingularEvents', async ({ startDate, endDate }, { rejectWithValue }) => {
+  try {
     const response = await profileServiceClient.events.getMySingularEvents({
       startDate,
       endDate
     })
 
     return response.data
+  } catch (error) {
+    const resolved = resolveCalendarError(error)
+    console.error('getMySingularEvents API error:', resolved.backendMessage || error, error)
+
+    return rejectWithValue(resolved)
   }
-)
+})
 
 // ** Get Singular Events for Professor
 export const getSingularEventsForProfessor = createAsyncThunk<
   SingularEventDTO[],
-  { professorId: string; startDate: string; endDate: string }
->('appCalendar/getSingularEventsForProfessor', async ({ professorId, startDate, endDate }) => {
-  const response = await profileServiceClient.events.getSingularEventsForProfessor({
-    professorId,
-    startDate,
-    endDate
-  })
+  { professorId: string; startDate: string; endDate: string },
+  CalendarThunkConfig
+>('appCalendar/getSingularEventsForProfessor', async ({ professorId, startDate, endDate }, { rejectWithValue }) => {
+  try {
+    const response = await profileServiceClient.events.getSingularEventsForProfessor({
+      professorId,
+      startDate,
+      endDate
+    })
 
-  return response.data
+    return response.data
+  } catch (error) {
+    const resolved = resolveCalendarError(error)
+    console.error('getSingularEventsForProfessor API error:', resolved.backendMessage || error, error)
+
+    return rejectWithValue(resolved)
+  }
 })
 
 // ** Fetch My Recurring Series with Smart Caching
-export const fetchMyRecurringSeries = createAsyncThunk<RecurringSeriesDTO[], { forceRefresh?: boolean } | void>(
-  'appCalendar/fetchMyRecurringSeries',
-  async (params, { getState }) => {
+export const fetchMyRecurringSeries = createAsyncThunk<
+  RecurringSeriesDTO[],
+  { forceRefresh?: boolean } | void,
+  CalendarThunkConfig
+>('appCalendar/fetchMyRecurringSeries', async (params, { getState, rejectWithValue }) => {
+  try {
     const forceRefresh = params && typeof params === 'object' ? params.forceRefresh : false
     const state = getState() as any
 
@@ -396,8 +504,13 @@ export const fetchMyRecurringSeries = createAsyncThunk<RecurringSeriesDTO[], { f
     }
 
     return myRecurringSeries
+  } catch (error) {
+    const resolved = resolveCalendarError(error)
+    console.error('fetchMyRecurringSeries API error:', resolved.backendMessage || error, error)
+
+    return rejectWithValue(resolved)
   }
-)
+})
 
 // ** Complete Event Occurrence with Attendance
 export const completeEventOccurrence = createAsyncThunk<
@@ -409,59 +522,91 @@ export const completeEventOccurrence = createAsyncThunk<
     actualEndTime: string
     eventAttendeeDTO: EventAttendeeDTO[]
     description?: string
-  }
+  },
+  CalendarThunkConfig
 >(
   'appCalendar/completeEventOccurrence',
   async (
     { seriesId, originalStartTime, actualStartTime, actualEndTime, eventAttendeeDTO, description },
-    { dispatch }
+    { dispatch, rejectWithValue }
   ) => {
-    const response = await profileServiceClient.events.completeEventOccurrence({
-      seriesId,
-      originalStartTime,
-      actualStartTime,
-      actualEndTime,
-      eventAttendeeDTO,
-      description
-    })
-    await dispatch(fetchEvents())
+    try {
+      const response = await profileServiceClient.events.completeEventOccurrence({
+        seriesId,
+        originalStartTime,
+        actualStartTime,
+        actualEndTime,
+        eventAttendeeDTO,
+        description
+      })
+      await dispatch(fetchEvents())
 
-    return response.data
+      return response.data
+    } catch (error) {
+      const resolved = resolveCalendarError(error)
+      console.error('completeEventOccurrence API error:', resolved.backendMessage || error, error)
+
+      return rejectWithValue(resolved)
+    }
   }
 )
 
 // ** Set Individual Attendee Prices
 export const setEventOccurrenceAttendeePrice = createAsyncThunk<
   void,
-  { occurrenceId: string; attendeeId: string; price: number }
->('appCalendar/setEventOccurrenceAttendeePrice', async ({ occurrenceId, attendeeId, price }) => {
-  await profileServiceClient.events.setEventOccurrenceAttendeePrice({
-    occurrenceId,
-    attendeeId,
-    price
-  })
+  { occurrenceId: string; attendeeId: string; price: number },
+  CalendarThunkConfig
+>('appCalendar/setEventOccurrenceAttendeePrice', async ({ occurrenceId, attendeeId, price }, { rejectWithValue }) => {
+  try {
+    await profileServiceClient.events.setEventOccurrenceAttendeePrice({
+      occurrenceId,
+      attendeeId,
+      price
+    })
+  } catch (error) {
+    const resolved = resolveCalendarError(error)
+    console.error('setEventOccurrenceAttendeePrice API error:', resolved.backendMessage || error, error)
+
+    return rejectWithValue(resolved)
+  }
 })
 
 export const setRecurringSeriesAttendeePrice = createAsyncThunk<
   void,
-  { seriesId: string; attendeeId: string; price: number }
->('appCalendar/setRecurringSeriesAttendeePrice', async ({ seriesId, attendeeId, price }) => {
-  await profileServiceClient.events.setRecurringSeriesAttendeePrice({
-    seriesId,
-    attendeeId,
-    price
-  })
+  { seriesId: string; attendeeId: string; price: number },
+  CalendarThunkConfig
+>('appCalendar/setRecurringSeriesAttendeePrice', async ({ seriesId, attendeeId, price }, { rejectWithValue }) => {
+  try {
+    await profileServiceClient.events.setRecurringSeriesAttendeePrice({
+      seriesId,
+      attendeeId,
+      price
+    })
+  } catch (error) {
+    const resolved = resolveCalendarError(error)
+    console.error('setRecurringSeriesAttendeePrice API error:', resolved.backendMessage || error, error)
+
+    return rejectWithValue(resolved)
+  }
 })
 
 export const setSingularEventAttendeePrice = createAsyncThunk<
   void,
-  { eventId: string; attendeeId: string; price: number }
->('appCalendar/setSingularEventAttendeePrice', async ({ eventId, attendeeId, price }) => {
-  await profileServiceClient.events.setSingularEventAttendeePrice({
-    eventId,
-    attendeeId,
-    price
-  })
+  { eventId: string; attendeeId: string; price: number },
+  CalendarThunkConfig
+>('appCalendar/setSingularEventAttendeePrice', async ({ eventId, attendeeId, price }, { rejectWithValue }) => {
+  try {
+    await profileServiceClient.events.setSingularEventAttendeePrice({
+      eventId,
+      attendeeId,
+      price
+    })
+  } catch (error) {
+    const resolved = resolveCalendarError(error)
+    console.error('setSingularEventAttendeePrice API error:', resolved.backendMessage || error, error)
+
+    return rejectWithValue(resolved)
+  }
 })
 
 const initialState: CalendarState = {
@@ -552,7 +697,9 @@ export const appCalendarSlice = createSlice({
     })
     builder.addCase(fetchEvents.rejected, (state, action) => {
       state.loading = false
-      state.error = action.error.message || 'Failed to fetch events'
+      // `action.payload` is the resolved CalendarErrorInfo from rejectWithValue;
+      // `action.error` only ever says "Request failed with status code 500".
+      state.error = action.payload?.message || 'Evenimentele nu au putut fi încărcate.'
     })
 
     // Get Attendees
@@ -628,7 +775,11 @@ export const appCalendarSlice = createSlice({
       action => action.type.endsWith('/rejected'),
       (state, action) => {
         state.loading = false
-        state.error = action.error?.message || 'An error occurred'
+        // Prefer the message resolved from the backend body over axios' generic
+        // "Request failed with status code 500".
+        state.error = isCalendarErrorInfo(action.payload)
+          ? action.payload.message
+          : action.error?.message || 'A apărut o eroare.'
       }
     )
     builder.addMatcher(

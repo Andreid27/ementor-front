@@ -36,6 +36,9 @@ import AttendeeManager from './AttendeeManager'
 
 // ** Types
 import { EventAttendeeDTO } from 'src/generated/profile-service'
+
+// ** Error Handling
+import { resolveCalendarError } from '../utils/calendarErrors'
 import { StudentData } from './AttendeeManager'
 
 // ** Utils
@@ -264,20 +267,13 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
       console.log('EventCompletionWizard - onComplete result:', result)
       setCompletionStatus('success')
     } catch (error) {
-      console.error('EventCompletionWizard - Error in onComplete:', error)
+      // Reading `error.message` straight off an axios failure yields
+      // "Request failed with status code 500" - the reason the backend gave sits
+      // in the response body, which is what the resolver digs out.
+      const resolved = resolveCalendarError(error)
+      console.error('EventCompletionWizard - Error in onComplete:', resolved.backendMessage || error, error)
       setCompletionStatus('error')
-
-      // Extract error message
-      let errorMessage = 'A apărut o eroare la finalizarea evenimentului.'
-      if (error instanceof Error) {
-        errorMessage = error.message
-      } else if (typeof error === 'string') {
-        errorMessage = error
-      } else if (error && typeof error === 'object' && 'message' in error) {
-        errorMessage = String((error as any).message)
-      }
-
-      setCompletionError(errorMessage)
+      setCompletionError(resolved.message)
     }
   }
 
