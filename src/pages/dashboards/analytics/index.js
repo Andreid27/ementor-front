@@ -28,6 +28,7 @@ import LastTestResults from './components/LastTestResults'
 import LessonStatsOverall from './components/LessonStatsOverall'
 import CrmLastTransaction from 'src/views/dashboards/crm/CrmLastTransaction'
 import EventsOverview from './components/EventsOverview'
+import JoinProfessorSection from 'src/views/dashboards/analytics/join-professor/JoinProfessorSection'
 
 const AnalyticsDashboard = () => {
   const dispatch = useDispatch()
@@ -50,6 +51,7 @@ const AnalyticsDashboard = () => {
     <ApexChartWrapper>
       <KeenSliderWrapper>
         <Grid container spacing={6}>
+          <JoinProfessorSection isStudent={user?.role === 'STUDENT'} />
           {/* <Grid item xs={12} lg={6}>
             <AnalyticsWebsiteAnalyticsSlider />
           </Grid>
