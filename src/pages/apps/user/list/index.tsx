@@ -47,7 +47,6 @@ import {
   fetchData,
   fetchInactiveStudents,
   deleteUser,
-  fetchStudentsByGeneration,
   deactivateStudentRelationship,
   updateStudentGeneration,
   updateStudentPrice
@@ -324,14 +323,12 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
       const generation = e.target.value
       setFilters(prev => ({ ...prev, generation }))
 
-      if (currentTab === 'active') {
-        // Active tab: use existing logic
-        if (generation && generation !== '' && professorId) {
-          dispatch(fetchStudentsByGeneration({ professorId, generation }) as any)
-        } else {
-          dispatch(fetchData() as any)
-        }
-      } else if (currentTab === 'inactive' && professorId) {
+      // Reset to first page when filtering
+      setPaginationModel(prev => ({ ...prev, page: 0 }))
+
+      // Active tab: filtered client-side by filterStudents, since the full active list is already loaded
+      // (the students-by-generation endpoint omits name, email, photo and wallet balance)
+      if (currentTab === 'inactive' && professorId) {
         // Inactive tab: fetch with server-side filtering
         dispatch(
           fetchInactiveStudents({
@@ -343,8 +340,6 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
             }
           }) as any
         )
-        // Reset to first page when filtering
-        setPaginationModel(prev => ({ ...prev, page: 0 }))
       }
     },
     [dispatch, professorId, currentTab, paginationModel.pageSize]

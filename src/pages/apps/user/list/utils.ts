@@ -128,9 +128,15 @@ export const filterStudents = (
     pricing: string
     status: string
     searchValue: string
+    generation?: string
   }
 ): StudentListItem[] => {
   return students.filter(student => {
+    // Generation filter
+    if (filters.generation && student.generation !== filters.generation) {
+      return false
+    }
+
     // Status filter
     if (filters.status && student.status !== filters.status) {
       return false
