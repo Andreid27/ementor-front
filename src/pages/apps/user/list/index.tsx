@@ -40,7 +40,7 @@ import CardStatsHorizontalWithDetails from 'src/@core/components/card-statistics
 
 // ** Utils Import
 import { getInitials } from 'src/@core/utils/get-initials'
-import { generateSchoolYearOptions } from './utils'
+import { generateSchoolYearOptions, formatPricing } from './utils'
 
 // ** Actions Imports
 import {
@@ -49,7 +49,8 @@ import {
   deleteUser,
   fetchStudentsByGeneration,
   deactivateStudentRelationship,
-  updateStudentGeneration
+  updateStudentGeneration,
+  updateStudentPrice
 } from 'src/store/apps/user'
 
 // ** Third Party Components
@@ -96,10 +97,11 @@ const renderClient = (row: StudentListItem, onAvatarClick?: (studentId: string) 
 interface RowOptionsProps {
   student: StudentListItem
   onEditGeneration: (student: StudentListItem) => void
+  onEditPrice: (student: StudentListItem) => void
   onDeactivate: (student: StudentListItem) => void
 }
 
-const RowOptions: React.FC<RowOptionsProps> = ({ student, onEditGeneration, onDeactivate }) => {
+const RowOptions: React.FC<RowOptionsProps> = ({ student, onEditGeneration, onEditPrice, onDeactivate }) => {
   // ** State
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const rowOptionsOpen = Boolean(anchorEl)
@@ -119,6 +121,11 @@ const RowOptions: React.FC<RowOptionsProps> = ({ student, onEditGeneration, onDe
 
   const handleEditGeneration = (): void => {
     onEditGeneration(student)
+    handleRowOptionsClose()
+  }
+
+  const handleEditPrice = (): void => {
+    onEditPrice(student)
     handleRowOptionsClose()
   }
 
@@ -154,6 +161,10 @@ const RowOptions: React.FC<RowOptionsProps> = ({ student, onEditGeneration, onDe
           <Icon icon='tabler:calendar' fontSize={20} />
           Edit Generation
         </MenuItem>
+        <MenuItem onClick={handleEditPrice} sx={{ '& svg': { mr: 2 } }}>
+          <Icon icon='tabler:currency-dollar' fontSize={20} />
+          Edit Price
+        </MenuItem>
         <Divider sx={{ my: 1 }} />
         <MenuItem onClick={handleDeactivate} sx={{ '& svg': { mr: 2 }, color: 'error.main' }}>
           <Icon icon='tabler:user-x' fontSize={20} />
@@ -183,6 +194,10 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
   const [newGeneration, setNewGeneration] = useState<string>('')
   const [isCustomGenerationEdit, setIsCustomGenerationEdit] = useState<boolean>(false)
   const [isUpdatingGeneration, setIsUpdatingGeneration] = useState<boolean>(false)
+  const [editPriceOpen, setEditPriceOpen] = useState<boolean>(false)
+  const [studentToEditPrice, setStudentToEditPrice] = useState<StudentListItem | null>(null)
+  const [newPrice, setNewPrice] = useState<string>('')
+  const [isUpdatingPrice, setIsUpdatingPrice] = useState<boolean>(false)
   const [deactivateDialogOpen, setDeactivateDialogOpen] = useState<boolean>(false)
   const [studentToDeactivate, setStudentToDeactivate] = useState<StudentListItem | null>(null)
   const [dateFilter, setDateFilter] = useState<string>('')
@@ -394,6 +409,46 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
     setIsUpdatingGeneration(false)
   }, [])
 
+  const handleEditPriceOpen = useCallback((student: StudentListItem) => {
+    setStudentToEditPrice(student)
+    setNewPrice(student.defaultPricePerSession != null ? String(student.defaultPricePerSession) : '')
+    setEditPriceOpen(true)
+  }, [])
+
+  const handleEditPriceClose = useCallback(() => {
+    setEditPriceOpen(false)
+    setStudentToEditPrice(null)
+    setNewPrice('')
+    setIsUpdatingPrice(false)
+  }, [])
+
+  const parsedNewPrice = newPrice.trim() === '' ? NaN : Number(newPrice)
+  const isNewPriceValid = Number.isFinite(parsedNewPrice) && parsedNewPrice >= 0
+  const isNewPriceUnchanged = isNewPriceValid && parsedNewPrice === studentToEditPrice?.defaultPricePerSession
+
+  const handlePriceUpdate = useCallback(async () => {
+    const effectiveProfessorId = professorId || studentToEditPrice?.professorId
+
+    if (!studentToEditPrice || !effectiveProfessorId || !isNewPriceValid) return
+
+    setIsUpdatingPrice(true)
+
+    try {
+      await dispatch(
+        updateStudentPrice({
+          studentUserId: studentToEditPrice.studentUserId,
+          professorId: effectiveProfessorId,
+          defaultPrice: parsedNewPrice
+        }) as any
+      ).unwrap()
+
+      handleEditPriceClose()
+    } catch (error) {
+      // Error toast is already shown by the Redux action
+      setIsUpdatingPrice(false)
+    }
+  }, [studentToEditPrice, professorId, isNewPriceValid, parsedNewPrice, dispatch, handleEditPriceClose])
+
   const handleDeactivateOpen = useCallback((student: StudentListItem) => {
     setStudentToDeactivate(student)
     setDeactivateDialogOpen(true)
@@ -567,10 +622,13 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
       headerName: 'Pricing',
       field: 'pricing',
       renderCell: ({ row }) => {
-        const pricingDisplay = row.defaultPricePerSession ? `$${row.defaultPricePerSession}/session` : 'Not set'
+        const pricingDisplay = formatPricing(row.defaultPricePerSession)
 
         return (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box
+            sx={{ display: 'flex', alignItems: 'center', gap: 2, cursor: 'pointer', '&:hover p': { color: 'primary.main' } }}
+            onClick={() => handleEditPriceOpen(row)}
+          >
             <Icon
               icon={row.defaultPricePerSession ? 'tabler:currency-dollar' : 'tabler:alert-circle'}
               fontSize={20}
@@ -626,7 +684,12 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
       field: 'actions',
       headerName: 'Actions',
       renderCell: ({ row }) => (
-        <RowOptions student={row} onEditGeneration={handleEditGenerationOpen} onDeactivate={handleDeactivateOpen} />
+        <RowOptions
+          student={row}
+          onEditGeneration={handleEditGenerationOpen}
+          onEditPrice={handleEditPriceOpen}
+          onDeactivate={handleDeactivateOpen}
+        />
       )
     }
   ]
@@ -944,6 +1007,45 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
           </Button>
           <Button onClick={handleGenerationUpdate} variant='contained' disabled={!newGeneration || isUpdatingGeneration}>
             {isUpdatingGeneration ? 'Updating...' : 'Update'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Edit Price Dialog */}
+      <Dialog open={editPriceOpen} onClose={handleEditPriceClose} maxWidth='sm' fullWidth>
+        <DialogTitle>Edit Student Price</DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 2 }}>
+            <Typography variant='body2' sx={{ mb: 4 }}>
+              Update the default price per session for <strong>{studentToEditPrice?.studentName}</strong>
+            </Typography>
+            <CustomTextField
+              fullWidth
+              autoFocus
+              type='number'
+              label='Default Price Per Session'
+              value={newPrice}
+              onChange={e => setNewPrice(e.target.value)}
+              placeholder='0.00'
+              error={newPrice !== '' && !isNewPriceValid}
+              helperText={newPrice !== '' && !isNewPriceValid ? 'Price must be a number of 0 or more' : ' '}
+              inputProps={{ min: 0, step: 0.01 }}
+              InputProps={{
+                endAdornment: <Typography sx={{ ml: 1, color: 'text.secondary' }}>RON</Typography>
+              }}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleEditPriceClose} color='secondary' disabled={isUpdatingPrice}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handlePriceUpdate}
+            variant='contained'
+            disabled={!isNewPriceValid || isNewPriceUnchanged || isUpdatingPrice}
+          >
+            {isUpdatingPrice ? 'Updating...' : 'Update'}
           </Button>
         </DialogActions>
       </Dialog>

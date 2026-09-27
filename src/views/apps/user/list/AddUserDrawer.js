@@ -197,7 +197,7 @@ const AddUserDrawer = props => {
                 helperText={errors.defaultPricePerSession?.message || 'Optional: Set a default price for sessions'}
                 disabled={loading}
                 InputProps={{
-                  startAdornment: <Typography sx={{ mr: 1, color: 'text.secondary' }}>$</Typography>
+                  endAdornment: <Typography sx={{ ml: 1, color: 'text.secondary' }}>RON</Typography>
                 }}
               />
             )}

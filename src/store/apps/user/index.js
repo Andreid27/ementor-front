@@ -277,6 +277,35 @@ export const updateStudentGeneration = createAsyncThunk(
   }
 )
 
+// ** Update Student Default Price
+export const updateStudentPrice = createAsyncThunk(
+  'appUsers/updateStudentPrice',
+  async ({ studentUserId, professorId, defaultPrice }, { rejectWithValue, dispatch }) => {
+    try {
+      const { profileServiceClient } = await import('src/services')
+
+      await profileServiceClient.studentProfessorRelationship.updateDefaultPrice({
+        studentUserId,
+        professorId,
+        defaultPrice
+      })
+
+      // Refresh active students list after updating
+      dispatch(fetchData())
+
+      toast.success('Price updated successfully')
+
+      return { studentUserId, professorId, defaultPrice }
+    } catch (error) {
+      console.error('Failed to update student price:', error)
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to update price'
+      toast.error(errorMessage)
+
+      return rejectWithValue(error.response?.data || error.message)
+    }
+  }
+)
+
 // ** Deactivate Student Relationship
 export const deactivateStudentRelationship = createAsyncThunk(
   'appUsers/deactivateStudentRelationship',

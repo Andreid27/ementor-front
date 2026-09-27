@@ -56,7 +56,7 @@ export const transformStudentData: StudentDataTransformer = (
       email: rel.email || '',
       avatar: '', // Will be loaded using profile picture extraction
       role: 'student',
-      pricing: rel.defaultPricePerSession ? `$${rel.defaultPricePerSession}/session` : 'Not set',
+      pricing: formatPricing(rel.defaultPricePerSession),
       billing: 'Per Session', // Default billing type
       status: rel.status || 'active',
       defaultPricePerSession: rel.defaultPricePerSession,
@@ -203,7 +203,7 @@ export const formatPricing = (defaultPricePerSession?: number): string => {
   if (!defaultPricePerSession || defaultPricePerSession <= 0) {
     return 'Not set'
   }
-  return `$${defaultPricePerSession}/session`
+  return `${defaultPricePerSession} RON/session`
 }
 
 // ** Generate status display color
