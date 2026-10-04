@@ -1,5 +1,5 @@
 // ** React Imports
-import { useState, Fragment, useEffect } from 'react'
+import { useState, Fragment, useEffect, useMemo } from 'react'
 
 // ** MUI Imports
 import {
@@ -16,6 +16,8 @@ import {
   Fade,
   Divider,
   Paper,
+  Tooltip,
+  CircularProgress,
   alpha
 } from '@mui/material'
 import { styled } from '@mui/material/styles'
@@ -23,6 +25,7 @@ import { styled } from '@mui/material/styles'
 // ** Redux Imports
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchData } from 'src/store/apps/user'
+import { fetchMyRecurringSeries } from 'src/store/apps/calendar'
 
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
@@ -37,6 +40,9 @@ import type { GenericAssignmentModalProps, AssignableEntity, SelectedUser } from
 import EntitySelector from './components/EntitySelector'
 import GroupedUserSelector from './components/GroupedUserSelector'
 import AssignmentConfigForm from './components/AssignmentConfigForm'
+
+// ** Utility Imports
+import { isSeriesActive } from './utils'
 
 // ========================================
 // STYLED COMPONENTS
@@ -152,6 +158,9 @@ function GenericAssignmentModal<T extends AssignableEntity>({
   // Loading state during assignment
   const [isAssigning, setIsAssigning] = useState<boolean>(false)
 
+  // Loading state during manual refresh of students and series
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false)
+
   // ========================================
   // REDUX - Fetch ALL active students directly from store
   // ========================================
@@ -166,9 +175,34 @@ function GenericAssignmentModal<T extends AssignableEntity>({
     }
   }, [dispatch, isOpen])
 
+  // The API also returns series whose endRecurrence has passed; only group by running ones
+  const activeRecurringSeries = useMemo(
+    () => recurringSeries.filter(series => isSeriesActive(series)),
+    [recurringSeries]
+  )
+
   // ========================================
   // HANDLERS
   // ========================================
+
+  /**
+   * Re-fetches active students and recurring series, bypassing the 2h series cache
+   */
+  const handleRefreshGroups = async () => {
+    setIsRefreshing(true)
+    try {
+      const [seriesResult] = await Promise.all([
+        dispatch(fetchMyRecurringSeries({ forceRefresh: true }) as any),
+        dispatch(fetchData() as any)
+      ])
+
+      if (fetchMyRecurringSeries.rejected.match(seriesResult)) {
+        toast.error('Eroare la reîmprospătarea grupelor')
+      }
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
 
   /**
    * Opens the modal
@@ -378,10 +412,22 @@ function GenericAssignmentModal<T extends AssignableEntity>({
                       <Icon icon='mdi:account-group-outline' fontSize={18} />
                     </SectionIcon>
                     Utilizatori
+                    <Tooltip title='Reîmprospătează grupele'>
+                      <Box component='span' sx={{ ml: 'auto' }}>
+                        <IconButton
+                          size='small'
+                          onClick={handleRefreshGroups}
+                          disabled={isRefreshing || isAssigning}
+                          aria-label='Reîmprospătează grupele'
+                        >
+                          {isRefreshing ? <CircularProgress size={18} /> : <Icon icon='mdi:refresh' fontSize={20} />}
+                        </IconButton>
+                      </Box>
+                    </Tooltip>
                   </SectionTitle>
                   <GroupedUserSelector
                     users={activeStudents}
-                    recurringSeries={recurringSeries}
+                    recurringSeries={activeRecurringSeries}
                     selectedUsers={selectedUsers}
                     onSelectionChange={setSelectedUsers}
                     enableSearch

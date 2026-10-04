@@ -10,6 +10,18 @@ export interface UserGroup {
 }
 
 /**
+ * Checks if a recurring series is still running (no end date, or ending in the future).
+ * Mirrors the backend's RecurringSeriesRepo.findActiveSeries.
+ *
+ * @param series - Recurring series to check
+ * @param now - Reference date (defaults to current time)
+ * @returns True if the series has not ended yet
+ */
+export const isSeriesActive = (series: RecurringSeriesDTO, now: Date = new Date()): boolean => {
+  return !series.endRecurrence || new Date(series.endRecurrence) >= now
+}
+
+/**
  * Groups users by their recurring series
  *
  * @param users - Array of users to group
