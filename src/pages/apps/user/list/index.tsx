@@ -40,7 +40,7 @@ import CardStatsHorizontalWithDetails from 'src/@core/components/card-statistics
 
 // ** Utils Import
 import { getInitials } from 'src/@core/utils/get-initials'
-import { generateSchoolYearOptions, formatPricing } from './utils'
+import { generateSchoolYearOptions, formatPricing, groupStudentsByPrice } from './utils'
 
 // ** Actions Imports
 import {
@@ -59,6 +59,7 @@ import axios from 'axios'
 // ** Custom Table Components Imports
 import TableHeader from 'src/views/apps/user/list/TableHeader'
 import AddUserDrawer from 'src/views/apps/user/list/AddUserDrawer'
+import PriceGroupsCard from 'src/views/apps/user/list/PriceGroupsCard'
 import UserViewDrawer from 'src/pages/student-profile/components/UserViewDrawer'
 
 // ** Local Components
@@ -731,6 +732,9 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
     ? Math.round((studentsInCurrentGeneration / totalActiveStudents) * 100)
     : 0
 
+  // ** Group active students by price per session (max 4 groups)
+  const priceGroups = useMemo(() => groupStudentsByPrice(store.activeStudents), [store.activeStudents])
+
   return (
     <Grid container spacing={6.5}>
       {/* Statistics Section - Student Metrics */}
@@ -788,6 +792,11 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
             />
           </Grid>
         </Grid>
+      </Grid>
+
+      {/* Price Groups - Total per price per session */}
+      <Grid item xs={12}>
+        <PriceGroupsCard groups={priceGroups} />
       </Grid>
 
       {/* Main Content */}

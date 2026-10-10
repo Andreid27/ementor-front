@@ -212,6 +212,58 @@ export const formatPricing = (defaultPricePerSession?: number): string => {
   return `${defaultPricePerSession} RON/session`
 }
 
+// ** Price group summary for the statistics cards
+export interface PriceGroup {
+  label: string
+  studentCount: number
+  total: number
+  priceCount: number
+}
+
+// ** Group students with a price set by their price per session
+// The most common prices get their own group; when there are more than maxGroups
+// distinct prices, the least common ones are merged into a single "Other prices" group
+export const groupStudentsByPrice = (
+  students: Array<{ defaultPricePerSession?: number }>,
+  maxGroups = 4
+): PriceGroup[] => {
+  const countsByPrice = new Map<number, number>()
+  students.forEach(student => {
+    const price = student.defaultPricePerSession
+    if (price && price > 0) {
+      countsByPrice.set(price, (countsByPrice.get(price) ?? 0) + 1)
+    }
+  })
+
+  const byCount = Array.from(countsByPrice.entries()).sort(([priceA, countA], [priceB, countB]) =>
+    countB !== countA ? countB - countA : priceA - priceB
+  )
+
+  const ownGroupCount = byCount.length > maxGroups ? maxGroups - 1 : byCount.length
+
+  const groups: PriceGroup[] = byCount
+    .slice(0, ownGroupCount)
+    .sort(([priceA], [priceB]) => priceA - priceB)
+    .map(([price, count]) => ({
+      label: `${price} RON/session`,
+      studentCount: count,
+      total: price * count,
+      priceCount: 1
+    }))
+
+  const remaining = byCount.slice(ownGroupCount)
+  if (remaining.length > 0) {
+    groups.push({
+      label: 'Other prices',
+      studentCount: remaining.reduce((sum, [, count]) => sum + count, 0),
+      total: remaining.reduce((sum, [price, count]) => sum + price * count, 0),
+      priceCount: remaining.length
+    })
+  }
+
+  return groups
+}
+
 // ** Generate status display color
 export const getStatusColor = (status: string): 'success' | 'warning' | 'secondary' => {
   return (userStatusObj[status] as 'success' | 'warning' | 'secondary') || 'secondary'
