@@ -15,7 +15,8 @@ import {
   InvoiceControllerApi,
   WalletControllerApi,
   ProfessorPaymentControllerApi,
-  OrganisationControllerApi
+  OrganisationControllerApi,
+  ProfessorFinanceApi
 } from './profile-service-client/api'
 
 // Import our custom axios instance
@@ -131,6 +132,11 @@ export class ProfileServiceClient {
   // Invoice APIs
   get invoice() {
     return new InvoiceControllerApi(this.config, undefined, apiClient)
+  }
+
+  // Professor Finance APIs
+  get finance() {
+    return new ProfessorFinanceApi(this.config, undefined, apiClient)
   }
 }
 

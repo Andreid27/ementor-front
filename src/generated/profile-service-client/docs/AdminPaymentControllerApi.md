@@ -1,6 +1,6 @@
 # AdminPaymentControllerApi
 
-All URIs are relative to *http://localhost:49202*
+All URIs are relative to *https://api.e-mentor.ro*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|

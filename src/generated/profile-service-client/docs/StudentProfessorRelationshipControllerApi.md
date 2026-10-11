@@ -1,6 +1,6 @@
 # StudentProfessorRelationshipControllerApi
 
-All URIs are relative to *http://localhost:49202*
+All URIs are relative to *https://api.e-mentor.ro*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
@@ -12,6 +12,7 @@ All URIs are relative to *http://localhost:49202*
 |[**getActiveStudentsForProfessor**](#getactivestudentsforprofessor) | **GET** /student-professor-relationships/professor/{professorId}/students | Get all active students for a professor|
 |[**getDefaultPrice**](#getdefaultprice) | **GET** /student-professor-relationships/{studentUserId}/{professorId}/price | Get default price for student-professor relationship|
 |[**getInactiveStudentsForProfessor**](#getinactivestudentsforprofessor) | **GET** /student-professor-relationships/professor/{professorId}/inactive-students | Get inactive students for a professor with pagination, filtering, and sorting|
+|[**getMyProfessors**](#getmyprofessors) | **GET** /student-professor-relationships/my-professors | Get all active professors for current student|
 |[**getPriceWithFallback**](#getpricewithfallback) | **GET** /student-professor-relationships/{studentUserId}/{professorId}/price-with-fallback | Get price with fallback logic|
 |[**getProfessorGenerations**](#getprofessorgenerations) | **GET** /student-professor-relationships/professor/{professorId}/generations | Get professor\&#39;s generation summary|
 |[**getRelationshipsByStudentIds**](#getrelationshipsbystudentids) | **POST** /student-professor-relationships/batch-by-student-ids | Get relationships for specific student IDs|
@@ -472,6 +473,51 @@ const { status, data } = await apiInstance.getInactiveStudentsForProfessor(
 |**403** | Access denied |  -  |
 |**200** | Inactive students retrieved successfully |  -  |
 |**400** | Invalid generation format or date range |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getMyProfessors**
+> Array<MyProfessorDTO> getMyProfessors()
+
+Retrieves the professors the current student has joined, most recent first. An empty list means the student has not joined any professor yet. Requires STUDENT role.
+
+### Example
+
+```typescript
+import {
+    StudentProfessorRelationshipControllerApi,
+    Configuration
+} from 'ementor-api-client';
+
+const configuration = new Configuration();
+const apiInstance = new StudentProfessorRelationshipControllerApi(configuration);
+
+const { status, data } = await apiInstance.getMyProfessors();
+```
+
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+**Array<MyProfessorDTO>**
+
+### Authorization
+
+[OIDC Authentication](../README.md#OIDC Authentication)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: */*
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**403** | Access denied |  -  |
+|**200** | Professors retrieved successfully |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

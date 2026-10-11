@@ -47,7 +47,7 @@ npm install PATH_TO_GENERATED_PACKAGE --save
 
 ### Documentation for API Endpoints
 
-All URIs are relative to *http://localhost:49202*
+All URIs are relative to *https://api.e-mentor.ro*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
@@ -104,9 +104,7 @@ Class | Method | HTTP request | Description
 *HostFileControllerApi* | [**delete2**](docs/HostFileControllerApi.md#delete2) | **DELETE** /host-file/{id} | Delete a speciality by ID.
 *HostFileControllerApi* | [**download3**](docs/HostFileControllerApi.md#download3) | **GET** /host-file/download/{fileId} | Download file
 *HostFileControllerApi* | [**upload1**](docs/HostFileControllerApi.md#upload1) | **POST** /host-file/upload | Upload a document
-*InvoiceControllerApi* | [**callback**](docs/InvoiceControllerApi.md#callback) | **POST** /invoices/callback | 
 *InvoiceControllerApi* | [**downloadInvoiceById**](docs/InvoiceControllerApi.md#downloadinvoicebyid) | **GET** /invoices/{id}/download | Download invoice by ID
-*InvoiceControllerApi* | [**getAuthUrl**](docs/InvoiceControllerApi.md#getauthurl) | **POST** /invoices/authUrl | 
 *InvoiceControllerApi* | [**getMyInvoices**](docs/InvoiceControllerApi.md#getmyinvoices) | **GET** /invoices/my | Get invoices for the current user
 *OrganisationControllerApi* | [**createOrUpdateOrganisation**](docs/OrganisationControllerApi.md#createorupdateorganisation) | **PUT** /organisations/{professorId} | Create or update organisation
 *OrganisationControllerApi* | [**deleteOrganisation**](docs/OrganisationControllerApi.md#deleteorganisation) | **DELETE** /organisations/{professorId} | Delete organisation
@@ -124,6 +122,14 @@ Class | Method | HTTP request | Description
 *PaymentControllerApi* | [**getProfessorPaymentInfo**](docs/PaymentControllerApi.md#getprofessorpaymentinfo) | **GET** /payment/professor/{professorId}/info | Get professor payment information including bank accounts
 *PaymentControllerApi* | [**rejectPayment**](docs/PaymentControllerApi.md#rejectpayment) | **POST** /payment/reject | Reject a bank transfer payment
 *PaymentControllerApi* | [**validateReference**](docs/PaymentControllerApi.md#validatereference) | **POST** /payment/references/validate | Validate a payment reference code
+*ProfessorFinanceApi* | [**exportFinanceLedger**](docs/ProfessorFinanceApi.md#exportfinanceledger) | **GET** /finance/professor/export | Ledger of all students for the period, for accounting (CSV or JSON)
+*ProfessorFinanceApi* | [**getFinanceAging**](docs/ProfessorFinanceApi.md#getfinanceaging) | **GET** /finance/professor/aging | Outstanding grouped by age of the unpaid session, as of today
+*ProfessorFinanceApi* | [**getFinanceBreakdown**](docs/ProfessorFinanceApi.md#getfinancebreakdown) | **GET** /finance/professor/breakdown | Earned in the period split by price, event type or series
+*ProfessorFinanceApi* | [**getFinanceOverview**](docs/ProfessorFinanceApi.md#getfinanceoverview) | **GET** /finance/professor/overview | KPI overview for the period plus the previous period of equal length
+*ProfessorFinanceApi* | [**getFinancePayments**](docs/ProfessorFinanceApi.md#getfinancepayments) | **GET** /finance/professor/payments | Paged payments received by this professor, filtered by creation date
+*ProfessorFinanceApi* | [**getFinanceStudentLedger**](docs/ProfessorFinanceApi.md#getfinancestudentledger) | **GET** /finance/professor/students/{studentId}/ledger | Chronological ledger of one student with this professor
+*ProfessorFinanceApi* | [**getFinanceStudents**](docs/ProfessorFinanceApi.md#getfinancestudents) | **GET** /finance/professor/students | Paged per-student finance rows
+*ProfessorFinanceApi* | [**getFinanceTimeseries**](docs/ProfessorFinanceApi.md#getfinancetimeseries) | **GET** /finance/professor/timeseries | Earned / collected / expected / lost per day, week or month
 *ProfessorPaymentControllerApi* | [**createPortalSession**](docs/ProfessorPaymentControllerApi.md#createportalsession) | **POST** /subscriptions/portal | Create Stripe Customer Portal session for billing management
 *ProfessorPaymentControllerApi* | [**getMyPayments**](docs/ProfessorPaymentControllerApi.md#getmypayments) | **GET** /subscriptions/payments | Get my payments
 *ProfessorPaymentControllerApi* | [**getSubscriptionStatus**](docs/ProfessorPaymentControllerApi.md#getsubscriptionstatus) | **GET** /subscriptions/my | Get current subscription status
@@ -154,6 +160,7 @@ Class | Method | HTTP request | Description
 *StudentProfessorRelationshipControllerApi* | [**getActiveStudentsForProfessor**](docs/StudentProfessorRelationshipControllerApi.md#getactivestudentsforprofessor) | **GET** /student-professor-relationships/professor/{professorId}/students | Get all active students for a professor
 *StudentProfessorRelationshipControllerApi* | [**getDefaultPrice**](docs/StudentProfessorRelationshipControllerApi.md#getdefaultprice) | **GET** /student-professor-relationships/{studentUserId}/{professorId}/price | Get default price for student-professor relationship
 *StudentProfessorRelationshipControllerApi* | [**getInactiveStudentsForProfessor**](docs/StudentProfessorRelationshipControllerApi.md#getinactivestudentsforprofessor) | **GET** /student-professor-relationships/professor/{professorId}/inactive-students | Get inactive students for a professor with pagination, filtering, and sorting
+*StudentProfessorRelationshipControllerApi* | [**getMyProfessors**](docs/StudentProfessorRelationshipControllerApi.md#getmyprofessors) | **GET** /student-professor-relationships/my-professors | Get all active professors for current student
 *StudentProfessorRelationshipControllerApi* | [**getPriceWithFallback**](docs/StudentProfessorRelationshipControllerApi.md#getpricewithfallback) | **GET** /student-professor-relationships/{studentUserId}/{professorId}/price-with-fallback | Get price with fallback logic
 *StudentProfessorRelationshipControllerApi* | [**getProfessorGenerations**](docs/StudentProfessorRelationshipControllerApi.md#getprofessorgenerations) | **GET** /student-professor-relationships/professor/{professorId}/generations | Get professor\&#39;s generation summary
 *StudentProfessorRelationshipControllerApi* | [**getRelationshipsByStudentIds**](docs/StudentProfessorRelationshipControllerApi.md#getrelationshipsbystudentids) | **POST** /student-professor-relationships/batch-by-student-ids | Get relationships for specific student IDs
@@ -222,6 +229,25 @@ Class | Method | HTTP request | Description
  - [FederatedIdentityRepresentation](docs/FederatedIdentityRepresentation.md)
  - [FilterCriteriaObject](docs/FilterCriteriaObject.md)
  - [FilterOptionObject](docs/FilterOptionObject.md)
+ - [FinanceAgingBucketDTO](docs/FinanceAgingBucketDTO.md)
+ - [FinanceAgingDTO](docs/FinanceAgingDTO.md)
+ - [FinanceAgingStudentDTO](docs/FinanceAgingStudentDTO.md)
+ - [FinanceBreakdownDTO](docs/FinanceBreakdownDTO.md)
+ - [FinanceBreakdownRowDTO](docs/FinanceBreakdownRowDTO.md)
+ - [FinanceExportDTO](docs/FinanceExportDTO.md)
+ - [FinanceExportRowDTO](docs/FinanceExportRowDTO.md)
+ - [FinanceKpisDTO](docs/FinanceKpisDTO.md)
+ - [FinanceLedgerDTO](docs/FinanceLedgerDTO.md)
+ - [FinanceLedgerEntryDTO](docs/FinanceLedgerEntryDTO.md)
+ - [FinanceOverviewDTO](docs/FinanceOverviewDTO.md)
+ - [FinancePaymentRowDTO](docs/FinancePaymentRowDTO.md)
+ - [FinancePaymentsPageDTO](docs/FinancePaymentsPageDTO.md)
+ - [FinanceSessionAllocationDTO](docs/FinanceSessionAllocationDTO.md)
+ - [FinanceStudentRefDTO](docs/FinanceStudentRefDTO.md)
+ - [FinanceStudentRowDTO](docs/FinanceStudentRowDTO.md)
+ - [FinanceStudentsPageDTO](docs/FinanceStudentsPageDTO.md)
+ - [FinanceTimeseriesBucketDTO](docs/FinanceTimeseriesBucketDTO.md)
+ - [FinanceTimeseriesDTO](docs/FinanceTimeseriesDTO.md)
  - [GenerateReferenceRequest](docs/GenerateReferenceRequest.md)
  - [GetRelationshipsByStudentIdsRequest](docs/GetRelationshipsByStudentIdsRequest.md)
  - [GroupDTO](docs/GroupDTO.md)
@@ -234,6 +260,7 @@ Class | Method | HTTP request | Description
  - [Location](docs/Location.md)
  - [LocationDTO](docs/LocationDTO.md)
  - [LocationLevel](docs/LocationLevel.md)
+ - [MyProfessorDTO](docs/MyProfessorDTO.md)
  - [OrganisationDto](docs/OrganisationDto.md)
  - [PageBankTransferPaymentDTO](docs/PageBankTransferPaymentDTO.md)
  - [PageProfessorPaymentDTO](docs/PageProfessorPaymentDTO.md)

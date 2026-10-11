@@ -1435,6 +1435,30 @@ export interface EventOccurrenceDTO {
      * @type {boolean}
      * @memberof EventOccurrenceDTO
      */
+    'virtual'?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof EventOccurrenceDTO
+     */
+    'cancelled'?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof EventOccurrenceDTO
+     */
+    'completed'?: boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof EventOccurrenceDTO
+     */
+    'effectiveStartTime'?: string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof EventOccurrenceDTO
+     */
     'upcoming'?: boolean;
     /**
      * 
@@ -1447,18 +1471,6 @@ export interface EventOccurrenceDTO {
      * @type {boolean}
      * @memberof EventOccurrenceDTO
      */
-    'cancelled'?: boolean;
-    /**
-     * 
-     * @type {string}
-     * @memberof EventOccurrenceDTO
-     */
-    'effectiveStartTime'?: string;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof EventOccurrenceDTO
-     */
     'rescheduled'?: boolean;
     /**
      * 
@@ -1466,18 +1478,6 @@ export interface EventOccurrenceDTO {
      * @memberof EventOccurrenceDTO
      */
     'effectiveEndTime'?: string;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof EventOccurrenceDTO
-     */
-    'virtual'?: boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof EventOccurrenceDTO
-     */
-    'completed'?: boolean;
 }
 /**
  * 
@@ -1817,6 +1817,1182 @@ export const FilterOptionObjectFilterTypeEnum = {
 } as const;
 
 export type FilterOptionObjectFilterTypeEnum = typeof FilterOptionObjectFilterTypeEnum[keyof typeof FilterOptionObjectFilterTypeEnum];
+
+/**
+ * 
+ * @export
+ * @interface FinanceAgingBucketDTO
+ */
+export interface FinanceAgingBucketDTO {
+    /**
+     * 
+     * @type {string}
+     * @memberof FinanceAgingBucketDTO
+     */
+    'key': FinanceAgingBucketDTOKeyEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof FinanceAgingBucketDTO
+     */
+    'label': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof FinanceAgingBucketDTO
+     */
+    'minDays': number;
+    /**
+     * null for 90+
+     * @type {number}
+     * @memberof FinanceAgingBucketDTO
+     */
+    'maxDays': number | null;
+    /**
+     * 
+     * @type {number}
+     * @memberof FinanceAgingBucketDTO
+     */
+    'amount': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof FinanceAgingBucketDTO
+     */
+    'studentsCount': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof FinanceAgingBucketDTO
+     */
+    'sessionsCount': number;
+}
+
+export const FinanceAgingBucketDTOKeyEnum = {
+    _030: '0-30',
+    _3160: '31-60',
+    _6190: '61-90',
+    _90: '90+'
+} as const;
+
+export type FinanceAgingBucketDTOKeyEnum = typeof FinanceAgingBucketDTOKeyEnum[keyof typeof FinanceAgingBucketDTOKeyEnum];
+
+/**
+ * 
+ * @export
+ * @interface FinanceAgingDTO
+ */
+export interface FinanceAgingDTO {
+    /**
+     * First day of the period (Europe/Bucharest), inclusive
+     * @type {string}
+     * @memberof FinanceAgingDTO
+     */
+    'periodStart': string;
+    /**
+     * Last day of the period (Europe/Bucharest), inclusive
+     * @type {string}
+     * @memberof FinanceAgingDTO
+     */
+    'periodEnd': string;
+    /**
+     * UTC instant the numbers were computed
+     * @type {string}
+     * @memberof FinanceAgingDTO
+     */
+    'generatedAt': string;
+    /**
+     * ISO 4217 currency of every amount
+     * @type {string}
+     * @memberof FinanceAgingDTO
+     */
+    'currency': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof FinanceAgingDTO
+     */
+    'totalOutstanding': number;
+    /**
+     * 
+     * @type {Array<FinanceAgingBucketDTO>}
+     * @memberof FinanceAgingDTO
+     */
+    'buckets': Array<FinanceAgingBucketDTO>;
+    /**
+     * 
+     * @type {Array<FinanceAgingStudentDTO>}
+     * @memberof FinanceAgingDTO
+     */
+    'topStudents': Array<FinanceAgingStudentDTO>;
+}
+/**
+ * 
+ * @export
+ * @interface FinanceAgingStudentDTO
+ */
+export interface FinanceAgingStudentDTO {
+    /**
+     * 
+     * @type {FinanceStudentRefDTO}
+     * @memberof FinanceAgingStudentDTO
+     */
+    'student': FinanceStudentRefDTO;
+    /**
+     * 
+     * @type {number}
+     * @memberof FinanceAgingStudentDTO
+     */
+    'outstanding': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof FinanceAgingStudentDTO
+     */
+    'unpaidSessions': number;
+    /**
+     * 
+     * @type {string}
+     * @memberof FinanceAgingStudentDTO
+     */
+    'oldestUnpaidSessionDate': string;
+}
+/**
+ * 
+ * @export
+ * @interface FinanceBreakdownDTO
+ */
+export interface FinanceBreakdownDTO {
+    /**
+     * First day of the period (Europe/Bucharest), inclusive
+     * @type {string}
+     * @memberof FinanceBreakdownDTO
+     */
+    'periodStart': string;
+    /**
+     * Last day of the period (Europe/Bucharest), inclusive
+     * @type {string}
+     * @memberof FinanceBreakdownDTO
+     */
+    'periodEnd': string;
+    /**
+     * UTC instant the numbers were computed
+     * @type {string}
+     * @memberof FinanceBreakdownDTO
+     */
+    'generatedAt': string;
+    /**
+     * ISO 4217 currency of every amount
+     * @type {string}
+     * @memberof FinanceBreakdownDTO
+     */
+    'currency': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof FinanceBreakdownDTO
+     */
+    'by': FinanceBreakdownDTOByEnum;
+    /**
+     * 
+     * @type {number}
+     * @memberof FinanceBreakdownDTO
+     */
+    'totalEarned': number;
+    /**
+     * 
+     * @type {Array<FinanceBreakdownRowDTO>}
+     * @memberof FinanceBreakdownDTO
+     */
+    'rows': Array<FinanceBreakdownRowDTO>;
+}
+
+export const FinanceBreakdownDTOByEnum = {
+    Price: 'PRICE',
+    EventType: 'EVENT_TYPE',
+    Series: 'SERIES'
+} as const;
+
+export type FinanceBreakdownDTOByEnum = typeof FinanceBreakdownDTOByEnum[keyof typeof FinanceBreakdownDTOByEnum];
+
+/**
+ * 
+ * @export
+ * @interface FinanceBreakdownRowDTO
+ */
+export interface FinanceBreakdownRowDTO {
+    /**
+     * 
+     * @type {string}
+     * @memberof FinanceBreakdownRowDTO
+     */
+    'key': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof FinanceBreakdownRowDTO
+     */
+    'label': string;
+    /**
+     * Distinct occurrences
+     * @type {number}
+     * @memberof FinanceBreakdownRowDTO
+     */
+    'sessions': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof FinanceBreakdownRowDTO
+     */
+    'billedAttendances': number;
+    /**
+     * Distinct students
+     * @type {number}
+     * @memberof FinanceBreakdownRowDTO
+     */
+    'students': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof FinanceBreakdownRowDTO
+     */
+    'earned': number;
+    /**
+     * Allocations to these attendances up to periodEnd
+     * @type {number}
+     * @memberof FinanceBreakdownRowDTO
+     */
+    'paid': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof FinanceBreakdownRowDTO
+     */
+    'outstanding': number;
+    /**
+     * earned / totalEarned, 4 decimals
+     * @type {number}
+     * @memberof FinanceBreakdownRowDTO
+     */
+    'shareOfEarned': number;
+}
+/**
+ * 
+ * @export
+ * @interface FinanceExportDTO
+ */
+export interface FinanceExportDTO {
+    /**
+     * First day of the period (Europe/Bucharest), inclusive
+     * @type {string}
+     * @memberof FinanceExportDTO
+     */
+    'periodStart': string;
+    /**
+     * Last day of the period (Europe/Bucharest), inclusive
+     * @type {string}
+     * @memberof FinanceExportDTO
+     */
+    'periodEnd': string;
+    /**
+     * UTC instant the numbers were computed
+     * @type {string}
+     * @memberof FinanceExportDTO
+     */
+    'generatedAt': string;
+    /**
+     * ISO 4217 currency of every amount
+     * @type {string}
+     * @memberof FinanceExportDTO
+     */
+    'currency': string;
+    /**
+     * 
+     * @type {Array<FinanceExportRowDTO>}
+     * @memberof FinanceExportDTO
+     */
+    'rows': Array<FinanceExportRowDTO>;
+}
+/**
+ * 
+ * @export
+ * @interface FinanceExportRowDTO
+ */
+export interface FinanceExportRowDTO {
+    /**
+     * 
+     * @type {FinanceStudentRefDTO}
+     * @memberof FinanceExportRowDTO
+     */
+    'student': FinanceStudentRefDTO;
+    /**
+     * 
+     * @type {FinanceLedgerEntryDTO}
+     * @memberof FinanceExportRowDTO
+     */
+    'entry': FinanceLedgerEntryDTO;
+}
+/**
+ * 
+ * @export
+ * @interface FinanceKpisDTO
+ */
+export interface FinanceKpisDTO {
+    /**
+     * 
+     * @type {string}
+     * @memberof FinanceKpisDTO
+     */
+    'periodStart': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof FinanceKpisDTO
+     */
+    'periodEnd': string;
+    /**
+     * Sum of EVENT_CHARGEs whose session date is in the period
+     * @type {number}
+     * @memberof FinanceKpisDTO
+     */
+    'earned': number;
+    /**
+     * CONFIRMED payments with confirmedAt in the period
+     * @type {number}
+     * @memberof FinanceKpisDTO
+     */
+    'collected': number;
+    /**
+     * Cumulative unpaid charges as of periodEnd
+     * @type {number}
+     * @memberof FinanceKpisDTO
+     */
+    'outstanding': number;
+    /**
+     * Cumulative unallocated confirmed payments as of periodEnd
+     * @type {number}
+     * @memberof FinanceKpisDTO
+     */
+    'credit': number;
+    /**
+     * Future scheduled sessions in the period
+     * @type {number}
+     * @memberof FinanceKpisDTO
+     */
+    'expected': number;
+    /**
+     * Cancelled sessions in the period
+     * @type {number}
+     * @memberof FinanceKpisDTO
+     */
+    'lost': number;
+    /**
+     * Past sessions in the period not yet completed or cancelled
+     * @type {number}
+     * @memberof FinanceKpisDTO
+     */
+    'awaitingCompletion': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof FinanceKpisDTO
+     */
+    'sessionsCompleted': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof FinanceKpisDTO
+     */
+    'sessionsCancelled': number;
+    /**
+     * Number of sessions counted in expected
+     * @type {number}
+     * @memberof FinanceKpisDTO
+     */
+    'sessionsExpected': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof FinanceKpisDTO
+     */
+    'sessionsAwaitingCompletion': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof FinanceKpisDTO
+     */
+    'billedAttendances': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof FinanceKpisDTO
+     */
+    'activePayingStudents': number;
+    /**
+     * earned / billedAttendances; null when billedAttendances = 0
+     * @type {number}
+     * @memberof FinanceKpisDTO
+     */
+    'averagePricePerSession': number | null;
+    /**
+     * collected / earned, 4 decimals; null when earned = 0
+     * @type {number}
+     * @memberof FinanceKpisDTO
+     */
+    'collectionRate': number | null;
+}
+/**
+ * 
+ * @export
+ * @interface FinanceLedgerDTO
+ */
+export interface FinanceLedgerDTO {
+    /**
+     * First day of the period (Europe/Bucharest), inclusive
+     * @type {string}
+     * @memberof FinanceLedgerDTO
+     */
+    'periodStart': string;
+    /**
+     * Last day of the period (Europe/Bucharest), inclusive
+     * @type {string}
+     * @memberof FinanceLedgerDTO
+     */
+    'periodEnd': string;
+    /**
+     * UTC instant the numbers were computed
+     * @type {string}
+     * @memberof FinanceLedgerDTO
+     */
+    'generatedAt': string;
+    /**
+     * ISO 4217 currency of every amount
+     * @type {string}
+     * @memberof FinanceLedgerDTO
+     */
+    'currency': string;
+    /**
+     * 
+     * @type {FinanceStudentRefDTO}
+     * @memberof FinanceLedgerDTO
+     */
+    'student': FinanceStudentRefDTO;
+    /**
+     * 
+     * @type {number}
+     * @memberof FinanceLedgerDTO
+     */
+    'openingBalance': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof FinanceLedgerDTO
+     */
+    'closingBalance': number;
+    /**
+     * Sum of session charges in the period (positive)
+     * @type {number}
+     * @memberof FinanceLedgerDTO
+     */
+    'totalCharged': number;
+    /**
+     * Sum of CONFIRMED payments in the period
+     * @type {number}
+     * @memberof FinanceLedgerDTO
+     */
+    'totalPaid': number;
+    /**
+     * As of periodEnd
+     * @type {number}
+     * @memberof FinanceLedgerDTO
+     */
+    'outstanding': number;
+    /**
+     * As of periodEnd
+     * @type {number}
+     * @memberof FinanceLedgerDTO
+     */
+    'credit': number;
+    /**
+     * 
+     * @type {Array<FinanceLedgerEntryDTO>}
+     * @memberof FinanceLedgerDTO
+     */
+    'entries': Array<FinanceLedgerEntryDTO>;
+}
+/**
+ * 
+ * @export
+ * @interface FinanceLedgerEntryDTO
+ */
+export interface FinanceLedgerEntryDTO {
+    /**
+     * Stable unique key: SESSION_CHARGE:<eventAttendeeId> or PAYMENT:<paymentId>
+     * @type {string}
+     * @memberof FinanceLedgerEntryDTO
+     */
+    'id': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof FinanceLedgerEntryDTO
+     */
+    'date': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof FinanceLedgerEntryDTO
+     */
+    'type': FinanceLedgerEntryDTOTypeEnum;
+    /**
+     * Signed. Charges are negative and payments positive.
+     * @type {number}
+     * @memberof FinanceLedgerEntryDTO
+     */
+    'amount': number;
+    /**
+     * false for non-CONFIRMED payments
+     * @type {boolean}
+     * @memberof FinanceLedgerEntryDTO
+     */
+    'affectsBalance': boolean;
+    /**
+     * Balance after this entry
+     * @type {number}
+     * @memberof FinanceLedgerEntryDTO
+     */
+    'runningBalance': number;
+    /**
+     * SESSION_CHARGE only
+     * @type {string}
+     * @memberof FinanceLedgerEntryDTO
+     */
+    'sessionTitle': string | null;
+    /**
+     * SESSION_CHARGE only
+     * @type {string}
+     * @memberof FinanceLedgerEntryDTO
+     */
+    'eventOccurrenceId': string | null;
+    /**
+     * SESSION_CHARGE only
+     * @type {string}
+     * @memberof FinanceLedgerEntryDTO
+     */
+    'eventAttendeeId': string | null;
+    /**
+     * SESSION_CHARGE of a series occurrence only
+     * @type {string}
+     * @memberof FinanceLedgerEntryDTO
+     */
+    'recurringSeriesId': string | null;
+    /**
+     * SESSION_CHARGE only. Allocated to this session as of periodEnd.
+     * @type {number}
+     * @memberof FinanceLedgerEntryDTO
+     */
+    'sessionPaidAmount': number | null;
+    /**
+     * SESSION_CHARGE only
+     * @type {number}
+     * @memberof FinanceLedgerEntryDTO
+     */
+    'sessionUnpaidAmount': number | null;
+    /**
+     * PAYMENT only
+     * @type {string}
+     * @memberof FinanceLedgerEntryDTO
+     */
+    'paymentId': string | null;
+    /**
+     * PAYMENT only
+     * @type {string}
+     * @memberof FinanceLedgerEntryDTO
+     */
+    'paymentStatus': FinanceLedgerEntryDTOPaymentStatusEnum | null;
+    /**
+     * PAYMENT only
+     * @type {string}
+     * @memberof FinanceLedgerEntryDTO
+     */
+    'paymentReferenceCode': string | null;
+    /**
+     * CONFIRMED PAYMENT only. Unallocated amount as of periodEnd.
+     * @type {number}
+     * @memberof FinanceLedgerEntryDTO
+     */
+    'paymentSurplus': number | null;
+    /**
+     * CONFIRMED PAYMENT only (may be empty)
+     * @type {Array<FinanceSessionAllocationDTO>}
+     * @memberof FinanceLedgerEntryDTO
+     */
+    'allocatedToSessions': Array<FinanceSessionAllocationDTO> | null;
+}
+
+export const FinanceLedgerEntryDTOTypeEnum = {
+    SessionCharge: 'SESSION_CHARGE',
+    Payment: 'PAYMENT',
+    Adjustment: 'ADJUSTMENT',
+    Surplus: 'SURPLUS'
+} as const;
+
+export type FinanceLedgerEntryDTOTypeEnum = typeof FinanceLedgerEntryDTOTypeEnum[keyof typeof FinanceLedgerEntryDTOTypeEnum];
+export const FinanceLedgerEntryDTOPaymentStatusEnum = {
+    Pending: 'PENDING',
+    Confirmed: 'CONFIRMED',
+    Rejected: 'REJECTED',
+    Expired: 'EXPIRED'
+} as const;
+
+export type FinanceLedgerEntryDTOPaymentStatusEnum = typeof FinanceLedgerEntryDTOPaymentStatusEnum[keyof typeof FinanceLedgerEntryDTOPaymentStatusEnum];
+
+/**
+ * 
+ * @export
+ * @interface FinanceOverviewDTO
+ */
+export interface FinanceOverviewDTO {
+    /**
+     * First day of the period (Europe/Bucharest), inclusive
+     * @type {string}
+     * @memberof FinanceOverviewDTO
+     */
+    'periodStart': string;
+    /**
+     * Last day of the period (Europe/Bucharest), inclusive
+     * @type {string}
+     * @memberof FinanceOverviewDTO
+     */
+    'periodEnd': string;
+    /**
+     * UTC instant the numbers were computed
+     * @type {string}
+     * @memberof FinanceOverviewDTO
+     */
+    'generatedAt': string;
+    /**
+     * ISO 4217 currency of every amount
+     * @type {string}
+     * @memberof FinanceOverviewDTO
+     */
+    'currency': string;
+    /**
+     * 
+     * @type {FinanceKpisDTO}
+     * @memberof FinanceOverviewDTO
+     */
+    'current': FinanceKpisDTO;
+    /**
+     * 
+     * @type {FinanceKpisDTO}
+     * @memberof FinanceOverviewDTO
+     */
+    'previous': FinanceKpisDTO;
+    /**
+     * PENDING payments right now (not period-filtered)
+     * @type {number}
+     * @memberof FinanceOverviewDTO
+     */
+    'pendingPaymentsCount': number;
+    /**
+     * Sum of PENDING payments right now (not period-filtered)
+     * @type {number}
+     * @memberof FinanceOverviewDTO
+     */
+    'pendingPaymentsAmount': number;
+}
+/**
+ * 
+ * @export
+ * @interface FinancePaymentRowDTO
+ */
+export interface FinancePaymentRowDTO {
+    /**
+     * 
+     * @type {string}
+     * @memberof FinancePaymentRowDTO
+     */
+    'id': string;
+    /**
+     * 
+     * @type {FinanceStudentRefDTO}
+     * @memberof FinancePaymentRowDTO
+     */
+    'student': FinanceStudentRefDTO;
+    /**
+     * 
+     * @type {number}
+     * @memberof FinancePaymentRowDTO
+     */
+    'amount': number;
+    /**
+     * 
+     * @type {string}
+     * @memberof FinancePaymentRowDTO
+     */
+    'currency': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof FinancePaymentRowDTO
+     */
+    'status': FinancePaymentRowDTOStatusEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof FinancePaymentRowDTO
+     */
+    'referenceCode': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof FinancePaymentRowDTO
+     */
+    'createdAt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof FinancePaymentRowDTO
+     */
+    'confirmedAt': string | null;
+    /**
+     * Always null for now (not stored)
+     * @type {string}
+     * @memberof FinancePaymentRowDTO
+     */
+    'rejectedReason': string | null;
+    /**
+     * 
+     * @type {number}
+     * @memberof FinancePaymentRowDTO
+     */
+    'totalAllocated': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof FinancePaymentRowDTO
+     */
+    'surplus': number;
+    /**
+     * 
+     * @type {string}
+     * @memberof FinancePaymentRowDTO
+     */
+    'paymentProofHostFileId': string | null;
+}
+
+export const FinancePaymentRowDTOStatusEnum = {
+    Pending: 'PENDING',
+    Confirmed: 'CONFIRMED',
+    Rejected: 'REJECTED',
+    Expired: 'EXPIRED'
+} as const;
+
+export type FinancePaymentRowDTOStatusEnum = typeof FinancePaymentRowDTOStatusEnum[keyof typeof FinancePaymentRowDTOStatusEnum];
+
+/**
+ * 
+ * @export
+ * @interface FinancePaymentsPageDTO
+ */
+export interface FinancePaymentsPageDTO {
+    /**
+     * First day of the period (Europe/Bucharest), inclusive
+     * @type {string}
+     * @memberof FinancePaymentsPageDTO
+     */
+    'periodStart': string;
+    /**
+     * Last day of the period (Europe/Bucharest), inclusive
+     * @type {string}
+     * @memberof FinancePaymentsPageDTO
+     */
+    'periodEnd': string;
+    /**
+     * UTC instant the numbers were computed
+     * @type {string}
+     * @memberof FinancePaymentsPageDTO
+     */
+    'generatedAt': string;
+    /**
+     * ISO 4217 currency of every amount
+     * @type {string}
+     * @memberof FinancePaymentsPageDTO
+     */
+    'currency': string;
+    /**
+     * 0-based page index
+     * @type {number}
+     * @memberof FinancePaymentsPageDTO
+     */
+    'page': number;
+    /**
+     * Page size
+     * @type {number}
+     * @memberof FinancePaymentsPageDTO
+     */
+    'size': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof FinancePaymentsPageDTO
+     */
+    'totalItems': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof FinancePaymentsPageDTO
+     */
+    'totalPages': number;
+    /**
+     * 
+     * @type {Array<FinancePaymentRowDTO>}
+     * @memberof FinancePaymentsPageDTO
+     */
+    'items': Array<FinancePaymentRowDTO>;
+}
+/**
+ * CONFIRMED PAYMENT only (may be empty)
+ * @export
+ * @interface FinanceSessionAllocationDTO
+ */
+export interface FinanceSessionAllocationDTO {
+    /**
+     * 
+     * @type {string}
+     * @memberof FinanceSessionAllocationDTO
+     */
+    'eventAttendeeId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof FinanceSessionAllocationDTO
+     */
+    'eventOccurrenceId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof FinanceSessionAllocationDTO
+     */
+    'sessionTitle': string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof FinanceSessionAllocationDTO
+     */
+    'sessionDate': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof FinanceSessionAllocationDTO
+     */
+    'amount': number;
+}
+/**
+ * 
+ * @export
+ * @interface FinanceStudentRefDTO
+ */
+export interface FinanceStudentRefDTO {
+    /**
+     * Student user id (Keycloak sub, equal to the student profile id)
+     * @type {string}
+     * @memberof FinanceStudentRefDTO
+     */
+    'studentId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof FinanceStudentRefDTO
+     */
+    'firstName': string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof FinanceStudentRefDTO
+     */
+    'lastName': string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof FinanceStudentRefDTO
+     */
+    'profilePictureId': string | null;
+}
+/**
+ * 
+ * @export
+ * @interface FinanceStudentRowDTO
+ */
+export interface FinanceStudentRowDTO {
+    /**
+     * 
+     * @type {FinanceStudentRefDTO}
+     * @memberof FinanceStudentRowDTO
+     */
+    'student': FinanceStudentRefDTO;
+    /**
+     * null when there is no relationship row
+     * @type {string}
+     * @memberof FinanceStudentRowDTO
+     */
+    'relationshipStatus': FinanceStudentRowDTORelationshipStatusEnum | null;
+    /**
+     * Price a new session would be billed at
+     * @type {number}
+     * @memberof FinanceStudentRowDTO
+     */
+    'effectivePrice': number | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof FinanceStudentRowDTO
+     */
+    'effectivePriceSource': FinanceStudentRowDTOEffectivePriceSourceEnum | null;
+    /**
+     * Billed attendances in the period
+     * @type {number}
+     * @memberof FinanceStudentRowDTO
+     */
+    'sessionsInPeriod': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof FinanceStudentRowDTO
+     */
+    'earnedInPeriod': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof FinanceStudentRowDTO
+     */
+    'collectedInPeriod': number;
+    /**
+     * As of periodEnd
+     * @type {number}
+     * @memberof FinanceStudentRowDTO
+     */
+    'outstanding': number;
+    /**
+     * As of periodEnd
+     * @type {number}
+     * @memberof FinanceStudentRowDTO
+     */
+    'credit': number;
+    /**
+     * As of periodEnd
+     * @type {number}
+     * @memberof FinanceStudentRowDTO
+     */
+    'unpaidSessions': number;
+    /**
+     * 
+     * @type {string}
+     * @memberof FinanceStudentRowDTO
+     */
+    'oldestUnpaidSessionDate': string | null;
+    /**
+     * confirmedAt of the latest CONFIRMED payment with confirmedAt <= periodEnd
+     * @type {string}
+     * @memberof FinanceStudentRowDTO
+     */
+    'lastPaymentDate': string | null;
+    /**
+     * 
+     * @type {number}
+     * @memberof FinanceStudentRowDTO
+     */
+    'lastPaymentAmount': number | null;
+}
+
+export const FinanceStudentRowDTORelationshipStatusEnum = {
+    Active: 'ACTIVE',
+    Inactive: 'INACTIVE',
+    Suspended: 'SUSPENDED'
+} as const;
+
+export type FinanceStudentRowDTORelationshipStatusEnum = typeof FinanceStudentRowDTORelationshipStatusEnum[keyof typeof FinanceStudentRowDTORelationshipStatusEnum];
+export const FinanceStudentRowDTOEffectivePriceSourceEnum = {
+    RelationshipDefault: 'RELATIONSHIP_DEFAULT',
+    LastCharge: 'LAST_CHARGE'
+} as const;
+
+export type FinanceStudentRowDTOEffectivePriceSourceEnum = typeof FinanceStudentRowDTOEffectivePriceSourceEnum[keyof typeof FinanceStudentRowDTOEffectivePriceSourceEnum];
+
+/**
+ * 
+ * @export
+ * @interface FinanceStudentsPageDTO
+ */
+export interface FinanceStudentsPageDTO {
+    /**
+     * First day of the period (Europe/Bucharest), inclusive
+     * @type {string}
+     * @memberof FinanceStudentsPageDTO
+     */
+    'periodStart': string;
+    /**
+     * Last day of the period (Europe/Bucharest), inclusive
+     * @type {string}
+     * @memberof FinanceStudentsPageDTO
+     */
+    'periodEnd': string;
+    /**
+     * UTC instant the numbers were computed
+     * @type {string}
+     * @memberof FinanceStudentsPageDTO
+     */
+    'generatedAt': string;
+    /**
+     * ISO 4217 currency of every amount
+     * @type {string}
+     * @memberof FinanceStudentsPageDTO
+     */
+    'currency': string;
+    /**
+     * 0-based page index
+     * @type {number}
+     * @memberof FinanceStudentsPageDTO
+     */
+    'page': number;
+    /**
+     * Page size
+     * @type {number}
+     * @memberof FinanceStudentsPageDTO
+     */
+    'size': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof FinanceStudentsPageDTO
+     */
+    'totalItems': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof FinanceStudentsPageDTO
+     */
+    'totalPages': number;
+    /**
+     * 
+     * @type {Array<FinanceStudentRowDTO>}
+     * @memberof FinanceStudentsPageDTO
+     */
+    'items': Array<FinanceStudentRowDTO>;
+}
+/**
+ * 
+ * @export
+ * @interface FinanceTimeseriesBucketDTO
+ */
+export interface FinanceTimeseriesBucketDTO {
+    /**
+     * 
+     * @type {string}
+     * @memberof FinanceTimeseriesBucketDTO
+     */
+    'bucketStart': string;
+    /**
+     * Inclusive
+     * @type {string}
+     * @memberof FinanceTimeseriesBucketDTO
+     */
+    'bucketEnd': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof FinanceTimeseriesBucketDTO
+     */
+    'earned': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof FinanceTimeseriesBucketDTO
+     */
+    'collected': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof FinanceTimeseriesBucketDTO
+     */
+    'expected': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof FinanceTimeseriesBucketDTO
+     */
+    'lost': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof FinanceTimeseriesBucketDTO
+     */
+    'awaitingCompletion': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof FinanceTimeseriesBucketDTO
+     */
+    'sessionsCompleted': number;
+    /**
+     * 
+     * @type {number}
+     * @memberof FinanceTimeseriesBucketDTO
+     */
+    'billedAttendances': number;
+}
+/**
+ * 
+ * @export
+ * @interface FinanceTimeseriesDTO
+ */
+export interface FinanceTimeseriesDTO {
+    /**
+     * First day of the period (Europe/Bucharest), inclusive
+     * @type {string}
+     * @memberof FinanceTimeseriesDTO
+     */
+    'periodStart': string;
+    /**
+     * Last day of the period (Europe/Bucharest), inclusive
+     * @type {string}
+     * @memberof FinanceTimeseriesDTO
+     */
+    'periodEnd': string;
+    /**
+     * UTC instant the numbers were computed
+     * @type {string}
+     * @memberof FinanceTimeseriesDTO
+     */
+    'generatedAt': string;
+    /**
+     * ISO 4217 currency of every amount
+     * @type {string}
+     * @memberof FinanceTimeseriesDTO
+     */
+    'currency': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof FinanceTimeseriesDTO
+     */
+    'granularity': FinanceTimeseriesDTOGranularityEnum;
+    /**
+     * 
+     * @type {Array<FinanceTimeseriesBucketDTO>}
+     * @memberof FinanceTimeseriesDTO
+     */
+    'buckets': Array<FinanceTimeseriesBucketDTO>;
+}
+
+export const FinanceTimeseriesDTOGranularityEnum = {
+    Day: 'DAY',
+    Week: 'WEEK',
+    Month: 'MONTH'
+} as const;
+
+export type FinanceTimeseriesDTOGranularityEnum = typeof FinanceTimeseriesDTOGranularityEnum[keyof typeof FinanceTimeseriesDTOGranularityEnum];
 
 /**
  * 
@@ -2427,6 +3603,37 @@ export interface LocationLevel {
 /**
  * 
  * @export
+ * @interface MyProfessorDTO
+ */
+export interface MyProfessorDTO {
+    /**
+     * 
+     * @type {string}
+     * @memberof MyProfessorDTO
+     */
+    'relationshipId'?: string;
+    /**
+     * 
+     * @type {ProfessorPreviewDTO}
+     * @memberof MyProfessorDTO
+     */
+    'professor'?: ProfessorPreviewDTO;
+    /**
+     * 
+     * @type {string}
+     * @memberof MyProfessorDTO
+     */
+    'generation'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof MyProfessorDTO
+     */
+    'joinedAt'?: string;
+}
+/**
+ * 
+ * @export
  * @interface OrganisationDto
  */
 export interface OrganisationDto {
@@ -2506,24 +3713,6 @@ export interface PageBankTransferPaymentDTO {
     'totalElements'?: number;
     /**
      * 
-     * @type {boolean}
-     * @memberof PageBankTransferPaymentDTO
-     */
-    'first'?: boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof PageBankTransferPaymentDTO
-     */
-    'last'?: boolean;
-    /**
-     * 
-     * @type {number}
-     * @memberof PageBankTransferPaymentDTO
-     */
-    'numberOfElements'?: number;
-    /**
-     * 
      * @type {PageableObject}
      * @memberof PageBankTransferPaymentDTO
      */
@@ -2557,6 +3746,24 @@ export interface PageBankTransferPaymentDTO {
      * @type {boolean}
      * @memberof PageBankTransferPaymentDTO
      */
+    'first'?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof PageBankTransferPaymentDTO
+     */
+    'last'?: boolean;
+    /**
+     * 
+     * @type {number}
+     * @memberof PageBankTransferPaymentDTO
+     */
+    'numberOfElements'?: number;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof PageBankTransferPaymentDTO
+     */
     'empty'?: boolean;
 }
 /**
@@ -2577,24 +3784,6 @@ export interface PageProfessorPaymentDTO {
      * @memberof PageProfessorPaymentDTO
      */
     'totalElements'?: number;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof PageProfessorPaymentDTO
-     */
-    'first'?: boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof PageProfessorPaymentDTO
-     */
-    'last'?: boolean;
-    /**
-     * 
-     * @type {number}
-     * @memberof PageProfessorPaymentDTO
-     */
-    'numberOfElements'?: number;
     /**
      * 
      * @type {PageableObject}
@@ -2630,6 +3819,24 @@ export interface PageProfessorPaymentDTO {
      * @type {boolean}
      * @memberof PageProfessorPaymentDTO
      */
+    'first'?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof PageProfessorPaymentDTO
+     */
+    'last'?: boolean;
+    /**
+     * 
+     * @type {number}
+     * @memberof PageProfessorPaymentDTO
+     */
+    'numberOfElements'?: number;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof PageProfessorPaymentDTO
+     */
     'empty'?: boolean;
 }
 /**
@@ -2650,24 +3857,6 @@ export interface PageStudentProfessorRelationshipDTO {
      * @memberof PageStudentProfessorRelationshipDTO
      */
     'totalElements'?: number;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof PageStudentProfessorRelationshipDTO
-     */
-    'first'?: boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof PageStudentProfessorRelationshipDTO
-     */
-    'last'?: boolean;
-    /**
-     * 
-     * @type {number}
-     * @memberof PageStudentProfessorRelationshipDTO
-     */
-    'numberOfElements'?: number;
     /**
      * 
      * @type {PageableObject}
@@ -2703,6 +3892,24 @@ export interface PageStudentProfessorRelationshipDTO {
      * @type {boolean}
      * @memberof PageStudentProfessorRelationshipDTO
      */
+    'first'?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof PageStudentProfessorRelationshipDTO
+     */
+    'last'?: boolean;
+    /**
+     * 
+     * @type {number}
+     * @memberof PageStudentProfessorRelationshipDTO
+     */
+    'numberOfElements'?: number;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof PageStudentProfessorRelationshipDTO
+     */
     'empty'?: boolean;
 }
 /**
@@ -2723,24 +3930,6 @@ export interface PageWalletDTO {
      * @memberof PageWalletDTO
      */
     'totalElements'?: number;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof PageWalletDTO
-     */
-    'first'?: boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof PageWalletDTO
-     */
-    'last'?: boolean;
-    /**
-     * 
-     * @type {number}
-     * @memberof PageWalletDTO
-     */
-    'numberOfElements'?: number;
     /**
      * 
      * @type {PageableObject}
@@ -2776,6 +3965,24 @@ export interface PageWalletDTO {
      * @type {boolean}
      * @memberof PageWalletDTO
      */
+    'first'?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof PageWalletDTO
+     */
+    'last'?: boolean;
+    /**
+     * 
+     * @type {number}
+     * @memberof PageWalletDTO
+     */
+    'numberOfElements'?: number;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof PageWalletDTO
+     */
     'empty'?: boolean;
 }
 /**
@@ -2784,18 +3991,6 @@ export interface PageWalletDTO {
  * @interface PageableObject
  */
 export interface PageableObject {
-    /**
-     * 
-     * @type {boolean}
-     * @memberof PageableObject
-     */
-    'paged'?: boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof PageableObject
-     */
-    'unpaged'?: boolean;
     /**
      * 
      * @type {number}
@@ -2820,6 +4015,18 @@ export interface PageableObject {
      * @memberof PageableObject
      */
     'sort'?: SortObject;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof PageableObject
+     */
+    'paged'?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof PageableObject
+     */
+    'unpaged'?: boolean;
 }
 /**
  * 
@@ -4588,12 +5795,6 @@ export interface SortObject {
      * @type {boolean}
      * @memberof SortObject
      */
-    'unsorted'?: boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof SortObject
-     */
     'sorted'?: boolean;
     /**
      * 
@@ -4601,6 +5802,12 @@ export interface SortObject {
      * @memberof SortObject
      */
     'empty'?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof SortObject
+     */
+    'unsorted'?: boolean;
 }
 /**
  * 
@@ -12028,46 +13235,6 @@ export const InvoiceControllerApiAxiosParamCreator = function (configuration?: C
     return {
         /**
          * 
-         * @param {string} code 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        callback: async (code: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'code' is not null or undefined
-            assertParamExists('callback', 'code', code)
-            const localVarPath = `/invoices/callback`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication OIDC Authentication required
-            // oauth required
-            await setOAuthToObject(localVarHeaderParameter, "OIDC Authentication", [], configuration)
-
-            if (code !== undefined) {
-                localVarQueryParameter['code'] = code;
-            }
-
-
-    
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
          * @summary Download invoice by ID
          * @param {string} id 
          * @param {*} [options] Override http request option.
@@ -12086,39 +13253,6 @@ export const InvoiceControllerApiAxiosParamCreator = function (configuration?: C
             }
 
             const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication OIDC Authentication required
-            // oauth required
-            await setOAuthToObject(localVarHeaderParameter, "OIDC Authentication", [], configuration)
-
-
-    
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        getAuthUrl: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/invoices/authUrl`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -12183,18 +13317,6 @@ export const InvoiceControllerApiFp = function(configuration?: Configuration) {
     return {
         /**
          * 
-         * @param {string} code 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async callback(code: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.callback(code, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['InvoiceControllerApi.callback']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
          * @summary Download invoice by ID
          * @param {string} id 
          * @param {*} [options] Override http request option.
@@ -12204,17 +13326,6 @@ export const InvoiceControllerApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.downloadInvoiceById(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['InvoiceControllerApi.downloadInvoiceById']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async getAuthUrl(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.getAuthUrl(options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['InvoiceControllerApi.getAuthUrl']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -12241,15 +13352,6 @@ export const InvoiceControllerApiFactory = function (configuration?: Configurati
     return {
         /**
          * 
-         * @param {InvoiceControllerApiCallbackRequest} requestParameters Request parameters.
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        callback(requestParameters: InvoiceControllerApiCallbackRequest, options?: RawAxiosRequestConfig): AxiosPromise<string> {
-            return localVarFp.callback(requestParameters.code, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
          * @summary Download invoice by ID
          * @param {InvoiceControllerApiDownloadInvoiceByIdRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
@@ -12257,14 +13359,6 @@ export const InvoiceControllerApiFactory = function (configuration?: Configurati
          */
         downloadInvoiceById(requestParameters: InvoiceControllerApiDownloadInvoiceByIdRequest, options?: RawAxiosRequestConfig): AxiosPromise<File> {
             return localVarFp.downloadInvoiceById(requestParameters.id, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        getAuthUrl(options?: RawAxiosRequestConfig): AxiosPromise<string> {
-            return localVarFp.getAuthUrl(options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -12286,15 +13380,6 @@ export const InvoiceControllerApiFactory = function (configuration?: Configurati
 export interface InvoiceControllerApiInterface {
     /**
      * 
-     * @param {InvoiceControllerApiCallbackRequest} requestParameters Request parameters.
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof InvoiceControllerApiInterface
-     */
-    callback(requestParameters: InvoiceControllerApiCallbackRequest, options?: RawAxiosRequestConfig): AxiosPromise<string>;
-
-    /**
-     * 
      * @summary Download invoice by ID
      * @param {InvoiceControllerApiDownloadInvoiceByIdRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
@@ -12305,14 +13390,6 @@ export interface InvoiceControllerApiInterface {
 
     /**
      * 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof InvoiceControllerApiInterface
-     */
-    getAuthUrl(options?: RawAxiosRequestConfig): AxiosPromise<string>;
-
-    /**
-     * 
      * @summary Get invoices for the current user
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -12320,20 +13397,6 @@ export interface InvoiceControllerApiInterface {
      */
     getMyInvoices(options?: RawAxiosRequestConfig): AxiosPromise<Array<InvoiceDTO>>;
 
-}
-
-/**
- * Request parameters for callback operation in InvoiceControllerApi.
- * @export
- * @interface InvoiceControllerApiCallbackRequest
- */
-export interface InvoiceControllerApiCallbackRequest {
-    /**
-     * 
-     * @type {string}
-     * @memberof InvoiceControllerApiCallback
-     */
-    readonly code: string
 }
 
 /**
@@ -12359,17 +13422,6 @@ export interface InvoiceControllerApiDownloadInvoiceByIdRequest {
 export class InvoiceControllerApi extends BaseAPI implements InvoiceControllerApiInterface {
     /**
      * 
-     * @param {InvoiceControllerApiCallbackRequest} requestParameters Request parameters.
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof InvoiceControllerApi
-     */
-    public callback(requestParameters: InvoiceControllerApiCallbackRequest, options?: RawAxiosRequestConfig) {
-        return InvoiceControllerApiFp(this.configuration).callback(requestParameters.code, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
      * @summary Download invoice by ID
      * @param {InvoiceControllerApiDownloadInvoiceByIdRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
@@ -12378,16 +13430,6 @@ export class InvoiceControllerApi extends BaseAPI implements InvoiceControllerAp
      */
     public downloadInvoiceById(requestParameters: InvoiceControllerApiDownloadInvoiceByIdRequest, options?: RawAxiosRequestConfig) {
         return InvoiceControllerApiFp(this.configuration).downloadInvoiceById(requestParameters.id, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof InvoiceControllerApi
-     */
-    public getAuthUrl(options?: RawAxiosRequestConfig) {
-        return InvoiceControllerApiFp(this.configuration).getAuthUrl(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -14046,6 +15088,1141 @@ export class PaymentControllerApi extends BaseAPI implements PaymentControllerAp
     }
 }
 
+
+
+/**
+ * ProfessorFinanceApi - axios parameter creator
+ * @export
+ */
+export const ProfessorFinanceApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @summary Ledger of all students for the period, for accounting (CSV or JSON)
+         * @param {string} [from] First day of the period, inclusive (Europe/Bucharest). Defaults to the first day of the current month.
+         * @param {string} [to] Last day of the period, inclusive (Europe/Bucharest). Defaults to the last day of the current month.
+         * @param {ExportFinanceLedgerFormatEnum} [format] Defaults to CSV
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        exportFinanceLedger: async (from?: string, to?: string, format?: ExportFinanceLedgerFormatEnum, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/finance/professor/export`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OIDC Authentication required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OIDC Authentication", [], configuration)
+
+            if (from !== undefined) {
+                localVarQueryParameter['from'] = (from as any instanceof Date) ?
+                    (from as any).toISOString().substring(0,10) :
+                    from;
+            }
+
+            if (to !== undefined) {
+                localVarQueryParameter['to'] = (to as any instanceof Date) ?
+                    (to as any).toISOString().substring(0,10) :
+                    to;
+            }
+
+            if (format !== undefined) {
+                localVarQueryParameter['format'] = format;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Outstanding grouped by age of the unpaid session, as of today
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getFinanceAging: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/finance/professor/aging`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OIDC Authentication required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OIDC Authentication", [], configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Earned in the period split by price, event type or series
+         * @param {string} [from] First day of the period, inclusive (Europe/Bucharest). Defaults to the first day of the current month.
+         * @param {string} [to] Last day of the period, inclusive (Europe/Bucharest). Defaults to the last day of the current month.
+         * @param {GetFinanceBreakdownByEnum} [by] Defaults to PRICE
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getFinanceBreakdown: async (from?: string, to?: string, by?: GetFinanceBreakdownByEnum, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/finance/professor/breakdown`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OIDC Authentication required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OIDC Authentication", [], configuration)
+
+            if (from !== undefined) {
+                localVarQueryParameter['from'] = (from as any instanceof Date) ?
+                    (from as any).toISOString().substring(0,10) :
+                    from;
+            }
+
+            if (to !== undefined) {
+                localVarQueryParameter['to'] = (to as any instanceof Date) ?
+                    (to as any).toISOString().substring(0,10) :
+                    to;
+            }
+
+            if (by !== undefined) {
+                localVarQueryParameter['by'] = by;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary KPI overview for the period plus the previous period of equal length
+         * @param {string} [from] First day of the period, inclusive (Europe/Bucharest). Defaults to the first day of the current month.
+         * @param {string} [to] Last day of the period, inclusive (Europe/Bucharest). Defaults to the last day of the current month.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getFinanceOverview: async (from?: string, to?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/finance/professor/overview`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OIDC Authentication required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OIDC Authentication", [], configuration)
+
+            if (from !== undefined) {
+                localVarQueryParameter['from'] = (from as any instanceof Date) ?
+                    (from as any).toISOString().substring(0,10) :
+                    from;
+            }
+
+            if (to !== undefined) {
+                localVarQueryParameter['to'] = (to as any instanceof Date) ?
+                    (to as any).toISOString().substring(0,10) :
+                    to;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Paged payments received by this professor, filtered by creation date
+         * @param {string} [from] First day of the period, inclusive (Europe/Bucharest). Defaults to the first day of the current month.
+         * @param {string} [to] Last day of the period, inclusive (Europe/Bucharest). Defaults to the last day of the current month.
+         * @param {Array<GetFinancePaymentsStatusEnum>} [status] Repeatable status filter; all statuses when missing
+         * @param {number} [page] 0-based page index
+         * @param {number} [size] Page size, 1..100 (default 20)
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getFinancePayments: async (from?: string, to?: string, status?: Array<GetFinancePaymentsStatusEnum>, page?: number, size?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/finance/professor/payments`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OIDC Authentication required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OIDC Authentication", [], configuration)
+
+            if (from !== undefined) {
+                localVarQueryParameter['from'] = (from as any instanceof Date) ?
+                    (from as any).toISOString().substring(0,10) :
+                    from;
+            }
+
+            if (to !== undefined) {
+                localVarQueryParameter['to'] = (to as any instanceof Date) ?
+                    (to as any).toISOString().substring(0,10) :
+                    to;
+            }
+
+            if (status) {
+                localVarQueryParameter['status'] = status;
+            }
+
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
+            }
+
+            if (size !== undefined) {
+                localVarQueryParameter['size'] = size;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Chronological ledger of one student with this professor
+         * @param {string} studentId Student user id
+         * @param {string} [from] First day of the period, inclusive (Europe/Bucharest). Defaults to the first day of the current month.
+         * @param {string} [to] Last day of the period, inclusive (Europe/Bucharest). Defaults to the last day of the current month.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getFinanceStudentLedger: async (studentId: string, from?: string, to?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'studentId' is not null or undefined
+            assertParamExists('getFinanceStudentLedger', 'studentId', studentId)
+            const localVarPath = `/finance/professor/students/{studentId}/ledger`
+                .replace(`{${"studentId"}}`, encodeURIComponent(String(studentId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OIDC Authentication required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OIDC Authentication", [], configuration)
+
+            if (from !== undefined) {
+                localVarQueryParameter['from'] = (from as any instanceof Date) ?
+                    (from as any).toISOString().substring(0,10) :
+                    from;
+            }
+
+            if (to !== undefined) {
+                localVarQueryParameter['to'] = (to as any instanceof Date) ?
+                    (to as any).toISOString().substring(0,10) :
+                    to;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Paged per-student finance rows
+         * @param {string} [from] First day of the period, inclusive (Europe/Bucharest). Defaults to the first day of the current month.
+         * @param {string} [to] Last day of the period, inclusive (Europe/Bucharest). Defaults to the last day of the current month.
+         * @param {GetFinanceStudentsSortEnum} [sort] 
+         * @param {GetFinanceStudentsDirectionEnum} [direction] Defaults to desc for outstanding/earned and asc for name.
+         * @param {number} [page] 0-based page index
+         * @param {number} [size] Page size, 1..100 (default 20)
+         * @param {string} [search] Case- and diacritics-insensitive name search
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getFinanceStudents: async (from?: string, to?: string, sort?: GetFinanceStudentsSortEnum, direction?: GetFinanceStudentsDirectionEnum, page?: number, size?: number, search?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/finance/professor/students`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OIDC Authentication required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OIDC Authentication", [], configuration)
+
+            if (from !== undefined) {
+                localVarQueryParameter['from'] = (from as any instanceof Date) ?
+                    (from as any).toISOString().substring(0,10) :
+                    from;
+            }
+
+            if (to !== undefined) {
+                localVarQueryParameter['to'] = (to as any instanceof Date) ?
+                    (to as any).toISOString().substring(0,10) :
+                    to;
+            }
+
+            if (sort !== undefined) {
+                localVarQueryParameter['sort'] = sort;
+            }
+
+            if (direction !== undefined) {
+                localVarQueryParameter['direction'] = direction;
+            }
+
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
+            }
+
+            if (size !== undefined) {
+                localVarQueryParameter['size'] = size;
+            }
+
+            if (search !== undefined) {
+                localVarQueryParameter['search'] = search;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Earned / collected / expected / lost per day, week or month
+         * @param {string} [from] First day of the period, inclusive (Europe/Bucharest). Defaults to the first day of the current month.
+         * @param {string} [to] Last day of the period, inclusive (Europe/Bucharest). Defaults to the last day of the current month.
+         * @param {GetFinanceTimeseriesGranularityEnum} [granularity] Bucket size. Defaults to DAY. DAY allows at most 366 days.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getFinanceTimeseries: async (from?: string, to?: string, granularity?: GetFinanceTimeseriesGranularityEnum, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/finance/professor/timeseries`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OIDC Authentication required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OIDC Authentication", [], configuration)
+
+            if (from !== undefined) {
+                localVarQueryParameter['from'] = (from as any instanceof Date) ?
+                    (from as any).toISOString().substring(0,10) :
+                    from;
+            }
+
+            if (to !== undefined) {
+                localVarQueryParameter['to'] = (to as any instanceof Date) ?
+                    (to as any).toISOString().substring(0,10) :
+                    to;
+            }
+
+            if (granularity !== undefined) {
+                localVarQueryParameter['granularity'] = granularity;
+            }
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * ProfessorFinanceApi - functional programming interface
+ * @export
+ */
+export const ProfessorFinanceApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = ProfessorFinanceApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @summary Ledger of all students for the period, for accounting (CSV or JSON)
+         * @param {string} [from] First day of the period, inclusive (Europe/Bucharest). Defaults to the first day of the current month.
+         * @param {string} [to] Last day of the period, inclusive (Europe/Bucharest). Defaults to the last day of the current month.
+         * @param {ExportFinanceLedgerFormatEnum} [format] Defaults to CSV
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async exportFinanceLedger(from?: string, to?: string, format?: ExportFinanceLedgerFormatEnum, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.exportFinanceLedger(from, to, format, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ProfessorFinanceApi.exportFinanceLedger']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Outstanding grouped by age of the unpaid session, as of today
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getFinanceAging(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<FinanceAgingDTO>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getFinanceAging(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ProfessorFinanceApi.getFinanceAging']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Earned in the period split by price, event type or series
+         * @param {string} [from] First day of the period, inclusive (Europe/Bucharest). Defaults to the first day of the current month.
+         * @param {string} [to] Last day of the period, inclusive (Europe/Bucharest). Defaults to the last day of the current month.
+         * @param {GetFinanceBreakdownByEnum} [by] Defaults to PRICE
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getFinanceBreakdown(from?: string, to?: string, by?: GetFinanceBreakdownByEnum, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<FinanceBreakdownDTO>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getFinanceBreakdown(from, to, by, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ProfessorFinanceApi.getFinanceBreakdown']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary KPI overview for the period plus the previous period of equal length
+         * @param {string} [from] First day of the period, inclusive (Europe/Bucharest). Defaults to the first day of the current month.
+         * @param {string} [to] Last day of the period, inclusive (Europe/Bucharest). Defaults to the last day of the current month.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getFinanceOverview(from?: string, to?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<FinanceOverviewDTO>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getFinanceOverview(from, to, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ProfessorFinanceApi.getFinanceOverview']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Paged payments received by this professor, filtered by creation date
+         * @param {string} [from] First day of the period, inclusive (Europe/Bucharest). Defaults to the first day of the current month.
+         * @param {string} [to] Last day of the period, inclusive (Europe/Bucharest). Defaults to the last day of the current month.
+         * @param {Array<GetFinancePaymentsStatusEnum>} [status] Repeatable status filter; all statuses when missing
+         * @param {number} [page] 0-based page index
+         * @param {number} [size] Page size, 1..100 (default 20)
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getFinancePayments(from?: string, to?: string, status?: Array<GetFinancePaymentsStatusEnum>, page?: number, size?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<FinancePaymentsPageDTO>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getFinancePayments(from, to, status, page, size, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ProfessorFinanceApi.getFinancePayments']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Chronological ledger of one student with this professor
+         * @param {string} studentId Student user id
+         * @param {string} [from] First day of the period, inclusive (Europe/Bucharest). Defaults to the first day of the current month.
+         * @param {string} [to] Last day of the period, inclusive (Europe/Bucharest). Defaults to the last day of the current month.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getFinanceStudentLedger(studentId: string, from?: string, to?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<FinanceLedgerDTO>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getFinanceStudentLedger(studentId, from, to, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ProfessorFinanceApi.getFinanceStudentLedger']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Paged per-student finance rows
+         * @param {string} [from] First day of the period, inclusive (Europe/Bucharest). Defaults to the first day of the current month.
+         * @param {string} [to] Last day of the period, inclusive (Europe/Bucharest). Defaults to the last day of the current month.
+         * @param {GetFinanceStudentsSortEnum} [sort] 
+         * @param {GetFinanceStudentsDirectionEnum} [direction] Defaults to desc for outstanding/earned and asc for name.
+         * @param {number} [page] 0-based page index
+         * @param {number} [size] Page size, 1..100 (default 20)
+         * @param {string} [search] Case- and diacritics-insensitive name search
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getFinanceStudents(from?: string, to?: string, sort?: GetFinanceStudentsSortEnum, direction?: GetFinanceStudentsDirectionEnum, page?: number, size?: number, search?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<FinanceStudentsPageDTO>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getFinanceStudents(from, to, sort, direction, page, size, search, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ProfessorFinanceApi.getFinanceStudents']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Earned / collected / expected / lost per day, week or month
+         * @param {string} [from] First day of the period, inclusive (Europe/Bucharest). Defaults to the first day of the current month.
+         * @param {string} [to] Last day of the period, inclusive (Europe/Bucharest). Defaults to the last day of the current month.
+         * @param {GetFinanceTimeseriesGranularityEnum} [granularity] Bucket size. Defaults to DAY. DAY allows at most 366 days.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getFinanceTimeseries(from?: string, to?: string, granularity?: GetFinanceTimeseriesGranularityEnum, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<FinanceTimeseriesDTO>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getFinanceTimeseries(from, to, granularity, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ProfessorFinanceApi.getFinanceTimeseries']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * ProfessorFinanceApi - factory interface
+ * @export
+ */
+export const ProfessorFinanceApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = ProfessorFinanceApiFp(configuration)
+    return {
+        /**
+         * 
+         * @summary Ledger of all students for the period, for accounting (CSV or JSON)
+         * @param {ProfessorFinanceApiExportFinanceLedgerRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        exportFinanceLedger(requestParameters: ProfessorFinanceApiExportFinanceLedgerRequest = {}, options?: RawAxiosRequestConfig): AxiosPromise<string> {
+            return localVarFp.exportFinanceLedger(requestParameters.from, requestParameters.to, requestParameters.format, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Outstanding grouped by age of the unpaid session, as of today
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getFinanceAging(options?: RawAxiosRequestConfig): AxiosPromise<FinanceAgingDTO> {
+            return localVarFp.getFinanceAging(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Earned in the period split by price, event type or series
+         * @param {ProfessorFinanceApiGetFinanceBreakdownRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getFinanceBreakdown(requestParameters: ProfessorFinanceApiGetFinanceBreakdownRequest = {}, options?: RawAxiosRequestConfig): AxiosPromise<FinanceBreakdownDTO> {
+            return localVarFp.getFinanceBreakdown(requestParameters.from, requestParameters.to, requestParameters.by, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary KPI overview for the period plus the previous period of equal length
+         * @param {ProfessorFinanceApiGetFinanceOverviewRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getFinanceOverview(requestParameters: ProfessorFinanceApiGetFinanceOverviewRequest = {}, options?: RawAxiosRequestConfig): AxiosPromise<FinanceOverviewDTO> {
+            return localVarFp.getFinanceOverview(requestParameters.from, requestParameters.to, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Paged payments received by this professor, filtered by creation date
+         * @param {ProfessorFinanceApiGetFinancePaymentsRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getFinancePayments(requestParameters: ProfessorFinanceApiGetFinancePaymentsRequest = {}, options?: RawAxiosRequestConfig): AxiosPromise<FinancePaymentsPageDTO> {
+            return localVarFp.getFinancePayments(requestParameters.from, requestParameters.to, requestParameters.status, requestParameters.page, requestParameters.size, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Chronological ledger of one student with this professor
+         * @param {ProfessorFinanceApiGetFinanceStudentLedgerRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getFinanceStudentLedger(requestParameters: ProfessorFinanceApiGetFinanceStudentLedgerRequest, options?: RawAxiosRequestConfig): AxiosPromise<FinanceLedgerDTO> {
+            return localVarFp.getFinanceStudentLedger(requestParameters.studentId, requestParameters.from, requestParameters.to, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Paged per-student finance rows
+         * @param {ProfessorFinanceApiGetFinanceStudentsRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getFinanceStudents(requestParameters: ProfessorFinanceApiGetFinanceStudentsRequest = {}, options?: RawAxiosRequestConfig): AxiosPromise<FinanceStudentsPageDTO> {
+            return localVarFp.getFinanceStudents(requestParameters.from, requestParameters.to, requestParameters.sort, requestParameters.direction, requestParameters.page, requestParameters.size, requestParameters.search, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Earned / collected / expected / lost per day, week or month
+         * @param {ProfessorFinanceApiGetFinanceTimeseriesRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getFinanceTimeseries(requestParameters: ProfessorFinanceApiGetFinanceTimeseriesRequest = {}, options?: RawAxiosRequestConfig): AxiosPromise<FinanceTimeseriesDTO> {
+            return localVarFp.getFinanceTimeseries(requestParameters.from, requestParameters.to, requestParameters.granularity, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * ProfessorFinanceApi - interface
+ * @export
+ * @interface ProfessorFinanceApi
+ */
+export interface ProfessorFinanceApiInterface {
+    /**
+     * 
+     * @summary Ledger of all students for the period, for accounting (CSV or JSON)
+     * @param {ProfessorFinanceApiExportFinanceLedgerRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProfessorFinanceApiInterface
+     */
+    exportFinanceLedger(requestParameters?: ProfessorFinanceApiExportFinanceLedgerRequest, options?: RawAxiosRequestConfig): AxiosPromise<string>;
+
+    /**
+     * 
+     * @summary Outstanding grouped by age of the unpaid session, as of today
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProfessorFinanceApiInterface
+     */
+    getFinanceAging(options?: RawAxiosRequestConfig): AxiosPromise<FinanceAgingDTO>;
+
+    /**
+     * 
+     * @summary Earned in the period split by price, event type or series
+     * @param {ProfessorFinanceApiGetFinanceBreakdownRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProfessorFinanceApiInterface
+     */
+    getFinanceBreakdown(requestParameters?: ProfessorFinanceApiGetFinanceBreakdownRequest, options?: RawAxiosRequestConfig): AxiosPromise<FinanceBreakdownDTO>;
+
+    /**
+     * 
+     * @summary KPI overview for the period plus the previous period of equal length
+     * @param {ProfessorFinanceApiGetFinanceOverviewRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProfessorFinanceApiInterface
+     */
+    getFinanceOverview(requestParameters?: ProfessorFinanceApiGetFinanceOverviewRequest, options?: RawAxiosRequestConfig): AxiosPromise<FinanceOverviewDTO>;
+
+    /**
+     * 
+     * @summary Paged payments received by this professor, filtered by creation date
+     * @param {ProfessorFinanceApiGetFinancePaymentsRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProfessorFinanceApiInterface
+     */
+    getFinancePayments(requestParameters?: ProfessorFinanceApiGetFinancePaymentsRequest, options?: RawAxiosRequestConfig): AxiosPromise<FinancePaymentsPageDTO>;
+
+    /**
+     * 
+     * @summary Chronological ledger of one student with this professor
+     * @param {ProfessorFinanceApiGetFinanceStudentLedgerRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProfessorFinanceApiInterface
+     */
+    getFinanceStudentLedger(requestParameters: ProfessorFinanceApiGetFinanceStudentLedgerRequest, options?: RawAxiosRequestConfig): AxiosPromise<FinanceLedgerDTO>;
+
+    /**
+     * 
+     * @summary Paged per-student finance rows
+     * @param {ProfessorFinanceApiGetFinanceStudentsRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProfessorFinanceApiInterface
+     */
+    getFinanceStudents(requestParameters?: ProfessorFinanceApiGetFinanceStudentsRequest, options?: RawAxiosRequestConfig): AxiosPromise<FinanceStudentsPageDTO>;
+
+    /**
+     * 
+     * @summary Earned / collected / expected / lost per day, week or month
+     * @param {ProfessorFinanceApiGetFinanceTimeseriesRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProfessorFinanceApiInterface
+     */
+    getFinanceTimeseries(requestParameters?: ProfessorFinanceApiGetFinanceTimeseriesRequest, options?: RawAxiosRequestConfig): AxiosPromise<FinanceTimeseriesDTO>;
+
+}
+
+/**
+ * Request parameters for exportFinanceLedger operation in ProfessorFinanceApi.
+ * @export
+ * @interface ProfessorFinanceApiExportFinanceLedgerRequest
+ */
+export interface ProfessorFinanceApiExportFinanceLedgerRequest {
+    /**
+     * First day of the period, inclusive (Europe/Bucharest). Defaults to the first day of the current month.
+     * @type {string}
+     * @memberof ProfessorFinanceApiExportFinanceLedger
+     */
+    readonly from?: string
+
+    /**
+     * Last day of the period, inclusive (Europe/Bucharest). Defaults to the last day of the current month.
+     * @type {string}
+     * @memberof ProfessorFinanceApiExportFinanceLedger
+     */
+    readonly to?: string
+
+    /**
+     * Defaults to CSV
+     * @type {'CSV' | 'JSON'}
+     * @memberof ProfessorFinanceApiExportFinanceLedger
+     */
+    readonly format?: ExportFinanceLedgerFormatEnum
+}
+
+/**
+ * Request parameters for getFinanceBreakdown operation in ProfessorFinanceApi.
+ * @export
+ * @interface ProfessorFinanceApiGetFinanceBreakdownRequest
+ */
+export interface ProfessorFinanceApiGetFinanceBreakdownRequest {
+    /**
+     * First day of the period, inclusive (Europe/Bucharest). Defaults to the first day of the current month.
+     * @type {string}
+     * @memberof ProfessorFinanceApiGetFinanceBreakdown
+     */
+    readonly from?: string
+
+    /**
+     * Last day of the period, inclusive (Europe/Bucharest). Defaults to the last day of the current month.
+     * @type {string}
+     * @memberof ProfessorFinanceApiGetFinanceBreakdown
+     */
+    readonly to?: string
+
+    /**
+     * Defaults to PRICE
+     * @type {'PRICE' | 'EVENT_TYPE' | 'SERIES'}
+     * @memberof ProfessorFinanceApiGetFinanceBreakdown
+     */
+    readonly by?: GetFinanceBreakdownByEnum
+}
+
+/**
+ * Request parameters for getFinanceOverview operation in ProfessorFinanceApi.
+ * @export
+ * @interface ProfessorFinanceApiGetFinanceOverviewRequest
+ */
+export interface ProfessorFinanceApiGetFinanceOverviewRequest {
+    /**
+     * First day of the period, inclusive (Europe/Bucharest). Defaults to the first day of the current month.
+     * @type {string}
+     * @memberof ProfessorFinanceApiGetFinanceOverview
+     */
+    readonly from?: string
+
+    /**
+     * Last day of the period, inclusive (Europe/Bucharest). Defaults to the last day of the current month.
+     * @type {string}
+     * @memberof ProfessorFinanceApiGetFinanceOverview
+     */
+    readonly to?: string
+}
+
+/**
+ * Request parameters for getFinancePayments operation in ProfessorFinanceApi.
+ * @export
+ * @interface ProfessorFinanceApiGetFinancePaymentsRequest
+ */
+export interface ProfessorFinanceApiGetFinancePaymentsRequest {
+    /**
+     * First day of the period, inclusive (Europe/Bucharest). Defaults to the first day of the current month.
+     * @type {string}
+     * @memberof ProfessorFinanceApiGetFinancePayments
+     */
+    readonly from?: string
+
+    /**
+     * Last day of the period, inclusive (Europe/Bucharest). Defaults to the last day of the current month.
+     * @type {string}
+     * @memberof ProfessorFinanceApiGetFinancePayments
+     */
+    readonly to?: string
+
+    /**
+     * Repeatable status filter; all statuses when missing
+     * @type {Array<'PENDING' | 'CONFIRMED' | 'REJECTED' | 'EXPIRED'>}
+     * @memberof ProfessorFinanceApiGetFinancePayments
+     */
+    readonly status?: Array<GetFinancePaymentsStatusEnum>
+
+    /**
+     * 0-based page index
+     * @type {number}
+     * @memberof ProfessorFinanceApiGetFinancePayments
+     */
+    readonly page?: number
+
+    /**
+     * Page size, 1..100 (default 20)
+     * @type {number}
+     * @memberof ProfessorFinanceApiGetFinancePayments
+     */
+    readonly size?: number
+}
+
+/**
+ * Request parameters for getFinanceStudentLedger operation in ProfessorFinanceApi.
+ * @export
+ * @interface ProfessorFinanceApiGetFinanceStudentLedgerRequest
+ */
+export interface ProfessorFinanceApiGetFinanceStudentLedgerRequest {
+    /**
+     * Student user id
+     * @type {string}
+     * @memberof ProfessorFinanceApiGetFinanceStudentLedger
+     */
+    readonly studentId: string
+
+    /**
+     * First day of the period, inclusive (Europe/Bucharest). Defaults to the first day of the current month.
+     * @type {string}
+     * @memberof ProfessorFinanceApiGetFinanceStudentLedger
+     */
+    readonly from?: string
+
+    /**
+     * Last day of the period, inclusive (Europe/Bucharest). Defaults to the last day of the current month.
+     * @type {string}
+     * @memberof ProfessorFinanceApiGetFinanceStudentLedger
+     */
+    readonly to?: string
+}
+
+/**
+ * Request parameters for getFinanceStudents operation in ProfessorFinanceApi.
+ * @export
+ * @interface ProfessorFinanceApiGetFinanceStudentsRequest
+ */
+export interface ProfessorFinanceApiGetFinanceStudentsRequest {
+    /**
+     * First day of the period, inclusive (Europe/Bucharest). Defaults to the first day of the current month.
+     * @type {string}
+     * @memberof ProfessorFinanceApiGetFinanceStudents
+     */
+    readonly from?: string
+
+    /**
+     * Last day of the period, inclusive (Europe/Bucharest). Defaults to the last day of the current month.
+     * @type {string}
+     * @memberof ProfessorFinanceApiGetFinanceStudents
+     */
+    readonly to?: string
+
+    /**
+     * 
+     * @type {'outstanding' | 'earned' | 'name'}
+     * @memberof ProfessorFinanceApiGetFinanceStudents
+     */
+    readonly sort?: GetFinanceStudentsSortEnum
+
+    /**
+     * Defaults to desc for outstanding/earned and asc for name.
+     * @type {'asc' | 'desc'}
+     * @memberof ProfessorFinanceApiGetFinanceStudents
+     */
+    readonly direction?: GetFinanceStudentsDirectionEnum
+
+    /**
+     * 0-based page index
+     * @type {number}
+     * @memberof ProfessorFinanceApiGetFinanceStudents
+     */
+    readonly page?: number
+
+    /**
+     * Page size, 1..100 (default 20)
+     * @type {number}
+     * @memberof ProfessorFinanceApiGetFinanceStudents
+     */
+    readonly size?: number
+
+    /**
+     * Case- and diacritics-insensitive name search
+     * @type {string}
+     * @memberof ProfessorFinanceApiGetFinanceStudents
+     */
+    readonly search?: string
+}
+
+/**
+ * Request parameters for getFinanceTimeseries operation in ProfessorFinanceApi.
+ * @export
+ * @interface ProfessorFinanceApiGetFinanceTimeseriesRequest
+ */
+export interface ProfessorFinanceApiGetFinanceTimeseriesRequest {
+    /**
+     * First day of the period, inclusive (Europe/Bucharest). Defaults to the first day of the current month.
+     * @type {string}
+     * @memberof ProfessorFinanceApiGetFinanceTimeseries
+     */
+    readonly from?: string
+
+    /**
+     * Last day of the period, inclusive (Europe/Bucharest). Defaults to the last day of the current month.
+     * @type {string}
+     * @memberof ProfessorFinanceApiGetFinanceTimeseries
+     */
+    readonly to?: string
+
+    /**
+     * Bucket size. Defaults to DAY. DAY allows at most 366 days.
+     * @type {'DAY' | 'WEEK' | 'MONTH'}
+     * @memberof ProfessorFinanceApiGetFinanceTimeseries
+     */
+    readonly granularity?: GetFinanceTimeseriesGranularityEnum
+}
+
+/**
+ * ProfessorFinanceApi - object-oriented interface
+ * @export
+ * @class ProfessorFinanceApi
+ * @extends {BaseAPI}
+ */
+export class ProfessorFinanceApi extends BaseAPI implements ProfessorFinanceApiInterface {
+    /**
+     * 
+     * @summary Ledger of all students for the period, for accounting (CSV or JSON)
+     * @param {ProfessorFinanceApiExportFinanceLedgerRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProfessorFinanceApi
+     */
+    public exportFinanceLedger(requestParameters: ProfessorFinanceApiExportFinanceLedgerRequest = {}, options?: RawAxiosRequestConfig) {
+        return ProfessorFinanceApiFp(this.configuration).exportFinanceLedger(requestParameters.from, requestParameters.to, requestParameters.format, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Outstanding grouped by age of the unpaid session, as of today
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProfessorFinanceApi
+     */
+    public getFinanceAging(options?: RawAxiosRequestConfig) {
+        return ProfessorFinanceApiFp(this.configuration).getFinanceAging(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Earned in the period split by price, event type or series
+     * @param {ProfessorFinanceApiGetFinanceBreakdownRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProfessorFinanceApi
+     */
+    public getFinanceBreakdown(requestParameters: ProfessorFinanceApiGetFinanceBreakdownRequest = {}, options?: RawAxiosRequestConfig) {
+        return ProfessorFinanceApiFp(this.configuration).getFinanceBreakdown(requestParameters.from, requestParameters.to, requestParameters.by, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary KPI overview for the period plus the previous period of equal length
+     * @param {ProfessorFinanceApiGetFinanceOverviewRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProfessorFinanceApi
+     */
+    public getFinanceOverview(requestParameters: ProfessorFinanceApiGetFinanceOverviewRequest = {}, options?: RawAxiosRequestConfig) {
+        return ProfessorFinanceApiFp(this.configuration).getFinanceOverview(requestParameters.from, requestParameters.to, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Paged payments received by this professor, filtered by creation date
+     * @param {ProfessorFinanceApiGetFinancePaymentsRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProfessorFinanceApi
+     */
+    public getFinancePayments(requestParameters: ProfessorFinanceApiGetFinancePaymentsRequest = {}, options?: RawAxiosRequestConfig) {
+        return ProfessorFinanceApiFp(this.configuration).getFinancePayments(requestParameters.from, requestParameters.to, requestParameters.status, requestParameters.page, requestParameters.size, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Chronological ledger of one student with this professor
+     * @param {ProfessorFinanceApiGetFinanceStudentLedgerRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProfessorFinanceApi
+     */
+    public getFinanceStudentLedger(requestParameters: ProfessorFinanceApiGetFinanceStudentLedgerRequest, options?: RawAxiosRequestConfig) {
+        return ProfessorFinanceApiFp(this.configuration).getFinanceStudentLedger(requestParameters.studentId, requestParameters.from, requestParameters.to, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Paged per-student finance rows
+     * @param {ProfessorFinanceApiGetFinanceStudentsRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProfessorFinanceApi
+     */
+    public getFinanceStudents(requestParameters: ProfessorFinanceApiGetFinanceStudentsRequest = {}, options?: RawAxiosRequestConfig) {
+        return ProfessorFinanceApiFp(this.configuration).getFinanceStudents(requestParameters.from, requestParameters.to, requestParameters.sort, requestParameters.direction, requestParameters.page, requestParameters.size, requestParameters.search, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Earned / collected / expected / lost per day, week or month
+     * @param {ProfessorFinanceApiGetFinanceTimeseriesRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ProfessorFinanceApi
+     */
+    public getFinanceTimeseries(requestParameters: ProfessorFinanceApiGetFinanceTimeseriesRequest = {}, options?: RawAxiosRequestConfig) {
+        return ProfessorFinanceApiFp(this.configuration).getFinanceTimeseries(requestParameters.from, requestParameters.to, requestParameters.granularity, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+/**
+ * @export
+ */
+export const ExportFinanceLedgerFormatEnum = {
+    Csv: 'CSV',
+    Json: 'JSON'
+} as const;
+export type ExportFinanceLedgerFormatEnum = typeof ExportFinanceLedgerFormatEnum[keyof typeof ExportFinanceLedgerFormatEnum];
+/**
+ * @export
+ */
+export const GetFinanceBreakdownByEnum = {
+    Price: 'PRICE',
+    EventType: 'EVENT_TYPE',
+    Series: 'SERIES'
+} as const;
+export type GetFinanceBreakdownByEnum = typeof GetFinanceBreakdownByEnum[keyof typeof GetFinanceBreakdownByEnum];
+/**
+ * @export
+ */
+export const GetFinancePaymentsStatusEnum = {
+    Pending: 'PENDING',
+    Confirmed: 'CONFIRMED',
+    Rejected: 'REJECTED',
+    Expired: 'EXPIRED'
+} as const;
+export type GetFinancePaymentsStatusEnum = typeof GetFinancePaymentsStatusEnum[keyof typeof GetFinancePaymentsStatusEnum];
+/**
+ * @export
+ */
+export const GetFinanceStudentsSortEnum = {
+    Outstanding: 'outstanding',
+    Earned: 'earned',
+    Name: 'name'
+} as const;
+export type GetFinanceStudentsSortEnum = typeof GetFinanceStudentsSortEnum[keyof typeof GetFinanceStudentsSortEnum];
+/**
+ * @export
+ */
+export const GetFinanceStudentsDirectionEnum = {
+    Asc: 'asc',
+    Desc: 'desc'
+} as const;
+export type GetFinanceStudentsDirectionEnum = typeof GetFinanceStudentsDirectionEnum[keyof typeof GetFinanceStudentsDirectionEnum];
+/**
+ * @export
+ */
+export const GetFinanceTimeseriesGranularityEnum = {
+    Day: 'DAY',
+    Week: 'WEEK',
+    Month: 'MONTH'
+} as const;
+export type GetFinanceTimeseriesGranularityEnum = typeof GetFinanceTimeseriesGranularityEnum[keyof typeof GetFinanceTimeseriesGranularityEnum];
 
 
 /**
@@ -16646,6 +18823,40 @@ export const StudentProfessorRelationshipControllerApiAxiosParamCreator = functi
             };
         },
         /**
+         * Retrieves the professors the current student has joined, most recent first. An empty list means the student has not joined any professor yet. Requires STUDENT role.
+         * @summary Get all active professors for current student
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getMyProfessors: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/student-professor-relationships/my-professors`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication OIDC Authentication required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "OIDC Authentication", [], configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
          * Gets the effective price using fallback logic: 1. Relationship price, 2. Event default price, 3. Error if none available
          * @summary Get price with fallback logic
          * @param {string} studentUserId 
@@ -17166,6 +19377,18 @@ export const StudentProfessorRelationshipControllerApiFp = function(configuratio
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
+         * Retrieves the professors the current student has joined, most recent first. An empty list means the student has not joined any professor yet. Requires STUDENT role.
+         * @summary Get all active professors for current student
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getMyProfessors(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<MyProfessorDTO>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getMyProfessors(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['StudentProfessorRelationshipControllerApi.getMyProfessors']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
          * Gets the effective price using fallback logic: 1. Relationship price, 2. Event default price, 3. Error if none available
          * @summary Get price with fallback logic
          * @param {string} studentUserId 
@@ -17382,6 +19605,15 @@ export const StudentProfessorRelationshipControllerApiFactory = function (config
             return localVarFp.getInactiveStudentsForProfessor(requestParameters.professorId, requestParameters.generation, requestParameters.createdAfter, requestParameters.createdBefore, requestParameters.modifiedAfter, requestParameters.modifiedBefore, requestParameters.page, requestParameters.size, requestParameters.sort, options).then((request) => request(axios, basePath));
         },
         /**
+         * Retrieves the professors the current student has joined, most recent first. An empty list means the student has not joined any professor yet. Requires STUDENT role.
+         * @summary Get all active professors for current student
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getMyProfessors(options?: RawAxiosRequestConfig): AxiosPromise<Array<MyProfessorDTO>> {
+            return localVarFp.getMyProfessors(options).then((request) => request(axios, basePath));
+        },
+        /**
          * Gets the effective price using fallback logic: 1. Relationship price, 2. Event default price, 3. Error if none available
          * @summary Get price with fallback logic
          * @param {StudentProfessorRelationshipControllerApiGetPriceWithFallbackRequest} requestParameters Request parameters.
@@ -17558,6 +19790,15 @@ export interface StudentProfessorRelationshipControllerApiInterface {
      * @memberof StudentProfessorRelationshipControllerApiInterface
      */
     getInactiveStudentsForProfessor(requestParameters: StudentProfessorRelationshipControllerApiGetInactiveStudentsForProfessorRequest, options?: RawAxiosRequestConfig): AxiosPromise<PageStudentProfessorRelationshipDTO>;
+
+    /**
+     * Retrieves the professors the current student has joined, most recent first. An empty list means the student has not joined any professor yet. Requires STUDENT role.
+     * @summary Get all active professors for current student
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof StudentProfessorRelationshipControllerApiInterface
+     */
+    getMyProfessors(options?: RawAxiosRequestConfig): AxiosPromise<Array<MyProfessorDTO>>;
 
     /**
      * Gets the effective price using fallback logic: 1. Relationship price, 2. Event default price, 3. Error if none available
@@ -18129,6 +20370,17 @@ export class StudentProfessorRelationshipControllerApi extends BaseAPI implement
      */
     public getInactiveStudentsForProfessor(requestParameters: StudentProfessorRelationshipControllerApiGetInactiveStudentsForProfessorRequest, options?: RawAxiosRequestConfig) {
         return StudentProfessorRelationshipControllerApiFp(this.configuration).getInactiveStudentsForProfessor(requestParameters.professorId, requestParameters.generation, requestParameters.createdAfter, requestParameters.createdBefore, requestParameters.modifiedAfter, requestParameters.modifiedBefore, requestParameters.page, requestParameters.size, requestParameters.sort, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Retrieves the professors the current student has joined, most recent first. An empty list means the student has not joined any professor yet. Requires STUDENT role.
+     * @summary Get all active professors for current student
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof StudentProfessorRelationshipControllerApi
+     */
+    public getMyProfessors(options?: RawAxiosRequestConfig) {
+        return StudentProfessorRelationshipControllerApiFp(this.configuration).getMyProfessors(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

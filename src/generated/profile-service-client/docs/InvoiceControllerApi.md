@@ -1,63 +1,11 @@
 # InvoiceControllerApi
 
-All URIs are relative to *http://localhost:49202*
+All URIs are relative to *https://api.e-mentor.ro*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**callback**](#callback) | **POST** /invoices/callback | |
 |[**downloadInvoiceById**](#downloadinvoicebyid) | **GET** /invoices/{id}/download | Download invoice by ID|
-|[**getAuthUrl**](#getauthurl) | **POST** /invoices/authUrl | |
 |[**getMyInvoices**](#getmyinvoices) | **GET** /invoices/my | Get invoices for the current user|
-
-# **callback**
-> string callback()
-
-
-### Example
-
-```typescript
-import {
-    InvoiceControllerApi,
-    Configuration
-} from 'ementor-api-client';
-
-const configuration = new Configuration();
-const apiInstance = new InvoiceControllerApi(configuration);
-
-let code: string; // (default to undefined)
-
-const { status, data } = await apiInstance.callback(
-    code
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **code** | [**string**] |  | defaults to undefined|
-
-
-### Return type
-
-**string**
-
-### Authorization
-
-[OIDC Authentication](../README.md#OIDC Authentication)
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: */*
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | OK |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **downloadInvoiceById**
 > File downloadInvoiceById()
@@ -109,49 +57,6 @@ const { status, data } = await apiInstance.downloadInvoiceById(
 |**403** | Forbidden |  -  |
 |**200** | Request successful |  -  |
 |**401** | Unauthorized |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **getAuthUrl**
-> string getAuthUrl()
-
-
-### Example
-
-```typescript
-import {
-    InvoiceControllerApi,
-    Configuration
-} from 'ementor-api-client';
-
-const configuration = new Configuration();
-const apiInstance = new InvoiceControllerApi(configuration);
-
-const { status, data } = await apiInstance.getAuthUrl();
-```
-
-### Parameters
-This endpoint does not have any parameters.
-
-
-### Return type
-
-**string**
-
-### Authorization
-
-[OIDC Authentication](../README.md#OIDC Authentication)
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: */*
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
