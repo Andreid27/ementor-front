@@ -243,8 +243,8 @@ const KpiTiles = ({ overview, loading, period, colors }: KpiTilesProps) => {
       value: formatWhole(current?.outstanding, currency),
       relation: current
         ? periodEndsLater
-          ? 'Owed to you today'
-          : `Owed on ${formatDay(current.periodEnd)}`
+          ? 'Owed by active students today'
+          : `Owed by active students on ${formatDay(current.periodEnd)}`
         : undefined,
       current: current?.outstanding,
       previous: previous?.outstanding,

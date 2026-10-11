@@ -238,7 +238,7 @@ export const TERMS = {
   },
   stillOwed: {
     label: 'Still Owed',
-    hint: 'Confirmed sessions that aren’t paid yet'
+    hint: 'Unpaid confirmed sessions of your active students'
   }
 } as const
 

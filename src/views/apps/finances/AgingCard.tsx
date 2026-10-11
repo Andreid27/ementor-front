@@ -36,7 +36,7 @@ const AgingCard = ({ aging, loading, error, onRetry, colors, onSelectStudent }: 
     <Card sx={{ height: '100%' }}>
       <CardHeader
         title='Still Owed by Age'
-        subheader={aging ? `As of today · ${formatAmount(total, currency)} confirmed but not paid` : ' '}
+        subheader={aging ? `As of today · ${formatAmount(total, currency)} owed by active students` : ' '}
         subheaderTypographyProps={{ sx: { mt: 1, color: 'text.secondary' } }}
       />
       <CardContent sx={{ pt: 0 }}>
