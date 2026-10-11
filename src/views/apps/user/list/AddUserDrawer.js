@@ -42,17 +42,17 @@ const Header = styled(Box)(({ theme }) => ({
 }))
 
 const schema = yup.object().shape({
-  studentEmail: yup.string().email('Invalid email format').required('Email is required'),
+  studentEmail: yup.string().email('Adresa de email nu este validă').required('Emailul este obligatoriu'),
   defaultPricePerSession: yup
     .number()
-    .typeError('Price must be a number')
-    .min(0, 'Price cannot be negative')
+    .typeError('Prețul trebuie să fie un număr')
+    .min(0, 'Prețul nu poate fi negativ')
     .nullable()
     .transform((value, originalValue) => (originalValue === '' ? null : value)),
   generation: yup
     .string()
     .nullable()
-    .test('valid-format', 'Generation must be in YYYY-YYYY format (e.g., 2024-2025)', value => {
+    .test('valid-format', 'Generația trebuie să fie în formatul AAAA-AAAA (ex. 2024-2025)', value => {
       if (!value) return true // Allow empty
       return /^\d{4}-\d{4}$/.test(value)
     })
@@ -103,20 +103,20 @@ const AddUserDrawer = props => {
 
       await dispatch(addStudentByEmail(requestData)).unwrap()
 
-      toast.success('Student added successfully!')
+      toast.success('Elevul a fost adăugat.')
       handleClose()
     } catch (error) {
       // Error handling based on API response
-      const errorMessage = error?.message || error?.toString() || 'Failed to add student'
+      const errorMessage = error?.message || error?.toString() || 'Elevul nu a putut fi adăugat'
 
       if (error?.status === 409 || errorMessage.includes('already exists')) {
-        toast.error('Student relationship already exists!')
+        toast.error('Elevul este deja în lista ta.')
       } else if (error?.status === 404 || errorMessage.includes('not found')) {
-        toast.error('User not found with the provided email!')
+        toast.error('Nu există niciun utilizator cu acest email.')
       } else if (error?.status === 400 || errorMessage.includes('negative')) {
-        toast.error('Invalid request: Price cannot be negative!')
+        toast.error('Prețul nu poate fi negativ.')
       } else if (errorMessage.includes('incomplete profile')) {
-        toast.error('Student has an incomplete profile!')
+        toast.error('Profilul elevului este incomplet.')
       } else {
         toast.error(errorMessage)
       }
@@ -143,7 +143,7 @@ const AddUserDrawer = props => {
       sx={{ '& .MuiDrawer-paper': { width: { xs: 300, sm: 400 } } }}
     >
       <Header>
-        <Typography variant='h5'>Add Student</Typography>
+        <Typography variant='h5'>Adaugă Elev</Typography>
         <IconButton
           size='small'
           onClick={handleClose}
@@ -170,13 +170,13 @@ const AddUserDrawer = props => {
               <CustomTextField
                 fullWidth
                 type='email'
-                label='Student Email'
+                label='Emailul Elevului'
                 value={value}
                 sx={{ mb: 4 }}
                 onChange={onChange}
                 error={Boolean(errors.studentEmail)}
-                placeholder='student@example.com'
-                helperText={errors.studentEmail?.message || 'Enter the email of the student you want to add'}
+                placeholder='elev@exemplu.ro'
+                helperText={errors.studentEmail?.message || 'Emailul elevului pe care vrei să-l adaugi'}
                 disabled={loading}
               />
             )}
@@ -188,13 +188,13 @@ const AddUserDrawer = props => {
               <CustomTextField
                 fullWidth
                 type='number'
-                label='Default Price Per Session'
+                label='Preț Implicit pe Ședință'
                 value={value}
                 sx={{ mb: 4 }}
                 onChange={onChange}
                 error={Boolean(errors.defaultPricePerSession)}
                 placeholder='0.00'
-                helperText={errors.defaultPricePerSession?.message || 'Optional: Set a default price for sessions'}
+                helperText={errors.defaultPricePerSession?.message || 'Opțional: prețul implicit pentru ședințe'}
                 disabled={loading}
                 InputProps={{
                   endAdornment: <Typography sx={{ ml: 1, color: 'text.secondary' }}>RON</Typography>
@@ -211,7 +211,7 @@ const AddUserDrawer = props => {
                   <CustomTextField
                     select
                     fullWidth
-                    label='Generation'
+                    label='Generație'
                     value={value}
                     sx={{ mb: 4 }}
                     onChange={e => {
@@ -223,24 +223,24 @@ const AddUserDrawer = props => {
                       }
                     }}
                     error={Boolean(errors.generation)}
-                    helperText={errors.generation?.message || 'Optional: Select academic year generation'}
+                    helperText={errors.generation?.message || 'Opțional: generația (anul școlar)'}
                     disabled={loading}
                   >
-                    <MenuItem value=''>None</MenuItem>
+                    <MenuItem value=''>Niciuna</MenuItem>
                     {schoolYearOptions.map(year => (
                       <MenuItem key={year} value={year}>
                         {year}
                       </MenuItem>
                     ))}
                     <MenuItem value='custom' sx={{ fontStyle: 'italic', color: 'primary.main' }}>
-                      Custom Year Range...
+                      Interval Personalizat...
                     </MenuItem>
                   </CustomTextField>
                 ) : (
                   <Box sx={{ mb: 4 }}>
                     <CustomTextField
                       fullWidth
-                      label='Custom Generation'
+                      label='Generație Personalizată'
                       value={value}
                       onChange={e => {
                         let input = e.target.value
@@ -258,10 +258,10 @@ const AddUserDrawer = props => {
                         }
                       }}
                       error={Boolean(errors.generation)}
-                      placeholder='YYYY-YYYY (e.g., 2025-2027)'
+                      placeholder='AAAA-AAAA (ex. 2025-2027)'
                       helperText={
                         errors.generation?.message ||
-                        'Enter start year, hyphen will be added automatically'
+                        'Scrie anul de început; cratima se adaugă automat'
                       }
                       disabled={loading}
                       inputProps={{ maxLength: 9 }}
@@ -275,7 +275,7 @@ const AddUserDrawer = props => {
                       }}
                       sx={{ mt: 1 }}
                     >
-                      Back to standard options
+                      Înapoi la opțiunile standard
                     </Button>
                   </Box>
                 )}
@@ -285,10 +285,10 @@ const AddUserDrawer = props => {
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Button type='submit' variant='contained' sx={{ mr: 3 }} disabled={loading}>
               {loading ? <CircularProgress size={20} sx={{ mr: 2 }} /> : null}
-              {loading ? 'Adding...' : 'Add Student'}
+              {loading ? 'Se adaugă...' : 'Adaugă Elev'}
             </Button>
             <Button variant='tonal' color='secondary' onClick={handleClose} disabled={loading}>
-              Cancel
+              Anulează
             </Button>
           </Box>
         </form>

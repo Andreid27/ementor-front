@@ -17,6 +17,7 @@ import Typography from '@mui/material/Typography'
 import CardHeader from '@mui/material/CardHeader'
 import CardContent from '@mui/material/CardContent'
 import { DataGrid } from '@mui/x-data-grid'
+import { gridLocaleText } from 'src/@core/utils/grid-locale-ro'
 import Tab from '@mui/material/Tab'
 import TabList from '@mui/lab/TabList'
 import TabContext from '@mui/lab/TabContext'
@@ -40,7 +41,7 @@ import CardStatsHorizontalWithDetails from 'src/@core/components/card-statistics
 
 // ** Utils Import
 import { getInitials } from 'src/@core/utils/get-initials'
-import { generateSchoolYearOptions, formatPricing, groupStudentsByPrice } from './utils'
+import { generateSchoolYearOptions, formatPricing, formatRon, formatStudentCount, groupStudentsByPrice } from './utils'
 
 // ** Actions Imports
 import {
@@ -155,20 +156,20 @@ const RowOptions: React.FC<RowOptionsProps> = ({ student, onEditGeneration, onEd
       >
         <MenuItem onClick={handleRowOptionsClose} sx={{ '& svg': { mr: 2 } }}>
           <Icon icon='tabler:eye' fontSize={20} />
-          View Details
+          Vezi Detalii
         </MenuItem>
         <MenuItem onClick={handleEditGeneration} sx={{ '& svg': { mr: 2 } }}>
           <Icon icon='tabler:calendar' fontSize={20} />
-          Edit Generation
+          Editează Generația
         </MenuItem>
         <MenuItem onClick={handleEditPrice} sx={{ '& svg': { mr: 2 } }}>
           <Icon icon='tabler:currency-dollar' fontSize={20} />
-          Edit Price
+          Editează Prețul
         </MenuItem>
         <Divider sx={{ my: 1 }} />
         <MenuItem onClick={handleDeactivate} sx={{ '& svg': { mr: 2 }, color: 'error.main' }}>
           <Icon icon='tabler:user-x' fontSize={20} />
-          Deactivate
+          Dezactivează
         </MenuItem>
       </Menu>
     </>
@@ -568,7 +569,7 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
       flex: 0.3,
       minWidth: COLUMN_WIDTHS.USER,
       field: 'fullName',
-      headerName: 'Student',
+      headerName: 'Elev',
       renderCell: ({ row }) => {
         const { studentName, email } = row
 
@@ -589,7 +590,7 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
                 {studentName || row.fullName}
               </Typography>
               <Typography noWrap variant='body2' sx={{ color: 'text.disabled' }}>
-                {email || 'No email available'}
+                {email || 'Fără email'}
               </Typography>
             </Box>
           </Box>
@@ -599,14 +600,14 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
     {
       flex: 0.15,
       minWidth: 120,
-      headerName: 'Generation',
+      headerName: 'Generație',
       field: 'generation',
       renderCell: ({ row }) => {
         return (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Icon icon='tabler:calendar' fontSize={20} />
             <Typography noWrap sx={{ fontWeight: 500 }}>
-              {row.generation || 'Not set'}
+              {row.generation || 'Nesetată'}
             </Typography>
           </Box>
         )
@@ -615,7 +616,7 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
     {
       flex: 0.15,
       minWidth: COLUMN_WIDTHS.PRICING,
-      headerName: 'Pricing',
+      headerName: 'Preț',
       field: 'pricing',
       renderCell: ({ row }) => {
         const pricingDisplay = formatPricing(row.defaultPricePerSession)
@@ -646,7 +647,7 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
     {
       flex: 0.12,
       minWidth: 110,
-      headerName: 'Balance',
+      headerName: 'Sold',
       field: 'walletBalance',
       renderCell: ({ row }) => {
         const balance = row.walletBalance ?? 0
@@ -667,7 +668,7 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
                 color: isNegative ? 'error.main' : isPositive ? 'success.main' : 'text.secondary'
               }}
             >
-              {Math.abs(balance).toFixed(2)} RON
+              {formatRon(Math.abs(balance))}
             </Typography>
           </Box>
         )
@@ -678,7 +679,7 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
       minWidth: COLUMN_WIDTHS.ACTIONS,
       sortable: false,
       field: 'actions',
-      headerName: 'Actions',
+      headerName: 'Acțiuni',
       renderCell: ({ row }) => (
         <RowOptions
           student={row}
@@ -744,12 +745,12 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
           <Grid item xs={12} md={3} sm={6}>
             <CardStatsHorizontalWithDetails
               stats={totalActiveStudents.toString()}
-              title='Total Active Students'
+              title='Elevi Activi'
               icon='tabler:users'
               avatarColor='primary'
               trendDiff={100}
               trend='positive'
-              subtitle='All active students'
+              subtitle='Toți elevii activi'
             />
           </Grid>
 
@@ -757,25 +758,25 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
           <Grid item xs={12} md={3} sm={6}>
             <CardStatsHorizontalWithDetails
               stats={studentsWithPricing.toString()}
-              title='Students with Pricing'
+              title='Elevi cu Preț Setat'
               icon='tabler:currency-dollar'
               avatarColor='success'
               trendDiff={pricingPercentage}
               trend='positive'
-              subtitle={`${pricingPercentage}% of total students`}
+              subtitle={`${pricingPercentage}% din totalul elevilor`}
             />
           </Grid>
 
           {/* Total Student Debt */}
           <Grid item xs={12} md={3} sm={6}>
             <CardStatsHorizontalWithDetails
-              stats={`${totalDebt.toFixed(2)} RON`}
-              title='Total Student Debt'
+              stats={formatRon(totalDebt)}
+              title='Datorii Elevi'
               icon='tabler:alert-circle'
               avatarColor='error'
               trendDiff={debtPercentage}
               trend='negative'
-              subtitle={`${studentsInDebt} students in debt`}
+              subtitle={formatStudentCount(studentsInDebt, 'cu datorii')}
             />
           </Grid>
 
@@ -783,8 +784,8 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
           <Grid item xs={12} md={3} sm={6}>
             <CardStatsHorizontalWithDetails
               stats={studentsInCurrentGeneration.toString()}
-              title='Students in Current Generation'
-              subtitle={filters.generation || schoolYearOptions[0] || 'N/A'}
+              title='Elevi în Generația Curentă'
+              subtitle={filters.generation || schoolYearOptions[0] || '—'}
               icon='tabler:school'
               avatarColor='info'
               trendDiff={generationPercentage}
@@ -804,13 +805,13 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
         <Card>
           <TabContext value={currentTab}>
             <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-              <TabList onChange={handleTabChange} aria-label='student status tabs'>
+              <TabList onChange={handleTabChange} aria-label='Starea elevilor'>
                 <Tab
                   value='active'
                   label={
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                       <Icon icon='tabler:user-check' />
-                      <span>Active Students</span>
+                      <span>Elevi Activi</span>
                       {store.activeStudents.length > 0 && (
                         <CustomChip
                           rounded
@@ -828,7 +829,7 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
                   label={
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                       <Icon icon='tabler:user-x' />
-                      <span>Inactive Students</span>
+                      <span>Elevi Inactivi</span>
                       {store.inactiveTotalElements > 0 && (
                         <CustomChip
                           rounded
@@ -845,21 +846,21 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
             </Box>
           </TabContext>
 
-          <CardHeader title='Search Filters' />
+          <CardHeader title='Filtre de Căutare' />
           <CardContent>
             <Grid container spacing={6}>
               <Grid item sm={currentTab === 'inactive' ? 4 : 6} xs={12}>
                 <CustomTextField
                   select
                   fullWidth
-                  label='Generation'
+                  label='Generație'
                   SelectProps={{
                     value: filters.generation || '',
                     displayEmpty: true,
                     onChange: handleGenerationChange
                   }}
                 >
-                  <MenuItem value=''>All Generations</MenuItem>
+                  <MenuItem value=''>Toate Generațiile</MenuItem>
                   {uniqueGenerations.map(gen => (
                     <MenuItem key={gen} value={gen}>
                       {gen}
@@ -872,17 +873,17 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
                   <CustomTextField
                     select
                     fullWidth
-                    label='Deactivated'
+                    label='Dezactivat'
                     SelectProps={{
                       value: dateFilter,
                       displayEmpty: true,
                       onChange: handleDateFilterChange
                     }}
                   >
-                    <MenuItem value=''>All Time</MenuItem>
-                    <MenuItem value='last30days'>Last 30 Days</MenuItem>
-                    <MenuItem value='last90days'>Last 90 Days</MenuItem>
-                    <MenuItem value='last6months'>Last 6 Months</MenuItem>
+                    <MenuItem value=''>Oricând</MenuItem>
+                    <MenuItem value='last30days'>În Ultimele 30 de Zile</MenuItem>
+                    <MenuItem value='last90days'>În Ultimele 90 de Zile</MenuItem>
+                    <MenuItem value='last6months'>În Ultimele 6 Luni</MenuItem>
                   </CustomTextField>
                 </Grid>
               )}
@@ -890,14 +891,14 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
                 <CustomTextField
                   select
                   fullWidth
-                  label='Pricing'
+                  label='Preț'
                   SelectProps={{
                     value: filters.pricing,
                     displayEmpty: true,
                     onChange: handlePricingChange
                   }}
                 >
-                  <MenuItem value=''>All Pricing</MenuItem>
+                  <MenuItem value=''>Toate Prețurile</MenuItem>
                   {uniquePricingRanges.map(pricing => (
                     <MenuItem key={pricing} value={pricing}>
                       {pricing}
@@ -920,6 +921,7 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
             paginationModel={paginationModel}
             onPaginationModelChange={handlePaginationChange}
             paginationMode={currentTab === 'inactive' ? 'server' : 'client'}
+            localeText={gridLocaleText('Niciun elev')}
             rowCount={currentTab === 'inactive' ? store.inactiveTotalElements : filteredStudents.length}
           />
         </Card>
@@ -934,11 +936,11 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
 
       {/* Edit Generation Dialog */}
       <Dialog open={editGenerationOpen} onClose={handleEditGenerationClose} maxWidth='sm' fullWidth>
-        <DialogTitle>Edit Student Generation</DialogTitle>
+        <DialogTitle>Editează Generația Elevului</DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 2 }}>
             <Typography variant='body2' sx={{ mb: 4 }}>
-              Update the generation for <strong>{studentToEdit?.studentName}</strong>
+              Actualizează generația pentru <strong>{studentToEdit?.studentName}</strong>
             </Typography>
             {!isCustomGenerationEdit ? (
               <CustomTextField
@@ -955,21 +957,21 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
                   }
                 }}
               >
-                <MenuItem value=''>None</MenuItem>
+                <MenuItem value=''>Niciuna</MenuItem>
                 {schoolYearOptions.map(year => (
                   <MenuItem key={year} value={year}>
                     {year}
                   </MenuItem>
                 ))}
                 <MenuItem value='custom' sx={{ fontStyle: 'italic', color: 'primary.main' }}>
-                  Custom Year Range...
+                  Interval Personalizat...
                 </MenuItem>
               </CustomTextField>
             ) : (
               <Box>
                 <CustomTextField
                   fullWidth
-                  label='Custom Generation'
+                  label='Generație Personalizată'
                   value={newGeneration}
                   onChange={e => {
                     let input = e.target.value
@@ -986,8 +988,8 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
                       setNewGeneration(input)
                     }
                   }}
-                  placeholder='YYYY-YYYY (e.g., 2025-2027)'
-                  helperText='Enter start year, hyphen will be added automatically'
+                  placeholder='AAAA-AAAA (ex. 2025-2027)'
+                  helperText='Scrie anul de început; cratima se adaugă automat'
                   inputProps={{ maxLength: 9 }}
                 />
                 <Button
@@ -999,7 +1001,7 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
                   }}
                   sx={{ mt: 1 }}
                 >
-                  Back to standard options
+                  Înapoi la opțiunile standard
                 </Button>
               </Box>
             )}
@@ -1007,32 +1009,32 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleEditGenerationClose} color='secondary' disabled={isUpdatingGeneration}>
-            Cancel
+            Anulează
           </Button>
           <Button onClick={handleGenerationUpdate} variant='contained' disabled={!newGeneration || isUpdatingGeneration}>
-            {isUpdatingGeneration ? 'Updating...' : 'Update'}
+            {isUpdatingGeneration ? 'Se actualizează...' : 'Actualizează'}
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Edit Price Dialog */}
       <Dialog open={editPriceOpen} onClose={handleEditPriceClose} maxWidth='sm' fullWidth>
-        <DialogTitle>Edit Student Price</DialogTitle>
+        <DialogTitle>Editează Prețul Elevului</DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 2 }}>
             <Typography variant='body2' sx={{ mb: 4 }}>
-              Update the default price per session for <strong>{studentToEditPrice?.studentName}</strong>
+              Actualizează prețul implicit pe ședință pentru <strong>{studentToEditPrice?.studentName}</strong>
             </Typography>
             <CustomTextField
               fullWidth
               autoFocus
               type='number'
-              label='Default Price Per Session'
+              label='Preț Implicit pe Ședință'
               value={newPrice}
               onChange={e => setNewPrice(e.target.value)}
               placeholder='0.00'
               error={newPrice !== '' && !isNewPriceValid}
-              helperText={newPrice !== '' && !isNewPriceValid ? 'Price must be a number of 0 or more' : ' '}
+              helperText={newPrice !== '' && !isNewPriceValid ? 'Prețul trebuie să fie un număr mai mare sau egal cu 0' : ' '}
               inputProps={{ min: 0, step: 0.01 }}
               InputProps={{
                 endAdornment: <Typography sx={{ ml: 1, color: 'text.secondary' }}>RON</Typography>
@@ -1042,37 +1044,37 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleEditPriceClose} color='secondary' disabled={isUpdatingPrice}>
-            Cancel
+            Anulează
           </Button>
           <Button
             onClick={handlePriceUpdate}
             variant='contained'
             disabled={!isNewPriceValid || isNewPriceUnchanged || isUpdatingPrice}
           >
-            {isUpdatingPrice ? 'Updating...' : 'Update'}
+            {isUpdatingPrice ? 'Se actualizează...' : 'Actualizează'}
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Deactivate Confirmation Dialog */}
       <Dialog open={deactivateDialogOpen} onClose={handleDeactivateClose} maxWidth='sm' fullWidth>
-        <DialogTitle>Deactivate Student</DialogTitle>
+        <DialogTitle>Dezactivează Elevul</DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 2 }}>
             <Typography variant='body1'>
-              Are you sure you want to deactivate <strong>{studentToDeactivate?.studentName}</strong>?
+              Sigur vrei să dezactivezi <strong>{studentToDeactivate?.studentName}</strong>?
             </Typography>
             <Typography variant='body2' sx={{ mt: 2, color: 'text.secondary' }}>
-              This will remove the student from your active students list. You can reactivate them later if needed.
+              Elevul va fi scos din lista elevilor activi. Îl poți reactiva oricând.
             </Typography>
           </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleDeactivateClose} color='secondary'>
-            Cancel
+            Anulează
           </Button>
           <Button onClick={handleDeactivateConfirm} variant='contained' color='error'>
-            Deactivate
+            Dezactivează
           </Button>
         </DialogActions>
       </Dialog>

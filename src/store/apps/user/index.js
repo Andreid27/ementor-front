@@ -42,7 +42,7 @@ export const fetchData = createAsyncThunk('appUsers/fetchData', async (_, { reje
     }
   } catch (error) {
     console.error('Failed to fetch active students:', error)
-    toast.error('Failed to fetch active students')
+    toast.error('Elevii activi nu s-au putut încărca')
 
     return rejectWithValue(error.response?.data || error.message)
   }
@@ -77,7 +77,7 @@ export const fetchInactiveStudents = createAsyncThunk(
       }
     } catch (error) {
       console.error('Failed to fetch inactive students:', error)
-      toast.error('Failed to fetch inactive students')
+      toast.error('Elevii inactivi nu s-au putut încărca')
 
       return rejectWithValue(error.response?.data || error.message)
     }
@@ -152,7 +152,7 @@ export const fetchStudentsByIds = createAsyncThunk(
           console.debug('[fetchStudentsByIds] Tier 3 - Batch API returned:', batchStudents.length, 'students')
         } catch (batchError) {
           console.warn('[fetchStudentsByIds] Tier 3 - Batch API failed:', batchError)
-          toast.error('Some student information could not be loaded')
+          toast.error('Unele informații despre elevi nu s-au putut încărca')
 
           // Continue with partial results
         }
@@ -166,7 +166,7 @@ export const fetchStudentsByIds = createAsyncThunk(
       }
     } catch (error) {
       console.error('[fetchStudentsByIds] Failed:', error)
-      toast.error('Failed to load student information')
+      toast.error('Informațiile despre elevi nu s-au putut încărca')
 
       return rejectWithValue(error.message)
     }
@@ -191,7 +191,7 @@ export const addStudentByEmail = createAsyncThunk(
       return response.data
     } catch (error) {
       console.error('Failed to add student by email:', error)
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to add student'
+      const errorMessage = 'Elevul nu a putut fi adăugat'
       toast.error(errorMessage)
 
       return rejectWithValue({
@@ -238,7 +238,7 @@ export const fetchStudentsByGeneration = createAsyncThunk(
       }
     } catch (error) {
       console.error('Failed to fetch students by generation:', error)
-      toast.error('Failed to fetch students by generation')
+      toast.error('Elevii din generația aleasă nu s-au putut încărca')
 
       return rejectWithValue(error.response?.data || error.message)
     }
@@ -264,12 +264,12 @@ export const updateStudentGeneration = createAsyncThunk(
       // Refresh active students list after updating
       dispatch(fetchData())
 
-      toast.success('Generation updated successfully')
+      toast.success('Generația a fost actualizată')
 
       return response.data
     } catch (error) {
       console.error('Failed to update student generation:', error)
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to update generation'
+      const errorMessage = 'Generația nu a putut fi actualizată'
       toast.error(errorMessage)
 
       return rejectWithValue(error.response?.data || error.message)
@@ -293,12 +293,12 @@ export const updateStudentPrice = createAsyncThunk(
       // Refresh active students list after updating
       dispatch(fetchData())
 
-      toast.success('Price updated successfully')
+      toast.success('Prețul a fost actualizat')
 
       return { studentUserId, professorId, defaultPrice }
     } catch (error) {
       console.error('Failed to update student price:', error)
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to update price'
+      const errorMessage = 'Prețul nu a putut fi actualizat'
       toast.error(errorMessage)
 
       return rejectWithValue(error.response?.data || error.message)
@@ -320,12 +320,12 @@ export const deactivateStudentRelationship = createAsyncThunk(
       // Refresh active students list after deactivating
       dispatch(fetchData())
 
-      toast.success('Student relationship deactivated successfully')
+      toast.success('Elevul a fost dezactivat')
 
       return { studentUserId, professorId }
     } catch (error) {
       console.error('Failed to deactivate student relationship:', error)
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to deactivate relationship'
+      const errorMessage = 'Elevul nu a putut fi dezactivat'
       toast.error(errorMessage)
 
       return rejectWithValue(error.response?.data || error.message)

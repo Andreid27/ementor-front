@@ -11,7 +11,7 @@ import Icon from 'src/@core/components/icon'
 import CustomAvatar from 'src/@core/components/mui/avatar'
 
 // ** Types
-import { PriceGroup } from 'src/pages/apps/user/list/utils'
+import { PriceGroup, formatRon, formatStudentCount } from 'src/pages/apps/user/list/utils'
 
 interface PriceGroupsCardProps {
   groups: PriceGroup[]
@@ -20,10 +20,6 @@ interface PriceGroupsCardProps {
 // One hue at stepped strength, so color only encodes order and never clashes
 // with the success/error meaning used by the other cards
 const PRIMARY_STRENGTHS = [1, 0.7, 0.45, 0.25]
-
-const formatRon = (value: number): string => `${value.toFixed(2)} RON`
-
-const formatStudents = (count: number): string => `${count} ${count === 1 ? 'student' : 'students'}`
 
 const PriceGroupsCard = ({ groups = [] }: PriceGroupsCardProps) => {
   // ** Hook
@@ -43,12 +39,12 @@ const PriceGroupsCard = ({ groups = [] }: PriceGroupsCardProps) => {
       <CardContent>
         <Box sx={{ gap: 3, display: 'flex', justifyContent: 'space-between' }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-            <Typography sx={{ mb: 1, color: 'text.secondary' }}>Price Groups</Typography>
+            <Typography sx={{ mb: 1, color: 'text.secondary' }}>Grupe de Preț</Typography>
             <Typography variant='h4' sx={{ mb: 1, fontVariantNumeric: 'tabular-nums' }}>
               {formatRon(totalAmount)}
             </Typography>
             <Typography variant='h6' sx={{ color: 'text.secondary' }}>
-              {totalStudents > 0 ? `${formatStudents(totalStudents)} · one session each` : 'No prices set yet'}
+              {totalStudents > 0 ? `${formatStudentCount(totalStudents)} · câte o ședință` : 'Niciun preț setat încă'}
             </Typography>
           </Box>
           <CustomAvatar skin='light' variant='rounded' color='primary' sx={{ width: 38, height: 38 }}>
@@ -95,7 +91,7 @@ const PriceGroupsCard = ({ groups = [] }: PriceGroupsCardProps) => {
                     {formatRon(group.total)}
                   </Typography>
                   <Typography variant='body2' sx={{ color: 'text.secondary', fontVariantNumeric: 'tabular-nums' }}>
-                    {`${formatStudents(group.studentCount)} · ${Math.round(
+                    {`${formatStudentCount(group.studentCount)} · ${Math.round(
                       (group.studentCount / totalStudents) * 100
                     )}%`}
                   </Typography>

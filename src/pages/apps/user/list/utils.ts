@@ -41,7 +41,7 @@ export const transformStudentData: StudentDataTransformer = (
 
     const firstName = rel.firstName || ''
     const lastName = rel.lastName || ''
-    const fullName = [firstName, lastName].filter(Boolean).join(' ') || 'Unknown Student'
+    const fullName = [firstName, lastName].filter(Boolean).join(' ') || 'Elev necunoscut'
 
     // For raw API data: rel.studentId contains the student UUID
     // For already-transformed data: rel.id contains the student UUID
@@ -82,15 +82,15 @@ export const handleApiError = (error: ApiErrorResponse, toast: ToastMethods): vo
   let errorMessage: string
 
   if (error.response?.status === 401) {
-    errorMessage = 'Authentication required. Please log in again.'
+    errorMessage = 'Sesiunea a expirat. Autentifică-te din nou.'
   } else if (error.response?.status === 403) {
-    errorMessage = 'Access denied. You do not have permission to view students.'
+    errorMessage = 'Nu ai acces la lista de elevi.'
   } else if (error.response?.status >= 500) {
-    errorMessage = 'Server error occurred. Please try again later.'
+    errorMessage = 'Eroare de server. Încearcă din nou mai târziu.'
   } else if (error.response?.status === 404) {
-    errorMessage = 'No students found for your account.'
+    errorMessage = 'Nu am găsit elevi pentru contul tău.'
   } else {
-    errorMessage = error.message || 'Failed to load students. Please check your connection.'
+    errorMessage = 'Elevii nu s-au putut încărca. Verifică conexiunea.'
   }
 
   toast.error(errorMessage, {
@@ -114,7 +114,7 @@ export const handleBatchPhotoError = (failedCount: number, totalCount: number, t
   const failureRate = failedCount / totalCount
 
   if (failureRate > 0.5) {
-    toast.warning('Some student photos could not be loaded. Please check your connection.', {
+    toast.warning('Unele fotografii ale elevilor nu s-au putut încărca. Verifică conexiunea.', {
       position: 'top-right',
       autoClose: 3000
     })
@@ -207,9 +207,9 @@ export const validateStudentData = (student: StudentListItem): boolean => {
 // ** Generate pricing display text
 export const formatPricing = (defaultPricePerSession?: number): string => {
   if (!defaultPricePerSession || defaultPricePerSession <= 0) {
-    return 'Not set'
+    return 'Nesetat'
   }
-  return `${defaultPricePerSession} RON/session`
+  return `${defaultPricePerSession} RON/ședință`
 }
 
 // ** Price group summary for the statistics cards
@@ -245,7 +245,7 @@ export const groupStudentsByPrice = (
     .slice(0, ownGroupCount)
     .sort(([priceA], [priceB]) => priceA - priceB)
     .map(([price, count]) => ({
-      label: `${price} RON/session`,
+      label: `${price} RON/ședință`,
       studentCount: count,
       total: price * count,
       priceCount: 1
@@ -254,7 +254,7 @@ export const groupStudentsByPrice = (
   const remaining = byCount.slice(ownGroupCount)
   if (remaining.length > 0) {
     groups.push({
-      label: 'Other prices',
+      label: 'Alte prețuri',
       studentCount: remaining.reduce((sum, [, count]) => sum + count, 0),
       total: remaining.reduce((sum, [price, count]) => sum + price * count, 0),
       priceCount: remaining.length
@@ -290,4 +290,17 @@ export const generateSchoolYearOptions = (): string[] => {
   }
 
   return schoolYears
+}
+
+// ** Romanian money and counts, as on the Finances page: 1.430,00 RON; 1 elev, 3 elevi, 20 de elevi
+const ronFormat = new Intl.NumberFormat('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+
+export const formatRon = (value: number): string => `${ronFormat.format(value)} RON`
+
+export const formatStudentCount = (count: number, suffix = ''): string => {
+  const lastTwoDigits = Math.abs(count) % 100
+  const takesDe = count !== 0 && (lastTwoDigits === 0 || lastTwoDigits >= 20)
+  const noun = count === 1 ? 'elev' : `${takesDe ? 'de ' : ''}elevi`
+
+  return [count, noun, suffix].filter(part => part !== '').join(' ')
 }
