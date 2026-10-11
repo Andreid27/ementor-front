@@ -18,12 +18,12 @@ import CustomTextField from 'src/@core/components/mui/text-field'
 // ** Utils
 import {
   FinancePeriod,
+  PERIOD_NAV,
   PeriodPreset,
   buildPeriod,
   formatTime,
   isCurrentPeriod,
   periodLabel,
-  periodUnit,
   shiftPeriod,
   validateRange
 } from './financeUtils'
@@ -38,17 +38,12 @@ interface PeriodBarProps {
   onExport: () => void
 }
 
-const CURRENT_LABEL: Record<Exclude<PeriodPreset, 'custom'>, string> = {
-  month: 'This Month',
-  year: 'This Year',
-  schoolYear: 'This School Year'
-}
-
+// Same words as the calendar's view switch (Lună, Săptămână, Zi)
 const PRESETS: { value: PeriodPreset; label: string }[] = [
-  { value: 'month', label: 'Month' },
-  { value: 'year', label: 'Year' },
-  { value: 'schoolYear', label: 'School Year' },
-  { value: 'custom', label: 'Custom' }
+  { value: 'month', label: 'Lună' },
+  { value: 'year', label: 'An' },
+  { value: 'schoolYear', label: 'An Școlar' },
+  { value: 'custom', label: 'Personalizat' }
 ]
 
 const PeriodBar = ({ period, onChange, generatedAt, refreshing, onRefresh, exporting, onExport }: PeriodBarProps) => {
@@ -60,7 +55,7 @@ const PeriodBar = ({ period, onChange, generatedAt, refreshing, onRefresh, expor
   }, [period.from, period.to])
 
   const rangeError = period.preset === 'custom' ? validateRange(draft.from, draft.to) : null
-  const unit = periodUnit(period.preset)
+  const nav = period.preset === 'custom' ? null : PERIOD_NAV[period.preset]
 
   const handlePresetChange = (_event: MouseEvent<HTMLElement>, preset: PeriodPreset | null) => {
     if (!preset) return
@@ -80,7 +75,7 @@ const PeriodBar = ({ period, onChange, generatedAt, refreshing, onRefresh, expor
     <Box
       sx={{ gap: 4, display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}
       role='toolbar'
-      aria-label='Finance period'
+      aria-label='Perioada afișată'
     >
       <Box sx={{ gap: 3, display: 'flex', flexWrap: 'wrap', alignItems: 'center' }}>
         <ToggleButtonGroup exclusive size='small' color='primary' value={period.preset} onChange={handlePresetChange}>
@@ -97,7 +92,7 @@ const PeriodBar = ({ period, onChange, generatedAt, refreshing, onRefresh, expor
               <CustomTextField
                 type='date'
                 size='small'
-                label='From'
+                label='De la'
                 value={draft.from}
                 onChange={handleDraftChange('from')}
                 error={Boolean(rangeError)}
@@ -108,7 +103,7 @@ const PeriodBar = ({ period, onChange, generatedAt, refreshing, onRefresh, expor
               <CustomTextField
                 type='date'
                 size='small'
-                label='To'
+                label='Până la'
                 value={draft.to}
                 onChange={handleDraftChange('to')}
                 error={Boolean(rangeError)}
@@ -135,7 +130,7 @@ const PeriodBar = ({ period, onChange, generatedAt, refreshing, onRefresh, expor
           </Box>
         ) : (
           <Box sx={{ gap: 1, display: 'flex', alignItems: 'center' }}>
-            <IconButton aria-label={`Previous ${unit}`} onClick={() => onChange(shiftPeriod(period, -1))}>
+            <IconButton aria-label={nav?.previous} onClick={() => onChange(shiftPeriod(period, -1))}>
               <Icon icon='tabler:chevron-left' fontSize={20} />
             </IconButton>
             <Typography
@@ -146,7 +141,7 @@ const PeriodBar = ({ period, onChange, generatedAt, refreshing, onRefresh, expor
             >
               {periodLabel(period)}
             </Typography>
-            <IconButton aria-label={`Next ${unit}`} onClick={() => onChange(shiftPeriod(period, 1))}>
+            <IconButton aria-label={nav?.next} onClick={() => onChange(shiftPeriod(period, 1))}>
               <Icon icon='tabler:chevron-right' fontSize={20} />
             </IconButton>
             {!isCurrentPeriod(period) && (
@@ -154,7 +149,7 @@ const PeriodBar = ({ period, onChange, generatedAt, refreshing, onRefresh, expor
                 size='small'
                 onClick={() => onChange(buildPeriod(period.preset as Exclude<PeriodPreset, 'custom'>))}
               >
-                {CURRENT_LABEL[period.preset as Exclude<PeriodPreset, 'custom'>]}
+                {nav?.current}
               </Button>
             )}
           </Box>
@@ -164,12 +159,12 @@ const PeriodBar = ({ period, onChange, generatedAt, refreshing, onRefresh, expor
       <Box sx={{ gap: 2, display: 'flex', alignItems: 'center' }}>
         {generatedAt && (
           <Typography variant='body2' sx={{ color: 'text.secondary' }}>
-            {`Updated ${formatTime(generatedAt)}`}
+            {`Actualizat la ${formatTime(generatedAt)}`}
           </Typography>
         )}
-        <Tooltip title='Refresh'>
+        <Tooltip title='Reîmprospătează'>
           <span>
-            <IconButton aria-label='Refresh' onClick={onRefresh} disabled={refreshing}>
+            <IconButton aria-label='Reîmprospătează' onClick={onRefresh} disabled={refreshing}>
               {refreshing ? <CircularProgress size={18} /> : <Icon icon='tabler:refresh' fontSize={20} />}
             </IconButton>
           </span>
@@ -181,7 +176,7 @@ const PeriodBar = ({ period, onChange, generatedAt, refreshing, onRefresh, expor
           disabled={exporting}
           startIcon={exporting ? <CircularProgress size={16} color='inherit' /> : <Icon icon='tabler:download' />}
         >
-          Export CSV
+          Exportă CSV
         </Button>
       </Box>
     </Box>

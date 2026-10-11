@@ -197,11 +197,11 @@ const FinancesPage = () => {
           <TabContext value={tab}>
             <TabList
               onChange={(_event: SyntheticEvent, value: 'students' | 'payments') => setTab(value)}
-              aria-label='Students and payments'
+              aria-label='Elevi și plăți'
               sx={{ px: 6, borderBottom: 1, borderColor: 'divider' }}
             >
-              <Tab value='students' label='Students' />
-              <Tab value='payments' label='Payments' />
+              <Tab value='students' label='Elevi' />
+              <Tab value='payments' label='Plăți' />
             </TabList>
             <TabPanel value='students' sx={{ p: 0 }}>
               <StudentsTable period={period} refreshKey={refreshKey} onSelectStudent={setSelectedStudent} />

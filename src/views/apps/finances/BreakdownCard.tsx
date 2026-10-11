@@ -24,7 +24,15 @@ import type { GetFinanceBreakdownByEnum } from 'src/generated/profile-service-cl
 // ** Local Imports
 import useFinanceQuery from './useFinanceQuery'
 import { SectionError, refetchSx } from './FinanceParts'
-import { FinanceColors, FinancePeriod, formatAmount, formatCount, formatPercent, periodLabel } from './financeUtils'
+import {
+  FinanceColors,
+  FinancePeriod,
+  formatAmount,
+  formatCount,
+  formatMoney,
+  formatPercent,
+  periodPhrase
+} from './financeUtils'
 
 interface BreakdownCardProps {
   period: FinancePeriod
@@ -33,10 +41,21 @@ interface BreakdownCardProps {
 }
 
 const DIMENSIONS: { value: GetFinanceBreakdownByEnum; label: string }[] = [
-  { value: 'PRICE', label: 'Price' },
-  { value: 'EVENT_TYPE', label: 'Type' },
-  { value: 'SERIES', label: 'Series' }
+  { value: 'PRICE', label: 'Preț' },
+  { value: 'EVENT_TYPE', label: 'Tip' },
+  { value: 'SERIES', label: 'Serie' }
 ]
+
+// The server labels rows in English; the keys are stable, so the words are set here. Series rows keep the
+// title the professor gave the series; one-off events use the calendar filter's name.
+const rowLabel = (by: GetFinanceBreakdownByEnum, row: { key: string; label: string }, currency: string): string => {
+  if (by === 'PRICE') return formatMoney(Number(row.key), currency)
+  if (row.key === 'ONE_TO_ONE') return '1:1 (un elev)'
+  if (row.key === 'GROUP') return 'Grup (2+ elevi)'
+  if (row.key === 'SINGULAR') return 'Evenimente individuale'
+
+  return row.label
+}
 
 const VISIBLE_ROWS = 6
 
@@ -63,8 +82,8 @@ const BreakdownCard = ({ period, refreshKey, colors }: BreakdownCardProps) => {
   return (
     <Card sx={{ height: '100%' }}>
       <CardHeader
-        title='Confirmed Income by Source'
-        subheader={data ? `${formatAmount(data.totalEarned, currency)} confirmed in ${periodLabel(period)}` : ' '}
+        title='Venit Finalizat pe Surse'
+        subheader={data ? `Finalizat ${periodPhrase(period)}: ${formatAmount(data.totalEarned, currency)}` : ' '}
         subheaderTypographyProps={{ sx: { mt: 1, color: 'text.secondary' } }}
         action={
           <ToggleButtonGroup
@@ -72,7 +91,7 @@ const BreakdownCard = ({ period, refreshKey, colors }: BreakdownCardProps) => {
             size='small'
             value={by}
             onChange={handleByChange}
-            aria-label='Group confirmed income by'
+            aria-label='Grupează venitul finalizat după'
           >
             {DIMENSIONS.map(dimension => (
               <ToggleButton key={dimension.value} value={dimension.value} sx={{ px: 3, textTransform: 'none' }}>
@@ -91,7 +110,7 @@ const BreakdownCard = ({ period, refreshKey, colors }: BreakdownCardProps) => {
         ) : rows.length === 0 ? (
           <Box sx={{ py: 8, gap: 2, display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
             <Icon icon='tabler:receipt-off' fontSize={32} />
-            <Typography sx={{ color: 'text.secondary' }}>{`No confirmed sessions in ${periodLabel(
+            <Typography sx={{ color: 'text.secondary' }}>{`Nicio ședință finalizată ${periodPhrase(
               period
             )}.`}</Typography>
           </Box>
@@ -101,7 +120,7 @@ const BreakdownCard = ({ period, refreshKey, colors }: BreakdownCardProps) => {
               <Box component='li' key={row.key} sx={{ '&:not(:last-of-type)': { mb: 4.5 } }}>
                 <Box sx={{ mb: 1.5, gap: 4, display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
                   <Typography noWrap sx={{ fontWeight: 500, color: 'text.primary' }}>
-                    {row.label}
+                    {rowLabel(data.by, row, currency)}
                   </Typography>
                   <Typography sx={{ fontWeight: 500, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
                     {formatAmount(row.earned, currency)}
@@ -122,9 +141,9 @@ const BreakdownCard = ({ period, refreshKey, colors }: BreakdownCardProps) => {
                 <Typography variant='body2' sx={{ mt: 1.5, color: 'text.secondary' }}>
                   {[
                     formatPercent(row.shareOfEarned),
-                    formatCount(row.billedAttendances, 'session'),
-                    formatCount(row.students, 'student'),
-                    row.outstanding > 0 ? `${formatAmount(row.outstanding, currency)} still owed` : null
+                    formatCount(row.billedAttendances, 'ședință', 'ședințe'),
+                    formatCount(row.students, 'elev', 'elevi'),
+                    row.outstanding > 0 ? `${formatAmount(row.outstanding, currency)} restanțe` : null
                   ]
                     .filter(Boolean)
                     .join(' · ')}
@@ -134,7 +153,7 @@ const BreakdownCard = ({ period, refreshKey, colors }: BreakdownCardProps) => {
             {rows.length > VISIBLE_ROWS && (
               <Box component='li' sx={{ mt: 3 }}>
                 <Button size='small' onClick={() => setShowAll(value => !value)}>
-                  {showAll ? 'Show Less' : `Show All ${rows.length}`}
+                  {showAll ? 'Arată Mai Puțin' : `Arată Toate (${rows.length})`}
                 </Button>
               </Box>
             )}

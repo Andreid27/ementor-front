@@ -25,7 +25,7 @@ import type {
 
 // ** Local Imports
 import useFinanceQuery from './useFinanceQuery'
-import { SectionError, StudentIdentity } from './FinanceParts'
+import { SectionError, StudentIdentity, gridLocaleText } from './FinanceParts'
 import { FinancePeriod, TERMS, formatDay, formatDateTime, formatMoney } from './financeUtils'
 
 interface StudentsTableProps {
@@ -58,8 +58,8 @@ const COMPACT_COLUMNS = {
 }
 
 const RELATIONSHIP_LABELS: Record<string, string | undefined> = {
-  INACTIVE: 'Inactive student',
-  SUSPENDED: 'Suspended'
+  INACTIVE: 'Elev inactiv',
+  SUSPENDED: 'Elev suspendat'
 }
 
 const StudentsTable = ({ period, refreshKey, onSelectStudent }: StudentsTableProps) => {
@@ -115,20 +115,20 @@ const StudentsTable = ({ period, refreshKey, onSelectStudent }: StudentsTablePro
   const columns: GridColDef<FinanceStudentRowDTO>[] = [
     {
       field: 'student',
-      headerName: 'Student',
+      headerName: 'Elev',
       flex: 1.4,
       minWidth: compact ? 170 : 220,
       // A former student says so under the name, in words, so the name keeps the full column width
       renderCell: ({ row }) => (
         <StudentIdentity
           student={row.student}
-          detail={row.relationshipStatus ? RELATIONSHIP_LABELS[row.relationshipStatus] : 'No longer linked to you'}
+          detail={row.relationshipStatus ? RELATIONSHIP_LABELS[row.relationshipStatus] : 'Nu mai este elevul tău'}
         />
       )
     },
     {
       field: 'effectivePrice',
-      headerName: 'Price',
+      headerName: 'Preț',
       minWidth: 120,
       sortable: false,
       renderCell: ({ row }) => (
@@ -138,7 +138,7 @@ const StudentsTable = ({ period, refreshKey, onSelectStudent }: StudentsTablePro
           </Typography>
           {row.effectivePriceSource === 'LAST_CHARGE' && (
             <Typography variant='caption' sx={{ color: 'text.secondary' }}>
-              Last charge
+              Ultimul preț facturat
             </Typography>
           )}
         </Box>
@@ -146,7 +146,7 @@ const StudentsTable = ({ period, refreshKey, onSelectStudent }: StudentsTablePro
     },
     {
       field: 'sessionsInPeriod',
-      headerName: 'Sessions',
+      headerName: 'Ședințe',
       minWidth: 110,
       sortable: false,
       align: 'right',
@@ -185,7 +185,7 @@ const StudentsTable = ({ period, refreshKey, onSelectStudent }: StudentsTablePro
           </Typography>
           {row.credit > 0 && (
             <Typography variant='caption' sx={{ color: 'text.secondary' }}>
-              {`${formatMoney(row.credit, currency)} in advance`}
+              {`${formatMoney(row.credit, currency)} în avans`}
             </Typography>
           )}
         </Box>
@@ -204,7 +204,7 @@ const StudentsTable = ({ period, refreshKey, onSelectStudent }: StudentsTablePro
           </Typography>
           {row.oldestUnpaidSessionDate && (
             <Typography variant='caption' sx={{ color: 'text.secondary' }}>
-              {`Since ${formatDay(row.oldestUnpaidSessionDate)}`}
+              {`Din ${formatDay(row.oldestUnpaidSessionDate)}`}
             </Typography>
           )}
         </Box>
@@ -212,7 +212,7 @@ const StudentsTable = ({ period, refreshKey, onSelectStudent }: StudentsTablePro
     },
     {
       field: 'lastPaymentDate',
-      headerName: 'Last Payment',
+      headerName: 'Ultima Plată',
       minWidth: 160,
       sortable: false,
       renderCell: ({ row }) =>
@@ -227,7 +227,7 @@ const StudentsTable = ({ period, refreshKey, onSelectStudent }: StudentsTablePro
           </Box>
         ) : (
           <Typography variant='body2' sx={{ color: 'text.secondary' }}>
-            Never
+            Niciodată
           </Typography>
         )
     }
@@ -238,9 +238,9 @@ const StudentsTable = ({ period, refreshKey, onSelectStudent }: StudentsTablePro
       <Box sx={{ p: 6, pt: 5, display: 'flex', justifyContent: 'flex-end' }}>
         <CustomTextField
           value={search}
-          placeholder='Search students'
+          placeholder='Caută elevi'
           onChange={event => setSearch(event.target.value)}
-          inputProps={{ 'aria-label': 'Search students' }}
+          inputProps={{ 'aria-label': 'Caută elevi' }}
           sx={{ width: { xs: '100%', sm: 280 } }}
           InputProps={{
             startAdornment: (
@@ -283,7 +283,7 @@ const StudentsTable = ({ period, refreshKey, onSelectStudent }: StudentsTablePro
               onSelectStudent(params.row.student)
             }
           }}
-          localeText={{ noRowsLabel: debouncedSearch ? 'No students match your search' : 'No students yet' }}
+          localeText={gridLocaleText(debouncedSearch ? 'Niciun elev nu se potrivește căutării' : 'Niciun elev încă')}
           sx={{ '& .MuiDataGrid-row': { cursor: 'pointer' } }}
         />
       )}

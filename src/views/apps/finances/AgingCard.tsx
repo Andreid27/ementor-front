@@ -28,6 +28,14 @@ interface AgingCardProps {
   onSelectStudent: (student: FinanceStudentRefDTO) => void
 }
 
+// The server labels buckets in English; the keys are stable, so the words are set here
+const AGE_LABELS: Record<string, string> = {
+  '0-30': '0–30 de zile',
+  '31-60': '31–60 de zile',
+  '61-90': '61–90 de zile',
+  '90+': 'Peste 90 de zile'
+}
+
 const AgingCard = ({ aging, loading, error, onRetry, colors, onSelectStudent }: AgingCardProps) => {
   const currency = aging?.currency ?? ''
   const total = aging?.totalOutstanding ?? 0
@@ -35,8 +43,8 @@ const AgingCard = ({ aging, loading, error, onRetry, colors, onSelectStudent }: 
   return (
     <Card sx={{ height: '100%' }}>
       <CardHeader
-        title='Still Owed by Age'
-        subheader={aging ? `As of today · ${formatAmount(total, currency)} owed by active students` : ' '}
+        title='Restanțe după Vechime'
+        subheader={aging ? `Situația de azi · elevii activi datorează ${formatAmount(total, currency)}` : ' '}
         subheaderTypographyProps={{ sx: { mt: 1, color: 'text.secondary' } }}
       />
       <CardContent sx={{ pt: 0 }}>
@@ -47,7 +55,7 @@ const AgingCard = ({ aging, loading, error, onRetry, colors, onSelectStudent }: 
         ) : total === 0 ? (
           <Box sx={{ py: 8, gap: 2, display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
             <Icon icon='tabler:circle-check' fontSize={32} />
-            <Typography sx={{ color: 'text.secondary' }}>Nobody owes you anything right now.</Typography>
+            <Typography sx={{ color: 'text.secondary' }}>Niciun elev activ nu are restanțe acum.</Typography>
           </Box>
         ) : (
           <Box sx={refetchSx(loading)}>
@@ -79,17 +87,18 @@ const AgingCard = ({ aging, loading, error, onRetry, colors, onSelectStudent }: 
                   <Box sx={{ mb: 1, gap: 2, display: 'flex', alignItems: 'center' }}>
                     <LegendKey color={colors.aging[index]} />
                     <Typography variant='body2' sx={{ color: 'text.secondary' }}>
-                      {bucket.label}
+                      {AGE_LABELS[bucket.key] ?? bucket.label}
                     </Typography>
                   </Box>
                   <Typography variant='h6'>{formatAmount(bucket.amount, currency)}</Typography>
                   <Typography variant='body2' sx={{ color: 'text.secondary' }}>
                     {bucket.amount > 0
-                      ? `${formatCount(bucket.studentsCount, 'student')} · ${formatCount(
+                      ? `${formatCount(bucket.studentsCount, 'elev', 'elevi')} · ${formatCount(
                           bucket.sessionsCount,
-                          'session'
+                          'ședință',
+                          'ședințe'
                         )}`
-                      : 'None'}
+                      : 'Nimic'}
                   </Typography>
                 </Grid>
               ))}
@@ -99,7 +108,7 @@ const AgingCard = ({ aging, loading, error, onRetry, colors, onSelectStudent }: 
               <>
                 <Divider sx={{ my: 5 }} />
                 <Typography variant='body2' sx={{ mb: 2, fontWeight: 500, color: 'text.secondary' }}>
-                  Owes the most
+                  Cele mai mari restanțe
                 </Typography>
                 {aging.topStudents.map(row => (
                   <ButtonBase
@@ -120,9 +129,11 @@ const AgingCard = ({ aging, loading, error, onRetry, colors, onSelectStudent }: 
                   >
                     <StudentIdentity
                       student={row.student}
-                      detail={`${formatCount(row.unpaidSessions, 'unpaid session')} · since ${formatDay(
-                        row.oldestUnpaidSessionDate
-                      )}`}
+                      detail={`${formatCount(
+                        row.unpaidSessions,
+                        'ședință neplătită',
+                        'ședințe neplătite'
+                      )} · din ${formatDay(row.oldestUnpaidSessionDate)}`}
                     />
                     <Typography sx={{ fontWeight: 500, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
                       {formatAmount(row.outstanding, currency)}

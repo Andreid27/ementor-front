@@ -22,7 +22,16 @@ import type { FinanceLedgerEntryDTO, FinanceStudentRefDTO } from 'src/generated/
 import useFinanceQuery from './useFinanceQuery'
 import { PaymentStatusChip } from './PaymentsTable'
 import { SectionError, StatusChip, StudentIdentity, readableAlertSx, refetchSx } from './FinanceParts'
-import { FinancePeriod, formatAmount, formatDateTime, formatInstantDay, formatMoney, periodLabel } from './financeUtils'
+import {
+  FinancePeriod,
+  formatAmount,
+  formatCount,
+  formatDateTime,
+  formatInstantDay,
+  formatMoney,
+  periodLabel,
+  periodPhrase
+} from './financeUtils'
 
 interface LedgerDrawerProps {
   student: FinanceStudentRefDTO | null
@@ -33,10 +42,10 @@ interface LedgerDrawerProps {
 
 // Balance is payments minus confirmed sessions: below zero the student owes, above zero they paid in advance
 const balanceText = (balance: number, currency: string): string => {
-  if (balance < 0) return `Owes ${formatAmount(-balance, currency)}`
-  if (balance > 0) return `${formatAmount(balance, currency)} paid in advance`
+  if (balance < 0) return `Datorează ${formatAmount(-balance, currency)}`
+  if (balance > 0) return `Avans de ${formatAmount(balance, currency)}`
 
-  return 'Settled'
+  return 'Achitat'
 }
 
 const signedMoney = (amount: number, currency: string): string =>
@@ -48,11 +57,15 @@ const SessionState = ({ entry, currency }: { entry: FinanceLedgerEntryDTO; curre
   const unpaid = entry.sessionUnpaidAmount ?? 0
   const paid = entry.sessionPaidAmount ?? 0
 
-  if (unpaid === 0) return <StatusChip color='success' icon='tabler:check' label='Paid' />
-  if (paid === 0) return <StatusChip color='error' icon='tabler:alert-circle' label='Unpaid' />
+  if (unpaid === 0) return <StatusChip color='success' icon='tabler:check' label='Plătit' />
+  if (paid === 0) return <StatusChip color='error' icon='tabler:alert-circle' label='Neplătit' />
 
   return (
-    <StatusChip color='warning' icon='tabler:progress' label={`Partly paid · ${formatAmount(unpaid, currency)} left`} />
+    <StatusChip
+      color='warning'
+      icon='tabler:progress'
+      label={`Plătit parțial · rest ${formatAmount(unpaid, currency)}`}
+    />
   )
 }
 
@@ -69,7 +82,7 @@ const LedgerEntry = ({ entry, currency }: { entry: FinanceLedgerEntryDTO; curren
         <Box sx={{ gap: 3, display: 'flex', justifyContent: 'space-between' }}>
           <Box sx={{ minWidth: 0 }}>
             <Typography noWrap sx={{ fontWeight: 500, color: 'text.primary' }}>
-              {isSession ? entry.sessionTitle || 'Session' : 'Payment'}
+              {isSession ? entry.sessionTitle || 'Ședință' : 'Plată'}
             </Typography>
             <Typography variant='body2' sx={{ color: 'text.secondary' }}>
               {isSession
@@ -88,7 +101,7 @@ const LedgerEntry = ({ entry, currency }: { entry: FinanceLedgerEntryDTO; curren
               {signedMoney(entry.amount, currency)}
             </Typography>
             <Typography variant='caption' sx={{ color: 'text.secondary' }}>
-              {entry.affectsBalance ? balanceText(entry.runningBalance, currency) : 'Not counted'}
+              {entry.affectsBalance ? balanceText(entry.runningBalance, currency) : 'Neinclus'}
             </Typography>
           </Box>
         </Box>
@@ -101,7 +114,7 @@ const LedgerEntry = ({ entry, currency }: { entry: FinanceLedgerEntryDTO; curren
           )}
           {!isSession && entry.paymentStatus === 'PENDING' && (
             <Typography variant='caption' sx={{ color: 'text.secondary' }}>
-              Counts as received once you confirm it
+              Intră la Încasat după ce o confirmi
             </Typography>
           )}
         </Box>
@@ -115,21 +128,21 @@ const LedgerEntry = ({ entry, currency }: { entry: FinanceLedgerEntryDTO; curren
                 key={allocation.eventAttendeeId}
                 sx={{ color: 'text.secondary' }}
               >
-                {`Paid for ${allocation.sessionTitle || 'a session'} on ${formatInstantDay(
+                {`Pentru ${allocation.sessionTitle || 'o ședință'} din ${formatInstantDay(
                   allocation.sessionDate
                 )} · ${formatMoney(allocation.amount, currency)}`}
               </Typography>
             ))}
             {allocations.length > MAX_ALLOCATIONS && (
               <Typography component='li' variant='body2' sx={{ color: 'text.secondary' }}>
-                {`and ${allocations.length - MAX_ALLOCATIONS} more sessions`}
+                {`și încă ${formatCount(allocations.length - MAX_ALLOCATIONS, 'ședință', 'ședințe')}`}
               </Typography>
             )}
           </Box>
         )}
         {(entry.paymentSurplus ?? 0) > 0 && (
           <Typography variant='body2' sx={{ mt: 1, color: 'text.secondary' }}>
-            {`${formatMoney(entry.paymentSurplus, currency)} left over, kept for future sessions`}
+            {`Rest de ${formatMoney(entry.paymentSurplus, currency)} pentru ședințe viitoare`}
           </Typography>
         )}
       </Box>
@@ -155,10 +168,10 @@ const LedgerDrawer = ({ student, period, refreshKey, onClose }: LedgerDrawerProp
 
   const summary = ledger
     ? [
-        { label: 'Opening balance', value: balanceText(ledger.openingBalance, currency) },
-        { label: 'Sessions confirmed', value: formatAmount(ledger.totalCharged, currency) },
-        { label: 'Payments received', value: formatAmount(ledger.totalPaid, currency) },
-        { label: 'Closing balance', value: balanceText(ledger.closingBalance, currency) }
+        { label: 'Sold la început', value: balanceText(ledger.openingBalance, currency) },
+        { label: 'Ședințe finalizate', value: formatAmount(ledger.totalCharged, currency) },
+        { label: 'Plăți încasate', value: formatAmount(ledger.totalPaid, currency) },
+        { label: 'Sold la final', value: balanceText(ledger.closingBalance, currency) }
       ]
     : []
 
@@ -168,13 +181,13 @@ const LedgerDrawer = ({ student, period, refreshKey, onClose }: LedgerDrawerProp
       open={Boolean(student)}
       onClose={onClose}
       ModalProps={{ keepMounted: false }}
-      PaperProps={{ sx: { width: { xs: '100%', sm: 540 } }, 'aria-label': 'Student ledger' } as any}
+      PaperProps={{ sx: { width: { xs: '100%', sm: 540 } }, 'aria-label': 'Fișa financiară a elevului' } as any}
     >
       {student && (
         <>
           <Box sx={{ p: 6, gap: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <StudentIdentity student={student} detail={periodLabel(period)} size={44} />
-            <IconButton aria-label='Close' onClick={onClose}>
+            <IconButton aria-label='Închide' onClick={onClose}>
               <Icon icon='tabler:x' fontSize={20} />
             </IconButton>
           </Box>
@@ -183,7 +196,7 @@ const LedgerDrawer = ({ student, period, refreshKey, onClose }: LedgerDrawerProp
             {error ? (
               notFound ? (
                 <Alert severity='info' sx={readableAlertSx('info')}>
-                  This student has no sessions or payments with you.
+                  Acest elev nu are ședințe sau plăți cu tine.
                 </Alert>
               ) : (
                 <SectionError error={error} onRetry={reload} />
@@ -208,13 +221,13 @@ const LedgerDrawer = ({ student, period, refreshKey, onClose }: LedgerDrawerProp
 
                 {ledger.outstanding > 0 && ledger.credit > 0 && (
                   <Alert severity='info' sx={{ mt: 5, ...readableAlertSx('info') }}>
-                    {`${formatAmount(
+                    {`O parte din plățile acestui elev (${formatAmount(
                       ledger.credit,
                       currency
-                    )} of this student’s payments isn’t matched to a session yet, so they show both an advance payment and ${formatAmount(
+                    )}) nu e încă alocată unei ședințe, așa că apare și un avans, și restanțe de ${formatAmount(
                       ledger.outstanding,
                       currency
-                    )} still owed.`}
+                    )}.`}
                   </Alert>
                 )}
 
@@ -222,7 +235,7 @@ const LedgerDrawer = ({ student, period, refreshKey, onClose }: LedgerDrawerProp
 
                 {ledger.entries.length === 0 ? (
                   <Typography sx={{ py: 8, textAlign: 'center', color: 'text.secondary' }}>
-                    {`No sessions or payments in ${periodLabel(period)}.`}
+                    {`Nicio ședință și nicio plată ${periodPhrase(period)}.`}
                   </Typography>
                 ) : (
                   <Box

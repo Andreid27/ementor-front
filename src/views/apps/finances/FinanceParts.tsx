@@ -3,6 +3,7 @@ import Box from '@mui/material/Box'
 import Alert from '@mui/material/Alert'
 import Button from '@mui/material/Button'
 import Typography from '@mui/material/Typography'
+import { roRO } from '@mui/x-data-grid'
 
 // ** Custom Component Imports
 import Icon from 'src/@core/components/icon'
@@ -34,7 +35,7 @@ export const SectionError = ({ error, onRetry }: SectionErrorProps) => (
     sx={readableAlertSx('error')}
     action={
       <Button variant='outlined' color='inherit' size='small' onClick={onRetry}>
-        Try Again
+        Reîncearcă
       </Button>
     }
   >
@@ -109,6 +110,21 @@ export const StatusChip = ({ label, icon, color }: StatusChipProps) => (
     sx={{ color: 'text.primary', '& .MuiChip-icon': { color: `${color}.main` } }}
   />
 )
+
+// Romanian table texts; the grid's own Romanian locale has no "1–10 din 113" footer text, so it is added here
+export const gridLocaleText = (noRowsLabel: string) => {
+  const romanian = roRO.components.MuiDataGrid.defaultProps.localeText
+
+  return {
+    ...romanian,
+    noRowsLabel,
+    MuiTablePagination: {
+      ...romanian.MuiTablePagination,
+      labelDisplayedRows: ({ from, to, count }: { from: number; to: number; count: number }) =>
+        `${from}–${to} din ${count !== -1 ? count : `peste ${to}`}`
+    }
+  }
+}
 
 // Holds the previous render at reduced opacity while a section refetches, so nothing jumps
 export const refetchSx = (refetching: boolean) => ({

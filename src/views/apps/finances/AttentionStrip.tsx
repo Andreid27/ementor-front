@@ -60,15 +60,16 @@ const AttentionStrip = ({ overview }: AttentionStripProps) => {
               size='small'
               sx={{ whiteSpace: 'nowrap' }}
             >
-              Open Calendar
+              Deschide Calendarul
             </Button>
           }
         >
-          <AlertTitle>{`${formatCount(awaiting, 'past session')} not confirmed`}</AlertTitle>
-          {`Mark ${awaiting === 1 ? 'it' : 'them'} complete in the calendar to confirm ${formatAmount(
-            current.awaitingCompletion,
-            currency
-          )}.`}
+          <AlertTitle>
+            {formatCount(awaiting, 'ședință trecută nefinalizată', 'ședințe trecute nefinalizate')}
+          </AlertTitle>
+          {`${
+            awaiting === 1 ? 'Marcheaz-o ca finalizată' : 'Marchează-le ca finalizate'
+          } în calendar ca să adaugi ${formatAmount(current.awaitingCompletion, currency)} la Finalizat.`}
         </Alert>
       )}
       {pendingPaymentsCount > 0 && (
@@ -85,15 +86,17 @@ const AttentionStrip = ({ overview }: AttentionStripProps) => {
               size='small'
               sx={{ whiteSpace: 'nowrap' }}
             >
-              Review Payments
+              Vezi Plățile
             </Button>
           }
         >
-          <AlertTitle>{`${formatCount(pendingPaymentsCount, 'payment')} waiting for you`}</AlertTitle>
-          {`Confirm ${pendingPaymentsCount === 1 ? 'it' : 'them'} to count ${formatAmount(
+          <AlertTitle>
+            {`${formatCount(pendingPaymentsCount, 'plată așteaptă', 'plăți așteaptă')} confirmarea ta`}
+          </AlertTitle>
+          {`${pendingPaymentsCount === 1 ? 'Confirm-o' : 'Confirmă-le'} ca să adaugi ${formatAmount(
             pendingPaymentsAmount,
             currency
-          )} as received.`}
+          )} la Încasat.`}
         </Alert>
       )}
     </Box>

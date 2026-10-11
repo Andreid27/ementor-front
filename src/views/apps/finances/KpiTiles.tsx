@@ -97,11 +97,13 @@ const KpiTile = ({
             }
           />
         </Box>
-        {delta.direction === 'flat' ? `Same as ${comparedTo}` : `${signedPercent(delta.fraction)} vs ${comparedTo}`}
+        {delta.direction === 'flat'
+          ? `La fel ca în ${comparedTo}`
+          : `${signedPercent(delta.fraction)} față de ${comparedTo}`}
       </>
     )
   } else if (current && !previous) {
-    comparison = `Nothing in ${comparedTo}`
+    comparison = `Nimic în ${comparedTo}`
   }
 
   return (
@@ -180,8 +182,8 @@ const KpiTiles = ({ overview, loading, period, colors }: KpiTilesProps) => {
       value: formatWhole(shouldEarn, currency),
       relation: current
         ? current.expected > 0
-          ? `${formatWhole(current.expected, currency)} still to come`
-          : 'All sessions are in the past'
+          ? `${formatWhole(current.expected, currency)} în ședințe viitoare`
+          : 'Toate ședințele au trecut'
         : undefined,
       current: shouldEarn,
       previous: previous ? shouldEarnOf(previous) : undefined,
@@ -189,8 +191,8 @@ const KpiTiles = ({ overview, loading, period, colors }: KpiTilesProps) => {
       comparedTo,
       detail: current
         ? current.lost > 0
-          ? `${formatWhole(current.lost, currency)} in cancelled sessions isn’t included`
-          : 'Every scheduled session at each student’s price'
+          ? `Ședințele anulate (${formatWhole(current.lost, currency)}) nu sunt incluse`
+          : 'Toate ședințele programate, la prețul fiecărui elev'
         : undefined,
       loading: firstLoad
     },
@@ -199,18 +201,18 @@ const KpiTiles = ({ overview, loading, period, colors }: KpiTilesProps) => {
       legend: <LegendKey color={colors.confirmed} />,
       value: formatWhole(current?.earned, currency),
       share: shouldEarn ? { fraction: (current?.earned ?? 0) / shouldEarn, color: colors.confirmed } : undefined,
-      relation: shouldEarn ? `${formatPercent((current?.earned ?? 0) / shouldEarn)} of what you should earn` : '—',
+      relation: shouldEarn ? `${formatPercent((current?.earned ?? 0) / shouldEarn)} din planificat` : '—',
       current: current?.earned,
       previous: previous?.earned,
       higherIsBetter: true,
       comparedTo,
       detail: current
         ? current.averagePricePerSession !== null
-          ? `${formatCount(current.billedAttendances, 'session')} held · avg ${formatWhole(
+          ? `${formatCount(current.billedAttendances, 'ședință ținută', 'ședințe ținute')} · medie ${formatWhole(
               current.averagePricePerSession,
               currency
             )}`
-          : 'No sessions confirmed yet'
+          : 'Nicio ședință finalizată încă'
         : undefined,
       loading: firstLoad
     },
@@ -224,15 +226,15 @@ const KpiTiles = ({ overview, loading, period, colors }: KpiTilesProps) => {
           : undefined,
       relation:
         current?.collectionRate !== null && current?.collectionRate !== undefined
-          ? `${formatPercent(current.collectionRate)} of confirmed`
-          : 'Nothing confirmed yet',
+          ? `${formatPercent(current.collectionRate)} din finalizat`
+          : 'Nimic finalizat încă',
       current: current?.collected,
       previous: previous?.collected,
       higherIsBetter: true,
       comparedTo,
       detail: overview
         ? overview.pendingPaymentsCount > 0
-          ? `${formatWhole(overview.pendingPaymentsAmount, currency)} waiting for your confirmation`
+          ? `${formatWhole(overview.pendingPaymentsAmount, currency)} așteaptă confirmarea ta`
           : TERMS.received.hint
         : undefined,
       loading: firstLoad
@@ -243,8 +245,8 @@ const KpiTiles = ({ overview, loading, period, colors }: KpiTilesProps) => {
       value: formatWhole(current?.outstanding, currency),
       relation: current
         ? periodEndsLater
-          ? 'Owed by active students today'
-          : `Owed by active students on ${formatDay(current.periodEnd)}`
+          ? 'Datorat azi de elevii activi'
+          : `Datorat de elevii activi la ${formatDay(current.periodEnd)}`
         : undefined,
       current: current?.outstanding,
       previous: previous?.outstanding,
@@ -252,7 +254,7 @@ const KpiTiles = ({ overview, loading, period, colors }: KpiTilesProps) => {
       comparedTo,
       detail: current
         ? current.credit > 0
-          ? `${formatWhole(current.credit, currency)} paid in advance by students`
+          ? `Elevii au plătit în avans ${formatWhole(current.credit, currency)}`
           : TERMS.stillOwed.hint
         : undefined,
       loading: firstLoad

@@ -10,6 +10,7 @@ import {
   parseISO,
   startOfMonth
 } from 'date-fns'
+import { ro } from 'date-fns/locale'
 
 // ** Types
 import type {
@@ -35,6 +36,9 @@ export const MAX_RANGE_DAYS = 1096
 // ** Dates
 
 const toIsoDate = (date: Date): string => format(date, 'yyyy-MM-dd')
+
+// Everything people read is Romanian: "4 oct 2026", "octombrie 2026", "duminică"
+const fmt = (date: Date, pattern: string): string => format(date, pattern, { locale: ro })
 
 // Date-only strings are parsed as local calendar dates, so 2026-10-01 never shifts a day
 export const parseDate = (value: string): Date => parseISO(value)
@@ -85,11 +89,11 @@ export const formatDateRange = (from: string, to: string): string => {
   const start = parseDate(from)
   const end = parseDate(to)
 
-  if (from === to) return format(start, 'd MMM yyyy')
-  if (start.getFullYear() !== end.getFullYear()) return `${format(start, 'd MMM yyyy')} – ${format(end, 'd MMM yyyy')}`
-  if (start.getMonth() !== end.getMonth()) return `${format(start, 'd MMM')} – ${format(end, 'd MMM yyyy')}`
+  if (from === to) return fmt(start, 'd MMM yyyy')
+  if (start.getFullYear() !== end.getFullYear()) return `${fmt(start, 'd MMM yyyy')} – ${fmt(end, 'd MMM yyyy')}`
+  if (start.getMonth() !== end.getMonth()) return `${fmt(start, 'd MMM')} – ${fmt(end, 'd MMM yyyy')}`
 
-  return `${format(start, 'd')} – ${format(end, 'd MMM yyyy')}`
+  return `${fmt(start, 'd')} – ${fmt(end, 'd MMM yyyy')}`
 }
 
 export const periodLabel = (period: FinancePeriod): string => {
@@ -97,26 +101,40 @@ export const periodLabel = (period: FinancePeriod): string => {
 
   switch (period.preset) {
     case 'month':
-      return format(from, 'MMMM yyyy')
+      return fmt(from, 'MMMM yyyy')
     case 'year':
-      return format(from, 'yyyy')
+      return fmt(from, 'yyyy')
     case 'schoolYear':
-      return `School year ${from.getFullYear()}–${from.getFullYear() + 1}`
+      return `Anul școlar ${from.getFullYear()}–${from.getFullYear() + 1}`
     default:
       return formatDateRange(period.from, period.to)
   }
 }
 
-// Unit used by the previous / next buttons ("Previous month")
-export const periodUnit = (preset: PeriodPreset): string =>
-  preset === 'month' ? 'month' : preset === 'year' ? 'year' : 'school year'
+// The period inside a sentence: "în octombrie 2026", "în anul școlar 2026–2027", "în perioada 1 – 15 oct 2026"
+export const periodPhrase = (period: FinancePeriod): string => {
+  if (period.preset === 'custom') return `în perioada ${periodLabel(period)}`
+  if (period.preset === 'schoolYear') return `în ${periodLabel(period).replace(/^Anul/, 'anul')}`
 
-// Name of the comparison period the overview returns, used in "vs September"
+  return `în ${periodLabel(period)}`
+}
+
+// Names of the previous / next / back-to-now buttons for each kind of period
+export const PERIOD_NAV: Record<
+  Exclude<PeriodPreset, 'custom'>,
+  { previous: string; next: string; current: string }
+> = {
+  month: { previous: 'Luna anterioară', next: 'Luna următoare', current: 'Luna Aceasta' },
+  year: { previous: 'Anul anterior', next: 'Anul următor', current: 'Anul Acesta' },
+  schoolYear: { previous: 'Anul școlar anterior', next: 'Anul școlar următor', current: 'Anul Școlar Curent' }
+}
+
+// Name of the comparison period the overview returns, used in "față de septembrie"
 export const comparisonLabel = (preset: PeriodPreset, previousStart: string, previousEnd: string): string => {
   const start = parseDate(previousStart)
 
-  if (preset === 'month') return format(start, 'MMMM')
-  if (preset === 'year') return format(start, 'yyyy')
+  if (preset === 'month') return fmt(start, 'MMMM')
+  if (preset === 'year') return fmt(start, 'yyyy')
   if (preset === 'schoolYear') return `${start.getFullYear()}–${start.getFullYear() + 1}`
 
   return formatDateRange(previousStart, previousEnd)
@@ -133,25 +151,26 @@ export const granularityFor = (period: FinancePeriod): Granularity => {
 }
 
 export const validateRange = (from: string, to: string): string | null => {
-  if (!from || !to || !isValid(parseDate(from)) || !isValid(parseDate(to))) return 'Choose a start and an end date.'
-  if (from > to) return 'The start date must be on or before the end date.'
-  if (periodDays(from, to) > MAX_RANGE_DAYS) return 'Choose a range of 3 years or less.'
+  if (!from || !to || !isValid(parseDate(from)) || !isValid(parseDate(to)))
+    return 'Alege o dată de început și una de sfârșit.'
+  if (from > to) return 'Data de început nu poate fi după data de sfârșit.'
+  if (periodDays(from, to) > MAX_RANGE_DAYS) return 'Alege un interval de cel mult 3 ani.'
 
   return null
 }
 
 export const formatDay = (value: string | null | undefined): string =>
-  value ? format(parseDate(value), 'd MMM yyyy') : '—'
+  value ? fmt(parseDate(value), 'd MMM yyyy') : '—'
 
 // Instants arrive in UTC and are shown in the viewer's local time
 export const formatDateTime = (value: string | null | undefined): string =>
-  value ? format(new Date(value), 'd MMM yyyy, HH:mm') : '—'
+  value ? fmt(new Date(value), 'd MMM yyyy, HH:mm') : '—'
 
 // Calendar date of an instant in the viewer's time zone, as yyyy-MM-dd
 export const localDate = (value: string): string => format(new Date(value), 'yyyy-MM-dd')
 
 export const formatInstantDay = (value: string | null | undefined): string =>
-  value ? format(new Date(value), 'd MMM yyyy') : '—'
+  value ? fmt(new Date(value), 'd MMM yyyy') : '—'
 
 export const formatTime = (value: string | null | undefined): string => (value ? format(new Date(value), 'HH:mm') : '')
 
@@ -164,17 +183,17 @@ const isWholeMonth = (bucket: FinanceTimeseriesBucketDTO): boolean => {
 export const bucketAxisLabel = (bucket: FinanceTimeseriesBucketDTO, granularity: Granularity): string => {
   const start = parseDate(bucket.bucketStart)
 
-  if (granularity === 'MONTH') return format(start, 'MMM')
-  if (granularity === 'WEEK') return format(start, 'd MMM')
+  if (granularity === 'MONTH') return fmt(start, 'MMM')
+  if (granularity === 'WEEK') return fmt(start, 'd MMM')
 
-  return format(start, 'd')
+  return fmt(start, 'd')
 }
 
 export const bucketTitle = (bucket: FinanceTimeseriesBucketDTO, granularity: Granularity): string => {
   const start = parseDate(bucket.bucketStart)
 
-  if (granularity === 'DAY') return format(start, 'EEEE, d MMMM yyyy')
-  if (granularity === 'MONTH' && isWholeMonth(bucket)) return format(start, 'MMMM yyyy')
+  if (granularity === 'DAY') return fmt(start, 'EEEE, d MMMM yyyy')
+  if (granularity === 'MONTH' && isWholeMonth(bucket)) return fmt(start, 'MMMM yyyy')
 
   return formatDateRange(bucket.bucketStart, bucket.bucketEnd)
 }
@@ -183,15 +202,16 @@ export const bucketTitle = (bucket: FinanceTimeseriesBucketDTO, granularity: Gra
 
 const round2 = (value: number): number => Math.round(value * 100) / 100
 
-const moneyFormat = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-const wholeFormat = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 })
-const compactFormat = new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 })
+// Romanian number format: 12.191 RON, 1.430,00 RON
+const moneyFormat = new Intl.NumberFormat('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+const wholeFormat = new Intl.NumberFormat('ro-RO', { maximumFractionDigits: 0 })
+const compactFormat = new Intl.NumberFormat('ro-RO', { notation: 'compact', maximumFractionDigits: 1 })
 
-// Exact amount for tables and ledgers: 1,430.00 RON
+// Exact amount for tables and ledgers: 1.430,00 RON
 export const formatMoney = (value: number | null | undefined, currency: string): string =>
   value === null || value === undefined ? '—' : `${moneyFormat.format(value)} ${currency}`
 
-// Amount in a sentence: drops ".00" so whole sums read cleanly, keeps cents when there are any
+// Amount in a sentence: drops ",00" so whole sums read cleanly, keeps bani when there are any
 export const formatAmount = (value: number | null | undefined, currency: string): string => {
   if (value === null || value === undefined) return '—'
 
@@ -203,14 +223,21 @@ export const formatAmount = (value: number | null | undefined, currency: string)
 export const formatWhole = (value: number | null | undefined, currency: string): string =>
   value === null || value === undefined ? '—' : `${wholeFormat.format(Math.round(value))} ${currency}`
 
-// Axis ticks: 0 / 500 / 1.5K
+// Axis ticks: 0 / 500 / 1,5 K
 export const formatCompact = (value: number): string => compactFormat.format(value)
 
 export const formatPercent = (fraction: number | null | undefined): string =>
   fraction === null || fraction === undefined ? '—' : `${Math.round(fraction * 100)}%`
 
-export const formatCount = (count: number, singular: string, plural = `${singular}s`): string =>
-  `${wholeFormat.format(count)} ${count === 1 ? singular : plural}`
+// Romanian counts: 1 ședință, 3 ședințe, 20 de ședințe, 101 ședințe, 120 de ședințe
+export const formatCount = (count: number, singular: string, plural: string): string => {
+  if (count === 1) return `1 ${singular}`
+
+  const lastTwoDigits = Math.abs(count) % 100
+  const takesDe = count !== 0 && (lastTwoDigits === 0 || lastTwoDigits >= 20)
+
+  return `${wholeFormat.format(count)} ${takesDe ? 'de ' : ''}${plural}`
+}
 
 // ** Derived figures
 
@@ -222,23 +249,24 @@ type PlanParts = Pick<FinanceKpisDTO, 'earned' | 'awaitingCompletion' | 'expecte
 export const shouldEarnOf = (parts: PlanParts): number =>
   round2(parts.earned + parts.awaitingCompletion + parts.expected)
 
-// The three figures the whole tab is built on, named the same way everywhere
+// The figures the whole tab is built on, named the same way everywhere. "Finalizat" is the calendar's
+// own word: a session counts once the professor marks it with "Marchează ca Finalizat".
 export const TERMS = {
   shouldEarn: {
-    label: 'Should Earn',
-    hint: 'Every scheduled session at each student’s price, held or still to come'
+    label: 'Planificat',
+    hint: 'Toate ședințele programate, la prețul fiecărui elev, ținute sau încă viitoare'
   },
   confirmed: {
-    label: 'Confirmed',
-    hint: 'Sessions you marked as held. Students owe this amount.'
+    label: 'Finalizat',
+    hint: 'Ședințe marcate ca ținute în calendar. Elevii datorează această sumă.'
   },
   received: {
-    label: 'Received',
-    hint: 'Payments from students that you confirmed'
+    label: 'Încasat',
+    hint: 'Plăți de la elevi pe care le-ai confirmat'
   },
   stillOwed: {
-    label: 'Still Owed',
-    hint: 'Unpaid confirmed sessions of your active students'
+    label: 'Restanțe',
+    hint: 'Ședințe finalizate și neplătite ale elevilor activi'
   }
 } as const
 
@@ -257,7 +285,7 @@ export const deltaOf = (current: number, previous: number): Delta | null => {
 }
 
 export const studentName = (student: FinanceStudentRefDTO | null | undefined): string =>
-  [student?.firstName, student?.lastName].filter(Boolean).join(' ') || 'Deleted account'
+  [student?.firstName, student?.lastName].filter(Boolean).join(' ') || 'Cont șters'
 
 // ** Chart colors
 // Should earn and confirmed are two steps of the brand green (theme primary): the lighter one is the
@@ -293,12 +321,13 @@ export const getFinanceColors = (mode: 'light' | 'dark'): FinanceColors =>
 
 export const financeErrorMessage = (error: any): string => {
   const status = error?.response?.status
-  const message = error?.response?.data?.message
 
-  if (status === 401) return 'Your session has expired. Sign in again to see your finances.'
-  if (status === 403) return 'Finances are available to professor accounts only.'
-  if (status === 404) return 'Finance reports aren’t available on the server yet.'
-  if (status === 400 && message) return message
+  if (status === 401) return 'Sesiunea a expirat. Autentifică-te din nou ca să vezi finanțele.'
+  if (status === 403) return 'Finanțele sunt disponibile doar pentru conturile de profesor.'
+  if (status === 404) return 'Rapoartele financiare nu sunt încă disponibile pe server.'
 
-  return 'Couldn’t load this section. Check your connection and try again.'
+  // The server explains bad requests in English; the cause on this page is always the chosen period
+  if (status === 400) return 'Perioada aleasă nu este validă. Alege alt interval.'
+
+  return 'Secțiunea nu s-a putut încărca. Verifică conexiunea și încearcă din nou.'
 }

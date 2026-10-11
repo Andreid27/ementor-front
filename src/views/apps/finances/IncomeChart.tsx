@@ -44,7 +44,7 @@ import {
   formatMoney,
   formatWhole,
   localDate,
-  periodLabel,
+  periodPhrase,
   shouldEarnOf
 } from './financeUtils'
 
@@ -84,9 +84,9 @@ const CHART_HEIGHT = 300
 const COMPACT_ROW_HEIGHT = 46
 
 const UNIT_TITLES: Record<Granularity, string> = {
-  DAY: 'Income by Day',
-  WEEK: 'Income by Week',
-  MONTH: 'Income by Month'
+  DAY: 'Venituri pe Zile',
+  WEEK: 'Venituri pe Săptămâni',
+  MONTH: 'Venituri pe Luni'
 }
 
 // A toggle button that also shows its name on hover, for the icon-only Chart / Table switch
@@ -114,9 +114,9 @@ const IncomeTooltip = ({ active, payload, colors, currency }: IncomeTooltipProps
   const row = payload[0].payload
 
   const notes = [
-    row.notConfirmed > 0 ? `${formatMoney(row.notConfirmed, currency)} held but not confirmed yet` : null,
-    row.stillToCome > 0 ? `${formatMoney(row.stillToCome, currency)} still to come` : null,
-    row.cancelled > 0 ? `${formatMoney(row.cancelled, currency)} cancelled, not included` : null
+    row.notConfirmed > 0 ? `${formatMoney(row.notConfirmed, currency)} în ședințe ținute, dar nefinalizate` : null,
+    row.stillToCome > 0 ? `${formatMoney(row.stillToCome, currency)} în ședințe viitoare` : null,
+    row.cancelled > 0 ? `${formatMoney(row.cancelled, currency)} anulate, neincluse` : null
   ].filter(Boolean)
 
   return (
@@ -152,26 +152,28 @@ const IncomeTooltip = ({ active, payload, colors, currency }: IncomeTooltipProps
   )
 }
 
-const summarize = (rows: ChartRow[], currency: string, label: string, isPast: boolean): string => {
+const summarize = (rows: ChartRow[], currency: string, phrase: string, isPast: boolean): string => {
   const total = (key: 'shouldEarn' | 'confirmed' | 'received') => rows.reduce((sum, row) => sum + (row[key] ?? 0), 0)
 
   const shouldEarn = total('shouldEarn')
   const confirmed = total('confirmed')
   const received = total('received')
 
-  if (!shouldEarn && !received) return `No sessions or payments in ${label}.`
+  const Phrase = phrase.charAt(0).toUpperCase() + phrase.slice(1)
+
+  if (!shouldEarn && !received) return `Nicio ședință și nicio plată ${phrase}.`
 
   if (isPast) {
-    return `In ${label} you should have earned ${formatWhole(shouldEarn, currency)}: ${formatWhole(
+    return `${Phrase} ai avut planificat ${formatWhole(shouldEarn, currency)}: ai finalizat ședințe de ${formatWhole(
       confirmed,
       currency
-    )} was confirmed and ${formatWhole(received, currency)} was received.`
+    )} și ai încasat ${formatWhole(received, currency)}.`
   }
 
-  return `In ${label} you should earn ${formatWhole(shouldEarn, currency)}. So far ${formatWhole(
+  return `${Phrase} ai planificat ${formatWhole(shouldEarn, currency)}. Până acum ai finalizat ședințe de ${formatWhole(
     confirmed,
     currency
-  )} is confirmed and ${formatWhole(received, currency)} was received.`
+  )} și ai încasat ${formatWhole(received, currency)}.`
 }
 
 const IncomeChart = ({ timeseries, loading, error, onRetry, period, colors }: IncomeChartProps) => {
@@ -201,8 +203,7 @@ const IncomeChart = ({ timeseries, loading, error, onRetry, period, colors }: In
     [timeseries, today]
   )
 
-  const label = periodLabel(period)
-  const summary = timeseries ? summarize(rows, currency, label, period.to < today) : ' '
+  const summary = timeseries ? summarize(rows, currency, periodPhrase(period), period.to < today) : ' '
   const isEmpty = rows.every(row => !row.shouldEarn && !row.received)
 
   const handleViewChange = (_event: MouseEvent<HTMLElement>, next: 'chart' | 'table' | null) => {
@@ -225,9 +226,10 @@ const IncomeChart = ({ timeseries, loading, error, onRetry, period, colors }: In
     { key: 'shouldEarn', label: TERMS.shouldEarn.label },
     { key: 'confirmed', label: TERMS.confirmed.label },
     { key: 'received', label: TERMS.received.label },
-    { key: 'notConfirmed', label: 'Not Confirmed Yet' },
-    { key: 'stillToCome', label: 'Still to Come' },
-    { key: 'cancelled', label: 'Cancelled' }
+    // Same state names as the calendar
+    { key: 'notConfirmed', label: 'Nefinalizat' },
+    { key: 'stillToCome', label: 'Viitor' },
+    { key: 'cancelled', label: 'Anulat' }
   ]
 
   const numberCell = { fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' } as const
@@ -235,15 +237,21 @@ const IncomeChart = ({ timeseries, loading, error, onRetry, period, colors }: In
   return (
     <Card>
       <CardHeader
-        title={timeseries ? UNIT_TITLES[timeseries.granularity] : 'Income'}
+        title={timeseries ? UNIT_TITLES[timeseries.granularity] : 'Venituri'}
         subheader={summary}
         subheaderTypographyProps={{ sx: { mt: 1, color: 'text.secondary' } }}
         action={
-          <ToggleButtonGroup exclusive size='small' value={view} onChange={handleViewChange} aria-label='Income view'>
-            <TooltipToggleButton value='chart' title='Chart'>
+          <ToggleButtonGroup
+            exclusive
+            size='small'
+            value={view}
+            onChange={handleViewChange}
+            aria-label='Mod de afișare'
+          >
+            <TooltipToggleButton value='chart' title='Grafic'>
               <Icon icon='tabler:chart-bar' fontSize={18} />
             </TooltipToggleButton>
-            <TooltipToggleButton value='table' title='Table'>
+            <TooltipToggleButton value='table' title='Tabel'>
               <Icon icon='tabler:table' fontSize={18} />
             </TooltipToggleButton>
           </ToggleButtonGroup>
@@ -303,7 +311,7 @@ const IncomeChart = ({ timeseries, loading, error, onRetry, period, colors }: In
               ) : (
                 <RechartsWrapper
                   role='img'
-                  aria-label={`Bar chart of income in ${currency}. ${summary} Switch to the table view for every amount.`}
+                  aria-label={`Grafic cu bare al veniturilor, în ${currency}. ${summary} Treci la tabel pentru toate sumele.`}
                 >
                   <ResponsiveContainer
                     width='100%'
@@ -377,10 +385,10 @@ const IncomeChart = ({ timeseries, loading, error, onRetry, period, colors }: In
               )
             ) : (
               <TableContainer>
-                <Table size='small' aria-label={`${UNIT_TITLES[timeseries.granularity]} in ${currency}`}>
+                <Table size='small' aria-label={`${UNIT_TITLES[timeseries.granularity]}, în ${currency}`}>
                   <TableHead>
                     <TableRow>
-                      <TableCell>Period</TableCell>
+                      <TableCell>Perioadă</TableCell>
                       {tableColumns.map(column => (
                         <TableCell key={column.key} align='right'>
                           {column.label}

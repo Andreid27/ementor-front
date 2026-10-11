@@ -24,7 +24,7 @@ import type {
 
 // ** Local Imports
 import useFinanceQuery from './useFinanceQuery'
-import { SectionError, StatusChip, StudentIdentity } from './FinanceParts'
+import { SectionError, StatusChip, StudentIdentity, gridLocaleText } from './FinanceParts'
 import { FinancePeriod, formatDateTime, formatMoney } from './financeUtils'
 
 interface PaymentsTableProps {
@@ -38,10 +38,11 @@ type StatusColor = 'warning' | 'success' | 'error' | 'secondary'
 // Status always ships with an icon and a word, never color alone
 export const PAYMENT_STATUS: Record<GetFinancePaymentsStatusEnum, { label: string; color: StatusColor; icon: string }> =
   {
-    PENDING: { label: 'Pending', color: 'warning', icon: 'tabler:clock' },
-    CONFIRMED: { label: 'Confirmed', color: 'success', icon: 'tabler:check' },
-    REJECTED: { label: 'Rejected', color: 'error', icon: 'tabler:x' },
-    EXPIRED: { label: 'Expired', color: 'secondary', icon: 'tabler:clock-off' }
+    // Same words as the dashboard's payment cards
+    PENDING: { label: 'În așteptare', color: 'warning', icon: 'tabler:clock' },
+    CONFIRMED: { label: 'Confirmat', color: 'success', icon: 'tabler:check' },
+    REJECTED: { label: 'Respins', color: 'error', icon: 'tabler:x' },
+    EXPIRED: { label: 'Expirat', color: 'secondary', icon: 'tabler:clock-off' }
   }
 
 export const PaymentStatusChip = ({ status }: { status: GetFinancePaymentsStatusEnum }) => (
@@ -90,7 +91,7 @@ const PaymentsTable = ({ period, refreshKey, onSelectStudent }: PaymentsTablePro
   const columns: GridColDef<FinancePaymentRowDTO>[] = [
     {
       field: 'createdAt',
-      headerName: 'Submitted',
+      headerName: 'Trimisă',
       minWidth: 170,
       sortable: false,
       renderCell: ({ row }) => (
@@ -101,7 +102,7 @@ const PaymentsTable = ({ period, refreshKey, onSelectStudent }: PaymentsTablePro
     },
     {
       field: 'student',
-      headerName: 'Student',
+      headerName: 'Elev',
       flex: 1.2,
       minWidth: compact ? 170 : 220,
       sortable: false,
@@ -111,7 +112,7 @@ const PaymentsTable = ({ period, refreshKey, onSelectStudent }: PaymentsTablePro
     },
     {
       field: 'amount',
-      headerName: 'Amount',
+      headerName: 'Sumă',
       minWidth: 130,
       sortable: false,
       align: 'right',
@@ -124,14 +125,14 @@ const PaymentsTable = ({ period, refreshKey, onSelectStudent }: PaymentsTablePro
     },
     {
       field: 'status',
-      headerName: 'Status',
+      headerName: 'Stare',
       minWidth: 145,
       sortable: false,
       renderCell: ({ row }) => <PaymentStatusChip status={row.status} />
     },
     {
       field: 'referenceCode',
-      headerName: 'Reference',
+      headerName: 'Referință',
       minWidth: 170,
       sortable: false,
       renderCell: ({ row }) => (
@@ -142,7 +143,7 @@ const PaymentsTable = ({ period, refreshKey, onSelectStudent }: PaymentsTablePro
     },
     {
       field: 'confirmedAt',
-      headerName: 'Confirmed',
+      headerName: 'Confirmată',
       minWidth: 170,
       sortable: false,
       renderCell: ({ row }) => (
@@ -153,7 +154,7 @@ const PaymentsTable = ({ period, refreshKey, onSelectStudent }: PaymentsTablePro
     },
     {
       field: 'totalAllocated',
-      headerName: 'Applied to Sessions',
+      headerName: 'Alocat Ședințelor',
       minWidth: 170,
       sortable: false,
       align: 'right',
@@ -165,7 +166,7 @@ const PaymentsTable = ({ period, refreshKey, onSelectStudent }: PaymentsTablePro
           </Typography>
           {row.surplus > 0 && (
             <Typography variant='caption' sx={{ color: 'text.secondary' }}>
-              {`${formatMoney(row.surplus, row.currency)} left over, kept for future sessions`}
+              {`Rest de ${formatMoney(row.surplus, row.currency)} pentru ședințe viitoare`}
             </Typography>
           )}
         </Box>
@@ -182,11 +183,11 @@ const PaymentsTable = ({ period, refreshKey, onSelectStudent }: PaymentsTablePro
           sx={{ width: { xs: '100%', sm: 220 } }}
           SelectProps={{
             displayEmpty: true,
-            inputProps: { 'aria-label': 'Payment status' },
+            inputProps: { 'aria-label': 'Starea plății' },
             onChange: event => setStatus(event.target.value as GetFinancePaymentsStatusEnum | '')
           }}
         >
-          <MenuItem value=''>All Statuses</MenuItem>
+          <MenuItem value=''>Toate Stările</MenuItem>
           {(Object.keys(PAYMENT_STATUS) as GetFinancePaymentsStatusEnum[]).map(key => (
             <MenuItem key={key} value={key}>
               {PAYMENT_STATUS[key].label}
@@ -221,7 +222,7 @@ const PaymentsTable = ({ period, refreshKey, onSelectStudent }: PaymentsTablePro
               onSelectStudent(params.row.student)
             }
           }}
-          localeText={{ noRowsLabel: status ? 'No payments with this status' : 'No payments in this period' }}
+          localeText={gridLocaleText(status ? 'Nicio plată cu această stare' : 'Nicio plată în această perioadă')}
           sx={{ '& .MuiDataGrid-row': { cursor: 'pointer' } }}
         />
       )}
