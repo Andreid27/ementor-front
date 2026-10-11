@@ -60,7 +60,10 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   response => response,
   async error => {
-    if (error.response && error.response.status === 403) {
+    // Finance reports are read-only sections that show their own error; a 403 there must not end the session
+    const isFinanceReport = Boolean(error.config?.url?.includes('/finance/professor/'));
+
+    if (error.response && error.response.status === 403 && !isFinanceReport) {
       store.dispatch(deleteUser());
       store.dispatch(deleteTokens());
       window.localStorage.removeItem('userData');

@@ -97,6 +97,13 @@ const navigation = () => {
       action: 'read'
     },
     {
+      title: 'Finances',
+      icon: 'tabler:report-money',
+      subject: 'professor-pages',
+      path: '/finances',
+      action: 'read'
+    },
+    {
       sectionTitle: 'Apps & Pages'
     },
     {
