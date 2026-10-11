@@ -57,12 +57,6 @@ const EventTypeIndicator: React.FC<EventTypeIndicatorProps> = ({ eventTypeInfo, 
             variant='outlined'
           />
         </Tooltip>
-
-        {eventTypeInfo.recurringSeriesId && (
-          <Typography variant='caption' color='text.secondary'>
-            Series ID: {eventTypeInfo.recurringSeriesId.slice(0, 8)}...
-          </Typography>
-        )}
       </Box>
 
       {/* Warning Message for Edit Mode */}

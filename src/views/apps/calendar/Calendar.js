@@ -22,6 +22,9 @@ import {
 import toast from 'react-hot-toast'
 import 'bootstrap-icons/font/bootstrap-icons.css'
 
+// ** Session state (Finalizat / Nefinalizat / Anulat / Viitor)
+import { getEventStatus } from './utils/eventStatus'
+
 // ** Error Handling
 import { resolveCalendarError } from './utils/calendarErrors'
 
@@ -38,6 +41,10 @@ const blankEvent = {
     description: ''
   }
 }
+
+// FullCalendar's event API keeps start and end on getters, so they are read explicitly
+const statusOf = calendarEvent =>
+  getEventStatus({ ...calendarEvent.extendedProps, start: calendarEvent.start, end: calendarEvent.end })
 
 const Calendar = props => {
   // ** Props
@@ -261,8 +268,29 @@ const Calendar = props => {
 
         return [
           // Background Color
-          `bg-${colorName}`
+          `bg-${colorName}`,
+
+          // Session state: drives the hollow look of sessions that still need finalizing and the cancelled strike
+          `fc-event-status-${statusOf(calendarEvent).key}`
         ]
+      },
+
+      // The state icon itself is drawn in CSS from the status class, so FullCalendar keeps its own markup
+      // and measures rows correctly. Here the state becomes words: a hover title (titles are cut short in
+      // the month grid), the accessible name, and a visible label in the agenda list where there is room.
+      eventDidMount({ event: calendarEvent, el, timeText, view }) {
+        const status = statusOf(calendarEvent)
+        const stateText = status.key === 'upcoming' ? '' : `, ${status.label}`
+
+        el.setAttribute('title', `${calendarEvent.title}${stateText}`)
+        el.setAttribute('aria-label', `${timeText ? `${timeText} ` : ''}${calendarEvent.title}${stateText}`)
+
+        if (view.type.startsWith('list') && stateText) {
+          const label = document.createElement('span')
+          label.className = 'fc-event-status-label'
+          label.textContent = status.label
+          el.querySelector('.fc-list-event-title')?.appendChild(label)
+        }
       },
       eventClick({ event: clickedEvent, jsEvent }) {
         // Prevent default URL navigation

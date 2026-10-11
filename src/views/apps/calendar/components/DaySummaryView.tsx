@@ -12,6 +12,8 @@ import Chip from '@mui/material/Chip'
 
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
+import EventStatusChip from './EventStatusChip'
+import { formatEventPrice, getEventStatus } from '../utils/eventStatus'
 
 interface DaySummaryViewProps {
   selectedDate: Date
@@ -28,52 +30,33 @@ const DaySummaryView: React.FC<DaySummaryViewProps> = ({
   onAddNewEvent,
   onClose
 }) => {
+  // The day's events are raw occurrences from the store, so every field is read from the event itself
   const formatEventTime = (event: any) => {
     if (event.allDay) {
-      return 'All Day'
+      return 'Toată ziua'
     }
 
-    const startTime = new Date(event.effectiveStartTime || event.start).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit'
-    })
+    const timeOptions: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit' }
+    const startTime = new Date(event.effectiveStartTime || event.start).toLocaleTimeString('ro-RO', timeOptions)
+    const endTime = new Date(event.effectiveEndTime || event.end).toLocaleTimeString('ro-RO', timeOptions)
 
-    const endTime = new Date(event.effectiveEndTime || event.end).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-
-    return `${startTime} - ${endTime}`
+    return `${startTime} – ${endTime}`
   }
 
   const getEventIcon = (event: any) => {
-    if (event.extendedProps?.virtual) {
+    if (event.virtual) {
       return 'tabler:video'
     }
-    if (event.extendedProps?.recurringSeriesId) {
+    if (event.recurringSeriesId) {
       return 'tabler:repeat'
     }
 
     return 'tabler:calendar-event'
   }
 
-  const getEventStatusColor = (event: any) => {
-    if (event.extendedProps?.completed) return 'success'
-    if (event.extendedProps?.cancelled) return 'error'
-    if (event.extendedProps?.upcoming) return 'info'
-    if (event.extendedProps?.missed) return 'warning'
-
-    return 'default'
-  }
-
-  const getEventStatusText = (event: any) => {
-    if (event.extendedProps?.completed) return 'Completed'
-    if (event.extendedProps?.cancelled) return 'Cancelled'
-    if (event.extendedProps?.upcoming) return 'Upcoming'
-    if (event.extendedProps?.missed) return 'Missed'
-
-    return null
-  }
+  // Romanian counts take "de" from 20 on: 1 eveniment, 3 evenimente, 20 de evenimente
+  const countLabel = (count: number) =>
+    count === 1 ? '1 eveniment programat' : `${count} ${count >= 20 ? 'de ' : ''}evenimente programate`
 
   return (
     <Box sx={{ height: '100%', overflow: 'auto' }}>
@@ -90,7 +73,7 @@ const DaySummaryView: React.FC<DaySummaryViewProps> = ({
       >
         <Icon icon='tabler:calendar-stats' fontSize='3rem' sx={{ mb: 2 }} />
         <Typography variant='h4' sx={{ fontWeight: 700, mb: 1 }}>
-          {selectedDate.toLocaleDateString('en-US', {
+          {selectedDate.toLocaleDateString('ro-RO', {
             weekday: 'long',
             year: 'numeric',
             month: 'long',
@@ -98,7 +81,7 @@ const DaySummaryView: React.FC<DaySummaryViewProps> = ({
           })}
         </Typography>
         <Typography variant='body1' sx={{ opacity: 0.9 }}>
-          {eventsForDay.length} {eventsForDay.length === 1 ? 'event' : 'events'} scheduled
+          {countLabel(eventsForDay.length)}
         </Typography>
       </Box>
 
@@ -120,7 +103,7 @@ const DaySummaryView: React.FC<DaySummaryViewProps> = ({
             transition: 'all 0.3s ease'
           }}
         >
-          Add New Event for This Day
+          Adaugă Eveniment
         </Button>
       </Box>
 
@@ -162,15 +145,15 @@ const DaySummaryView: React.FC<DaySummaryViewProps> = ({
                   </Box>
                   <Box sx={{ flex: 1 }}>
                     <Typography variant='h6' sx={{ fontWeight: 600, mb: 0.5 }}>
-                      {event.seriesTitle || event.title || 'Untitled Event'}
+                      {event.seriesTitle || event.title || 'Eveniment fără titlu'}
                     </Typography>
                     <Typography variant='body2' sx={{ color: 'text.secondary', mb: 1 }}>
                       {formatEventTime(event)}
                     </Typography>
-                    {event.extendedProps?.professorName && (
+                    {event.professorName && (
                       <Typography variant='body2' sx={{ color: 'text.secondary' }}>
                         <Icon icon='tabler:user' fontSize='1rem' sx={{ mr: 0.5, verticalAlign: 'middle' }} />
-                        {event.extendedProps.professorName}
+                        {event.professorName}
                       </Typography>
                     )}
                   </Box>
@@ -178,22 +161,17 @@ const DaySummaryView: React.FC<DaySummaryViewProps> = ({
 
                 {/* Status and badges */}
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
-                  {getEventStatusText(event) && (
-                    <Chip
-                      label={getEventStatusText(event)}
-                      color={getEventStatusColor(event)}
-                      size='small'
-                      sx={{ fontWeight: 500 }}
-                    />
-                  )}
+                  {(() => {
+                    const status = getEventStatus(event)
 
-                  {event.extendedProps?.price !== undefined && (
-                    <Chip
-                      label={event.extendedProps.price === 0 ? 'Free' : `$${event.extendedProps.price}`}
-                      color={event.extendedProps.price === 0 ? 'success' : 'warning'}
-                      size='small'
-                      sx={{ fontWeight: 500 }}
-                    />
+                    return status.icon ? (
+                      <EventStatusChip label={status.label} icon={status.icon} color={status.color} />
+                    ) : null
+                  })()}
+
+                  {/* Price is information, not a status, so it gets a neutral chip */}
+                  {formatEventPrice(event) && (
+                    <Chip label={formatEventPrice(event)} size='small' variant='outlined' sx={{ fontWeight: 500 }} />
                   )}
                 </Box>
               </Box>
@@ -234,7 +212,7 @@ const DaySummaryView: React.FC<DaySummaryViewProps> = ({
             transition: 'all 0.3s ease'
           }}
         >
-          Close
+          Închide
         </Button>
       </Box>
     </Box>

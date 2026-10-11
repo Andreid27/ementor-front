@@ -15,6 +15,7 @@ import { useTheme } from '@mui/material/styles'
 
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
+import EventStatusChip from './EventStatusChip'
 
 // ** Components
 import EventHeroSection from './EventHeroSection'
@@ -26,6 +27,7 @@ import { selectSelectedEvent } from 'src/store/apps/calendar/index'
 
 // ** Utils
 import { format } from 'date-fns'
+import { ro } from 'date-fns/locale'
 import { enrichAttendeesWithStudentData } from '../utils/eventAttendeeUtils'
 
 interface EventDetailItem {
@@ -92,7 +94,7 @@ const EventViewImproved: React.FC<EventViewImprovedProps> = ({
   // Helper functions for date formatting
   const formatDateTime = (dateString: string) => {
     try {
-      return format(new Date(dateString), 'MMMM d, yyyy h:mm a')
+      return format(new Date(dateString), 'EEEE, d MMMM yyyy, HH:mm', { locale: ro })
     } catch {
       return dateString
     }
@@ -100,7 +102,7 @@ const EventViewImproved: React.FC<EventViewImprovedProps> = ({
 
   const formatTimeOnly = (dateString: string) => {
     try {
-      return format(new Date(dateString), 'h:mm a')
+      return format(new Date(dateString), 'HH:mm', { locale: ro })
     } catch {
       return dateString
     }
@@ -116,8 +118,8 @@ const EventViewImproved: React.FC<EventViewImprovedProps> = ({
 
       details.push({
         icon: 'tabler:calendar',
-        label: 'Date & Time',
-        value: endTime ? `${startTime} - ${endTime}` : startTime,
+        label: 'Dată și oră',
+        value: endTime ? `${startTime} – ${endTime}` : startTime,
         color: theme.palette.primary.main
       })
     }
@@ -126,7 +128,7 @@ const EventViewImproved: React.FC<EventViewImprovedProps> = ({
     if (selectedEvent?.professorName) {
       details.push({
         icon: 'tabler:user',
-        label: 'Professor',
+        label: 'Profesor',
         value: selectedEvent.professorName,
         color: theme.palette.info.main
       })
@@ -149,8 +151,8 @@ const EventViewImproved: React.FC<EventViewImprovedProps> = ({
       const minutes = totalMinutes % 60
 
       const duration = []
-      if (hours > 0) duration.push(`${hours}h`)
-      if (minutes > 0) duration.push(`${minutes}m`)
+      if (hours > 0) duration.push(`${hours} h`)
+      if (minutes > 0) duration.push(`${minutes} min`)
 
       if (duration.length > 0) {
         details.push({
@@ -191,9 +193,11 @@ const EventViewImproved: React.FC<EventViewImprovedProps> = ({
   const eventStatus = useMemo(() => {
     const statuses = []
 
-    if (selectedEvent?.completed) statuses.push({ label: 'Finalizat', color: 'success', icon: 'tabler:check-circle' })
-    if (selectedEvent?.cancelled) statuses.push({ label: 'Anulat', color: 'error', icon: 'tabler:x-circle' })
-    if (selectedEvent?.missed) statuses.push({ label: 'Ratat', color: 'warning', icon: 'tabler:clock-x' })
+    if (selectedEvent?.completed) statuses.push({ label: 'Finalizat', color: 'success', icon: 'tabler:circle-check' })
+    if (selectedEvent?.cancelled) statuses.push({ label: 'Anulat', color: 'error', icon: 'tabler:circle-x' })
+    // Same name and mark as in the calendar grid: it took place but isn't marked as held yet
+    if (selectedEvent?.missed)
+      statuses.push({ label: 'Nefinalizat', color: 'warning', icon: 'tabler:clock-exclamation' })
     if (selectedEvent?.rescheduled) statuses.push({ label: 'Reprogramat', color: 'info', icon: 'tabler:calendar-time' })
     if (selectedEvent?.upcoming) statuses.push({ label: 'Viitor', color: 'primary', icon: 'tabler:clock' })
 
@@ -205,71 +209,11 @@ const EventViewImproved: React.FC<EventViewImprovedProps> = ({
       {/* Hero Section */}
       <EventHeroSection />
 
-      {/* Event Information Card */}
-      {(selectedEvent?.seriesTitle || selectedEvent?.id) && (
-        <Card sx={{ mb: 3 }}>
-          <CardContent>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: 40,
-                  height: 40,
-                  borderRadius: '50%',
-                  bgcolor: `${theme.palette.primary.main}20`,
-                  color: theme.palette.primary.main
-                }}
-              >
-                <Icon icon='tabler:info-circle' fontSize='1.25rem' />
-              </Box>
-              <Typography variant='h6' sx={{ fontWeight: 600 }}>
-                Informații Eveniment
-              </Typography>
-            </Box>
-
-            {selectedEvent.seriesTitle && (
-              <Typography variant='subtitle1' sx={{ fontWeight: 600, mb: 1 }}>
-                {selectedEvent.seriesTitle}
-              </Typography>
-            )}
-
-            <Stack direction='row' spacing={1} flexWrap='wrap' useFlexGap>
-              {selectedEvent.id && (
-                <Chip
-                  label={`ID: ${selectedEvent.id}`}
-                  size='small'
-                  variant='outlined'
-                  sx={{ fontFamily: 'monospace' }}
-                />
-              )}
-              {selectedEvent.recurringSeriesId && (
-                <Chip
-                  label={`Series: ${selectedEvent.recurringSeriesId}`}
-                  size='small'
-                  variant='outlined'
-                  color='primary'
-                  sx={{ fontFamily: 'monospace' }}
-                />
-              )}
-            </Stack>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Status Chips */}
       {eventStatus.length > 0 && (
         <Box sx={{ mb: 3, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-          {eventStatus.map((status, index) => (
-            <Chip
-              key={index}
-              icon={<Icon icon={status.icon} />}
-              label={status.label}
-              color={status.color as any}
-              size='small'
-              sx={{ fontWeight: 600 }}
-            />
+          {eventStatus.map(status => (
+            <EventStatusChip key={status.label} label={status.label} icon={status.icon} color={status.color as any} />
           ))}
         </Box>
       )}
@@ -432,33 +376,6 @@ const EventViewImproved: React.FC<EventViewImprovedProps> = ({
         </Card>
       )}
 
-      {/* Professor Details */}
-      {selectedEvent?.professorId && (
-        <Card sx={{ mb: 3 }}>
-          <CardContent>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-              <Avatar
-                sx={{
-                  width: 40,
-                  height: 40,
-                  background: 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)'
-                }}
-              >
-                <Icon icon='tabler:user' fontSize='1.25rem' />
-              </Avatar>
-              <Box>
-                <Typography variant='subtitle2' sx={{ fontWeight: 600 }}>
-                  {selectedEvent.professorName || 'Professor'}
-                </Typography>
-                <Typography variant='caption' color='text.secondary' sx={{ fontFamily: 'monospace' }}>
-                  ID: {selectedEvent.professorId}
-                </Typography>
-              </Box>
-            </Box>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Metadata */}
       {(selectedEvent?.creation || selectedEvent?.modified) && (
         <Card sx={{ mb: 3 }}>
@@ -466,17 +383,17 @@ const EventViewImproved: React.FC<EventViewImprovedProps> = ({
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <Icon icon='tabler:history' fontSize='1.25rem' color='text.secondary' />
               <Typography variant='subtitle2' sx={{ fontWeight: 600 }}>
-                Record Information
+                Istoric
               </Typography>
             </Box>
             {selectedEvent.creation && (
               <Typography variant='body2' color='text.secondary' sx={{ mb: 0.5 }}>
-                Created: {formatDateTime(selectedEvent.creation)}
+                Creat: {formatDateTime(selectedEvent.creation)}
               </Typography>
             )}
             {selectedEvent.modified && (
               <Typography variant='body2' color='text.secondary'>
-                Modified: {formatDateTime(selectedEvent.modified)}
+                Modificat: {formatDateTime(selectedEvent.modified)}
               </Typography>
             )}
           </CardContent>

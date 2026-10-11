@@ -8,6 +8,19 @@ import useBgColor from 'src/@core/hooks/useBgColor'
 // ** utilities
 import { hexToRGBA } from 'src/@core/utils/hex-to-rgba'
 
+// Session state icons (tabler circle-check, clock-exclamation, circle-x) as CSS masks, so the calendar can
+// draw them in the text color without adding markup inside FullCalendar's events
+const maskIcon = body =>
+  `url("data:image/svg+xml,${encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g fill="none" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">${body}</g></svg>`
+  )}")`
+
+const STATUS_ICONS = {
+  completed: maskIcon('<path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0"/><path d="m9 12l2 2l4-4"/>'),
+  unconfirmed: maskIcon('<path d="M20.986 12.502a9 9 0 1 0-5.973 7.98"/><path d="M12 7v5l3 3m4 1v3m0 3v.01"/>'),
+  cancelled: maskIcon('<path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0m7-2l4 4m0-4l-4 4"/>')
+}
+
 const CalendarWrapper = styled(Box)(({ theme }) => {
   // ** Hook
   const bgColors = useBgColor()
@@ -149,7 +162,7 @@ const CalendarWrapper = styled(Box)(({ theme }) => {
             color: theme.palette.primary.main,
             backgroundColor: bgColors.primaryLight.backgroundColor,
             '& .fc-event-title, & .fc-event-time': {
-              color: theme.palette.primary.main
+              color: theme.palette.text.primary
             }
           },
           '&.bg-success': {
@@ -157,7 +170,7 @@ const CalendarWrapper = styled(Box)(({ theme }) => {
             color: theme.palette.success.main,
             backgroundColor: bgColors.successLight.backgroundColor,
             '& .fc-event-title, & .fc-event-time': {
-              color: theme.palette.success.main
+              color: theme.palette.text.primary
             }
           },
           '&.bg-error': {
@@ -165,7 +178,7 @@ const CalendarWrapper = styled(Box)(({ theme }) => {
             color: theme.palette.error.main,
             backgroundColor: bgColors.errorLight.backgroundColor,
             '& .fc-event-title, & .fc-event-time': {
-              color: theme.palette.error.main
+              color: theme.palette.text.primary
             }
           },
           '&.bg-warning': {
@@ -173,7 +186,7 @@ const CalendarWrapper = styled(Box)(({ theme }) => {
             color: theme.palette.warning.main,
             backgroundColor: bgColors.warningLight.backgroundColor,
             '& .fc-event-title, & .fc-event-time': {
-              color: theme.palette.warning.main
+              color: theme.palette.text.primary
             }
           },
           '&.bg-info': {
@@ -181,10 +194,37 @@ const CalendarWrapper = styled(Box)(({ theme }) => {
             color: theme.palette.info.main,
             backgroundColor: bgColors.infoLight.backgroundColor,
             '& .fc-event-title, & .fc-event-time': {
-              color: theme.palette.info.main
+              color: theme.palette.text.primary
             }
+          },
+
+          // ** Session state. The series color stays in the tint, the dot and the outline; the text and the
+          // state icon use the regular text color (the series colors on their own tint are 1.7–2.9:1)
+          // Past sessions not finalized yet are hollow, so they stand out as the ones that need action
+          '&.fc-event-status-unconfirmed': {
+            borderWidth: 1,
+            borderStyle: 'solid',
+            borderColor: 'currentColor',
+            backgroundColor: 'transparent'
+          },
+          '&.fc-event-status-cancelled .fc-event-title': {
+            textDecoration: 'line-through'
           }
         },
+
+        // Upcoming sessions keep a dot in their series color
+        '& .fc-daygrid-event-dot': {
+          borderColor: 'currentColor'
+        },
+        '& .fc-event-status-label': {
+          marginLeft: theme.spacing(2),
+          color: theme.palette.text.secondary,
+          fontSize: theme.typography.body2.fontSize
+        },
+        '&.fc-list-event.fc-event-status-cancelled .fc-event-title, &.fc-list-event.fc-event-status-cancelled .fc-list-event-title a':
+          {
+            textDecoration: 'line-through'
+          },
         '&.bg-primary': {
           '& .fc-list-event-dot': {
             borderColor: theme.palette.primary.main,
@@ -233,7 +273,38 @@ const CalendarWrapper = styled(Box)(({ theme }) => {
         '&.fc-daygrid-event': {
           marginLeft: '4px',
           marginRight: '4px'
-        }
+        },
+
+        // Finalized, not finalized and cancelled sessions show their state icon where the dot would be
+        // (month grid and agenda) or before the title (week and day), in the text color
+        ...Object.fromEntries(
+          Object.entries(STATUS_ICONS).map(([key, mask]) => {
+            const icon = {
+              border: 0,
+              flexShrink: 0,
+              borderRadius: 0,
+              backgroundColor: theme.palette.text.primary,
+              WebkitMask: `${mask} center / contain no-repeat`,
+              mask: `${mask} center / contain no-repeat`
+            }
+
+            return [
+              `&.fc-event-status-${key}`,
+              {
+                '& .fc-daygrid-event-dot, & .fc-list-event-dot': { ...icon, width: 14, height: 14 },
+                '&.fc-timegrid-event .fc-event-title::before': {
+                  ...icon,
+                  width: 12,
+                  height: 12,
+                  content: '""',
+                  display: 'inline-block',
+                  verticalAlign: '-1px',
+                  marginRight: theme.spacing(1)
+                }
+              }
+            ]
+          })
+        )
       },
       '& .fc-view-harness': {
         minHeight: '650px',

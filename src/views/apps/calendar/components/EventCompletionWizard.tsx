@@ -77,10 +77,10 @@ const formatDurationMinutes = (minutes: number): string => {
   const remainingMinutes = minutes % 60
 
   if (remainingMinutes === 0) {
-    return `${hours} hour${hours !== 1 ? 's' : ''}`
+    return `${hours} ${hours === 1 ? 'oră' : 'ore'}`
   }
 
-  return `${hours}h ${remainingMinutes}min`
+  return `${hours} h ${remainingMinutes} min`
 }
 
 interface EventCompletionWizardProps {
@@ -363,7 +363,7 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
                   <Stack direction='row' spacing={1} sx={{ mt: 1 }} flexWrap='wrap' useFlexGap>
                     <Chip label={`Durată Planificată: ${plannedDurationText}`} variant='outlined' size='small' />
                     <Chip
-                      label={`Preț de Bază: ${selectedEvent?.seriesPrice || selectedEvent?.price || 0} LEI`}
+                      label={`Preț de Bază: ${selectedEvent?.seriesPrice || selectedEvent?.price || 0} RON`}
                       variant='outlined'
                       size='small'
                     />
