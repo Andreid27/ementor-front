@@ -299,11 +299,16 @@ const TabAccount = () => {
     }
   }
 
-  const sendUpdateRequest = () => {
-    const requestBody = buildRequestBody()
+  const sendUpdateRequest = async () => {
     const userRole = userData.data.role
     const isStudent = userRole === 'STUDENT'
     const isProfessor = userRole === 'PROFESSOR'
+
+    // The cards are read through getValues(), which skips their rules. Check Scara here:
+    // the column is varchar(5), so a longer value fails the save with a 500.
+    if (isStudent && !(await addressInfoRef.current.trigger('staircase'))) return
+
+    const requestBody = buildRequestBody()
 
     if (userData.data.hasProfile === false) {
       const createEndpoint = isStudent

@@ -34,10 +34,15 @@ const StepBillingDetails = ({ address, setAddress, counties, handlePrev, handleS
     control,
     handleSubmit,
     formState: { errors },
-    getValues
+    getValues,
+    trigger
   } = useForm({ defaultValues: address })
 
   const onSubmit = async data => {
+    // The submit button calls this directly, bypassing handleSubmit. Check Scara here:
+    // the column is varchar(5), so a longer value fails the insert with a 500.
+    if (!(await trigger('staircase'))) return
+
     let newValues = getValues()
     setAddress(newValues)
     handleSubmitProfile(newValues)
@@ -175,17 +180,23 @@ const StepBillingDetails = ({ address, setAddress, counties, handlePrev, handleS
           <Controller
             name='staircase'
             control={control}
-            rules={{ maxLength: 5 }}
+            rules={{ maxLength: { value: 5, message: 'Scara poate avea cel mult 5 caractere.' } }}
             render={({ field: { value, onChange } }) => (
               <CustomTextField
                 fullWidth
                 value={value}
                 label='Scară'
-                onChange={onChange}
+                onChange={event => {
+                  onChange(event)
+
+                  // Clear the error as soon as the value is fixed, not on the next submit
+                  if (errors.staircase) trigger('staircase')
+                }}
+                inputProps={{ maxLength: 5 }}
                 error={Boolean(errors.staircase)}
                 placeholder=''
                 aria-describedby='validation-async-email'
-                {...(errors.staircase && { helperText: 'Acest câmp este obligatoriu.' })}
+                {...(errors.staircase && { helperText: errors.staircase.message })}
               />
             )}
           />

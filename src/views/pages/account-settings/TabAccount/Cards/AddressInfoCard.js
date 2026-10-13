@@ -8,14 +8,16 @@ import CustomTextField from 'src/@core/components/mui/text-field'
 const AddressInfoCard = ({ address, counties }, ref) => {
   // Expose the getData function through the ref
   useImperativeHandle(ref, () => ({
-    getValues
+    getValues,
+    trigger
   }))
 
   const {
     control,
     handleSubmit,
     formState: { errors },
-    getValues
+    getValues,
+    trigger
   } = useForm({ defaultValues: address })
 
   const onSubmit = async data => {}
@@ -148,17 +150,23 @@ const AddressInfoCard = ({ address, counties }, ref) => {
           <Controller
             name='staircase'
             control={control}
-            rules={{ maxLength: 5 }}
+            rules={{ maxLength: { value: 5, message: 'Scara poate avea cel mult 5 caractere.' } }}
             render={({ field: { value, onChange } }) => (
               <CustomTextField
                 fullWidth
                 value={value}
                 label='Scară'
-                onChange={onChange}
+                onChange={event => {
+                  onChange(event)
+
+                  // Clear the error as soon as the value is fixed, not on the next save
+                  if (errors.staircase) trigger('staircase')
+                }}
+                inputProps={{ maxLength: 5 }}
                 error={Boolean(errors.staircase)}
                 placeholder=''
                 aria-describedby='validation-async-email'
-                {...(errors.staircase && { helperText: 'Acest câmp este obligatoriu.' })}
+                {...(errors.staircase && { helperText: errors.staircase.message })}
               />
             )}
           />
