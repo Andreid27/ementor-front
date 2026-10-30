@@ -19,10 +19,13 @@ interface StatusPillProps {
   /** Shapes keep the states apart for people who don't tell the colours apart. */
   icon: string
   children: ReactNode
+
+  /** Lets a long label break onto a second line on narrow screens instead of running out of its card. */
+  wrap?: boolean
 }
 
 /** A small status label: tinted background, readable text, and an icon so colour is never the only cue. */
-const StatusPill = ({ tone, icon, children }: StatusPillProps) => {
+const StatusPill = ({ tone, icon, children, wrap = false }: StatusPillProps) => {
   const theme = useTheme()
 
   const base =
@@ -43,11 +46,12 @@ const StatusPill = ({ tone, icon, children }: StatusPillProps) => {
         gap: 1,
         px: 2.5,
         py: 0.75,
-        borderRadius: 999,
+        maxWidth: '100%',
+        borderRadius: wrap ? '12px' : 999,
         fontSize: '0.8125rem',
         fontWeight: 600,
         lineHeight: 1.3,
-        whiteSpace: 'nowrap',
+        whiteSpace: wrap ? 'normal' : 'nowrap',
         color,
         bgcolor: alpha(base, tone === 'neutral' ? 0.08 : toneWash(theme))
       }}

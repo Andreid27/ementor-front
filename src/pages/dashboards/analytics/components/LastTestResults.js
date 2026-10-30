@@ -392,12 +392,24 @@ const LastTestResults = ({ data, studentId }) => {
   const delta = periodValue - overall
   const compare = shownDays !== ALL_DAYS
 
+  // Named in full: "media generală" alone didn't say whose average it was, or of what.
+  const allTestsAverage = studentId ? 'media elevului din toate testele' : 'media ta din toate testele'
+  const inPeriod = `În ${shownPeriod.long}`
+
   const comparison =
     delta >= 1
-      ? { tone: 'accent', icon: 'tabler:trending-up', label: `${delta}% peste media generală` }
+      ? {
+          tone: 'accent',
+          icon: 'tabler:trending-up',
+          label: `${inPeriod}: ${delta}% mai bine decât ${allTestsAverage}`
+        }
       : delta <= -1
-      ? { tone: 'warning', icon: 'tabler:trending-down', label: `${-delta}% sub media generală` }
-      : { tone: 'neutral', icon: 'tabler:equal', label: 'La nivelul mediei generale' }
+      ? {
+          tone: 'warning',
+          icon: 'tabler:trending-down',
+          label: `${inPeriod}: ${-delta}% mai slab decât ${allTestsAverage}`
+        }
+      : { tone: 'neutral', icon: 'tabler:equal', label: `${inPeriod}: la fel ca ${allTestsAverage}` }
 
   // The bright theme green is under 3:1 as a line on white; one step deeper reads clearly.
   const line = theme.palette.mode === 'light' ? darken(theme.palette.primary.main, 0.2) : theme.palette.primary.main
@@ -476,7 +488,11 @@ const LastTestResults = ({ data, studentId }) => {
     { key: 'tests', label: studentId ? 'Testele elevului' : 'Testele tale', show: tests.length > 0 },
     { key: 'trend', label: `Media ultimelor ${ROLLING_TESTS} teste`, show: tests.length > 1 },
     { key: 'cohort', label: cohortLine && `Media celor admiși la ${cohortLabel(cohortLine)}`, show: !!cohortLine },
-    { key: 'overall', label: `media generală ${overall}%`, show: compare && tests.length > 0 }
+    {
+      key: 'overall',
+      label: `${allTestsAverage.charAt(0).toUpperCase()}${allTestsAverage.slice(1)}: ${overall}%`,
+      show: compare && tests.length > 0
+    }
   ].filter(item => item.show)
 
   const swatches = {
@@ -492,7 +508,7 @@ const LastTestResults = ({ data, studentId }) => {
         ...values
       )}% și ${Math.max(...values)}%. Media ultimelor ${ROLLING_TESTS} teste a ajuns la ${
         tests[tests.length - 1]?.average
-      }%. Media perioadei: ${periodValue}%, media generală: ${overall}%.`,
+      }%. Media perioadei: ${periodValue}%, ${allTestsAverage}: ${overall}%.`,
     cohortLine &&
       `Media celor admiși la ${cohortLabel(cohortLine)}: între ${formatAverage(
         Math.min(...cohortAverages)
@@ -566,7 +582,7 @@ const LastTestResults = ({ data, studentId }) => {
       <>
         {tests.length > 0 && compare && (
           <Box sx={{ mb: 4 }}>
-            <StatusPill tone={comparison.tone} icon={comparison.icon}>
+            <StatusPill tone={comparison.tone} icon={comparison.icon} wrap>
               {comparison.label}
             </StatusPill>
           </Box>
