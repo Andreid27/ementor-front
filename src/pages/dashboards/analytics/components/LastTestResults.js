@@ -1,28 +1,57 @@
 // ** React Imports
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
+
+// ** Next Import
+import NextLink from 'next/link'
 
 // ** MUI Imports
 import Box from '@mui/material/Box'
+import Link from '@mui/material/Link'
 import Button from '@mui/material/Button'
+import Skeleton from '@mui/material/Skeleton'
 import Typography from '@mui/material/Typography'
-import ToggleButton from '@mui/material/ToggleButton'
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup'
 import { alpha, darken, useTheme } from '@mui/material/styles'
 
 // ** Third Party Imports
-import { Area, AreaChart, CartesianGrid, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import {
+  Area,
+  CartesianGrid,
+  ComposedChart,
+  Line,
+  ReferenceArea,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis
+} from 'recharts'
 import { useReducedMotion } from 'framer-motion'
 
 // ** API Imports
 import apiClient from 'src/@core/axios/axiosEmentor'
 import * as apiSpec from 'src/apiSpec'
+import { fetchBenchmarkLine, isNotFound } from 'src/views/admission-benchmark/benchmarkApi'
 
 // ** Custom Components Imports
 import InsightCard from 'src/views/student-ui/InsightCard'
 import StatusPill from 'src/views/student-ui/StatusPill'
-import { formatShortDate, percent } from 'src/views/student-ui/format'
+import { percent } from 'src/views/student-ui/format'
 import { countLabel } from 'src/views/student-ui/countLabel'
 import { accentInk } from 'src/views/student-ui/readableAccent'
+import LineSwatch from 'src/views/admission-benchmark/LineSwatch'
+import PeriodToggle from 'src/views/admission-benchmark/PeriodToggle'
+import {
+  DAY_MS,
+  cohortColor,
+  cohortCountsLabel,
+  cohortLabel,
+  dayToTime,
+  daysToExamLabel,
+  formatAverage,
+  splitAtGaps,
+  timeTicks,
+  timeToDay
+} from 'src/views/admission-benchmark/chartStyle'
 
 /*
  * The periods the student can look back over. The quiz service takes the window
@@ -40,32 +69,43 @@ const PERIODS = [
 const DEFAULT_DAYS = 30
 const ALL_DAYS = 3650
 const STORAGE_KEY = 'ementor.results-period'
+const PROFILE_PATH = '/pages/account-settings/account'
 
-/** One point per test, oldest first. Dates carry the year unless every test is from this year. */
-const toPoints = results => {
-  const sorted = [...results].sort((a, b) => new Date(a.date) - new Date(b.date))
-  const years = new Set(sorted.map(result => new Date(result.date).getFullYear()))
-  const showYear = years.size > 1 || !years.has(new Date().getFullYear())
+// How long a period waits for the cohort line before showing the tests without it.
+const BENCHMARK_GRACE_MS = 1000
 
-  return sorted.map((result, index) => ({
-    key: index,
-    label: showYear
-      ? new Date(result.date).toLocaleDateString('ro-RO', { day: 'numeric', month: 'short', year: '2-digit' })
-      : formatShortDate(result.date),
+const NONE = []
 
-    // The time tells apart two tests taken on the same day.
-    title: new Date(result.date).toLocaleString('ro-RO', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }),
-    value: percent(result.correctAnswers, result.totalQuestions),
-    correct: result.correctAnswers,
-    total: result.totalQuestions
-  }))
-}
+/** One point per test, oldest first, placed at the moment it was taken. */
+const toTests = results =>
+  results
+    .map(result => {
+      const time = new Date(result.date).getTime()
+
+      return {
+        t: time,
+        day: timeToDay(time),
+
+        // The time tells apart two tests taken on the same day.
+        title: new Date(time).toLocaleString('ro-RO', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        }),
+        value: percent(result.correctAnswers, result.totalQuestions),
+        correct: result.correctAnswers,
+        total: result.totalQuestions
+      }
+    })
+    .sort((a, b) => a.t - b.t)
+
+/** The cohort's days at noon, one line per run of consecutive days. */
+const toCohortRows = points =>
+  splitAtGaps(points).flatMap((run, index) =>
+    run.map(point => ({ t: dayToTime(point.date), day: point.date, [`cohort${index}`]: point.average }))
+  )
 
 const readSavedDays = () => {
   try {
@@ -77,40 +117,104 @@ const readSavedDays = () => {
   }
 }
 
-const ResultTooltip = ({ active, payload }) => {
-  if (!active || !payload?.length) return null
+const startOfDay = time => {
+  const date = new Date(time)
+  date.setHours(0, 0, 0, 0)
 
-  const point = payload[0].payload
+  return date.getTime()
+}
+
+/**
+ * Everything on the day under the pointer: the student's tests, each as it
+ * always was, then the cohort's average for that day. Reading the whole day
+ * keeps a test reachable on a long period, where a day is about a pixel wide.
+ */
+const DayTooltip = ({ active, label, testsByDay, cohortByDay, cohortStroke }) => {
+  if (!active || label == null) return null
+
+  const day = timeToDay(label)
+  const tests = testsByDay.get(day) ?? []
+  const cohort = cohortByDay.get(day)
+
+  if (!tests.length && !cohort) return null
 
   return (
     <Box
       sx={{
         px: 3,
         py: 2,
+        maxWidth: 280,
         borderRadius: '10px',
         bgcolor: 'background.paper',
+
+        // The paper matches the card under it; the hairline keeps them apart in the dark theme.
+        border: theme => `1px solid ${theme.palette.divider}`,
         boxShadow: theme => `0 6px 20px ${alpha(theme.palette.common.black, 0.12)}`
       }}
     >
-      <Typography variant='caption' sx={{ color: 'text.secondary' }}>
-        {point.title}
-      </Typography>
-      <Typography sx={{ fontWeight: 700, color: 'text.primary' }}>{point.value}%</Typography>
-      <Typography variant='caption' sx={{ display: 'block', color: 'text.secondary' }}>
-        {point.correct} din {point.total} corecte
-      </Typography>
+      {tests.map((test, index) => (
+        <Box key={test.t} sx={{ mt: index ? 2 : 0 }}>
+          <Typography variant='caption' sx={{ color: 'text.secondary' }}>
+            {test.title}
+          </Typography>
+          <Typography sx={{ fontWeight: 700, color: 'text.primary' }}>{test.value}%</Typography>
+          <Typography variant='caption' sx={{ display: 'block', color: 'text.secondary' }}>
+            {test.correct} din {test.total} corecte
+          </Typography>
+        </Box>
+      ))}
+      {cohort && (
+        <Box sx={tests.length ? { mt: 2, pt: 2, borderTop: theme => `1px solid ${theme.palette.divider}` } : undefined}>
+          <Typography sx={{ display: 'flex', alignItems: 'center', gap: 1.5, fontWeight: 700, color: 'text.primary' }}>
+            <Box
+              component='span'
+              aria-hidden
+              sx={{ width: 10, height: 10, flexShrink: 0, borderRadius: '50%', bgcolor: cohortStroke }}
+            />
+            {formatAverage(cohort.average)} · media celor admiși
+          </Typography>
+          <Typography variant='caption' sx={{ display: 'block', color: 'text.secondary' }}>
+            {daysToExamLabel(cohort.daysBeforeExam)} · {cohortCountsLabel(cohort.tests, cohort.students)}
+          </Typography>
+        </Box>
+      )}
     </Box>
+  )
+}
+
+/** "Azi", just left of the today line, above the plot. */
+const TodayLabel = ({ viewBox, fill }) => (
+  <text x={viewBox.x - 6} y={viewBox.y - 8} textAnchor='end' fill={fill} fontSize={12} fontWeight={600}>
+    Azi
+  </text>
+)
+
+/**
+ * Names the shaded days ahead, right of the today line: the full name when it
+ * fits before the chart's edge, a short one on narrow charts, else nothing.
+ */
+const AheadLabel = ({ viewBox, names, fill }) => {
+  const fits = text => viewBox.width + 8 >= text.length * 6.6 + 6
+  const text = names.find(name => name && fits(name))
+  if (!text) return null
+
+  return (
+    <text x={viewBox.x + 6} y={viewBox.y - 8} textAnchor='start' fill={fill} fontSize={12}>
+      {text}
+    </text>
   )
 }
 
 /**
  * Test results over a period the student picks, on a fixed 0–100% scale so a
  * small dip doesn't look like a fall, with the all-time average as a dashed
- * line. Written for both readers: the student on their dashboard, and the
- * professor looking at one student (pass `studentId`).
+ * line. When the student has a target university, speciality and exam date,
+ * a second line shows how students admitted there were scoring at the same
+ * distance from their exam, running 30 days past today.
  *
- * `data` is the 30-day stats the page already loaded; other periods are
- * fetched here once each.
+ * Written for both readers: the student on their dashboard, and the professor
+ * looking at one student (pass `studentId`). `data` is the 30-day stats the
+ * page already loaded; other periods are fetched here once each.
  */
 const LastTestResults = ({ data, studentId }) => {
   const theme = useTheme()
@@ -121,6 +225,11 @@ const LastTestResults = ({ data, studentId }) => {
   const [loaded, setLoaded] = useState({})
   const [status, setStatus] = useState('ready')
   const requestId = useRef(0)
+
+  // The cohort line per period: undefined while unknown, null when there is none to draw.
+  const [benchmarks, setBenchmarks] = useState({})
+  const [waited, setWaited] = useState({})
+  const benchmarkRequests = useRef(new Set())
 
   // The saved period is a per-device convenience, read once on the client.
   useEffect(() => {
@@ -158,8 +267,29 @@ const LastTestResults = ({ data, studentId }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [days, statsUrl])
 
-  const choosePeriod = (_event, value) => {
-    if (!value) return
+  // The cohort line is extra: a failed or refused call only means no line.
+  useEffect(() => {
+    if (benchmarks[days] !== undefined) return
+
+    if (!benchmarkRequests.current.has(days)) {
+      benchmarkRequests.current.add(days)
+      fetchBenchmarkLine(days, studentId)
+        .then(line => setBenchmarks(previous => ({ ...previous, [days]: line })))
+        .catch(error => {
+          if (!isNotFound(error)) console.error('Failed to load the admitted students line:', error)
+          setBenchmarks(previous => ({ ...previous, [days]: null }))
+        })
+    }
+
+    const timer = setTimeout(() => setWaited(previous => ({ ...previous, [days]: true })), BENCHMARK_GRACE_MS)
+
+    return () => clearTimeout(timer)
+
+    // Each period is fetched once; the card remounts for another student.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [days])
+
+  const choosePeriod = value => {
     setDays(value)
     if (value === DEFAULT_DAYS || loaded[value]) setStatus('ready')
     try {
@@ -172,16 +302,23 @@ const LastTestResults = ({ data, studentId }) => {
   const period = PERIODS.find(item => item.days === days) ?? PERIODS[0]
   const isAll = days === ALL_DAYS
 
-  // While a new period loads, the previous one stays on screen, dimmed.
-  const [shownDays, setShownDays] = useState(DEFAULT_DAYS)
+  // A period appears once its tests are in and its cohort line has arrived or
+  // stopped being waited for; until then the previous one stays, dimmed.
+  const statsReady = days === DEFAULT_DAYS || Boolean(loaded[days])
+  const benchmarkSettled = benchmarks[days] !== undefined || Boolean(waited[days])
+  const [shownDays, setShownDays] = useState(null)
   useEffect(() => {
-    if (days === DEFAULT_DAYS || loaded[days]) setShownDays(days)
-  }, [days, loaded])
+    if (statsReady && benchmarkSettled) setShownDays(days)
+  }, [days, statsReady, benchmarkSettled])
 
   const shownPeriod = PERIODS.find(item => item.days === shownDays) ?? PERIODS[0]
   const shownData = shownDays === DEFAULT_DAYS ? data : loaded[shownDays]
-  const results = shownData?.lastMonthQuizzesResults ?? []
-  const points = toPoints(results)
+  const results = shownData?.lastMonthQuizzesResults ?? NONE
+  const tests = useMemo(() => toTests(results), [results])
+
+  const benchmark = shownDays === null ? undefined : benchmarks[shownDays]
+  const cohortLine = benchmark?.status === 'READY' && benchmark.points.length > 0 ? benchmark : null
+  const cohortPoints = cohortLine?.points ?? NONE
 
   const periodValue = percent(
     results.reduce((sum, result) => sum + result.correctAnswers, 0),
@@ -200,52 +337,118 @@ const LastTestResults = ({ data, studentId }) => {
 
   // The bright theme green is under 3:1 as a line on white; one step deeper reads clearly.
   const line = theme.palette.mode === 'light' ? darken(theme.palette.primary.main, 0.2) : theme.palette.primary.main
+  const cohortStroke = cohortColor(theme, 0)
   const axisText = { fill: theme.palette.text.secondary, fontSize: 12 }
-  const values = points.map(point => point.value)
+  const values = tests.map(test => test.value)
 
   // Every test keeps its point; only the marks get finer as tests get denser.
-  const dense = points.length > 40
+  const dense = tests.length > 40
 
   const dot =
-    points.length > 150
+    tests.length > 150
       ? false
       : dense
       ? { r: 2, fill: line, strokeWidth: 0 }
       : { r: 3.5, fill: theme.palette.background.paper, stroke: line, strokeWidth: 2 }
 
-  const loading = status === 'loading'
+  // Recharts restarts its line animation, and hides the test dots until it ends, whenever the data or
+  // the axis moves; both stay the same until the shown data changes.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const now = useMemo(() => Date.now(), [shownDays, cohortLine])
+  const cohortRuns = splitAtGaps(cohortPoints).length
+
+  const rows = useMemo(() => [...tests, ...toCohortRows(cohortPoints)].sort((a, b) => a.t - b.t), [tests, cohortPoints])
+
+  // The time axis covers the period up to today, or to 30 days past it when the cohort line runs ahead.
+  // "Tot" starts at the first point instead of ten years back.
+  const start =
+    shownDays === ALL_DAYS
+      ? startOfDay(Math.min(rows[0]?.t ?? now, now - DEFAULT_DAYS * DAY_MS))
+      : startOfDay(now - (shownDays ?? DEFAULT_DAYS) * DAY_MS)
+  const end = cohortLine?.to ? Math.max(now, dayToTime(cohortLine.to) + DAY_MS / 2) : now
+  const ahead = end > now
+  const { ticks, format } = timeTicks(start, end)
+
+  // The shaded days stop at the exam when it comes sooner than 30 days.
+  const aheadNames =
+    cohortLine?.to === cohortLine?.examDate ? ['Până la examen'] : ['Următoarele 30 de zile', '+30 zile']
+
+  const testsByDay = new Map()
+  tests.forEach(test => testsByDay.set(test.day, [...(testsByDay.get(test.day) ?? []), test]))
+  const cohortByDay = new Map(cohortPoints.map(point => [point.date, point]))
+  const cohortAverages = cohortPoints.map(point => point.average)
+
+  const loading = status === 'loading' || days !== shownDays
+  const hasChart = tests.length > 0 || cohortLine !== null
+
+  const profileLink = (
+    <Link component={NextLink} href={PROFILE_PATH} sx={{ fontWeight: 600, color: accentInk, whiteSpace: 'nowrap' }}>
+      Completează profilul
+    </Link>
+  )
+
+  // One quiet line saying why there is no cohort line, written for whoever is reading.
+  const benchmarkNote = (() => {
+    switch (benchmark?.status) {
+      case 'NO_TARGET':
+        return studentId ? (
+          'Elevul nu are universitatea și specializarea țintă în profil.'
+        ) : (
+          <>Alege universitatea și specializarea în profil ca să te compari cu cei admiși. {profileLink}</>
+        )
+      case 'NO_EXAM_DATE':
+        return studentId ? (
+          'Elevul nu are data examenului în profil.'
+        ) : (
+          <>Adaugă data examenului în profil ca să vezi linia celor admiși. {profileLink}</>
+        )
+      case 'NO_COHORT_DATA':
+        return `Încă nu avem studenți admiși la ${benchmark.specialityName}.`
+      case 'READY':
+        return cohortLine ? null : 'Linia celor admiși apare când mai e cel mult un an până la examen.'
+      default:
+        return null
+    }
+  })()
+
+  const legend = [
+    { key: 'tests', label: studentId ? 'Testele elevului' : 'Testele tale', show: tests.length > 0 },
+    { key: 'cohort', label: cohortLine && `Media celor admiși la ${cohortLabel(cohortLine)}`, show: !!cohortLine },
+    { key: 'overall', label: `media generală ${overall}%`, show: compare && tests.length > 0 }
+  ].filter(item => item.show)
+
+  const swatches = {
+    tests: <LineSwatch stroke={line} dot={theme.palette.background.paper} />,
+    cohort: <LineSwatch stroke={cohortStroke} width={3} />,
+    overall: <LineSwatch stroke={theme.palette.text.secondary} dash='4 4' width={1.5} />
+  }
+
+  const chartLabel = [
+    tests.length > 0 &&
+      `${countLabel(tests.length, 'Un test', 'teste')} în ${shownPeriod.long}, cu rezultate între ${Math.min(
+        ...values
+      )}% și ${Math.max(...values)}%. Media perioadei: ${periodValue}%, media generală: ${overall}%.`,
+    cohortLine &&
+      `Media celor admiși la ${cohortLabel(cohortLine)}: între ${formatAverage(
+        Math.min(...cohortAverages)
+      )} și ${formatAverage(Math.max(...cohortAverages))}, până pe ${new Date(end).toLocaleDateString('ro-RO', {
+        day: 'numeric',
+        month: 'long'
+      })}.`
+  ]
+    .filter(Boolean)
+    .join(' ')
 
   const periodControl = (
-    <ToggleButtonGroup
-      exclusive
-      size='small'
-      value={days}
-      onChange={choosePeriod}
-      aria-label='Perioada'
-      sx={{
-        mb: 4,
-        width: { xs: '100%', sm: 'auto' },
-        '& .MuiToggleButton-root': {
-          flex: { xs: 1, sm: 'none' },
-          minHeight: 36,
-          px: { xs: 1, sm: 3 },
-          fontSize: '0.8125rem',
-          fontWeight: 600,
-          textTransform: 'none',
-          color: 'text.secondary',
-          '&.Mui-selected': {
-            color: accentInk(theme),
-            bgcolor: alpha(theme.palette.primary.main, theme.palette.mode === 'light' ? 0.12 : 0.16)
-          }
-        }
-      }}
-    >
-      {PERIODS.map(item => (
-        <ToggleButton key={item.days} value={item.days}>
-          {item.short}
-        </ToggleButton>
-      ))}
-    </ToggleButtonGroup>
+    <Box sx={{ mb: 4 }}>
+      <PeriodToggle periods={PERIODS} value={days} onChange={choosePeriod} />
+    </Box>
+  )
+
+  const note = benchmarkNote && (
+    <Typography variant='body2' sx={{ mt: 3, color: 'text.secondary', opacity: loading ? 0.5 : 1 }}>
+      {benchmarkNote}
+    </Typography>
   )
 
   const renderBody = () => {
@@ -262,43 +465,51 @@ const LastTestResults = ({ data, studentId }) => {
       )
     }
 
-    if (points.length === 0) {
+    if (shownDays === null) {
+      return <Skeleton variant='rounded' sx={{ flex: 1, minHeight: { xs: 200, md: 240 }, borderRadius: '10px' }} />
+    }
+
+    const noTests = (
+      <Box sx={{ opacity: loading ? 0.5 : 1 }}>
+        <Typography variant='body2' sx={{ color: 'text.secondary' }}>
+          {shownDays === DEFAULT_DAYS
+            ? 'Niciun test în ultimele 30 de zile. Graficul apare după următorul test.'
+            : `Niciun test în ${shownPeriod.long}.`}
+        </Typography>
+        {!isAll && !loading && (
+          <Button
+            size='small'
+            onClick={() => choosePeriod(ALL_DAYS)}
+            sx={{ mt: 2, ml: -2, fontWeight: 600, color: accentInk }}
+          >
+            Vezi toate rezultatele
+          </Button>
+        )}
+      </Box>
+    )
+
+    if (!hasChart) {
       return (
-        <Box sx={{ opacity: loading ? 0.5 : 1 }}>
-          <Typography variant='body2' sx={{ color: 'text.secondary' }}>
-            {shownDays === DEFAULT_DAYS
-              ? 'Niciun test în ultimele 30 de zile. Graficul apare după următorul test.'
-              : `Niciun test în ${shownPeriod.long}.`}
-          </Typography>
-          {!isAll && !loading && (
-            <Button
-              size='small'
-              onClick={event => choosePeriod(event, ALL_DAYS)}
-              sx={{ mt: 2, ml: -2, fontWeight: 600, color: accentInk }}
-            >
-              Vezi toate rezultatele
-            </Button>
-          )}
-        </Box>
+        <>
+          {noTests}
+          {note}
+        </>
       )
     }
 
     return (
       <>
-        {compare && (
+        {tests.length > 0 && compare && (
           <Box sx={{ mb: 4 }}>
             <StatusPill tone={comparison.tone} icon={comparison.icon}>
               {comparison.label}
             </StatusPill>
           </Box>
         )}
+        {tests.length === 0 && <Box sx={{ mb: 3 }}>{noTests}</Box>}
         <Box
           role='img'
-          aria-label={`${countLabel(results.length, 'Un test', 'teste')} în ${
-            shownPeriod.long
-          }, cu rezultate între ${Math.min(...values)}% și ${Math.max(
-            ...values
-          )}%. Media perioadei: ${periodValue}%, media generală: ${overall}%.`}
+          aria-label={chartLabel}
           sx={{
             flex: 1,
             minHeight: { xs: 200, md: 240 },
@@ -307,8 +518,12 @@ const LastTestResults = ({ data, studentId }) => {
           }}
         >
           <ResponsiveContainer width='100%' height='100%' minHeight={200}>
-            {/* A new period starts a fresh chart, so a hover from the old data never lands on the new one. */}
-            <AreaChart key={shownDays} data={points} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+            {/* New data starts a fresh chart, so a hover from the old data never lands on the new one. */}
+            <ComposedChart
+              key={`${shownDays}-${cohortLine ? 'cohort' : 'tests'}`}
+              data={rows}
+              margin={{ top: ahead ? 24 : 8, right: 8, left: 0, bottom: 0 }}
+            >
               <defs>
                 <linearGradient id={gradientId} x1='0' y1='0' x2='0' y2='1'>
                   <stop offset='0%' stopColor={theme.palette.primary.main} stopOpacity={0.28} />
@@ -316,12 +531,22 @@ const LastTestResults = ({ data, studentId }) => {
                 </linearGradient>
               </defs>
               <CartesianGrid vertical={false} stroke={alpha(theme.palette.text.primary, 0.08)} />
-              {/* Keyed by point, labelled by date: two tests on the same day get one date. */}
+              {ahead && (
+                <ReferenceArea
+                  x1={now}
+                  x2={end}
+                  fill={alpha(theme.palette.text.primary, theme.palette.mode === 'light' ? 0.04 : 0.06)}
+                  ifOverflow='hidden'
+                  label={<AheadLabel names={aheadNames} fill={theme.palette.text.secondary} />}
+                />
+              )}
               <XAxis
-                dataKey='key'
-                tickFormatter={index =>
-                  index > 0 && points[index - 1]?.label === points[index]?.label ? '' : points[index]?.label ?? ''
-                }
+                type='number'
+                scale='time'
+                dataKey='t'
+                domain={[start, end]}
+                ticks={ticks}
+                tickFormatter={format}
                 tickLine={false}
                 axisLine={false}
                 tick={axisText}
@@ -337,28 +562,89 @@ const LastTestResults = ({ data, studentId }) => {
                 tick={axisText}
                 width={48}
               />
-              {compare && (
+              {compare && tests.length > 0 && (
+                <ReferenceLine y={overall} stroke={theme.palette.text.secondary} strokeDasharray='4 4' />
+              )}
+              {ahead && (
                 <ReferenceLine
-                  y={overall}
-                  stroke={theme.palette.text.secondary}
-                  strokeDasharray='4 4'
-                  label={{ value: `media generală ${overall}%`, position: 'insideTopLeft', ...axisText }}
+                  x={now}
+                  stroke={alpha(theme.palette.text.primary, 0.35)}
+                  label={<TodayLabel fill={theme.palette.text.primary} />}
                 />
               )}
-              <Tooltip content={<ResultTooltip />} cursor={{ stroke: alpha(line, 0.4) }} />
+              <Tooltip
+                content={<DayTooltip testsByDay={testsByDay} cohortByDay={cohortByDay} cohortStroke={cohortStroke} />}
+                cursor={{ stroke: alpha(line, 0.4) }}
+              />
+              {/* Fill, then the cohort, then the student's line on top: the student's own data leads. */}
               <Area
                 type='monotone'
                 dataKey='value'
+                connectNulls
+                stroke='none'
+                fill={`url(#${gradientId})`}
+                dot={false}
+                activeDot={false}
+                isAnimationActive={!reduceMotion}
+              />
+              {Array.from({ length: cohortRuns }, (_, index) => (
+                <Line
+                  key={index}
+                  type='monotone'
+                  dataKey={`cohort${index}`}
+                  connectNulls
+                  stroke={cohortStroke}
+                  strokeWidth={3}
+                  strokeLinecap='round'
+                  dot={false}
+                  activeDot={{ r: 4, fill: cohortStroke, stroke: theme.palette.background.paper, strokeWidth: 2 }}
+                  isAnimationActive={!reduceMotion}
+                />
+              ))}
+              <Line
+                type='monotone'
+                dataKey='value'
+                connectNulls
                 stroke={line}
                 strokeWidth={dense ? 1.75 : 2.5}
-                fill={`url(#${gradientId})`}
                 dot={dot}
                 activeDot={{ r: 5, fill: line }}
                 isAnimationActive={!reduceMotion}
               />
-            </AreaChart>
+            </ComposedChart>
           </ResponsiveContainer>
         </Box>
+        {/* The tests alone need no legend; the cohort line always gets its name. */}
+        {(legend.length > 1 || cohortLine) && (
+          <Box
+            component='ul'
+            sx={{
+              m: 0,
+              mt: 3,
+              p: 0,
+              listStyle: 'none',
+              display: 'flex',
+              flexWrap: 'wrap',
+              columnGap: 4,
+              rowGap: 1.5,
+              opacity: loading ? 0.5 : 1
+            }}
+          >
+            {legend.map(item => (
+              <Box
+                component='li'
+                key={item.key}
+                sx={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: 0, color: 'text.secondary' }}
+              >
+                {swatches[item.key]}
+                <Typography variant='body2' component='span' sx={{ color: 'inherit', overflowWrap: 'anywhere' }}>
+                  {item.label}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        )}
+        {note}
       </>
     )
   }
@@ -366,9 +652,9 @@ const LastTestResults = ({ data, studentId }) => {
   return (
     <InsightCard
       title='Rezultate la teste'
-      subtitle={points.length ? 'Câte un punct pentru fiecare test' : undefined}
+      subtitle={tests.length ? 'Câte un punct pentru fiecare test' : undefined}
       aside={
-        points.length > 0 && (
+        tests.length > 0 && (
           <Box sx={{ textAlign: { xs: 'left', sm: 'right' }, opacity: loading ? 0.5 : 1 }}>
             <Typography sx={{ fontWeight: 700, fontSize: '1.5rem', lineHeight: 1.1, color: 'text.primary' }}>
               {periodValue}%
