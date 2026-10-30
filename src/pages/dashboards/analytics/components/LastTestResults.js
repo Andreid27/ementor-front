@@ -68,6 +68,9 @@ const PERIODS = [
 ]
 
 const DEFAULT_DAYS = 30
+
+// How far before the exam the admitted students' curves reach (quiz-service's benchmark.window-days).
+const COHORT_REACH_DAYS = 730
 const ALL_DAYS = 3650
 const STORAGE_KEY = 'ementor.results-period'
 const PROFILE_PATH = '/pages/account-settings/account'
@@ -364,11 +367,14 @@ const LastTestResults = ({ data, studentId }) => {
   const cohortLine = benchmark?.status === 'READY' && benchmark.points.length > 0 ? benchmark : null
 
   // Drawn smoothed; the tooltip reads the same values, so its point sits on the line.
-  // The cohort reaches back at most a year, so "Tot" smooths it as a year does.
+  // The cohort reaches back at most two years, so "Tot" smooths it as that span does.
   const cohortPoints = useMemo(() => {
     if (!cohortLine) return NONE
 
-    const smoothed = smoothCurve(cohortLine.points, smoothingRadius(Math.min(shownDays ?? DEFAULT_DAYS, 365) + 30))
+    const smoothed = smoothCurve(
+      cohortLine.points,
+      smoothingRadius(Math.min(shownDays ?? DEFAULT_DAYS, COHORT_REACH_DAYS) + 30)
+    )
 
     return studentId
       ? smoothed
@@ -460,7 +466,7 @@ const LastTestResults = ({ data, studentId }) => {
       case 'NO_COHORT_DATA':
         return `Încă nu avem studenți admiși la ${benchmark.specialityName}.`
       case 'READY':
-        return cohortLine ? null : 'Linia celor admiși apare când mai e cel mult un an până la examen.'
+        return cohortLine ? null : 'Linia celor admiși apare când mai sunt cel mult doi ani până la examen.'
       default:
         return null
     }

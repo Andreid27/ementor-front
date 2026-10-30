@@ -87,3 +87,24 @@ export interface AdmissionResult extends AdmissionResultRequest {
   admissionUniversityValue: string | null
   admissionSpecialityValue: string | null
 }
+
+/** Admitted students in one exam year and speciality, each student counted once. */
+export interface AdmissionsBySpeciality {
+  year: number
+  specialityId: string
+  specialityName: string
+  students: number
+}
+
+/** The same counts split by university. */
+export interface AdmissionsByUniversity extends AdmissionsBySpeciality {
+  universityId: string
+  universityName: string
+}
+
+/** GET /admission-benchmark/admissions: a professor's own admitted students, or everyone's for an admin. */
+export interface BenchmarkAdmissions {
+  students: number
+  bySpeciality: AdmissionsBySpeciality[]
+  byUniversity: AdmissionsByUniversity[]
+}

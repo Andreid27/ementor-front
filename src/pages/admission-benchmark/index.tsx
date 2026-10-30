@@ -20,6 +20,7 @@ import PeriodToggle from 'src/views/admission-benchmark/PeriodToggle'
 import CohortTable from 'src/views/admission-benchmark/CohortTable'
 import CohortPicker, { CohortSelection } from 'src/views/admission-benchmark/CohortPicker'
 import CohortCurvesChart, { PlottedCurve } from 'src/views/admission-benchmark/CohortCurvesChart'
+import AdmittedStudentsCard from 'src/views/admission-benchmark/AdmittedStudentsCard'
 import { MAX_COHORTS } from 'src/views/admission-benchmark/chartStyle'
 import IllustratedState from 'src/views/student-ui/IllustratedState'
 import { accentButtonSx } from 'src/views/student-ui/readableAccent'
@@ -31,10 +32,11 @@ const PERIODS = [
   { days: 30, short: '30 zile' },
   { days: 90, short: '3 luni' },
   { days: 180, short: '6 luni' },
-  { days: 365, short: '1 an' }
+  { days: 365, short: '1 an' },
+  { days: 730, short: '2 ani' }
 ]
 
-const DEFAULT_DAYS = 365
+const DEFAULT_DAYS = 730
 const STORAGE_KEY = 'ementor.benchmark-cohorts'
 
 const readSavedKeys = (): string[] => {
@@ -187,6 +189,13 @@ const AdmissionBenchmarkPage = () => {
     </Grid>
   )
 
+  // Loaded on its own, so it shows whatever state the cohort comparison is in.
+  const admitted = (
+    <Grid item xs={12}>
+      <AdmittedStudentsCard />
+    </Grid>
+  )
+
   if (cohortsStatus === 'loading') {
     return (
       <Grid container spacing={6}>
@@ -197,6 +206,7 @@ const AdmissionBenchmarkPage = () => {
             <Skeleton variant='rounded' sx={{ mt: 5, height: { xs: 280, md: 340 } }} />
           </Card>
         </Grid>
+        {admitted}
       </Grid>
     )
   }
@@ -220,6 +230,7 @@ const AdmissionBenchmarkPage = () => {
             />
           </Card>
         </Grid>
+        {admitted}
       </Grid>
     )
   }
@@ -242,6 +253,7 @@ const AdmissionBenchmarkPage = () => {
             />
           </Card>
         </Grid>
+        {admitted}
       </Grid>
     )
   }
@@ -299,6 +311,8 @@ const AdmissionBenchmarkPage = () => {
           )}
         </Card>
       </Grid>
+
+      {admitted}
     </Grid>
   )
 }

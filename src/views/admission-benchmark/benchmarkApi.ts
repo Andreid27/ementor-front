@@ -3,7 +3,14 @@ import * as apiSpec from 'src/apiSpec'
 import apiClient from 'src/@core/axios/axiosEmentor'
 
 // ** Types
-import type { AdmissionResult, AdmissionResultRequest, BenchmarkCohorts, BenchmarkCurves, BenchmarkLine } from './types'
+import type {
+  AdmissionResult,
+  AdmissionResultRequest,
+  BenchmarkAdmissions,
+  BenchmarkCohorts,
+  BenchmarkCurves,
+  BenchmarkLine
+} from './types'
 
 const BENCHMARK = `${apiSpec.PROFILE_SERVICE}/admission-benchmark`
 const RELATIONSHIPS = `${apiSpec.PROFILE_SERVICE}/student-professor-relationships`
@@ -33,6 +40,16 @@ export const fetchCurves = async (keys: string[], days: number): Promise<Benchma
   const response = await apiClient.get(`${BENCHMARK}/curves`, { params: { keys: keys.join(','), days } })
 
   return { computedAt: response.data?.computedAt ?? null, curves: response.data?.curves ?? [] }
+}
+
+export const fetchAdmissions = async (): Promise<BenchmarkAdmissions> => {
+  const response = await apiClient.get(`${BENCHMARK}/admissions`)
+
+  return {
+    students: response.data?.students ?? 0,
+    bySpeciality: response.data?.bySpeciality ?? [],
+    byUniversity: response.data?.byUniversity ?? []
+  }
 }
 
 /**

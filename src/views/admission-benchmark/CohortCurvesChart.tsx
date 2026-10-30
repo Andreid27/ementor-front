@@ -43,7 +43,7 @@ interface CohortCurvesChartProps {
 type Row = { d: number } & Record<string, number>
 
 /** Tick steps that land on round numbers of days for each period. */
-const tickStep = (days: number) => (days <= 30 ? 5 : days <= 90 ? 15 : days <= 180 ? 30 : 60)
+const tickStep = (days: number) => (days <= 30 ? 5 : days <= 90 ? 15 : days <= 180 ? 30 : days <= 365 ? 60 : 120)
 
 const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1)
 
