@@ -75,18 +75,6 @@ export const timeToDay = (time: number) => {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
 }
 
-/**
- * Splits daily points into runs of consecutive days, so a line stops where a
- * day has no data instead of drawing across the gap.
- */
-export const splitAtGaps = <T extends { daysBeforeExam: number }>(points: T[]): T[][] =>
-  points.reduce<T[][]>((runs, point, index) => {
-    if (index === 0 || Math.abs(point.daysBeforeExam - points[index - 1].daysBeforeExam) > 1) runs.push([])
-    runs[runs.length - 1].push(point)
-
-    return runs
-  }, [])
-
 const startOfDay = (time: number) => {
   const date = new Date(time)
   date.setHours(0, 0, 0, 0)

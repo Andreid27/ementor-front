@@ -13,15 +13,7 @@ import { useReducedMotion } from 'framer-motion'
 
 // ** Custom Components Imports
 import LineSwatch from './LineSwatch'
-import {
-  cohortColor,
-  cohortCountsLabel,
-  cohortDash,
-  cohortLabel,
-  daysToExamLabel,
-  formatAverage,
-  splitAtGaps
-} from './chartStyle'
+import { cohortColor, cohortCountsLabel, cohortDash, cohortLabel, daysToExamLabel, formatAverage } from './chartStyle'
 import { accentInk } from 'src/views/student-ui/readableAccent'
 
 // ** Types
@@ -106,28 +98,27 @@ const CurvesTooltip = ({
 
 /**
  * The chosen cohorts as lines over the days before their exam, left to right
- * toward the exam. A line stops where a day has no tests in its window.
+ * toward the exam. A day without tests in its window is bridged, so each line
+ * runs on as one smooth curve.
  */
 const CohortCurvesChart = ({ plotted, days, status, onRetry }: CohortCurvesChartProps) => {
   const theme = useTheme()
   const reduceMotion = useReducedMotion()
 
-  // One row per day before the exam; each run of consecutive days of a cohort is its own series.
+  // One row per day before the exam, with one value per cohort that has a point that day.
   const { rows, series, pointsByDay } = useMemo(() => {
     const byDay = new Map<number, Row>()
     const series: { dataKey: string; slot: number }[] = []
     const pointsByDay = new Map<string, Map<number, BenchmarkCurvePoint>>()
 
     plotted.forEach(({ curve, slot }) => {
+      const dataKey = `c${slot}`
+      series.push({ dataKey, slot })
       pointsByDay.set(curve.key, new Map(curve.points.map(point => [point.daysBeforeExam, point])))
-      splitAtGaps(curve.points).forEach((run, index) => {
-        const dataKey = `c${slot}_${index}`
-        series.push({ dataKey, slot })
-        run.forEach(point => {
-          const row = byDay.get(point.daysBeforeExam) ?? ({ d: point.daysBeforeExam } as Row)
-          row[dataKey] = point.average
-          byDay.set(point.daysBeforeExam, row)
-        })
+      curve.points.forEach(point => {
+        const row = byDay.get(point.daysBeforeExam) ?? ({ d: point.daysBeforeExam } as Row)
+        row[dataKey] = point.average
+        byDay.set(point.daysBeforeExam, row)
       })
     })
 
@@ -219,6 +210,7 @@ const CohortCurvesChart = ({ plotted, days, status, onRetry }: CohortCurvesChart
               key={dataKey}
               type='monotone'
               dataKey={dataKey}
+              connectNulls
               stroke={cohortColor(theme, slot)}
               strokeWidth={2.5}
               strokeDasharray={cohortDash(slot)}

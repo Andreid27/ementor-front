@@ -48,7 +48,6 @@ import {
   dayToTime,
   daysToExamLabel,
   formatAverage,
-  splitAtGaps,
   timeTicks,
   timeToDay
 } from 'src/views/admission-benchmark/chartStyle'
@@ -101,11 +100,30 @@ const toTests = results =>
     })
     .sort((a, b) => a.t - b.t)
 
-/** The cohort's days at noon, one line per run of consecutive days. */
+// The student's line follows a rolling average, so one good or bad test bends it instead of breaking it.
+const ROLLING_TESTS = 5
+
+/**
+ * Each test with the average of itself and up to four tests before it,
+ * counted by questions the way "media perioadei" is.
+ */
+const withRollingAverage = tests =>
+  tests.map((test, index) => {
+    const recent = tests.slice(Math.max(0, index - ROLLING_TESTS + 1), index + 1)
+
+    return {
+      ...test,
+      averageOf: recent.length,
+      average: percent(
+        recent.reduce((sum, item) => sum + item.correct, 0),
+        recent.reduce((sum, item) => sum + item.total, 0)
+      )
+    }
+  })
+
+/** The cohort's days at noon. Days without data are bridged, so the line runs on without a break. */
 const toCohortRows = points =>
-  splitAtGaps(points).flatMap((run, index) =>
-    run.map(point => ({ t: dayToTime(point.date), day: point.date, [`cohort${index}`]: point.average }))
-  )
+  points.map(point => ({ t: dayToTime(point.date), day: point.date, cohort: point.average }))
 
 const readSavedDays = () => {
   try {
@@ -129,7 +147,7 @@ const startOfDay = time => {
  * always was, then the cohort's average for that day. Reading the whole day
  * keeps a test reachable on a long period, where a day is about a pixel wide.
  */
-const DayTooltip = ({ active, label, testsByDay, cohortByDay, cohortStroke }) => {
+const DayTooltip = ({ active, label, testsByDay, cohortByDay, cohortStroke, showCounts }) => {
   if (!active || label == null) return null
 
   const day = timeToDay(label)
@@ -163,6 +181,14 @@ const DayTooltip = ({ active, label, testsByDay, cohortByDay, cohortStroke }) =>
           </Typography>
         </Box>
       ))}
+      {tests.length > 0 && tests[tests.length - 1].averageOf > 1 && (
+        <Typography variant='caption' sx={{ display: 'block', mt: 1.5, color: 'text.secondary' }}>
+          Media ultimelor {tests[tests.length - 1].averageOf} teste:{' '}
+          <Box component='span' sx={{ fontWeight: 700, color: 'text.primary' }}>
+            {tests[tests.length - 1].average}%
+          </Box>
+        </Typography>
+      )}
       {cohort && (
         <Box sx={tests.length ? { mt: 2, pt: 2, borderTop: theme => `1px solid ${theme.palette.divider}` } : undefined}>
           <Typography sx={{ display: 'flex', alignItems: 'center', gap: 1.5, fontWeight: 700, color: 'text.primary' }}>
@@ -174,7 +200,10 @@ const DayTooltip = ({ active, label, testsByDay, cohortByDay, cohortStroke }) =>
             {formatAverage(cohort.average)} · media celor admiși
           </Typography>
           <Typography variant='caption' sx={{ display: 'block', color: 'text.secondary' }}>
-            {daysToExamLabel(cohort.daysBeforeExam)} · {cohortCountsLabel(cohort.tests, cohort.students)}
+            {daysToExamLabel(cohort.daysBeforeExam)}
+
+            {/* How many tests and students stand behind a point is for the professor, not the student. */}
+            {showCounts && ` · ${cohortCountsLabel(cohort.tests, cohort.students)}`}
           </Typography>
         </Box>
       )}
@@ -314,7 +343,7 @@ const LastTestResults = ({ data, studentId }) => {
   const shownPeriod = PERIODS.find(item => item.days === shownDays) ?? PERIODS[0]
   const shownData = shownDays === DEFAULT_DAYS ? data : loaded[shownDays]
   const results = shownData?.lastMonthQuizzesResults ?? NONE
-  const tests = useMemo(() => toTests(results), [results])
+  const tests = useMemo(() => withRollingAverage(toTests(results)), [results])
 
   const benchmark = shownDays === null ? undefined : benchmarks[shownDays]
   const cohortLine = benchmark?.status === 'READY' && benchmark.points.length > 0 ? benchmark : null
@@ -341,21 +370,18 @@ const LastTestResults = ({ data, studentId }) => {
   const axisText = { fill: theme.palette.text.secondary, fontSize: 12 }
   const values = tests.map(test => test.value)
 
-  // Every test keeps its point; only the marks get finer as tests get denser.
-  const dense = tests.length > 40
-
+  // Every test keeps its point around the average line; the marks get finer as tests get denser.
   const dot =
     tests.length > 150
-      ? false
-      : dense
-      ? { r: 2, fill: line, strokeWidth: 0 }
+      ? { r: 1.75, fill: alpha(line, 0.7), strokeWidth: 0 }
+      : tests.length > 40
+      ? { r: 2.5, fill: line, strokeWidth: 0 }
       : { r: 3.5, fill: theme.palette.background.paper, stroke: line, strokeWidth: 2 }
 
-  // Recharts restarts its line animation, and hides the test dots until it ends, whenever the data or
-  // the axis moves; both stay the same until the shown data changes.
+  // Recharts restarts its line animations whenever the data or the axis moves; both stay the same
+  // until the shown data changes.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const now = useMemo(() => Date.now(), [shownDays, cohortLine])
-  const cohortRuns = splitAtGaps(cohortPoints).length
 
   const rows = useMemo(() => [...tests, ...toCohortRows(cohortPoints)].sort((a, b) => a.t - b.t), [tests, cohortPoints])
 
@@ -413,12 +439,14 @@ const LastTestResults = ({ data, studentId }) => {
 
   const legend = [
     { key: 'tests', label: studentId ? 'Testele elevului' : 'Testele tale', show: tests.length > 0 },
+    { key: 'trend', label: `Media ultimelor ${ROLLING_TESTS} teste`, show: tests.length > 1 },
     { key: 'cohort', label: cohortLine && `Media celor admiși la ${cohortLabel(cohortLine)}`, show: !!cohortLine },
     { key: 'overall', label: `media generală ${overall}%`, show: compare && tests.length > 0 }
   ].filter(item => item.show)
 
   const swatches = {
-    tests: <LineSwatch stroke={line} dot={theme.palette.background.paper} />,
+    tests: <LineSwatch stroke={line} dot={theme.palette.background.paper} line={false} />,
+    trend: <LineSwatch stroke={line} />,
     cohort: <LineSwatch stroke={cohortStroke} width={3} />,
     overall: <LineSwatch stroke={theme.palette.text.secondary} dash='4 4' width={1.5} />
   }
@@ -427,7 +455,9 @@ const LastTestResults = ({ data, studentId }) => {
     tests.length > 0 &&
       `${countLabel(tests.length, 'Un test', 'teste')} în ${shownPeriod.long}, cu rezultate între ${Math.min(
         ...values
-      )}% și ${Math.max(...values)}%. Media perioadei: ${periodValue}%, media generală: ${overall}%.`,
+      )}% și ${Math.max(...values)}%. Media ultimelor ${ROLLING_TESTS} teste a ajuns la ${
+        tests[tests.length - 1]?.average
+      }%. Media perioadei: ${periodValue}%, media generală: ${overall}%.`,
     cohortLine &&
       `Media celor admiși la ${cohortLabel(cohortLine)}: între ${formatAverage(
         Math.min(...cohortAverages)
@@ -573,13 +603,20 @@ const LastTestResults = ({ data, studentId }) => {
                 />
               )}
               <Tooltip
-                content={<DayTooltip testsByDay={testsByDay} cohortByDay={cohortByDay} cohortStroke={cohortStroke} />}
+                content={
+                  <DayTooltip
+                    testsByDay={testsByDay}
+                    cohortByDay={cohortByDay}
+                    cohortStroke={cohortStroke}
+                    showCounts={Boolean(studentId)}
+                  />
+                }
                 cursor={{ stroke: alpha(line, 0.4) }}
               />
-              {/* Fill, then the cohort, then the student's line on top: the student's own data leads. */}
+              {/* Fill, then the cohort, then the student's average and tests on top: the student's own data leads. */}
               <Area
                 type='monotone'
-                dataKey='value'
+                dataKey='average'
                 connectNulls
                 stroke='none'
                 fill={`url(#${gradientId})`}
@@ -587,29 +624,39 @@ const LastTestResults = ({ data, studentId }) => {
                 activeDot={false}
                 isAnimationActive={!reduceMotion}
               />
-              {Array.from({ length: cohortRuns }, (_, index) => (
-                <Line
-                  key={index}
-                  type='monotone'
-                  dataKey={`cohort${index}`}
-                  connectNulls
-                  stroke={cohortStroke}
-                  strokeWidth={3}
-                  strokeLinecap='round'
-                  dot={false}
-                  activeDot={{ r: 4, fill: cohortStroke, stroke: theme.palette.background.paper, strokeWidth: 2 }}
-                  isAnimationActive={!reduceMotion}
-                />
-              ))}
               <Line
                 type='monotone'
-                dataKey='value'
+                dataKey='cohort'
+                connectNulls
+                stroke={cohortStroke}
+                strokeWidth={3}
+                strokeLinecap='round'
+                dot={false}
+                activeDot={{ r: 4, fill: cohortStroke, stroke: theme.palette.background.paper, strokeWidth: 2 }}
+                isAnimationActive={!reduceMotion}
+              />
+              <Line
+                type='monotone'
+                dataKey='average'
                 connectNulls
                 stroke={line}
-                strokeWidth={dense ? 1.75 : 2.5}
-                dot={dot}
-                activeDot={{ r: 5, fill: line }}
+                strokeWidth={2.5}
+                strokeLinecap='round'
+                dot={false}
+                activeDot={false}
                 isAnimationActive={!reduceMotion}
+              />
+              {/*
+                Each test as a point of its own, off the line when it was above or below the trend. Recharts
+                draws a line's points only once its animation ends, and an animation cut short by new data
+                never ends, so the points don't animate.
+              */}
+              <Line
+                dataKey='value'
+                stroke='none'
+                dot={dot}
+                activeDot={{ r: 5, fill: line, stroke: theme.palette.background.paper, strokeWidth: 2 }}
+                isAnimationActive={false}
               />
             </ComposedChart>
           </ResponsiveContainer>
