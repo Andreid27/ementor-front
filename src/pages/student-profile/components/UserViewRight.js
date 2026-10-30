@@ -53,7 +53,7 @@ const TabList = styled(MuiTabList)(({ theme }) => ({
   }
 }))
 
-const UserViewRight = ({ tab, profileData, quizStats, lessonStats, quizzesData }) => {
+const UserViewRight = ({ tab, userId, profileData, quizStats, lessonStats, quizzesData }) => {
   // ** State
   const [activeTab, setActiveTab] = useState(tab)
   const [isLoading, setIsLoading] = useState(true)
@@ -68,7 +68,7 @@ const UserViewRight = ({ tab, profileData, quizStats, lessonStats, quizzesData }
 
         <>
           <TabPanel sx={{ p: 0 }} value='account'>
-            <UserViewAccount profileData={profileData} quizStats={quizStats} lessonStats={lessonStats} quizzesData={quizzesData} />
+            <UserViewAccount userId={userId} profileData={profileData} quizStats={quizStats} lessonStats={lessonStats} quizzesData={quizzesData} />
           </TabPanel>
         </>
       </Box>

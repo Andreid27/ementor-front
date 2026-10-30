@@ -35,7 +35,7 @@ const Timeline = styled(MuiTimeline)({
   }
 })
 
-const UserViewAccount = ({ profileData, quizStats, lessonStats, quizzesData }) => {
+const UserViewAccount = ({ userId, profileData, quizStats, lessonStats, quizzesData }) => {
   return (
     <Grid container spacing={6}>
       <Grid item xs={12} md={6}>
@@ -45,7 +45,7 @@ const UserViewAccount = ({ profileData, quizStats, lessonStats, quizzesData }) =
         <StudentStatsQuestions questions={quizStats.questions} />
       </Grid>
       <Grid item xs={12} md={6}>
-        <LastTestResults direction={'ltr'} data={quizStats} />
+        <LastTestResults direction={'ltr'} data={quizStats} studentId={userId} />
       </Grid>
     </Grid>
 

@@ -102,6 +102,7 @@ const UserView = ({ tab, userId, invoiceData }) => {
       <Grid item xs={12} md={7} lg={8}>
         <UserViewRight
           tab={tab}
+          userId={userId}
           profileData={profileData}
           quizStats={quizStats}
           lessonStats={lessonStats}

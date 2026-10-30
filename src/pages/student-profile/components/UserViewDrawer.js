@@ -134,6 +134,7 @@ const UserViewDrawer = ({ tab, userId, open, onClose }) => {
             <Grid item xs={12}>
               <UserViewRight
                 tab={tab}
+                userId={userId}
                 profileData={profileData}
                 quizStats={quizStats}
                 lessonStats={lessonStats}
