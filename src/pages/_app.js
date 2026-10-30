@@ -31,6 +31,9 @@ if (typeof window !== 'undefined' && apm) {
   }
 }
 
+// ** Local end-to-end testing: profile and quiz calls go to local services when their hosts are set
+import 'src/@core/utils/local-service-hosts'
+
 // ** Store Imports
 import { store } from 'src/store'
 import { Provider } from 'react-redux'
