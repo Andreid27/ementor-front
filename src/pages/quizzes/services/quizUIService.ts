@@ -3,10 +3,12 @@ import quizServiceClient from 'src/generated/quiz-service-client'
 import {
   QuizDTO,
   FilterCriteriaObjectOperationEnum,
-  SortCriteriaDirectionEnum
+  SortCriteriaDirectionEnum,
+  SubmitQuizDTO
 } from '../../../generated/quiz-service/api'
 import { QuizGridRow, DataGridParams } from '../types'
 import { transformQuizDTOToGridRow } from '../utils/transformers'
+import type { QuizIntegrityPayload, QuizIntegrityReportDTO } from '../../../components/quiz/integrity/integrityTypes'
 
 export class QuizUIService {
   private client = quizServiceClient
@@ -114,11 +116,18 @@ export class QuizUIService {
   /**
    * Submit quiz answers
    * Enhanced with better error handling (Requirement 9.3)
+   *
+   * The integrity record (what the student did during the quiz) travels with the answers but never costs the
+   * student the submission: if it is refused (400) or too large for a proxy (413), the answers are sent again alone.
    */
-  async submitQuiz(quizId: string, answers: Record<string, number>): Promise<any> {
+  async submitQuiz(
+    quizId: string,
+    answers: Record<string, number>,
+    integrity?: QuizIntegrityPayload | null
+  ): Promise<any> {
     try {
       // Transform answers to match the API format
-      const submitData = {
+      const submitData: SubmitQuizDTO = {
         quizStudentId: quizId,
         submitedQuestionAnswers: Object.entries(answers).map(([questionId, answerIndex]) => ({
           questionId,
@@ -126,8 +135,27 @@ export class QuizUIService {
         }))
       }
 
-      const response = await this.client.quizzes.submit({ submitQuizDTO: submitData })
-      return response.data
+      if (!integrity) {
+        const response = await this.client.quizzes.submit({ submitQuizDTO: submitData })
+
+        return response.data
+      }
+
+      // Not in the generated client until it is regenerated from the backend that accepts it
+      const submitWithIntegrity: SubmitQuizDTO & { integrity: QuizIntegrityPayload } = { ...submitData, integrity }
+
+      try {
+        const response = await this.client.quizzes.submit({ submitQuizDTO: submitWithIntegrity })
+
+        return response.data
+      } catch (error: any) {
+        if (![400, 413].includes(error.response?.status)) throw error
+
+        console.warn(`Submit with the integrity record failed (${error.response.status}); sending the answers alone.`)
+        const response = await this.client.quizzes.submit({ submitQuizDTO: submitData })
+
+        return response.data
+      }
     } catch (error: any) {
       console.error(`Error submitting quiz ${quizId}:`, error)
 
@@ -145,6 +173,25 @@ export class QuizUIService {
       }
 
       throw new Error('Nu am putut trimite testul. Te rugăm să încerci din nou.')
+    }
+  }
+
+  /**
+   * Get the integrity report of a submitted attempt, for the professor who assigned the quiz and for admins.
+   * Null when there is nothing to show: the backend answers 404 for attempts it will not show, and backends
+   * without integrity tracking do not have the endpoint at all
+   */
+  async getAttemptIntegrity(attemptId: string): Promise<QuizIntegrityReportDTO | null> {
+    try {
+      const response = await this.client.getAttemptIntegrity(attemptId)
+      const report = response.data
+
+      return report && typeof report === 'object' && report.risk && report.summary ? report : null
+    } catch (error: any) {
+      if ([403, 404].includes(error.response?.status)) return null
+
+      console.error(`Error fetching the integrity report of attempt ${attemptId}:`, error)
+      throw error
     }
   }
 

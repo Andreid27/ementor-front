@@ -1,5 +1,5 @@
 // ** React Imports
-import React, { useState, useEffect, useCallback, useMemo, use } from 'react'
+import React, { useState, useEffect, useCallback, useMemo, useRef, use } from 'react'
 
 // ** Next Imports
 import { useRouter } from 'next/router'
@@ -28,6 +28,15 @@ import {
   ValidationError,
   CelebrationErrorFallback
 } from 'src/components/quiz/ErrorMessages'
+import QuizContentProtection from 'src/components/quiz/QuizContentProtection'
+import { QuizClock, createQuizClock, getRemainingMs } from 'src/components/quiz/quizClock'
+import QuizIntegrityNotice from 'src/components/quiz/integrity/QuizIntegrityNotice'
+import QuizIntegrityReport from 'src/components/quiz/integrity/QuizIntegrityReport'
+import IntegrityQuestionMarker, { hasIntegrityMarker } from 'src/components/quiz/integrity/IntegrityQuestionMarker'
+import { useQuizIntegrityReport } from 'src/components/quiz/integrity/useQuizIntegrityReport'
+import { QuizIntegrityTracker, startQuizIntegrityTracker } from 'src/components/quiz/integrity/integrityTracker'
+import { indexQuestionStats } from 'src/components/quiz/integrity/integrityFormat'
+import type { AnswerSelectionSource, BlockedAction, SubmitTrigger } from 'src/components/quiz/integrity/integrityTypes'
 
 // ** Hooks
 import { useResponsive, useResponsiveQuizInterface } from '../../quizzes/hooks/useResponsive'
@@ -54,6 +63,19 @@ interface QuizInterfaceProps {
   quizId?: string
   attemptId?: string
   isProfessor?: boolean
+}
+
+// A failed automatic submit at time up is retried after this delay
+const TIME_UP_RETRY_DELAY_MS = 5000
+
+// Seconds left (rounded up, so 0:00 means the time is up) and seconds used, read from the quiz clock
+const readQuizClock = (clock: QuizClock) => {
+  const remainingMs = Math.max(0, getRemainingMs(clock, Date.now(), performance.now()))
+
+  return {
+    timeRemaining: Math.ceil(remainingMs / 1000),
+    timeSpent: Math.floor((clock.durationMs - remainingMs) / 1000)
+  }
 }
 
 const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId, isProfessor }) => {
@@ -102,6 +124,10 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId, isProf
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   const students = useSelector(selectAllStudents)
   const [user, setUser] = useState<any>(null)
+  const quizClockRef = useRef<QuizClock | null>(null)
+
+  // The integrity record lives outside React state: it must not add renders to a page that re-renders every second
+  const trackerRef = useRef<QuizIntegrityTracker | null>(null)
 
   // ** Computed values
   const answeredQuestions = useMemo(() => {
@@ -110,6 +136,24 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId, isProf
 
   const totalQuestions = quizState.quiz?.questions?.length || 0
   const isQuizComplete = answeredQuestions === totalQuestions
+
+  // Taking the quiz, as opposed to reviewing an attempt: the only time the integrity record is kept
+  const isTakingQuiz =
+    Boolean(quizId) && !isProfessor && !loading && Boolean(quizState.quiz) && !quizState.hasSubmitted && !reviewMode
+
+  // Once the time is up the answers are final, even while a failed automatic submit is being retried
+  const isTimeUp = isTakingQuiz && quizState.timeRemaining === 0
+
+  // ** Integrity report, for the professor reviewing a student's attempt (students never see it)
+  const { state: integrityState, retry: retryIntegrity } = useQuizIntegrityReport(
+    attemptId,
+    Boolean(isProfessor && attemptId)
+  )
+
+  const integrityByQuestion = useMemo(
+    () => indexQuestionStats(integrityState.status === 'ready' ? integrityState.report : null),
+    [integrityState]
+  )
 
   // ** Load quiz data with enhanced error handling
   useEffect(() => {
@@ -180,10 +224,18 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId, isProf
           // Start the quiz attempt
           const quizData = await quizUIService.startQuiz(quizId)
 
+          // The countdown runs from the server's deadline, so a slowed or paused timer cannot stretch it
+          const clock = createQuizClock(
+            { serverTime: quizData.serverTime, endTime: quizData.endTime, maxTimeMinutes: quizData.maxTime || 60 },
+            Date.now(),
+            performance.now()
+          )
+          quizClockRef.current = clock
+
           setQuizState(prev => ({
             ...prev,
             quiz: quizData,
-            timeRemaining: (quizData.maxTime || 60) * 60,
+            timeRemaining: readQuizClock(clock).timeRemaining,
             progress: {
               ...prev.progress,
               quizId: quizData.id || '',
@@ -220,28 +272,57 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId, isProf
     }
   }, [quizId, attemptId])
 
-  // ** Timer countdown
+  // ** Timer countdown, read from the quiz clock several times a second and again when the tab comes back,
+  // ** so the display never skips a second; the state changes only when a shown value does
   useEffect(() => {
-    if (!quizState.quiz || quizState.hasSubmitted || loading) return
+    const clock = quizClockRef.current
+    if (!clock || !quizState.quiz || quizState.hasSubmitted || loading) return
 
-    const timer = setInterval(() => {
-      setQuizState(prev => {
-        const newTimeRemaining = Math.max(0, prev.timeRemaining - 1)
-        const newTimeSpent = prev.progress.timeSpent + 1
+    const tick = () => {
+      const { timeRemaining, timeSpent } = readQuizClock(clock)
 
-        return {
-          ...prev,
-          timeRemaining: newTimeRemaining,
-          progress: {
-            ...prev.progress,
-            timeSpent: newTimeSpent
-          }
-        }
-      })
-    }, 1000)
+      setQuizState(prev =>
+        prev.timeRemaining === timeRemaining && prev.progress.timeSpent === timeSpent
+          ? prev
+          : { ...prev, timeRemaining, progress: { ...prev.progress, timeSpent } }
+      )
+    }
 
-    return () => clearInterval(timer)
+    tick()
+    const timer = setInterval(tick, 250)
+    document.addEventListener('visibilitychange', tick)
+
+    return () => {
+      clearInterval(timer)
+      document.removeEventListener('visibilitychange', tick)
+    }
   }, [quizState.quiz, quizState.hasSubmitted, loading])
+
+  // ** Integrity record: starts when the questions are on screen and stops after the submit or on leaving the page.
+  // ** Without a submit the record is thrown away
+  useEffect(() => {
+    if (!isTakingQuiz || !quizId) return
+
+    const tracker = startQuizIntegrityTracker({
+      quizStudentId: quizId,
+      questionOrder: (quizState.quiz?.questions || []).map(question => question.id || ''),
+      serverEndTime: quizState.quiz?.endTime || '',
+      clockOffsetMs: quizClockRef.current?.clockOffsetMs ?? 0
+    })
+    trackerRef.current = tracker
+
+    return () => {
+      tracker?.stop()
+      if (trackerRef.current === tracker) trackerRef.current = null
+    }
+
+    // The quiz does not change while it is taken; restarting would lose the record
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isTakingQuiz, quizId])
+
+  const handleBlockedAction = useCallback((action: BlockedAction) => {
+    trackerRef.current?.recordBlockedAction(action)
+  }, [])
 
   // ** Scroll detection is now handled by ProgressCard component
 
@@ -266,7 +347,9 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId, isProf
   }, [quizState.quiz, quizState.hasSubmitted, quizState.progress])
 
   // ** Handle answer selection
-  const handleAnswerSelect = useCallback((questionId: string, answerIndex: number) => {
+  const handleAnswerSelect = useCallback((questionId: string, answerIndex: number, source: AnswerSelectionSource) => {
+    trackerRef.current?.recordAnswer(questionId, answerIndex, source)
+
     setQuizState(prev => ({
       ...prev,
       progress: {
@@ -279,13 +362,14 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId, isProf
     }))
   }, [])
 
-  // ** Handle quiz submission with enhanced error handling
+  // ** Handle quiz submission with enhanced error handling.
+  // ** MANUAL asks for confirmation when questions are unanswered; the dialog then submits as MANUAL_INCOMPLETE
   const handleSubmitQuiz = useCallback(
-    async (isAutoSubmit = false) => {
+    async (trigger: SubmitTrigger) => {
       if (quizState.isSubmitting || quizState.hasSubmitted) return
 
-      // Check if all questions are answered (unless auto-submit)
-      if (!isAutoSubmit && !isQuizComplete) {
+      // Check if all questions are answered (unless the student already confirmed, or time is up)
+      if (trigger === 'MANUAL' && !isQuizComplete) {
         // Show confirmation dialog for incomplete quiz
         setShowConfirmDialog(true)
         return
@@ -297,9 +381,12 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId, isProf
         setSubmitError(null)
         setError(null)
 
+        // Without an integrity record the answers are sent alone
+        const integrity = trackerRef.current?.buildPayload(trigger) ?? null
+
         // Requirement 9.2: Clear loading state during submission
         // Submit quiz answers
-        const submitResults = await quizUIService.submitQuiz(quizId, quizState.progress.answers)
+        const submitResults = await quizUIService.submitQuiz(quizId, quizState.progress.answers, integrity)
 
         // Convert correctAnswers array to map for easier lookup
         const correctAnswersMap: Record<string, number> = {}
@@ -342,12 +429,21 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId, isProf
     [quizId, quizState.progress.answers, quizState.isSubmitting, quizState.hasSubmitted, isQuizComplete]
   )
 
-  // ** Auto-submit when time runs out
+  // ** Auto-submit when time runs out; after a failed attempt it tries again every few seconds, not in a tight loop
   useEffect(() => {
-    if (quizState.timeRemaining === 0 && !quizState.hasSubmitted && !quizState.isSubmitting && quizState.quiz) {
-      handleSubmitQuiz(true)
-    }
-  }, [quizState.timeRemaining, quizState.hasSubmitted, quizState.isSubmitting, quizState.quiz, handleSubmitQuiz])
+    if (quizState.timeRemaining !== 0 || quizState.hasSubmitted || quizState.isSubmitting || !quizState.quiz) return
+
+    const timer = setTimeout(() => handleSubmitQuiz('TIME_UP'), submitError ? TIME_UP_RETRY_DELAY_MS : 0)
+
+    return () => clearTimeout(timer)
+  }, [
+    quizState.timeRemaining,
+    quizState.hasSubmitted,
+    quizState.isSubmitting,
+    quizState.quiz,
+    handleSubmitQuiz,
+    submitError
+  ])
 
   // ** Handle celebration completion
   const handleCelebrationComplete = useCallback(() => {
@@ -397,8 +493,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId, isProf
   // ** Handle dialog confirm - force submit even with unanswered questions
   const handleDialogConfirm = useCallback(async () => {
     setShowConfirmDialog(false)
-    // Force submit by calling with isAutoSubmit=true to bypass the check
-    await handleSubmitQuiz(true)
+    await handleSubmitQuiz('MANUAL_INCOMPLETE')
   }, [handleSubmitQuiz])
 
   // ** Get unanswered questions count
@@ -484,6 +579,9 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId, isProf
   // ** Main quiz interface with error boundaries
   return (
     <>
+      {/* Students cannot copy, paste, print or save the questions; professors reviewing an attempt can */}
+      {!isProfessor && <QuizContentProtection onBlocked={handleBlockedAction} />}
+
       {/* Show QuizResults in place of ProgressCard when in review mode */}
       {reviewMode && results ? (
         <QuizComponentErrorBoundary componentName='Quiz Results' minimal>
@@ -500,6 +598,11 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId, isProf
               window.scrollTo({ top: 0, behavior: 'smooth' })
             }}
           />
+          {isProfessor && (
+            <QuizComponentErrorBoundary componentName='Integritatea testului' minimal>
+              <QuizIntegrityReport state={integrityState} onRetry={retryIntegrity} />
+            </QuizComponentErrorBoundary>
+          )}
         </QuizComponentErrorBoundary>
       ) : (
         /* Requirement 9.5: Error boundary for Progress Card */
@@ -510,7 +613,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId, isProf
             totalQuestions={totalQuestions}
             answeredQuestions={answeredQuestions}
             totalTime={(quizState.quiz?.maxTime || 60) * 60}
-            onTimeUp={() => handleSubmitQuiz(true)}
+            onTimeUp={() => handleSubmitQuiz('TIME_UP')}
             currentQuestionIndex={quizState.progress.currentQuestion}
             quizDifficulty={quizState.quiz?.difficultyLevel?.toString() || 'Mediu'}
             estimatedTimePerQuestion={Math.round(((quizState.quiz?.maxTime || 60) * 60) / totalQuestions)}
@@ -534,7 +637,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId, isProf
             <Box>
               <SubmitError
                 message={submitError}
-                onRetry={() => handleSubmitQuiz(false)}
+                onRetry={() => handleSubmitQuiz(isTimeUp ? 'TIME_UP' : 'MANUAL')}
                 onDismiss={() => setSubmitError(null)}
               />
             </Box>
@@ -549,6 +652,8 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId, isProf
             </Box>
           </Fade>
         )}
+
+        {quizId && !reviewMode && <QuizIntegrityNotice />}
 
         {/* Questions with error boundaries */}
         {/* Task 6: Requirement 2.1 - Maximum 32px spacing between questions on desktop, 24px on mobile */}
@@ -568,6 +673,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId, isProf
             <Box
               key={question.id}
               id={`question-${index}`}
+              data-question-id={question.id}
               sx={{
                 transition: enableAnimations
                   ? `all ${ANIMATION_DURATIONS.MEDIUM}ms ${EASING_FUNCTIONS.STANDARD}`
@@ -579,8 +685,8 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId, isProf
                 <RadioComponent
                   question={question}
                   selectedAnswer={quizState.progress.answers[question.id || '']}
-                  onAnswerSelect={answerIndex => handleAnswerSelect(question.id || '', answerIndex)}
-                  disabled={quizState.hasSubmitted || quizState.isSubmitting || reviewMode}
+                  onAnswerSelect={(answerIndex, source) => handleAnswerSelect(question.id || '', answerIndex, source)}
+                  disabled={quizState.hasSubmitted || quizState.isSubmitting || reviewMode || isTimeUp}
                   showResults={reviewMode}
                   correctAnswer={
                     reviewMode
@@ -593,6 +699,11 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId, isProf
                   touchOptimized={isTouchDevice}
                   questionNumber={index + 1}
                   totalQuestions={totalQuestions}
+                  reviewMarker={
+                    hasIntegrityMarker(integrityByQuestion[question.id || '']) ? (
+                      <IntegrityQuestionMarker stats={integrityByQuestion[question.id || '']} />
+                    ) : undefined
+                  }
                 />
               </QuizComponentErrorBoundary>
             </Box>
@@ -606,7 +717,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId, isProf
               answeredQuestions={answeredQuestions}
               totalQuestions={totalQuestions}
               isSubmitting={quizState.isSubmitting}
-              onSubmit={() => handleSubmitQuiz(false)}
+              onSubmit={() => handleSubmitQuiz(isTimeUp ? 'TIME_UP' : 'MANUAL')}
               disabled={quizState.hasSubmitted}
             />
           </QuizComponentErrorBoundary>

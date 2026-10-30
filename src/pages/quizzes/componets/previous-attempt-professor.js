@@ -11,6 +11,7 @@ import CustomAvatar from 'src/@core/components/mui/avatar'
 
 // ** Utils Import
 import { getInitials } from 'src/@core/utils/get-initials'
+import IntegrityRiskBadge, { hasIntegrityBadge } from 'src/components/quiz/integrity/IntegrityRiskBadge'
 
 const PreviousAttemptProfessor = props => {
   const router = useRouter()
@@ -296,6 +297,15 @@ const PreviousAttemptProfessor = props => {
             >
               {props.attempt.correctAnswers}/{props.questionsCount} corecte
             </Typography>
+            {hasIntegrityBadge(props.attempt.integrityRiskLevel) && (
+              <Box sx={{ mt: 1 }}>
+                <IntegrityRiskBadge
+                  riskLevel={props.attempt.integrityRiskLevel}
+                  exitCount={props.attempt.integrityExitCount}
+                  awayMs={props.attempt.integrityAwayMs}
+                />
+              </Box>
+            )}
           </Box>
 
           {/* Time */}

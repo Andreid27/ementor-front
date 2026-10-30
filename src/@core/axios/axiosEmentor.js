@@ -60,10 +60,12 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   response => response,
   async error => {
-    // Finance reports are read-only sections that show their own error; a 403 there must not end the session
-    const isFinanceReport = Boolean(error.config?.url?.includes('/finance/professor/'));
+    // Finance reports and quiz integrity reports are read-only sections that show their own error; a 403 there must
+    // not end the session
+    const url = error.config?.url || '';
+    const isReadOnlyReport = url.includes('/finance/professor/') || /\/quiz\/attempt\/[^/]+\/integrity$/.test(url);
 
-    if (error.response && error.response.status === 403 && !isFinanceReport) {
+    if (error.response && error.response.status === 403 && !isReadOnlyReport) {
       store.dispatch(deleteUser());
       store.dispatch(deleteTokens());
       window.localStorage.removeItem('userData');

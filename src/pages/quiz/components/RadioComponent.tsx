@@ -8,6 +8,7 @@ import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked'
 import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked'
 import { RadioComponentProps } from '../types'
 import { useResponsive } from '../../quizzes/hooks/useResponsive'
+import type { AnswerSelectionSource } from '../../../components/quiz/integrity/integrityTypes'
 
 // ** Apple Design System
 import {
@@ -410,7 +411,8 @@ const RadioComponent: React.FC<
   compact = false,
   touchOptimized = false,
   questionNumber,
-  totalQuestions
+  totalQuestions,
+  reviewMarker
 }) => {
   const theme = useTheme()
   const { isMobile, isTablet, isTouchDevice, shouldReduceMotion, supportsHover } = useResponsive()
@@ -425,8 +427,10 @@ const RadioComponent: React.FC<
     setLocalSelected(selectedAnswer)
   }, [selectedAnswer])
 
+  // The quiz integrity record needs how the answer was picked (pointer type or keyboard) and whether a person
+  // did it: isTrusted is false when a script selects the answer
   const handleAnswerSelect = useCallback(
-    (answerIndex: number) => {
+    (answerIndex: number, source: AnswerSelectionSource) => {
       if (disabled || showResults || isAnimating) return
 
       setIsAnimating(true)
@@ -449,7 +453,7 @@ const RadioComponent: React.FC<
 
       setTimeout(() => {
         setLocalSelected(answerIndex)
-        onAnswerSelect(answerIndex)
+        onAnswerSelect(answerIndex, source)
         setIsAnimating(false)
 
         // Clear the just selected state after animation
@@ -469,7 +473,7 @@ const RadioComponent: React.FC<
     (event: React.KeyboardEvent, answerIndex: number) => {
       if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault()
-        handleAnswerSelect(answerIndex)
+        handleAnswerSelect(answerIndex, { pointerType: 'keyboard', isTrusted: event.nativeEvent.isTrusted })
       }
     },
     [handleAnswerSelect]
@@ -609,6 +613,7 @@ const RadioComponent: React.FC<
               Întrebarea {questionNumber} din {totalQuestions}
             </Typography>
           )}
+          {reviewMarker && <Box sx={{ mb: 1 }}>{reviewMarker}</Box>}
           <Typography
             variant='body1'
             component='h3'
@@ -682,7 +687,12 @@ const RadioComponent: React.FC<
                 index={index}
                 compact={compact}
                 touchOptimized={touchOptimized}
-                onClick={() => handleAnswerSelect(option.index)}
+                onClick={event =>
+                  handleAnswerSelect(option.index, {
+                    pointerType: (event.nativeEvent as PointerEvent).pointerType || '',
+                    isTrusted: event.nativeEvent.isTrusted
+                  })
+                }
                 onKeyDown={e => handleKeyDown(e, option.index)}
                 tabIndex={disabled || showResults ? -1 : 0}
               >

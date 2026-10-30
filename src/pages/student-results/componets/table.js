@@ -32,6 +32,7 @@ import DeleteDialogTransition from './DeleteDialogTransition'
 import extractProfilePicture from 'src/@core/axios/profile-picture-extractor'
 import profilePictureDownloader from 'src/@core/axios/profile-picture-downloader'
 import UserViewDrawer from 'src/pages/student-profile/components/UserViewDrawer'
+import IntegrityRiskBadge, { hasIntegrityBadge } from 'src/components/quiz/integrity/IntegrityRiskBadge'
 
 // ** renders client column
 const renderClient = (params, user) => {
@@ -188,7 +189,7 @@ const StudentsResultsTable = () => {
       renderCell: params => {
         const status = getScoreType(params.row.correctAnswers, params.row.questionsCount)
 
-        return (
+        const scoreChip = (
           <CustomChip
             rounded
             size='small'
@@ -197,6 +198,21 @@ const StudentsResultsTable = () => {
             label={status ? status.text : 'N/A'}
             sx={{ '& .MuiChip-label': { textTransform: 'capitalize' } }}
           />
+        )
+
+        // Attempts with quiz integrity signals get a risk badge next to the score
+        if (!hasIntegrityBadge(params.row.integrityRiskLevel)) return scoreChip
+
+        return (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {scoreChip}
+            <IntegrityRiskBadge
+              compact
+              riskLevel={params.row.integrityRiskLevel}
+              exitCount={params.row.integrityExitCount}
+              awayMs={params.row.integrityAwayMs}
+            />
+          </Box>
         )
       }
     },

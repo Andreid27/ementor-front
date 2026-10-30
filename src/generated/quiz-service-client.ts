@@ -66,6 +66,12 @@ export class QuizServiceClient {
   get user() {
     return new UserControllerApi(this.config, undefined, apiClient)
   }
+
+  // Integrity report of a submitted attempt; not in the generated client until it is regenerated from the backend
+  // that serves it (quiz integrity contract, section 9)
+  getAttemptIntegrity(id: string) {
+    return apiClient.get(`${this.config.basePath}/quiz/attempt/${encodeURIComponent(id)}/integrity`)
+  }
 }
 
 // Export singleton instance

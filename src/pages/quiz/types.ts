@@ -1,6 +1,8 @@
 // ** Types for Quiz Taking Interface
 
+import type { ReactNode } from 'react'
 import { QuestionDTO, QuizDTO } from '../../generated/quiz-service/api'
+import type { AnswerSelectionSource } from '../../components/quiz/integrity/integrityTypes'
 
 // ** Performance Level Type
 export type PerformanceLevel = 'high' | 'medium' | 'low'
@@ -49,7 +51,10 @@ export interface ProgressCardProps {
 export interface RadioComponentProps {
   question: QuestionDTO
   selectedAnswer?: number
-  onAnswerSelect: (answerIndex: number) => void
+  onAnswerSelect: (answerIndex: number, source: AnswerSelectionSource) => void
+
+  // Shown under the question number in the professor's review, e.g. a quiz integrity marker
+  reviewMarker?: ReactNode
   disabled?: boolean
   showResults?: boolean
   correctAnswer?: number
