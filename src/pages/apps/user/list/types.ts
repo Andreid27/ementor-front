@@ -29,6 +29,12 @@ export interface StudentListItem {
   attributes?: { [key: string]: Array<string> } // Profile picture metadata
   generation?: string
   professorId?: string
+
+  // Where the student got in, as the professor entered it
+  admissionScore?: number | null
+  admissionUniversityValue?: string | null
+  admissionSpecialityValue?: string | null
+  admissionExamDate?: string | null
 }
 
 // ** Component props interfaces

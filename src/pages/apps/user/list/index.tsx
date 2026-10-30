@@ -26,6 +26,7 @@ import DialogTitle from '@mui/material/DialogTitle'
 import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
 import Button from '@mui/material/Button'
+import ButtonBase from '@mui/material/ButtonBase'
 
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
@@ -62,6 +63,7 @@ import TableHeader from 'src/views/apps/user/list/TableHeader'
 import AddUserDrawer from 'src/views/apps/user/list/AddUserDrawer'
 import PriceGroupsCard from 'src/views/apps/user/list/PriceGroupsCard'
 import UserViewDrawer from 'src/pages/student-profile/components/UserViewDrawer'
+import AdmissionResultDialog from 'src/views/admission-benchmark/AdmissionResultDialog'
 
 // ** Local Components
 import StudentAvatar from './components/StudentAvatar'
@@ -99,10 +101,17 @@ interface RowOptionsProps {
   student: StudentListItem
   onEditGeneration: (student: StudentListItem) => void
   onEditPrice: (student: StudentListItem) => void
+  onEditAdmission: (student: StudentListItem) => void
   onDeactivate: (student: StudentListItem) => void
 }
 
-const RowOptions: React.FC<RowOptionsProps> = ({ student, onEditGeneration, onEditPrice, onDeactivate }) => {
+const RowOptions: React.FC<RowOptionsProps> = ({
+  student,
+  onEditGeneration,
+  onEditPrice,
+  onEditAdmission,
+  onDeactivate
+}) => {
   // ** State
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const rowOptionsOpen = Boolean(anchorEl)
@@ -127,6 +136,11 @@ const RowOptions: React.FC<RowOptionsProps> = ({ student, onEditGeneration, onEd
 
   const handleEditPrice = (): void => {
     onEditPrice(student)
+    handleRowOptionsClose()
+  }
+
+  const handleEditAdmission = (): void => {
+    onEditAdmission(student)
     handleRowOptionsClose()
   }
 
@@ -166,6 +180,10 @@ const RowOptions: React.FC<RowOptionsProps> = ({ student, onEditGeneration, onEd
           <Icon icon='tabler:currency-dollar' fontSize={20} />
           Editează Prețul
         </MenuItem>
+        <MenuItem onClick={handleEditAdmission} sx={{ '& svg': { mr: 2 } }}>
+          <Icon icon='tabler:school' fontSize={20} />
+          Rezultat admitere
+        </MenuItem>
         <Divider sx={{ my: 1 }} />
         <MenuItem onClick={handleDeactivate} sx={{ '& svg': { mr: 2 }, color: 'error.main' }}>
           <Icon icon='tabler:user-x' fontSize={20} />
@@ -202,6 +220,10 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
   const [deactivateDialogOpen, setDeactivateDialogOpen] = useState<boolean>(false)
   const [studentToDeactivate, setStudentToDeactivate] = useState<StudentListItem | null>(null)
   const [dateFilter, setDateFilter] = useState<string>('')
+  const [admissionStudent, setAdmissionStudent] = useState<StudentListItem | null>(null)
+
+  // Results saved from the dialog show at once, without fetching the list again
+  const [savedAdmissions, setSavedAdmissions] = useState<Record<string, Partial<StudentListItem>>>({})
 
   // ** Hooks
   const dispatch = useDispatch()
@@ -614,6 +636,57 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
       }
     },
     {
+      flex: 0.2,
+      minWidth: 170,
+      sortable: false,
+      headerName: 'Admitere',
+      field: 'admission',
+      renderCell: ({ row }) => {
+        const admission = { ...row, ...savedAdmissions[row.studentUserId] }
+
+        const score =
+          admission.admissionScore != null ? Number(admission.admissionScore).toLocaleString('ro-RO') : null
+        const summary = [admission.admissionSpecialityValue, score].filter(Boolean).join(' · ')
+
+        const details = [
+          [admission.admissionSpecialityValue, admission.admissionUniversityValue].filter(Boolean).join(', '),
+          score && `media ${score}`,
+          admission.admissionExamDate &&
+            `examen ${new Date(`${admission.admissionExamDate}T12:00`).toLocaleDateString('ro-RO')}`
+        ]
+          .filter(Boolean)
+          .join(' · ')
+
+        return (
+          <ButtonBase
+            onClick={() => setAdmissionStudent(row)}
+            title={details || 'Adaugă rezultatul de admitere'}
+            aria-label={`Rezultat admitere pentru ${row.studentName || row.fullName}: ${details || 'neadăugat'}`}
+            sx={{
+              gap: 2,
+              mx: -1,
+              px: 1,
+              py: 1,
+              maxWidth: '100%',
+              borderRadius: 1,
+              justifyContent: 'flex-start',
+              '&:hover p': { color: 'primary.main' },
+              '&.Mui-focusVisible': { outline: theme => `2px solid ${theme.palette.primary.main}` }
+            }}
+          >
+            <Icon
+              icon={summary ? 'tabler:school' : 'tabler:circle-plus'}
+              fontSize={20}
+              color={summary ? 'inherit' : 'disabled'}
+            />
+            <Typography noWrap sx={{ fontWeight: 500, color: summary ? 'text.primary' : 'text.secondary' }}>
+              {summary || 'Neadăugat'}
+            </Typography>
+          </ButtonBase>
+        )
+      }
+    },
+    {
       flex: 0.15,
       minWidth: COLUMN_WIDTHS.PRICING,
       headerName: 'Preț',
@@ -685,6 +758,7 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
           student={row}
           onEditGeneration={handleEditGenerationOpen}
           onEditPrice={handleEditPriceOpen}
+          onEditAdmission={setAdmissionStudent}
           onDeactivate={handleDeactivateOpen}
         />
       )
@@ -933,6 +1007,24 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
       {selectedStudentId && (
         <UserViewDrawer open={drawerOpen} onClose={handleDrawerClose} userId={selectedStudentId} tab='account' />
       )}
+
+      {/* Admission Result Dialog, for active and former students alike */}
+      <AdmissionResultDialog
+        student={admissionStudent}
+        onClose={() => setAdmissionStudent(null)}
+        onSaved={result => {
+          const studentUserId = admissionStudent?.studentUserId ?? result.studentId
+          setSavedAdmissions(previous => ({
+            ...previous,
+            [studentUserId]: {
+              admissionScore: result.admissionScore,
+              admissionUniversityValue: result.admissionUniversityValue,
+              admissionSpecialityValue: result.admissionSpecialityValue,
+              admissionExamDate: result.admissionExamDate
+            }
+          }))
+        }}
+      />
 
       {/* Edit Generation Dialog */}
       <Dialog open={editGenerationOpen} onClose={handleEditGenerationClose} maxWidth='sm' fullWidth>

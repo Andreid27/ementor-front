@@ -29,6 +29,13 @@ export const userStatusObj: UserStatusObj = {
 }
 
 // ** Data transformation function
+// The admission fields are newer than the generated client, so they are read without its type
+const admissionFields = (rel: StudentProfessorRelationshipDTO) => {
+  const { admissionScore, admissionUniversityValue, admissionSpecialityValue, admissionExamDate } = rel as any
+
+  return { admissionScore, admissionUniversityValue, admissionSpecialityValue, admissionExamDate }
+}
+
 export const transformStudentData: StudentDataTransformer = (
   relationships: StudentProfessorRelationshipDTO[]
 ): StudentListItem[] => {
@@ -66,7 +73,8 @@ export const transformStudentData: StudentDataTransformer = (
       fullName, // For compatibility
       attributes: rel.attributes, // Preserve attributes for profile picture extraction
       generation: rel.generation, // Include generation from API
-      professorId: rel.professorId // Include professorId from API
+      professorId: rel.professorId, // Include professorId from API
+      ...admissionFields(rel)
     }
   })
 }
