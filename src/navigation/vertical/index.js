@@ -78,6 +78,13 @@ const navigation = () => {
       path: '/student-results'
     },
     {
+      icon: 'tabler:chart-line',
+      subject: 'professor-pages',
+      title: 'Benchmark admitere',
+      action: 'read',
+      path: '/admission-benchmark'
+    },
+    {
       sectionTitle: 'Administrativ',
       action: 'read',
       subject: 'professor-pages'
