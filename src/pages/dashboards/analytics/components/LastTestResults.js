@@ -80,11 +80,19 @@ const BENCHMARK_GRACE_MS = 1000
 
 /*
  * On the student's own chart the admitted students' average is drawn this
- * many points higher than it is (capped at 100%), so students aim a little
- * above the real bar. Nothing on the student's screen says so; the professor's
- * view of the same student shows the real average.
+ * many points higher than it is, so students aim a little above the real bar.
+ * Nothing on the student's screen says so; the professor's view of the same
+ * student shows the real average.
  */
 const STUDENT_COHORT_OFFSET = 2
+
+/*
+ * The lift shrinks above 92%, to a quarter of what is left below 100, so a
+ * high average still rises and falls as it really does. A plain cap would turn
+ * every day above 98% into a flat line at exactly 100%, which gives it away.
+ */
+const liftCohortAverage = average =>
+  Math.round((average + Math.min(STUDENT_COHORT_OFFSET, (100 - average) / 4)) * 10) / 10
 
 const NONE = []
 
@@ -376,12 +384,7 @@ const LastTestResults = ({ data, studentId }) => {
       smoothingRadius(Math.min(shownDays ?? DEFAULT_DAYS, COHORT_REACH_DAYS) + 30)
     )
 
-    return studentId
-      ? smoothed
-      : smoothed.map(point => ({
-          ...point,
-          average: Math.min(100, Math.round((point.average + STUDENT_COHORT_OFFSET) * 10) / 10)
-        }))
+    return studentId ? smoothed : smoothed.map(point => ({ ...point, average: liftCohortAverage(point.average) }))
   }, [cohortLine, shownDays, studentId])
 
   const periodValue = percent(
