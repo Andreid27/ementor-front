@@ -48,6 +48,8 @@ import {
   dayToTime,
   daysToExamLabel,
   formatAverage,
+  smoothCurve,
+  smoothingRadius,
   timeTicks,
   timeToDay
 } from 'src/views/admission-benchmark/chartStyle'
@@ -72,6 +74,14 @@ const PROFILE_PATH = '/pages/account-settings/account'
 
 // How long a period waits for the cohort line before showing the tests without it.
 const BENCHMARK_GRACE_MS = 1000
+
+/*
+ * On the student's own chart the admitted students' average is drawn this
+ * many points higher than it is (capped at 100%), so students aim a little
+ * above the real bar. Nothing on the student's screen says so; the professor's
+ * view of the same student shows the real average.
+ */
+const STUDENT_COHORT_OFFSET = 2
 
 const NONE = []
 
@@ -105,19 +115,24 @@ const ROLLING_TESTS = 5
 
 /**
  * Each test with the average of itself and up to four tests before it,
- * counted by questions the way "media perioadei" is.
+ * counted by questions the way "media perioadei" is. Only a day's last test
+ * carries it onto the line: two tests hours apart would otherwise draw a
+ * vertical jump, so the line moves once a day.
  */
 const withRollingAverage = tests =>
   tests.map((test, index) => {
     const recent = tests.slice(Math.max(0, index - ROLLING_TESTS + 1), index + 1)
+    const lastOfDay = tests[index + 1]?.day !== test.day
 
     return {
       ...test,
       averageOf: recent.length,
-      average: percent(
-        recent.reduce((sum, item) => sum + item.correct, 0),
-        recent.reduce((sum, item) => sum + item.total, 0)
-      )
+      average: lastOfDay
+        ? percent(
+            recent.reduce((sum, item) => sum + item.correct, 0),
+            recent.reduce((sum, item) => sum + item.total, 0)
+          )
+        : undefined
     }
   })
 
@@ -347,7 +362,21 @@ const LastTestResults = ({ data, studentId }) => {
 
   const benchmark = shownDays === null ? undefined : benchmarks[shownDays]
   const cohortLine = benchmark?.status === 'READY' && benchmark.points.length > 0 ? benchmark : null
-  const cohortPoints = cohortLine?.points ?? NONE
+
+  // Drawn smoothed; the tooltip reads the same values, so its point sits on the line.
+  // The cohort reaches back at most a year, so "Tot" smooths it as a year does.
+  const cohortPoints = useMemo(() => {
+    if (!cohortLine) return NONE
+
+    const smoothed = smoothCurve(cohortLine.points, smoothingRadius(Math.min(shownDays ?? DEFAULT_DAYS, 365) + 30))
+
+    return studentId
+      ? smoothed
+      : smoothed.map(point => ({
+          ...point,
+          average: Math.min(100, Math.round((point.average + STUDENT_COHORT_OFFSET) * 10) / 10)
+        }))
+  }, [cohortLine, shownDays, studentId])
 
   const periodValue = percent(
     results.reduce((sum, result) => sum + result.correctAnswers, 0),

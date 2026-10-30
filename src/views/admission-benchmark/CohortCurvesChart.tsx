@@ -13,7 +13,16 @@ import { useReducedMotion } from 'framer-motion'
 
 // ** Custom Components Imports
 import LineSwatch from './LineSwatch'
-import { cohortColor, cohortCountsLabel, cohortDash, cohortLabel, daysToExamLabel, formatAverage } from './chartStyle'
+import {
+  cohortColor,
+  cohortCountsLabel,
+  cohortDash,
+  cohortLabel,
+  daysToExamLabel,
+  formatAverage,
+  smoothCurve,
+  smoothingRadius
+} from './chartStyle'
 import { accentInk } from 'src/views/student-ui/readableAccent'
 
 // ** Types
@@ -105,7 +114,8 @@ const CohortCurvesChart = ({ plotted, days, status, onRetry }: CohortCurvesChart
   const theme = useTheme()
   const reduceMotion = useReducedMotion()
 
-  // One row per day before the exam, with one value per cohort that has a point that day.
+  // One row per day before the exam, with one value per cohort that has a point that day. The lines are
+  // drawn smoothed, and the tooltip reads the same values, so its points sit on the lines.
   const { rows, series, pointsByDay } = useMemo(() => {
     const byDay = new Map<number, Row>()
     const series: { dataKey: string; slot: number }[] = []
@@ -113,9 +123,10 @@ const CohortCurvesChart = ({ plotted, days, status, onRetry }: CohortCurvesChart
 
     plotted.forEach(({ curve, slot }) => {
       const dataKey = `c${slot}`
+      const points = smoothCurve(curve.points, smoothingRadius(days))
       series.push({ dataKey, slot })
-      pointsByDay.set(curve.key, new Map(curve.points.map(point => [point.daysBeforeExam, point])))
-      curve.points.forEach(point => {
+      pointsByDay.set(curve.key, new Map(points.map(point => [point.daysBeforeExam, point])))
+      points.forEach(point => {
         const row = byDay.get(point.daysBeforeExam) ?? ({ d: point.daysBeforeExam } as Row)
         row[dataKey] = point.average
         byDay.set(point.daysBeforeExam, row)
@@ -123,7 +134,7 @@ const CohortCurvesChart = ({ plotted, days, status, onRetry }: CohortCurvesChart
     })
 
     return { rows: Array.from(byDay.values()).sort((a, b) => b.d - a.d), series, pointsByDay }
-  }, [plotted])
+  }, [plotted, days])
 
   const axisText = { fill: theme.palette.text.secondary, fontSize: 12 }
   const step = tickStep(days)
@@ -153,7 +164,7 @@ const CohortCurvesChart = ({ plotted, days, status, onRetry }: CohortCurvesChart
   const described = plotted
     .filter(({ curve }) => curve.points.length > 0)
     .map(({ curve }) => {
-      const averages = curve.points.map(point => point.average)
+      const averages = Array.from(pointsByDay.get(curve.key)?.values() ?? [], point => point.average)
 
       return `${cohortLabel(curve)}: de la ${formatAverage(Math.min(...averages))} la ${formatAverage(
         Math.max(...averages)

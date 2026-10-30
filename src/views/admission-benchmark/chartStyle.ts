@@ -75,6 +75,40 @@ export const timeToDay = (time: number) => {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
 }
 
+/**
+ * How many days on each side a drawn cohort line takes into account, for a
+ * chart spanning `spanDays`: a week on short charts, a twentieth of the span
+ * on long ones, where a week's wobble would still read as noise.
+ */
+export const smoothingRadius = (spanDays: number) => Math.max(7, Math.round(spanDays / 20))
+
+/**
+ * Evens out a cohort curve for drawing. The server's points already average a
+ * 7-day window, but with few tests a day that still leaves steps and
+ * plateaus; here each day becomes the average of the days within `radius` of
+ * it, nearer days and days with more tests counting more. The days and the
+ * counts stay as they were.
+ */
+export const smoothCurve = <T extends { daysBeforeExam: number; average: number; tests: number }>(
+  points: T[],
+  radius: number
+): T[] =>
+  points.map(point => {
+    let weighted = 0
+    let weights = 0
+
+    points.forEach(other => {
+      const distance = Math.abs(other.daysBeforeExam - point.daysBeforeExam)
+      if (distance > radius) return
+
+      const weight = (radius + 1 - distance) * Math.max(other.tests, 1)
+      weighted += other.average * weight
+      weights += weight
+    })
+
+    return { ...point, average: Math.round((weighted / weights) * 10) / 10 }
+  })
+
 const startOfDay = (time: number) => {
   const date = new Date(time)
   date.setHours(0, 0, 0, 0)
