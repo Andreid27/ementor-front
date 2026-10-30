@@ -27,6 +27,7 @@ import CongratulationsQuizzes from 'src/pages/dashboards/analytics/components/Co
 import LessonStatsOverall from 'src/pages/dashboards/analytics/components/LessonStatsOverall'
 import StudentStatsQuestions from 'src/pages/dashboards/analytics/components/StudentStatsQuestions'
 import LastTestResults from 'src/pages/dashboards/analytics/components/LastTestResults'
+import AdmissionResultCard from 'src/views/admission-benchmark/AdmissionResultCard'
 
 // Styled Timeline component
 const Timeline = styled(MuiTimeline)({
@@ -44,8 +45,11 @@ const UserViewAccount = ({ userId, profileData, quizStats, lessonStats, quizzesD
       <Grid item xs={12} md={6}>
         <StudentStatsQuestions questions={quizStats.questions} />
       </Grid>
-      <Grid item xs={12} md={6}>
+      <Grid item xs={12}>
         <LastTestResults direction={'ltr'} data={quizStats} studentId={userId} />
+      </Grid>
+      <Grid item xs={12}>
+        <AdmissionResultCard studentId={userId} profile={profileData} />
       </Grid>
     </Grid>
 
