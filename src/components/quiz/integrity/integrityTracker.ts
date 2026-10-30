@@ -105,11 +105,13 @@ const elementSignature = (element: Element) => {
   return clip(`${element.tagName}${id}${firstClass}`.toLowerCase(), 200)
 }
 
-// #nprogress is the page loading bar (NProgress, started on every route change)
+// #nprogress is the page loading bar (NProgress, started on every route change); recharts measures text in a
+// hidden span it adds to <body> and leaves there, so every student who saw a dashboard chart has one
 const isAppElement = (element: Element) =>
   IGNORED_TAGS.includes(element.tagName) ||
   element.id.startsWith('__next') ||
   element.id === 'nprogress' ||
+  element.id === 'recharts_measurement_span' ||
   classNames(element)
     .split(/\s+/)
     .some(name => name.startsWith('Mui') || name.startsWith('base-'))
@@ -565,13 +567,15 @@ export const startQuizIntegrityTracker = (options: QuizIntegrityTrackerOptions):
       try {
         if (!stopped) resolveBlur()
 
-        // Older browsers leave pointerType out of click events; a pointerdown just before tells what was used
+        // A pointerdown just before tells what was really used: older browsers leave pointerType out of click
+        // events, and iOS Safari reports the click of a finger tap as a mouse click
         let input = toAnswerInput(source.pointerType)
         if (
-          input === 'UNKNOWN' &&
+          (input === 'UNKNOWN' || input === 'MOUSE') &&
           source.isTrusted &&
           lastPointer &&
-          recorder.now() - lastPointer.t <= POINTER_FALLBACK_MS
+          recorder.now() - lastPointer.t <= POINTER_FALLBACK_MS &&
+          toAnswerInput(lastPointer.type) !== 'UNKNOWN'
         ) {
           input = toAnswerInput(lastPointer.type)
         }
