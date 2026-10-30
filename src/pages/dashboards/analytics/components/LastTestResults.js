@@ -1,175 +1,179 @@
+// ** React Imports
+import { useId } from 'react'
+
 // ** MUI Imports
 import Box from '@mui/material/Box'
-import Card from '@mui/material/Card'
-import CardHeader from '@mui/material/CardHeader'
 import Typography from '@mui/material/Typography'
-import CardContent from '@mui/material/CardContent'
+import { alpha, darken, useTheme } from '@mui/material/styles'
 
 // ** Third Party Imports
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-
-// ** Icon Imports
-import Icon from 'src/@core/components/icon'
+import { Area, AreaChart, CartesianGrid, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { useReducedMotion } from 'framer-motion'
 
 // ** Custom Components Imports
-import CustomChip from 'src/@core/components/mui/chip'
-import { useTheme } from '@emotion/react'
+import InsightCard from 'src/views/student-ui/InsightCard'
+import StatusPill from 'src/views/student-ui/StatusPill'
+import { formatShortDate, percent } from 'src/views/student-ui/format'
+import { countLabel } from 'src/views/student-ui/countLabel'
 
+const ResultTooltip = ({ active, payload }) => {
+  if (!active || !payload?.length) return null
 
-const CustomTooltip = props => {
-  // ** Props
-  const { active, payload } = props
-  if (active && payload) {
-    return (
-      <div className='recharts-custom-tooltip'>
-        <Typography sx={{ fontSize: theme => theme.typography.body2.fontSize }}>{`${payload[0].payload.correctAnswers}/${payload[0].payload.totalQuestions} = ${payload[0].value}%`}</Typography>
-      </div>
-    )
-  }
-
-  return null
-}
-
-const LastTestResults = ({ direction, data }) => {
-  const theme = useTheme()
-  const graphDataSort = data.lastMonthQuizzesResults.map(item => ({ ...item }))
-  graphDataSort.sort((a, b) => new Date(a.date) - new Date(b.date))
-
-  let correctAnswers = 0
-  let totalQuestions = 0
-
-
-  graphDataSort.forEach(item => {
-    const date = new Date(item.date)
-    item.date = `${date.getDate()}/${date.getMonth() + 1}`
-    correctAnswers += item.correctAnswers
-    totalQuestions += item.totalQuestions
-    item.result = parseFloat(item.result).toFixed(2)
-  })
-  const graphData = graphDataSort
-  let monthAverage = parseFloat(correctAnswers * 100 / totalQuestions).toFixed(2)
-  function getMonthDelta(data) {
-    if (data && data.questions && data.questions.totalQuestions === 0) {
-      return [0, 'info']
-    }
-    let totalAvarage = data.questions.correctQuestions * 100 / data.questions.totalQuestions
-    let delta = parseFloat(monthAverage - totalAvarage).toFixed(2)
-    if (delta < 0) {
-      return [Math.abs(delta), 'error']
-    } else if (delta == 0) {
-      return [delta, 'info']
-    } else {
-      return [delta, 'success']
-    }
-  }
-  let [monthDelta, monthDeltaStatus] = getMonthDelta(data)
-
-  function getChipContent(monthDeltaStatus) {
-
-    if (monthDeltaStatus === 'error') {
-      return (
-        <>
-          <Icon icon='tabler:arrow-down' fontSize='1rem' />
-          <span>{monthDelta}%</span>
-        </>
-      )
-    } else if (monthDeltaStatus === 'success') {
-      return (
-        <>
-          <Icon icon='tabler:arrow-up' fontSize='1rem' />
-          <span>{monthDelta}%</span>
-        </>
-      )
-    } else {
-      return (
-        <>
-          <Icon icon='tabler:point' fontSize='1rem' />
-          <span>{monthDelta}%</span>
-        </>
-      )
-    }
-  }
-
-  function getMonthAverageColor(monthAverage) {
-    if (monthAverage >= 80) {
-      return theme.palette.success.main
-    } else if (monthAverage > 50) {
-      return theme.palette.warning.main
-    } else {
-      return theme.palette.error.main
-    }
-  }
-
+  const point = payload[0].payload
 
   return (
-    <Card>
-      {graphData.length ? (
-        <>
-          <CardHeader
-            title='Rezultate teste lunare'
-            subheader='Rezultatele tale din ultimile 30 de zile.'
-            subheaderTypographyProps={{ sx: { color: theme => `${theme.palette.text.disabled} !important` } }}
-            sx={{
-              flexDirection: ['column', 'row'],
-              alignItems: ['flex-start', 'center'],
-              '& .MuiCardHeader-action': { mb: 0 },
-              '& .MuiCardHeader-content': { mb: [2, 0] }
-            }}
-            action={
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Typography variant='h6' color={getMonthAverageColor(monthAverage)} sx={{ mr: 5, fontWeight: 1000 }}>
-                  %{monthAverage}
-                </Typography>
-                <CustomChip
-                  skin='light'
-                  color={monthDeltaStatus}
-                  sx={{ fontWeight: 500, borderRadius: 1, fontSize: theme => theme.typography.body2.fontSize }}
-                  label={
-                    <Box sx={{ display: 'flex', alignItems: 'center', '& svg': { mr: 1 } }}>
-                      {getChipContent(monthDeltaStatus)}
-                    </Box>
-                  }
-                />
-              </Box>
-            }
-          />
-          <CardContent>
-            <Box sx={{ height: 350 }}>
+    <Box
+      sx={{
+        px: 3,
+        py: 2,
+        borderRadius: '10px',
+        bgcolor: 'background.paper',
+        boxShadow: theme => `0 6px 20px ${alpha(theme.palette.common.black, 0.12)}`
+      }}
+    >
+      <Typography variant='caption' sx={{ color: 'text.secondary' }}>
+        {point.label}
+      </Typography>
+      <Typography sx={{ fontWeight: 700, color: 'text.primary' }}>{point.value}%</Typography>
+      <Typography variant='caption' sx={{ color: 'text.secondary' }}>
+        {point.correct} din {point.total} corecte
+      </Typography>
+    </Box>
+  )
+}
 
-              <ResponsiveContainer>
-                <LineChart height={350} data={graphData} style={{ direction }} margin={{ left: -20 }}>
-                  <CartesianGrid />
-                  <XAxis dataKey='date' reversed={direction === 'rtl'} />
-                  <YAxis orientation={direction === 'rtl' ? 'right' : 'left'} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Line dataKey='result' stroke={getMonthAverageColor(monthAverage)} strokeWidth={3} />
-                </LineChart>
-              </ResponsiveContainer>
-            </Box>
-          </CardContent>
-        </>
+/**
+ * Each test from the last 30 days as one point, on a fixed 0–100% scale so a
+ * small dip doesn't look like a fall, with the all-time average as a dashed
+ * line. Written for both readers: the student and the professor.
+ */
+const LastTestResults = ({ data }) => {
+  const theme = useTheme()
+  const reduceMotion = useReducedMotion()
+  const gradientId = `results-${useId().replace(/:/g, '')}`
+
+  const results = [...(data?.lastMonthQuizzesResults ?? [])].sort((a, b) => new Date(a.date) - new Date(b.date))
+
+  const points = results.map((result, index) => ({
+    key: index,
+    label: formatShortDate(result.date),
+    value: percent(result.correctAnswers, result.totalQuestions),
+    correct: result.correctAnswers,
+    total: result.totalQuestions
+  }))
+
+  const monthValue = percent(
+    results.reduce((sum, result) => sum + result.correctAnswers, 0),
+    results.reduce((sum, result) => sum + result.totalQuestions, 0)
+  )
+  const overall = percent(data?.questions?.correctQuestions ?? 0, data?.questions?.totalQuestions ?? 0)
+  const delta = monthValue - overall
+
+  const comparison =
+    delta >= 1
+      ? { tone: 'accent', icon: 'tabler:trending-up', label: `${delta}% peste media generală` }
+      : delta <= -1
+      ? { tone: 'warning', icon: 'tabler:trending-down', label: `${-delta}% sub media generală` }
+      : { tone: 'neutral', icon: 'tabler:equal', label: 'La nivelul mediei generale' }
+
+  // The bright theme green is under 3:1 as a line on white; one step deeper reads clearly.
+  const line = theme.palette.mode === 'light' ? darken(theme.palette.primary.main, 0.2) : theme.palette.primary.main
+  const axisText = { fill: theme.palette.text.secondary, fontSize: 12 }
+
+  const values = points.map(point => point.value)
+
+  return (
+    <InsightCard
+      title='Rezultate în ultimele 30 de zile'
+      subtitle={points.length ? 'Câte un punct pentru fiecare test' : undefined}
+      aside={
+        points.length > 0 && (
+          <Box sx={{ textAlign: { xs: 'left', sm: 'right' } }}>
+            <Typography sx={{ fontWeight: 700, fontSize: '1.5rem', lineHeight: 1.1, color: 'text.primary' }}>
+              {monthValue}%
+            </Typography>
+            <Typography variant='caption' sx={{ color: 'text.secondary' }}>
+              media lunii
+            </Typography>
+          </Box>
+        )
+      }
+    >
+      {points.length === 0 ? (
+        <Typography variant='body2' sx={{ color: 'text.secondary' }}>
+          Niciun test în ultimele 30 de zile. Graficul apare după următorul test.
+        </Typography>
       ) : (
         <>
-          <CardHeader
-            title='Rezultate teste lunare'
-            subheader='Rezultatele tale din ultimile 30 de zile.'
-            subheaderTypographyProps={{ sx: { color: theme => `${theme.palette.text.disabled} !important` } }}
-            sx={{
-              flexDirection: ['column', 'row'],
-              alignItems: ['flex-start', 'center'],
-              '& .MuiCardHeader-action': { mb: 0 },
-              '& .MuiCardHeader-content': { mb: [2, 0] }
-            }}
-          />
-          <CardContent>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-              <Typography variant='h6'>Nu ai susținut niciun test în ultimele 30 de zile</Typography>
-            </Box>
-          </CardContent>
+          <Box sx={{ mb: 4 }}>
+            <StatusPill tone={comparison.tone} icon={comparison.icon}>
+              {comparison.label}
+            </StatusPill>
+          </Box>
+          <Box
+            role='img'
+            aria-label={`${countLabel(
+              points.length,
+              'Un test',
+              'teste'
+            )} în ultimele 30 de zile, cu rezultate între ${Math.min(...values)}% și ${Math.max(
+              ...values
+            )}%. Media lunii: ${monthValue}%, media generală: ${overall}%.`}
+            sx={{ flex: 1, minHeight: { xs: 200, md: 240 } }}
+          >
+            <ResponsiveContainer width='100%' height='100%' minHeight={200}>
+              <AreaChart data={points} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id={gradientId} x1='0' y1='0' x2='0' y2='1'>
+                    <stop offset='0%' stopColor={theme.palette.primary.main} stopOpacity={0.28} />
+                    <stop offset='100%' stopColor={theme.palette.primary.main} stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid vertical={false} stroke={alpha(theme.palette.text.primary, 0.08)} />
+                {/* Keyed by test, labelled by day: two tests on the same day get one date. */}
+                <XAxis
+                  dataKey='key'
+                  tickFormatter={index =>
+                    index > 0 && points[index - 1]?.label === points[index]?.label ? '' : points[index]?.label ?? ''
+                  }
+                  tickLine={false}
+                  axisLine={false}
+                  tick={axisText}
+                  interval='preserveStartEnd'
+                  minTickGap={16}
+                />
+                <YAxis
+                  domain={[0, 100]}
+                  ticks={[0, 50, 100]}
+                  tickFormatter={value => `${value}%`}
+                  tickLine={false}
+                  axisLine={false}
+                  tick={axisText}
+                  width={48}
+                />
+                <ReferenceLine
+                  y={overall}
+                  stroke={theme.palette.text.secondary}
+                  strokeDasharray='4 4'
+                  label={{ value: `media generală ${overall}%`, position: 'insideTopLeft', ...axisText }}
+                />
+                <Tooltip content={<ResultTooltip />} cursor={{ stroke: alpha(line, 0.4) }} />
+                <Area
+                  type='monotone'
+                  dataKey='value'
+                  stroke={line}
+                  strokeWidth={2.5}
+                  fill={`url(#${gradientId})`}
+                  dot={{ r: 3.5, fill: theme.palette.background.paper, stroke: line, strokeWidth: 2 }}
+                  activeDot={{ r: 5, fill: line }}
+                  isAnimationActive={!reduceMotion}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </Box>
         </>
       )}
-
-    </Card>
+    </InsightCard>
   )
 }
 

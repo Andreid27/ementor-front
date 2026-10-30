@@ -1,88 +1,76 @@
 import React, { useEffect, useState } from 'react'
-import Card from '@mui/material/Card'
-import CardHeader from '@mui/material/CardHeader'
-import CardContent from '@mui/material/CardContent'
-import List from '@mui/material/List'
-import ListItem from '@mui/material/ListItem'
-import ListItemText from '@mui/material/ListItemText'
-import Typography from '@mui/material/Typography'
-import Skeleton from '@mui/material/Skeleton'
 import Box from '@mui/material/Box'
-import Chip from '@mui/material/Chip'
-import Divider from '@mui/material/Divider'
+import Button from '@mui/material/Button'
+import Skeleton from '@mui/material/Skeleton'
+import Typography from '@mui/material/Typography'
+import { alpha, useTheme } from '@mui/material/styles'
+import { useSelector } from 'react-redux'
 import { profileServiceClient, EventOccurrenceDTO } from 'src/services'
-import EmentorAvatar, { UserType } from 'src/@core/components/ementor-avatar'
+import { selectUser } from 'src/store/apps/user'
+import Icon from 'src/@core/components/icon'
+import EmptyStateCard from 'src/views/student-ui/EmptyStateCard'
+import InsightCard from 'src/views/student-ui/InsightCard'
+import StatusPill, { StatusTone } from 'src/views/student-ui/StatusPill'
+import { accentButtonSx, accentFill, accentInk } from 'src/views/student-ui/readableAccent'
 
-const formatDateTime = (iso?: string) => {
-  if (!iso) return ''
-  try {
-    const d = new Date(iso)
-    return d.toLocaleDateString('ro-RO', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  } catch (e) {
-    return iso
-  }
+// A card, not a calendar: the next few sessions and the last couple.
+const UPCOMING_SHOWN = 3
+const RECENT_SHOWN = 2
+
+const startOf = (evt: EventOccurrenceDTO) => new Date(evt.effectiveStartTime || evt.actualStartTime || '')
+
+const endOf = (evt: EventOccurrenceDTO) => {
+  const end = evt.effectiveEndTime || evt.actualEndTime
+
+  return end ? new Date(end) : null
 }
 
-const formatTime = (iso?: string) => {
-  if (!iso) return ''
-  try {
-    const d = new Date(iso)
-    return d.toLocaleTimeString('ro-RO', {
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  } catch (e) {
-    return ''
-  }
+/** A session that has started and not ended yet: the one the student can join right now. */
+const isLive = (evt: EventOccurrenceDTO, now: Date) => {
+  const end = endOf(evt)
+
+  return !evt.cancelled && startOf(evt) <= now && end !== null && now <= end
 }
 
-const getTimeUntilEvent = (startTime?: string) => {
-  if (!startTime) return ''
-  try {
-    const now = new Date()
-    const eventStart = new Date(startTime)
-    const diffMs = eventStart.getTime() - now.getTime()
+const formatTime = (date: Date) => date.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' })
 
-    if (diffMs < 0) return ''
+/** "Azi", "Mâine", "În 3 zile", counted in calendar days, not hours. */
+const relativeDay = (date: Date, now: Date) => {
+  const day = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+  const days = Math.round((day(date) - day(now)) / 864e5)
 
-    const diffMins = Math.floor(diffMs / 60000)
-    const diffHours = Math.floor(diffMins / 60)
-    const diffDays = Math.floor(diffHours / 24)
+  if (days <= 0) return 'Azi'
+  if (days === 1) return 'Mâine'
 
-    if (diffDays > 0) {
-      return `în ${diffDays} zi${diffDays > 1 ? 'le' : ''}`
-    } else if (diffHours > 0) {
-      return diffHours === 1 ? `în 1 oră` : `în ${diffHours} ore`
-    } else if (diffMins > 0) {
-      return diffMins === 1 ? `în 1 minut` : `în ${diffMins} minute`
-    } else {
-      return 'în curând'
-    }
-  } catch (e) {
-    return ''
-  }
+  return `În ${days} zile`
 }
 
-const isEventLive = (startTime?: string, endTime?: string) => {
-  if (!startTime || !endTime) return false
-  try {
-    const now = new Date()
-    const start = new Date(startTime)
-    const end = new Date(endTime)
-    return now >= start && now <= end
-  } catch (e) {
-    return false
-  }
+/**
+ * A group session lists every student in the group, so only the viewer's own
+ * row says whether they were there. Attendance is known once the session has
+ * actually started; before that it simply ended.
+ */
+const pastStatus = (evt: EventOccurrenceDTO, userId?: string): { tone: StatusTone; icon: string; label: string } => {
+  if (evt.cancelled) return { tone: 'neutral', icon: 'tabler:ban', label: 'Anulată' }
+
+  const mine = evt.eventAttendees?.find(attendee => attendee.attendeeId === userId)
+  if (mine?.attended) return { tone: 'neutral', icon: 'tabler:circle-check', label: 'Ai participat' }
+  if (mine && evt.actualStartTime) return { tone: 'warning', icon: 'tabler:user-x', label: 'Ai lipsit' }
+
+  return { tone: 'neutral', icon: 'tabler:clock-check', label: 'Încheiată' }
 }
 
-const EventsOverview: React.FC = () => {
-  const [pastEvents, setPastEvents] = useState<EventOccurrenceDTO[]>([])
-  const [upcomingEvents, setUpcomingEvents] = useState<EventOccurrenceDTO[]>([])
+interface EventsOverviewProps {
+  /** What the empty card tells the student, e.g. that sessions need a professor first. */
+  emptyDescription?: string
+}
+
+const EventsOverview: React.FC<EventsOverviewProps> = ({
+  emptyDescription = 'Când profesorul programează o ședință, o vezi aici, cu linkul de intrare.'
+}) => {
+  const theme = useTheme()
+  const user = useSelector(selectUser)
+  const [events, setEvents] = useState<EventOccurrenceDTO[]>([])
   const [loading, setLoading] = useState<boolean>(true)
 
   useEffect(() => {
@@ -93,7 +81,7 @@ const EventsOverview: React.FC = () => {
       try {
         const now = new Date()
 
-        // Fetch events from last 6 days to next 7 days
+        // From 6 days back to 7 days ahead
         const startDate = new Date(now)
         startDate.setDate(startDate.getDate() - 6)
         const endDate = new Date(now)
@@ -107,44 +95,12 @@ const EventsOverview: React.FC = () => {
 
           if (mounted) {
             const data = res?.data ?? res
-            const allEvents = Array.isArray(data) ? data : []
-
-            // Filter and sort past events
-            const past = allEvents
-              .filter((evt: EventOccurrenceDTO) => {
-                const eventTime = new Date(evt.effectiveStartTime || evt.actualStartTime || '')
-                return eventTime < now
-              })
-              .sort((a: EventOccurrenceDTO, b: EventOccurrenceDTO) => {
-                const timeA = new Date(a.effectiveStartTime || a.actualStartTime || '').getTime()
-                const timeB = new Date(b.effectiveStartTime || b.actualStartTime || '').getTime()
-                return timeB - timeA // Most recent first
-              })
-              .slice(0, 6)
-
-            // Filter and sort upcoming events
-            const upcoming = allEvents
-              .filter((evt: EventOccurrenceDTO) => {
-                const eventTime = new Date(evt.effectiveStartTime || evt.actualStartTime || '')
-                return eventTime >= now && !evt.cancelled
-              })
-              .sort((a: EventOccurrenceDTO, b: EventOccurrenceDTO) => {
-                const timeA = new Date(a.effectiveStartTime || a.actualStartTime || '').getTime()
-                const timeB = new Date(b.effectiveStartTime || b.actualStartTime || '').getTime()
-                return timeA - timeB // Soonest first
-              })
-              .slice(0, 7)
-
-            setPastEvents(past)
-            setUpcomingEvents(upcoming)
+            setEvents(Array.isArray(data) ? data : [])
           }
         }
       } catch (err) {
         console.error('Failed to fetch events:', err)
-        if (mounted) {
-          setPastEvents([])
-          setUpcomingEvents([])
-        }
+        if (mounted) setEvents([])
       } finally {
         if (mounted) setLoading(false)
       }
@@ -157,190 +113,182 @@ const EventsOverview: React.FC = () => {
     }
   }, [])
 
-  const renderEventItem = (evt: EventOccurrenceDTO, isUpcoming: boolean, isClosest: boolean = false) => {
-    const eventTime = evt.effectiveStartTime || evt.actualStartTime || ''
-    const eventEndTime = evt.actualEndTime || ''
-    const attended = evt.eventAttendees?.some(attendee => attendee.attended) || false
-    const isLive = isUpcoming && isEventLive(eventTime, eventEndTime)
-    const timeUntil = isUpcoming && !isLive ? getTimeUntilEvent(eventTime) : ''
+  const now = new Date()
 
-    const handleJoinMeeting = () => {
-      if (evt.meetingLink) {
-        window.open(evt.meetingLink, '_blank')
-      }
-    }
+  const upcoming = events
+    .filter(evt => isLive(evt, now) || (startOf(evt) > now && !evt.cancelled))
+    .sort((a, b) => startOf(a).getTime() - startOf(b).getTime())
+    .slice(0, UPCOMING_SHOWN)
 
+  const recent = events
+    .filter(evt => startOf(evt) <= now && !isLive(evt, now))
+    .sort((a, b) => startOf(b).getTime() - startOf(a).getTime())
+    .slice(0, RECENT_SHOWN)
+
+  if (loading) {
     return (
-      <ListItem
-        key={evt.id || evt.recurringSeriesId}
-        sx={{
-          py: 2,
-          px: 3,
-          backgroundColor: isClosest ? 'action.hover' : 'transparent',
-          borderLeft: isClosest ? 4 : 0,
-          borderColor: isClosest ? 'primary.main' : 'transparent',
-          transition: 'all 0.2s',
-          '&:hover': {
-            backgroundColor: 'action.selected'
-          },
-          cursor: isLive && evt.meetingLink ? 'pointer' : 'default'
-        }}
-        onClick={isLive && evt.meetingLink ? handleJoinMeeting : undefined}
-      >
-        <Box sx={{ width: '100%' }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.75 }}>
-            <Typography variant='body2' fontWeight={isClosest ? 600 : 500} sx={{ flex: 1 }}>
-              {evt.seriesTitle || 'Event'}
-            </Typography>
-            {!isUpcoming && (
-              <Chip
-                label={attended ? 'Participat' : 'Pierdut'}
-                size='small'
-                color={attended ? 'success' : 'default'}
-                sx={{ ml: 1 }}
-              />
-            )}
+      <InsightCard title='Ședințe'>
+        {[0, 1, 2].map(index => (
+          <Box key={index} aria-hidden sx={{ display: 'flex', gap: 3.5, py: 3 }}>
+            <Skeleton variant='rounded' width={48} height={52} sx={{ borderRadius: '12px', flexShrink: 0 }} />
+            <Box sx={{ flex: 1 }}>
+              <Skeleton width='70%' height={22} />
+              <Skeleton width='45%' height={18} />
+            </Box>
           </Box>
-
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              mb: isUpcoming ? -4.5 : undefined
-            }}
-          >
-            <Typography variant='caption' color='text.secondary'>
-              {formatDateTime(eventTime)}
-            </Typography>
-
-            {evt.professorName && (
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.5 }}>
-                {isUpcoming && evt.professorId && (
-                  <EmentorAvatar
-                    userId={evt.professorId}
-                    userType={UserType.PROFESSOR}
-                    alt={evt.professorName || 'Professor'}
-                    sx={{
-                      width: 20,
-                      height: 20,
-                      fontSize: '0.7rem'
-                    }}
-                  />
-                )}
-                <Typography variant='caption' color='text.secondary'>
-                  {evt.professorName}
-                </Typography>
-              </Box>
-            )}
-          </Box>
-          {isUpcoming && (
-            <>
-              {isLive && evt.meetingLink ? (
-                <Typography variant='caption' color='success.main' fontWeight={600} sx={{ mt: 0.5, display: 'block' }}>
-                  🟢 Gata de alăturare - Click pentru a deschide întâlnirea
-                </Typography>
-              ) : timeUntil ? (
-                <Typography variant='caption' color='info.main' sx={{ mt: 0.5, display: 'block' }}>
-                  ⏱️ {timeUntil}
-                </Typography>
-              ) : null}
-            </>
-          )}
-        </Box>
-      </ListItem>
+        ))}
+      </InsightCard>
     )
   }
 
+  if (upcoming.length === 0 && recent.length === 0) {
+    return (
+      <EmptyStateCard
+        heading='Ședințe'
+        icon='tabler:calendar-event'
+        title='Nicio ședință programată'
+        description={emptyDescription}
+      />
+    )
+  }
+
+  const renderRow = (evt: EventOccurrenceDTO, index: number) => {
+    const start = startOf(evt)
+    const live = isLive(evt, now)
+    const isUpcoming = live || start > now
+
+    const status = live
+      ? { tone: 'accent' as StatusTone, icon: 'tabler:broadcast', label: 'Acum' }
+      : isUpcoming
+      ? { tone: 'info' as StatusTone, icon: 'tabler:calendar', label: relativeDay(start, now) }
+      : pastStatus(evt, user?.id)
+
+    return (
+      <Box
+        component='li'
+        key={evt.id || `${evt.recurringSeriesId}-${index}`}
+        sx={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: 3.5,
+          py: 3.5,
+          borderTop: index === 0 ? 'none' : `1px solid ${theme.palette.divider}`
+        }}
+      >
+        <Box
+          aria-hidden
+          sx={{
+            width: 48,
+            flexShrink: 0,
+            py: 1.5,
+            borderRadius: '12px',
+            textAlign: 'center',
+            ...(live
+              ? { bgcolor: accentFill(theme), color: 'common.white' }
+              : {
+                  bgcolor: alpha(theme.palette.text.primary, isUpcoming ? 0.06 : 0.04),
+                  color: isUpcoming ? 'text.primary' : 'text.secondary'
+                })
+          }}
+        >
+          <Typography
+            component='span'
+            sx={{
+              display: 'block',
+              fontSize: '0.6875rem',
+              fontWeight: 700,
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+              color: 'inherit'
+            }}
+          >
+            {start.toLocaleDateString('ro-RO', { month: 'short' }).replace('.', '')}
+          </Typography>
+          <Typography
+            component='span'
+            sx={{ display: 'block', fontSize: '1.125rem', fontWeight: 700, lineHeight: 1.2, color: 'inherit' }}
+          >
+            {start.getDate()}
+          </Typography>
+        </Box>
+
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 2 }}>
+            <Typography
+              sx={{
+                fontWeight: 600,
+                fontSize: '0.9375rem',
+                lineHeight: 1.35,
+                color: isUpcoming ? 'text.primary' : 'text.secondary'
+              }}
+            >
+              {evt.seriesTitle || 'Ședință'}
+            </Typography>
+            <StatusPill tone={status.tone} icon={status.icon}>
+              {status.label}
+            </StatusPill>
+          </Box>
+          <Typography variant='body2' sx={{ mt: 0.5, color: 'text.secondary' }}>
+            {formatTime(start)}
+            {evt.professorName && ` · ${evt.professorName}`}
+          </Typography>
+          {live && evt.meetingLink && (
+            <Button
+              variant='contained'
+              href={evt.meetingLink}
+              target='_blank'
+              rel='noopener noreferrer'
+              endIcon={<Icon icon='tabler:external-link' fontSize='1rem' />}
+              sx={{ ...accentButtonSx, mt: 3 }}
+            >
+              Intră în ședință
+            </Button>
+          )}
+        </Box>
+      </Box>
+    )
+  }
+
+  const sectionLabel = (text: string) => (
+    <Typography
+      component='h3'
+      sx={{
+        fontSize: '0.75rem',
+        fontWeight: 700,
+        letterSpacing: '0.08em',
+        textTransform: 'uppercase',
+        color: 'text.secondary'
+      }}
+    >
+      {text}
+    </Typography>
+  )
+
   return (
-    <Card>
-      <CardContent sx={{ p: 0 }}>
-        {loading ? (
-          <>
-            {/* Skeleton for Upcoming Events */}
-            <Box sx={{ px: 3, pt: 2, pb: 1 }}>
-              <Skeleton variant='text' width={120} height={24} />
-            </Box>
-            <List dense disablePadding>
-              <ListItem sx={{ py: 2, px: 3 }}>
-                <Box sx={{ width: '100%' }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-                    <Skeleton variant='text' width='60%' height={20} />
-                  </Box>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Skeleton variant='text' width='40%' height={16} />
-                    <Skeleton variant='text' width='30%' height={16} />
-                  </Box>
-                </Box>
-              </ListItem>
-            </List>
+    <InsightCard title='Ședințe' subtitle='Cu profesorul, în următoarele 7 zile'>
+      {upcoming.length > 0 ? (
+        <>
+          {sectionLabel('Urmează')}
+          <Box component='ul' sx={{ listStyle: 'none', m: 0, p: 0 }}>
+            {upcoming.map(renderRow)}
+          </Box>
+        </>
+      ) : (
+        <Typography variant='body2' sx={{ color: 'text.secondary', display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Icon icon='tabler:calendar-off' fontSize='1.125rem' color={accentInk(theme)} aria-hidden />
+          Nicio ședință în următoarele 7 zile.
+        </Typography>
+      )}
 
-            <Divider sx={{ my: 1 }} />
-
-            {/* Skeleton for Past Events */}
-            <Box sx={{ px: 3, pt: 2, pb: 1 }}>
-              <Skeleton variant='text' width={100} height={24} />
-            </Box>
-            <List dense disablePadding>
-              <ListItem sx={{ py: 2, px: 3 }}>
-                <Box sx={{ width: '100%' }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-                    <Skeleton variant='text' width='50%' height={20} />
-                    <Skeleton variant='rounded' width={60} height={24} />
-                  </Box>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Skeleton variant='text' width='35%' height={16} />
-                    <Skeleton variant='text' width='30%' height={16} />
-                  </Box>
-                </Box>
-              </ListItem>
-            </List>
-          </>
-        ) : (
-          <>
-            {/* Upcoming Events */}
-            {upcomingEvents.length > 0 && (
-              <>
-                <Box sx={{ px: 3, pt: 4, pb: 3 }}>
-                  <Typography variant='subtitle1' color='primary' fontWeight={600}>
-                    Evenimente viitoare
-                  </Typography>
-                </Box>
-                <List dense disablePadding>
-                  {upcomingEvents.map((evt, idx) => renderEventItem(evt, true, idx === 0))}
-                </List>
-              </>
-            )}
-
-            {/* Divider between sections */}
-            {upcomingEvents.length > 0 && pastEvents.length > 0 && <Divider sx={{ my: 1 }} />}
-
-            {/* Past Events */}
-            {pastEvents.length > 0 && (
-              <>
-                <Box sx={{ px: 3, pt: 2, pb: 1 }}>
-                  <Typography variant='subtitle2' color='text.secondary' fontWeight={600}>
-                    Evenimente recente
-                  </Typography>
-                </Box>
-                <List dense disablePadding>
-                  {pastEvents.map(evt => renderEventItem(evt, false))}
-                </List>
-              </>
-            )}
-
-            {/* No events message */}
-            {upcomingEvents.length === 0 && pastEvents.length === 0 && (
-              <Box sx={{ p: 3 }}>
-                <Typography variant='body2' color='text.secondary' textAlign='center'>
-                  Nu s-au găsit evenimente
-                </Typography>
-              </Box>
-            )}
-          </>
-        )}
-      </CardContent>
-    </Card>
+      {recent.length > 0 && (
+        <Box sx={{ mt: 5 }}>
+          {sectionLabel('Recente')}
+          <Box component='ul' sx={{ listStyle: 'none', m: 0, p: 0 }}>
+            {recent.map(renderRow)}
+          </Box>
+        </Box>
+      )}
+    </InsightCard>
   )
 }
 

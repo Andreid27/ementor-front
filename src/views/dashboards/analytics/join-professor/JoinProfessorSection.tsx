@@ -6,23 +6,26 @@ import { AnimatePresence, motion } from 'framer-motion'
 
 // ** Local Imports
 import JoinProfessorCard from './JoinProfessorCard'
-import useMyProfessors from './useMyProfessors'
+import type { MyProfessorDTO } from './joinProfessorApi'
+import type { MyProfessorsStatus } from './useMyProfessors'
 
 const MotionGrid = motion.create(Grid)
 
 interface JoinProfessorSectionProps {
   isStudent: boolean
+
+  /** From useMyProfessors, which the dashboard calls once and shares with the journey guide. */
+  professors: MyProfessorDTO[]
+  status: MyProfessorsStatus
+  onJoined: () => void
 }
 
 /**
  * Dashboard slot for the "join your professor" card. It shows only once
  * my-professors has answered with an empty list, and collapses away as soon as
- * the student has a professor. Kept as its own component so the fetch state
- * does not re-render the whole dashboard.
+ * the student has a professor.
  */
-const JoinProfessorSection = ({ isStudent }: JoinProfessorSectionProps) => {
-  const { professors, status, refresh } = useMyProfessors(isStudent)
-
+const JoinProfessorSection = ({ isStudent, professors, status, onJoined }: JoinProfessorSectionProps) => {
   const show = isStudent && status === 'ready' && professors.length === 0
 
   return (
@@ -35,7 +38,7 @@ const JoinProfessorSection = ({ isStudent }: JoinProfessorSectionProps) => {
           style={{ overflow: 'hidden' }}
           exit={{ opacity: 0, height: 0, paddingTop: 0, transition: { duration: 0.5, ease: [0.4, 0, 0.2, 1] } }}
         >
-          <JoinProfessorCard onJoined={refresh} />
+          <JoinProfessorCard onJoined={onJoined} />
         </MotionGrid>
       )}
     </AnimatePresence>

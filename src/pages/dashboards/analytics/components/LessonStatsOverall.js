@@ -1,162 +1,146 @@
 // ** MUI Imports
 import Box from '@mui/material/Box'
-import Card from '@mui/material/Card'
-import { useTheme } from '@mui/material/styles'
 import Typography from '@mui/material/Typography'
-import CardContent from '@mui/material/CardContent'
+import { alpha, useTheme } from '@mui/material/styles'
 
-// ** Icons Imports
+// ** Third Party Imports
+import { MotionConfig, motion } from 'framer-motion'
+
+// ** Icon Imports
 import Icon from 'src/@core/components/icon'
 
 // ** Custom Components Imports
-import ReactApexcharts from 'src/@core/components/react-apexcharts'
+import InsightCard from 'src/views/student-ui/InsightCard'
+import { formatStudyTime } from 'src/views/student-ui/format'
+import { countLabel } from 'src/views/student-ui/countLabel'
+import { accentInk } from 'src/views/student-ui/readableAccent'
 
-// ** Util Import
-import { hexToRGBA } from 'src/@core/utils/hex-to-rgba'
+// Past this many chapters the rest are grouped, so the card keeps one size.
+const SHOWN_CHAPTERS = 4
 
-
-const LessonStatsOverall = props => {
-  // ** Hook
+/**
+ * Study time per chapter, as labelled bars rather than an unlabelled donut, and
+ * how many of the opened lessons were read to the end. Written for both
+ * readers: the student on their dashboard and the professor looking at one
+ * student.
+ */
+const LessonStatsOverall = ({ data }) => {
   const theme = useTheme()
 
-  const chapters = (props.data.studentChaptersTime || []).map(item => ({ ...item })).sort((a, b) => b.time - a.time)
-  const series = chapters.map(chapter => parseInt(chapter.time / 60))
-  const labels = chapters.map(chapter => chapter.chapterTitle)
-  const lastAccessedLessons = (props.data.lastAccessedLessons || []).map(item => ({ ...item }))
-
-  function getDoneLessons() {
-    let doneLessons = 0
-    lastAccessedLessons.forEach(lesson => {
-      if (lesson.timeToRead <= lesson.totalTime) {
-        doneLessons++
-      }
+  const chapters = [...(data?.studentChaptersTime ?? [])].sort((a, b) => b.time - a.time)
+  const shown = chapters.slice(0, SHOWN_CHAPTERS)
+  const others = chapters.slice(SHOWN_CHAPTERS)
+  if (others.length) {
+    shown.push({
+      chapterTitle: others.length === 1 ? 'Încă un capitol' : `Alte ${countLabel(others.length, '', 'capitole')}`,
+      time: others.reduce((sum, chapter) => sum + chapter.time, 0)
     })
-
-    return doneLessons
   }
 
-  const doneLessons = getDoneLessons()
-  const doneLessonsPercent = parseFloat(doneLessons / lastAccessedLessons.length * 100).toFixed(2)
+  const totalSeconds = chapters.reduce((sum, chapter) => sum + chapter.time, 0)
+  const longest = Math.max(...shown.map(chapter => chapter.time), 1)
 
-  const options = {
-    colors: [
-      hexToRGBA(theme.palette.success.main, 0.9),  // Success - Strong
-      hexToRGBA(theme.palette.success.main, 0.7),  // Success - Moderate
-      hexToRGBA(theme.palette.success.main, 0.5),  // Success - Light
-      hexToRGBA(theme.palette.success.main, 0.3),  // Success - Faint
-      hexToRGBA(theme.palette.success.main, 0.1),  // Success - Very Faint
-      hexToRGBA(theme.palette.info.main, 0.9),     // Info - Strong
-      hexToRGBA(theme.palette.info.main, 0.7),     // Info - Moderate
-      hexToRGBA(theme.palette.info.main, 0.5),     // Info - Light
-      hexToRGBA(theme.palette.info.main, 0.3),     // Info - Faint
-      hexToRGBA(theme.palette.info.main, 0.1),     // Info - Very Faint
-      hexToRGBA("#a577ba", 0.9),  // Primary - Strong
-      hexToRGBA("#a577ba", 0.7),  // Primary - Moderate
-      hexToRGBA("#a577ba", 0.5),  // Primary - Light
-      hexToRGBA("#a577ba", 0.3),  // Primary - Faint
-      hexToRGBA("#a577ba", 0.1),  // Primary - Very Faint
-    ],
-    stroke: { width: 0 },
-    legend: { show: false },
-    tooltip: { enabled: false },
-    dataLabels: { enabled: false },
-    labels: labels,
-    states: {
-      hover: {
-        filter: { type: 'none' }
-      },
-      active: {
-        filter: { type: 'none' }
-      }
-    },
-    grid: {
-      padding: {
-        top: -22,
-        bottom: -18
-      }
-    },
-    plotOptions: {
-      pie: {
-        customScale: 0.8,
-        expandOnClick: false,
-        donut: {
-          size: '73%',
-          labels: {
-            show: true,
-            name: {
-              offsetY: 22,
-              color: theme.palette.text.secondary,
-              fontFamily: theme.typography.fontFamily
-            },
-            value: {
-              offsetY: -17,
-              fontWeight: 500,
-              formatter: val => `${val}`,
-              color: theme.palette.text.primary,
-              fontFamily: theme.typography.fontFamily,
-              fontSize: theme.typography.h2.fontSize
-            },
-            total: {
-              show: true,
-              label: 'Minute',
-              color: theme.palette.text.secondary,
-              fontFamily: theme.typography.fontFamily,
-              fontSize: theme.typography.h5.fontSize
-            }
-          }
-        }
-      }
-    },
-    responsive: [
-      {
-        breakpoint: theme.breakpoints.values.lg,
-        options: {
-          chart: { width: 200, height: 249 }
-        }
-      },
-      {
-        breakpoint: theme.breakpoints.values.md,
-        options: {
-          chart: { width: 150, height: 199 }
-        }
-      }
-    ]
-  }
-
-  function getTitle() {
-    if ((doneLessons > 1)) {
-      return `${doneLessons} lecții parcurse`
-    } else if (doneLessons > 0) {
-      return `O lecție parcursă`
-    } else {
-      return 'Nicio lecție parcursă încă'
-    }
-  }
+  const opened = data?.lastAccessedLessons ?? []
+  const readToEnd = opened.filter(lesson => lesson.timeToRead && lesson.totalTime >= lesson.timeToRead).length
 
   return (
-    <Card>
-      <CardContent>
-        <Box sx={{ gap: 2, display: 'flex', alignItems: 'stretch', justifyContent: 'space-between' }}>
-          <Box sx={{ gap: 1.75, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-            <div>
-              <Typography variant='h5' sx={{ mb: 0.5 }}>
-                Timp de recapitulare lecții
+    <MotionConfig reducedMotion='user'>
+      <InsightCard
+        title='Timp de studiu'
+        subtitle='Pe capitole, din lecțiile deschise'
+        aside={
+          totalSeconds > 0 && (
+            <Box sx={{ textAlign: { xs: 'left', sm: 'right' } }}>
+              <Typography sx={{ fontWeight: 700, fontSize: '1.5rem', lineHeight: 1.1, color: 'text.primary' }}>
+                {formatStudyTime(totalSeconds)}
               </Typography>
-              <Typography variant='body2'>Timpul petrecut pentru fiecare lecție</Typography>
-            </div>
-            <div>
-              <Typography variant='h3'>{getTitle()}</Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', '& svg': { mr: 1, color: 'success.main' } }}>
-                <Typography variant='h6' sx={{ color: doneLessonsPercent >= 80 ? 'success.main' : 'error.main' }}>
-                  ~{doneLessonsPercent > 0 ? doneLessonsPercent : 0}% din lecțiile asignate
-                </Typography>
+              <Typography variant='caption' sx={{ color: 'text.secondary' }}>
+                în total
+              </Typography>
+            </Box>
+          )
+        }
+      >
+        {totalSeconds === 0 ? (
+          <Typography variant='body2' sx={{ color: 'text.secondary' }}>
+            Încă nu există timp de studiu. Apare după prima lecție deschisă.
+          </Typography>
+        ) : (
+          <>
+            <Box component='ul' sx={{ listStyle: 'none', m: 0, p: 0 }}>
+              {shown.map((chapter, index) => (
+                <Box
+                  component='li'
+                  key={`${index}-${chapter.chapterTitle}`}
+                  sx={{ mb: index === shown.length - 1 ? 0 : 4 }}
+                >
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 3, mb: 1.5 }}>
+                    <Typography
+                      variant='body2'
+                      sx={{
+                        color: 'text.primary',
+                        fontWeight: 500,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      {chapter.chapterTitle}
+                    </Typography>
+                    <Typography variant='body2' sx={{ color: 'text.secondary', whiteSpace: 'nowrap' }}>
+                      {formatStudyTime(chapter.time)}
+                    </Typography>
+                  </Box>
+                  <Box
+                    aria-hidden
+                    sx={{
+                      height: 8,
+                      borderRadius: 4,
+                      overflow: 'hidden',
+                      bgcolor: alpha(theme.palette.text.primary, 0.08)
+                    }}
+                  >
+                    <motion.div
+                      initial={{ scaleX: 0 }}
+                      animate={{ scaleX: chapter.time / longest }}
+                      transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.1 + index * 0.06 }}
+                      style={{
+                        height: '100%',
+                        borderRadius: 4,
+                        transformOrigin: 'left',
+                        background: theme.palette.primary.main
+                      }}
+                    />
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+
+            {opened.length > 0 && (
+              <Box
+                sx={{
+                  mt: 'auto',
+                  pt: 5,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 2,
+                  color: 'text.secondary',
+                  fontSize: '0.875rem'
+                }}
+              >
+                <Icon icon='tabler:circle-check' fontSize='1.125rem' color={accentInk(theme)} aria-hidden />
+                <span>
+                  <Box component='strong' sx={{ color: 'text.primary', fontWeight: 600 }}>
+                    {readToEnd} din {opened.length}
+                  </Box>{' '}
+                  {opened.length === 1 ? 'lecție deschisă, citită' : 'lecții deschise, citite'} până la capăt
+                </span>
               </Box>
-            </div>
-          </Box>
-          <ReactApexcharts type='donut' width={150} height={165} series={series} options={options} />
-        </Box>
-      </CardContent>
-    </Card>
+            )}
+          </>
+        )}
+      </InsightCard>
+    </MotionConfig>
   )
 }
 

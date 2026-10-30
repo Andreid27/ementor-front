@@ -1,181 +1,121 @@
 // ** MUI Imports
 import Box from '@mui/material/Box'
-import Card from '@mui/material/Card'
-import Grid from '@mui/material/Grid'
-import { useTheme } from '@mui/material/styles'
-import CardHeader from '@mui/material/CardHeader'
+import Divider from '@mui/material/Divider'
 import Typography from '@mui/material/Typography'
-import CardContent from '@mui/material/CardContent'
+import { alpha, useTheme } from '@mui/material/styles'
+
+// ** Icon Imports
+import Icon from 'src/@core/components/icon'
 
 // ** Custom Components Imports
-import Icon from 'src/@core/components/icon'
-import OptionsMenu from 'src/@core/components/option-menu'
-import CustomAvatar from 'src/@core/components/mui/avatar'
-import ReactApexcharts from 'src/@core/components/react-apexcharts'
+import InsightCard from 'src/views/student-ui/InsightCard'
+import ProgressRing from 'src/views/student-ui/ProgressRing'
+import StatusPill from 'src/views/student-ui/StatusPill'
+import { percent } from 'src/views/student-ui/format'
+import { countLabel } from 'src/views/student-ui/countLabel'
+import { toneInk } from 'src/views/student-ui/readableAccent'
 
-// ** Util Import
-import { hexToRGBA } from 'src/@core/utils/hex-to-rgba'
+// The same score bands as the test list: 80% and up, 60–79%, under 60%.
+const verdictFor = value => {
+  if (value >= 80) return { tone: 'accent', icon: 'tabler:trophy', label: 'Foarte bine' }
+  if (value >= 60) return { tone: 'warning', icon: 'tabler:trending-up', label: 'Pe drumul bun' }
 
-const StudentStatsQuestions = props => {
-  let data = [
-    {
-      subtitle: props.questions.correctQuestions,
-      title: 'Întrebări corecte',
-      avatarIcon: 'tabler:circle-check'
-    },
-    {
-      subtitle: props.questions.totalQuestions - props.questions.correctQuestions,
-      avatarColor: 'warning',
-      title: 'Întrebări greșite',
-      avatarIcon: 'tabler:circle-dashed-x'
-    }
-  ]
-  let correctPercentage = ((props.questions.correctQuestions / props.questions.totalQuestions) * 100).toFixed(2)
+  return { tone: 'error', icon: 'tabler:book', label: 'Merită recapitulat' }
+}
 
-
-  // ** Hook
+/**
+ * Share of correct answers across every test. Written for both readers: the
+ * student on their dashboard and the professor looking at one student.
+ */
+const StudentStatsQuestions = ({ questions }) => {
   const theme = useTheme()
+  const total = questions?.totalQuestions ?? 0
+  const correct = questions?.correctQuestions ?? 0
+  const value = percent(correct, total)
+  const verdict = verdictFor(value)
 
-  const options = {
-    chart: {
-      sparkline: { enabled: true }
-    },
-    stroke: { dashArray: 10 },
-    labels: ['Media răspunsurilor tale'],
-    colors: [hexToRGBA(theme.palette.primary.main, 1)],
-    states: {
-      hover: {
-        filter: { type: 'none' }
-      },
-      active: {
-        filter: { type: 'none' }
-      }
-    },
-    fill: {
-      type: 'gradient',
-      gradient: {
-        shade: 'dark',
-        opacityTo: 0.5,
-        opacityFrom: 1,
-        shadeIntensity: 0.5,
-        stops: [30, 70, 100],
-        inverseColors: false,
-        gradientToColors: [theme.palette.primary.main]
-      }
-    },
-    plotOptions: {
-      radialBar: {
-        endAngle: 130,
-        startAngle: -140,
-        hollow: { size: '60%' },
-        track: { background: 'transparent' },
-        dataLabels: {
-          name: {
-            offsetY: -15,
-            color: theme.palette.text.disabled,
-            fontFamily: theme.typography.fontFamily,
-            fontSize: theme.typography.body2.fontSize
-          },
-          value: {
-            offsetY: 15,
-            fontWeight: 500,
-            formatter: value => `${correctPercentage}%`,
-            color: theme.palette.text.primary,
-            fontFamily: theme.typography.fontFamily,
-            fontSize: theme.typography.h1.fontSize
-          }
-        }
-      }
-    },
-    grid: {
-      padding: {
-        top: -30,
-        bottom: 12
-      }
-    },
-    responsive: [
-      {
-        breakpoint: 1300,
-        options: {
-          grid: {
-            padding: {
-              left: 22
-            }
-          }
-        }
-      },
-      {
-        breakpoint: theme.breakpoints.values.md,
-        options: {
-          grid: {
-            padding: {
-              left: 0
-            }
-          }
-        }
-      }
-    ]
-  }
+  const ringColor =
+    verdict.tone === 'accent'
+      ? theme.palette.primary.main
+      : verdict.tone === 'warning'
+      ? theme.palette.warning.main
+      : theme.palette.error.main
 
-  function handleColorChange(options) {
-    if (correctPercentage === 'NaN') return
-
-    if (correctPercentage < 50) {
-      options.colors = [hexToRGBA(theme.palette.error.main, 1)]
-      options.fill.gradient.gradientToColors = [theme.palette.error.main]
-    } else if (correctPercentage < 75) {
-      options.colors = [hexToRGBA(theme.palette.warning.main, 1)]
-      options.fill.gradient.gradientToColors = [theme.palette.warning.main]
-    } else {
-      options.colors = [hexToRGBA(theme.palette.primary.main, 1)]
-      options.fill.gradient.gradientToColors = [theme.palette.primary.main]
-    }
-
-    return options
-  }
+  const rows = [
+    { icon: 'tabler:check', color: theme.palette.primary.main, count: correct, label: 'corecte' },
+    { icon: 'tabler:x', color: theme.palette.error.main, count: total - correct, label: 'greșite' }
+  ]
 
   return (
-    <Card>
-      <CardHeader
-        title='Evoluția ta per total'
-        subheader='Aici poți vedea progresul tău de-a lungul tuturor testelor parcurse 😊'
-      />
-      <CardContent>
-        <Grid container spacing={6}>
-          <Grid item xs={12} sm={5}>
-            <Typography variant='h1'>{props.questions.totalQuestions}</Typography>
-            <Typography sx={{ mb: 6, color: 'text.secondary' }}>Total întrebări</Typography>
-            {data.map((item, index) => (
-              <Box
-                key={index}
-                sx={{ display: 'flex', alignItems: 'center', mb: index !== data.length - 1 ? 4 : undefined }}
-              >
-                <CustomAvatar
-                  skin='light'
-                  variant='rounded'
-                  color={item.avatarColor}
-                  sx={{ mr: 4, width: 34, height: 34 }}
+    <InsightCard
+      title='Răspunsuri corecte'
+      subtitle='Din toate testele rezolvate'
+      aside={
+        total > 0 && (
+          <StatusPill tone={verdict.tone} icon={verdict.icon}>
+            {verdict.label}
+          </StatusPill>
+        )
+      }
+    >
+      {total === 0 ? (
+        <Typography variant='body2' sx={{ color: 'text.secondary' }}>
+          Încă nu există răspunsuri. Procentul apare după primul test.
+        </Typography>
+      ) : (
+        <Box
+          sx={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: { xs: 'column', sm: 'row' },
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: { xs: 5, sm: 8 }
+          }}
+        >
+          <ProgressRing value={value} color={ringColor}>
+            <Typography sx={{ fontWeight: 700, fontSize: '2rem', lineHeight: 1, color: 'text.primary' }}>
+              {value}%
+            </Typography>
+            <Typography variant='caption' sx={{ mt: 1, color: 'text.secondary' }}>
+              corecte
+            </Typography>
+          </ProgressRing>
+
+          <Box sx={{ minWidth: 160 }}>
+            {rows.map(row => (
+              <Box key={row.label} sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 3 }}>
+                <Box
+                  aria-hidden
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 32,
+                    height: 32,
+                    borderRadius: '10px',
+                    color: toneInk(theme, row.color),
+                    bgcolor: alpha(row.color, theme.palette.mode === 'light' ? 0.12 : 0.16)
+                  }}
                 >
-                  <Icon icon={item.avatarIcon} />
-                </CustomAvatar>
-                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                  <Typography variant='h6'>{item.title}</Typography>
-                  <Typography variant='body2' sx={{ color: 'text.disabled' }}>
-                    {item.subtitle}
-                  </Typography>
+                  <Icon icon={row.icon} fontSize='1.125rem' />
                 </Box>
+                <Typography sx={{ color: 'text.primary' }}>
+                  <Box component='span' sx={{ fontWeight: 700, fontSize: '1.125rem', mr: 1.5 }}>
+                    {row.count}
+                  </Box>
+                  {row.label}
+                </Typography>
               </Box>
             ))}
-          </Grid>
-          <Grid item xs={12} sm={7} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {correctPercentage === 'NaN' ? <Typography variant='h2'>Nu există încă suficiente date.</Typography> :
-              <ReactApexcharts type='radialBar' height={325} options={handleColorChange(options)} series={[correctPercentage]} />
-
-            }
-          </Grid>
-        </Grid>
-      </CardContent>
-    </Card>
+            <Divider sx={{ my: 3 }} />
+            <Typography variant='body2' sx={{ color: 'text.secondary' }}>
+              {countLabel(total, 'o întrebare', 'întrebări')} în total
+            </Typography>
+          </Box>
+        </Box>
+      )}
+    </InsightCard>
   )
 }
 

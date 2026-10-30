@@ -89,6 +89,11 @@ interface CrmLastTransactionProps {
    * Used when viewing another user's transactions
    */
   userAvatarUrl?: string
+  /**
+   * The current user's wallet summary, when the parent already loaded it.
+   * The component then shows it instead of requesting it again.
+   */
+  summary?: WalletSummaryDTO
 }
 
 const CrmLastTransaction: React.FC<CrmLastTransactionProps> = ({
@@ -98,7 +103,8 @@ const CrmLastTransaction: React.FC<CrmLastTransactionProps> = ({
   userRole = 'student',
   userId,
   userName,
-  userAvatarUrl
+  userAvatarUrl,
+  summary
 }) => {
   const router = useRouter()
   const [anchorEl, setAnchorEl] = useState(null)
@@ -146,7 +152,10 @@ const CrmLastTransaction: React.FC<CrmLastTransactionProps> = ({
   }
 
   useEffect(() => {
-    if (userId) {
+    if (summary) {
+      setWalletSummary(summary)
+      if (typeof onWalletLoaded === 'function') onWalletLoaded(summary)
+    } else if (userId) {
       // For admin/professor view: fetch user's balance history (returns Array<WalletBalanceChangeDTO>)
       profileServiceClient.wallet
         .getUserBalanceHistory({ userId })
@@ -183,7 +192,7 @@ const CrmLastTransaction: React.FC<CrmLastTransactionProps> = ({
           console.error('Error fetching balance history:', error)
         })
     }
-  }, [userId])
+  }, [userId, summary])
 
   // Handle click on bank transfer transaction to show payment details
   const handleTransactionClick = (transaction: WalletBalanceChangeDTO) => {
@@ -289,7 +298,7 @@ const CrmLastTransaction: React.FC<CrmLastTransactionProps> = ({
           '& .apexcharts-series[rel="2"]': { transform: 'translateY(-9px)' }
         }}
       >
-        <CardHeader title='Istoric Tranzactii' />
+        <CardHeader title='Istoric tranzacții' />
         <CardContent>
           <TableContainer sx={{ maxHeight: 'calc(10 * 73px + 48px)', overflow: 'auto' }}>
             <Table>
@@ -426,7 +435,7 @@ const CrmLastTransaction: React.FC<CrmLastTransactionProps> = ({
                               {row.referenceType === 'BANK_TRANSFER'
                                 ? 'Transfer bancar'
                                 : row.referenceType === 'EVENT_ATTENDEE'
-                                ? 'Ședință efecutată'
+                                ? 'Ședință efectuată'
                                 : row.referenceType}
                             </Typography>
                           </Box>
@@ -436,9 +445,9 @@ const CrmLastTransaction: React.FC<CrmLastTransactionProps> = ({
                         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                           <Typography noWrap sx={{ fontWeight: 500, color: 'text.secondary' }}>
                             {row.changeType === 'PAYMENT_CONFIRMED'
-                              ? 'Plata confirmata'
+                              ? 'Plată confirmată'
                               : row.changeType === 'EVENT_CHARGE'
-                              ? 'Taxa sedinta'
+                              ? 'Taxă ședință'
                               : row.changeType === 'ADMIN_ADJUSTMENT'
                               ? 'Ajustare admin'
                               : row.changeType}
@@ -487,7 +496,7 @@ const CrmLastTransaction: React.FC<CrmLastTransactionProps> = ({
                   <TableRow>
                     <TableCell colSpan={4} align='center' sx={{ py: 4 }}>
                       <Typography variant='body2' color='text.disabled'>
-                        Nu exista tranzactii disponibile
+                        Nu există tranzacții încă
                       </Typography>
                     </TableCell>
                   </TableRow>
@@ -522,13 +531,13 @@ const CrmLastTransaction: React.FC<CrmLastTransactionProps> = ({
           <Box
             sx={{ mb: 4, gap: 1, display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}
           >
-            <Typography variant='h6'>Sold Curent</Typography>
+            <Typography variant='h6'>Sold curent</Typography>
           </Box>
           <Box
             sx={{ mb: 6, gap: 1, display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}
           >
             <Typography variant='body2' sx={{ color: 'text.secondary' }}>
-              {walletSummary?.balanceChanges?.length || 0} tranzactii totale
+              {walletSummary?.balanceChanges?.length || 0} tranzacții în total
             </Typography>
           </Box>
           {walletSummary?.balanceChanges && walletSummary.balanceChanges.length > 0 ? (
@@ -537,7 +546,7 @@ const CrmLastTransaction: React.FC<CrmLastTransactionProps> = ({
               height={80}
               series={[
                 {
-                  name: 'Evolutie Balanta',
+                  name: 'Evoluția soldului',
                   data: walletSummary.balanceChanges
                     .slice(-10) // Last 10 transactions
                     .map(change => change.balanceAfter || 0)
@@ -548,7 +557,7 @@ const CrmLastTransaction: React.FC<CrmLastTransactionProps> = ({
           ) : (
             <Box sx={{ height: 80, display: 'flex', alignItems: 'center', mb: 2 }}>
               <Typography variant='body2' color='text.disabled'>
-                Nu exista date pentru grafic
+                Nu există date pentru grafic
               </Typography>
             </Box>
           )}
@@ -590,7 +599,7 @@ const CrmLastTransaction: React.FC<CrmLastTransactionProps> = ({
               size='small'
               disabled
             >
-              Detalii Wallet
+              Detalii portofel
             </Button>
           )}
         </CardContent>

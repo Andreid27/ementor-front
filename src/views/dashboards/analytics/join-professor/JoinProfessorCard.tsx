@@ -38,7 +38,9 @@ const EASE_OUT: [number, number, number, number] = [0.22, 1, 0.36, 1]
 // How long the "Conectat" stamp stays on screen before the dashboard refreshes.
 const JOINED_HOLD_MS = 2600
 
-const INPUT_ID = 'join-professor-code'
+// Exported so the journey guide can bring the student straight to the code field.
+export const JOIN_CODE_INPUT_ID = 'join-professor-code'
+
 const STATUS_ID = 'join-professor-status'
 
 const GRAIN = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`
@@ -55,7 +57,12 @@ const sheen = keyframes`
 
 const Root = styled(motion.section)(({ theme }) => ({
   position: 'relative',
+
+  // The glows reach past the edges, which makes a hidden-overflow box
+  // scrollable: focusing the code field would scroll the card's own content.
+  // Clipping draws the same but cannot scroll.
   overflow: 'hidden',
+  '@supports (overflow: clip)': { overflow: 'clip' },
   isolation: 'isolate',
   borderRadius: 20,
   color: theme.palette.common.white,
@@ -533,13 +540,13 @@ const JoinProfessorCard = ({ onJoined }: JoinProfessorCardProps) => {
                             <Box sx={{ flex: 1, minWidth: 0 }}>
                               <Typography
                                 component='label'
-                                htmlFor={INPUT_ID}
+                                htmlFor={JOIN_CODE_INPUT_ID}
                                 sx={{ display: 'block', mb: 0.5, fontSize: '0.875rem', color: 'text.secondary' }}
                               >
                                 Codul profesorului
                               </Typography>
                               <InputBase
-                                id={INPUT_ID}
+                                id={JOIN_CODE_INPUT_ID}
                                 inputRef={inputRef}
                                 value={code}
                                 onChange={handleCodeChange}
