@@ -150,6 +150,9 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId, isProf
     Boolean(isProfessor && attemptId)
   )
 
+  // Hidden until the professor opens it, together with the markers on the questions
+  const [showIntegrity, setShowIntegrity] = useState(false)
+
   const integrityByQuestion = useMemo(
     () => indexQuestionStats(integrityState.status === 'ready' ? integrityState.report : null),
     [integrityState]
@@ -601,7 +604,12 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId, isProf
           />
           {isProfessor && (
             <QuizComponentErrorBoundary componentName='Integritatea testului' minimal>
-              <QuizIntegrityReport state={integrityState} onRetry={retryIntegrity} />
+              <QuizIntegrityReport
+                state={integrityState}
+                onRetry={retryIntegrity}
+                shown={showIntegrity}
+                onToggle={() => setShowIntegrity(shown => !shown)}
+              />
             </QuizComponentErrorBoundary>
           )}
         </QuizComponentErrorBoundary>
@@ -701,7 +709,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId, isProf
                   questionNumber={index + 1}
                   totalQuestions={totalQuestions}
                   reviewMarker={
-                    hasIntegrityMarker(integrityByQuestion[question.id || '']) ? (
+                    showIntegrity && hasIntegrityMarker(integrityByQuestion[question.id || '']) ? (
                       <IntegrityQuestionMarker stats={integrityByQuestion[question.id || '']} />
                     ) : undefined
                   }

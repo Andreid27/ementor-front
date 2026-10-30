@@ -23,7 +23,8 @@ import { getInitials } from 'src/@core/utils/get-initials'
 import * as apiSpec from '../../../apiSpec'
 import apiClient from 'src/@core/axios/axiosEmentor'
 import componentTypes from 'src/pages/student-results/componets/componentsType.json'
-import { Button, LinearProgress } from '@mui/material'
+import { Button, IconButton, LinearProgress, Tooltip } from '@mui/material'
+import Icon from 'src/@core/components/icon'
 import AssignationModal from './assignationModal'
 import { useDispatch } from 'react-redux'
 import { fetchStudentsByIds } from 'src/store/apps/user'
@@ -105,6 +106,9 @@ const StudentsResultsTable = () => {
   // ** States
   const [users, setUsers] = useState([])
   const classes = useStyles()
+
+  // Professors often share their screen, so the integrity badges stay hidden until turned on for this visit
+  const [showIntegrity, setShowIntegrity] = useState(false)
 
   const columns = [
     {
@@ -200,8 +204,8 @@ const StudentsResultsTable = () => {
           />
         )
 
-        // Attempts with quiz integrity signals get a risk badge next to the score
-        if (!hasIntegrityBadge(params.row.integrityRiskLevel)) return scoreChip
+        // Attempts with quiz integrity signals get a risk badge next to the score, once the professor turns them on
+        if (!showIntegrity || !hasIntegrityBadge(params.row.integrityRiskLevel)) return scoreChip
 
         return (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -482,7 +486,22 @@ const StudentsResultsTable = () => {
     <>
       <AssignationModal onAssignSuccess={refreshTableData} />
       <Card>
-        <CardHeader title='Rezultate studenți' />
+        <CardHeader
+          title='Rezultate studenți'
+          action={
+            <Tooltip title={showIntegrity ? 'Ascunde integritatea testelor' : 'Integritatea testelor'}>
+              <IconButton
+                size='small'
+                onClick={() => setShowIntegrity(shown => !shown)}
+                aria-label='Integritatea testelor'
+                aria-pressed={showIntegrity}
+                sx={{ color: showIntegrity ? 'primary.main' : 'text.disabled' }}
+              >
+                <Icon icon='tabler:dots' fontSize={18} />
+              </IconButton>
+            </Tooltip>
+          }
+        />
         <Box sx={{ px: 3, pb: 3, pl: '1.7%' }}>
           <Typography variant='body2' sx={{ color: 'text.secondary' }}>
             Aici puteți vedea rezultatele studenților la testele pe care le-ați creat.

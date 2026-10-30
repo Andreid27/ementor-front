@@ -9,7 +9,8 @@ import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import Collapse from '@mui/material/Collapse'
 import Divider from '@mui/material/Divider'
-import Skeleton from '@mui/material/Skeleton'
+import IconButton from '@mui/material/IconButton'
+import Tooltip from '@mui/material/Tooltip'
 import Typography from '@mui/material/Typography'
 import { alpha, useTheme } from '@mui/material/styles'
 
@@ -38,12 +39,17 @@ import type { QuizIntegrityReportState } from './useQuizIntegrityReport'
  *
  * Shows the server's report for the attempt: the risk level with its reasons, an overview, one card per exit
  * (when, how long, the question on screen and what the student did after coming back), idle periods, other
- * signals and the full timeline. Renders nothing when there is no report to show.
+ * signals and the full timeline. Professors often share their screen, so the report stays closed behind an
+ * unlabelled icon until the professor opens it, and nothing renders when there is no report to show.
  */
 
 interface QuizIntegrityReportProps {
   state: QuizIntegrityReportState
   onRetry: () => void
+
+  // Whether the professor opened the report; the page also uses it for the question markers
+  shown: boolean
+  onToggle: () => void
 }
 
 const SectionTitle: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -150,7 +156,7 @@ const otherSignals = (report: QuizIntegrityReportDTO) => {
   return signals
 }
 
-const ReportCard: React.FC<{ report: QuizIntegrityReportDTO }> = ({ report }) => {
+const ReportCard: React.FC<{ report: QuizIntegrityReportDTO; onHide: () => void }> = ({ report, onHide }) => {
   const theme = useTheme()
   const [showReasons, setShowReasons] = useState(false)
   const [showTimeline, setShowTimeline] = useState(false)
@@ -191,6 +197,14 @@ const ReportCard: React.FC<{ report: QuizIntegrityReportDTO }> = ({ report }) =>
             <Typography variant='body2' color='text.secondary'>
               Scor {report.risk?.score ?? 0}/100
             </Typography>
+            <Button
+              size='small'
+              color='secondary'
+              onClick={onHide}
+              startIcon={<Icon icon='tabler:eye-off' fontSize={16} />}
+            >
+              Ascunde
+            </Button>
           </Box>
         </Box>
         <Typography variant='body2' color='text.secondary' sx={{ mt: 1, mb: 3 }}>
@@ -347,35 +361,54 @@ const ReportCard: React.FC<{ report: QuizIntegrityReportDTO }> = ({ report }) =>
   )
 }
 
-const QuizIntegrityReport: React.FC<QuizIntegrityReportProps> = ({ state, onRetry }) => {
-  if (state.status === 'idle' || state.status === 'unavailable') return null
+const QuizIntegrityReport: React.FC<QuizIntegrityReportProps> = ({ state, onRetry, shown, onToggle }) => {
+  // The control appears once there is a report, or an error to explain
+  if (state.status !== 'ready' && state.status !== 'error') return null
 
   return (
     <Box sx={{ width: '100%', maxWidth: { xs: '100%', md: 900 }, mx: 'auto', mt: 2 }}>
-      {state.status === 'loading' && (
-        <Card>
-          <CardContent sx={{ p: { xs: 4, sm: 5 } }}>
-            <Skeleton width='40%' height={32} />
-            <Skeleton width='90%' />
-            <Skeleton width='75%' />
-          </CardContent>
-        </Card>
+      {/* Professors often share their screen: closed, the report is a plain grey "more" icon that says nothing to
+          anyone watching, with its name only in the tooltip */}
+      {!shown && (
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <Tooltip title='Integritatea testului'>
+            <IconButton
+              size='small'
+              onClick={onToggle}
+              aria-label='Integritatea testului'
+              aria-expanded={false}
+              aria-controls='quiz-integrity-report'
+              sx={{ color: 'text.disabled' }}
+            >
+              <Icon icon='tabler:dots' fontSize={18} />
+            </IconButton>
+          </Tooltip>
+        </Box>
       )}
 
-      {state.status === 'error' && (
-        <Alert
-          severity='warning'
-          action={
-            <Button color='inherit' size='small' onClick={onRetry}>
-              Reîncearcă
-            </Button>
-          }
-        >
-          Nu am putut încărca datele despre integritatea testului.
-        </Alert>
-      )}
+      {shown && (
+        <Box id='quiz-integrity-report'>
+          {state.status === 'error' && (
+            <Alert
+              severity='warning'
+              action={
+                <>
+                  <Button color='inherit' size='small' onClick={onRetry}>
+                    Reîncearcă
+                  </Button>
+                  <Button color='inherit' size='small' onClick={onToggle}>
+                    Ascunde
+                  </Button>
+                </>
+              }
+            >
+              Nu am putut încărca datele despre integritatea testului.
+            </Alert>
+          )}
 
-      {state.status === 'ready' && <ReportCard report={state.report} />}
+          {state.status === 'ready' && <ReportCard report={state.report} onHide={onToggle} />}
+        </Box>
+      )}
     </Box>
   )
 }
