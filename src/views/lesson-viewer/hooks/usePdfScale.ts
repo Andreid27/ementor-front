@@ -3,10 +3,16 @@ import { useState, useCallback, useMemo, useEffect, RefObject } from 'react'
 const ZOOM_LEVELS = [0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3]
 const DEFAULT_ZOOM_INDEX = 2 // 1.0x
 
+// Horizontal room the document keeps around the page outside fullscreen.
+const NORMAL_PADDING_X = 40
+
 interface UsePdfScaleProps {
   isInFullscreenMode: boolean
   pageWidth: number | null
   pageHeight: number | null
+
+  /** The page's width at 100%, before any zoom; lets 100% mean "fit the width" on narrow screens. */
+  baseWidth?: number | null
   containerRef: RefObject<HTMLElement>
   isMobile: boolean
 }
@@ -31,9 +37,23 @@ export const usePdfScale = ({
   isInFullscreenMode,
   pageWidth,
   pageHeight,
+  baseWidth,
   containerRef,
   isMobile
 }: UsePdfScaleProps): UsePdfScaleReturn => {
+  // Width available to the page outside fullscreen, followed as the window resizes.
+  const [containerWidth, setContainerWidth] = useState<number | null>(null)
+
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container || typeof ResizeObserver === 'undefined') return
+
+    const observer = new ResizeObserver(entries => setContainerWidth(entries[0].contentRect.width))
+    observer.observe(container)
+
+    return () => observer.disconnect()
+  }, [containerRef])
+
   // Manual zoom level (controlled by user)
   const [zoomIndex, setZoomIndex] = useState(DEFAULT_ZOOM_INDEX)
 
@@ -47,6 +67,7 @@ export const usePdfScale = ({
       // Reset when exiting fullscreen
       setFullscreenAutoScale(1)
       setIsScaleCalculated(false)
+
       return
     }
 
@@ -65,6 +86,7 @@ export const usePdfScale = ({
 
     // Calculate with a delay to ensure container is fully sized
     const delay = isMobile ? 300 : 200
+
     const timeoutId = setTimeout(() => {
       const containerWidth = container.clientWidth
       const containerHeight = container.clientHeight
@@ -132,11 +154,14 @@ export const usePdfScale = ({
     if (isInFullscreenMode) {
       // In fullscreen: use ONLY auto-scale (manual zoom disabled)
       return fullscreenAutoScale
-    } else {
-      // Normal mode: use manual zoom level
-      return ZOOM_LEVELS[zoomIndex]
     }
-  }, [isInFullscreenMode, fullscreenAutoScale, zoomIndex])
+
+    // Normal mode: the manual zoom level, where 100% is the page's own width or,
+    // on a narrower screen such as a phone, the screen's width.
+    const fitWidth = baseWidth && containerWidth ? Math.min(1, (containerWidth - NORMAL_PADDING_X) / baseWidth) : 1
+
+    return ZOOM_LEVELS[zoomIndex] * Math.max(fitWidth, 0.1)
+  }, [isInFullscreenMode, fullscreenAutoScale, zoomIndex, baseWidth, containerWidth])
 
   // Zoom controls (disabled in fullscreen)
   const zoomIn = useCallback(() => {

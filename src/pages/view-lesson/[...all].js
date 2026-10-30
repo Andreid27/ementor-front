@@ -6,7 +6,7 @@ import apiClient from 'src/@core/axios/axiosEmentor'
 import * as apiSpec from '../../apiSpec'
 import toast from 'react-hot-toast'
 import { TabContext, TabList } from '@mui/lab'
-import FileTab from './components/FileTab'
+import FileTab from 'src/views/lesson-viewer/LessonFileTab'
 
 const ViewLesson = props => {
   const [lesson, setLesson] = useState(null)

@@ -70,7 +70,8 @@ export const useControlsVisibility = ({
       if (newState && isMobile && isFullscreen) {
         startHideTimer()
       }
-      return newState
+      
+return newState
     })
   }, [enabled, isMobile, isFullscreen, clearHideTimer, startHideTimer])
 

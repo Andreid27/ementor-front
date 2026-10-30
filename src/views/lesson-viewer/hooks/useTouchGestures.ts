@@ -84,7 +84,8 @@ export const useTouchGestures = ({
         isMultiTouchRef.current = false
         setTouchStart(null)
         setTouchMoved(false)
-        return
+        
+return
       }
 
       const touchEnd = {
@@ -101,7 +102,8 @@ export const useTouchGestures = ({
         onTap?.()
         setTouchStart(null)
         setTouchMoved(false)
-        return
+        
+return
       }
 
       // Check if swipe threshold is met (horizontal swipe, not vertical scroll)

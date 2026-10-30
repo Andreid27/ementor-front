@@ -1,7 +1,10 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 
 interface UsePdfNavigationProps {
   numPages: number | null
+
+  /** Page to open on; clamped to the document once its page count is known. */
+  initialPage?: number
   transitionDuration?: number
 }
 
@@ -24,9 +27,15 @@ interface UsePdfNavigationReturn {
  */
 export const usePdfNavigation = ({
   numPages,
+  initialPage = 1,
   transitionDuration = 300
 }: UsePdfNavigationProps): UsePdfNavigationReturn => {
-  const [pageNumber, setPageNumber] = useState(1)
+  const [pageNumber, setPageNumber] = useState(Math.max(1, initialPage))
+
+  // A saved page can be past the end if the professor replaced the file with a shorter one.
+  useEffect(() => {
+    if (numPages && pageNumber > numPages) setPageNumber(numPages)
+  }, [numPages, pageNumber])
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [transitionDirection, setTransitionDirection] = useState<'forward' | 'backward'>('forward')
 

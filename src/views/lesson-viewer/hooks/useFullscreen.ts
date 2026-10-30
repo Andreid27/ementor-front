@@ -61,7 +61,8 @@ export const useFullscreen = (elementRef: RefObject<HTMLElement>): UseFullscreen
     if (isFallbackFullscreen) {
       setIsFallbackFullscreen(false)
       document.body.style.overflow = ''
-      return
+      
+return
     }
 
     try {

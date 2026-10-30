@@ -80,23 +80,24 @@
 .pageContainer {
   position: relative;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   width: 100%;
   min-height: 600px;
-  overflow: visible;
+
+  /* A page zoomed past the viewer scrolls sideways instead of being cut. */
+  overflow-x: auto;
 }
 
-/* Page Wrapper */
+/* Page Wrapper: in the flow, so a page taller than the viewer grows it instead
+   of losing its top and bottom to the viewer's edges. */
 .pageWrapper {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
-  animation: fadeIn 250ms ease-out;
+  margin: 0 auto;
+  animation: pageIn 250ms ease-out;
 }
 
 /* ============================================================================
@@ -182,14 +183,14 @@
   border-radius: 8px;
 }
 
-@keyframes fadeIn {
+@keyframes pageIn {
   from {
     opacity: 0;
-    transform: translate(-50%, -45%);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
-    transform: translate(-50%, -50%);
+    transform: translateY(0);
   }
 }
 
@@ -559,4 +560,16 @@
   .errorText {
     color: #ff6b6b;
   }
+}
+
+/* Something drawn over the page, such as the reading pause prompt. */
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15, 20, 34, 0.45);
 }
