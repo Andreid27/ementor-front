@@ -1,9 +1,13 @@
 // ** React Imports
 import { useState, useEffect, useCallback } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/router'
 
 // ** MUI Imports
-import { alpha, Box, Card, useMediaQuery } from '@mui/material'
+import { Box, Button, Card, useMediaQuery } from '@mui/material'
+
+// ** Third Party Imports
+import { useSelector } from 'react-redux'
 
 // ** Components
 import QuizDataGrid from './components/QuizDataGrid'
@@ -11,6 +15,17 @@ import QuizMobileList from './components/QuizMobileList'
 import QuizPreview from './componets/quiz-preview'
 import AppleToolbar from './components/AppleToolbar'
 import { useTheme } from '@mui/material/styles'
+import useMyProfessors from 'src/views/dashboards/analytics/join-professor/useMyProfessors'
+import IllustratedState from 'src/views/student-ui/IllustratedState'
+import FirstStepCallout from 'src/views/student-ui/FirstStepCallout'
+import { STUDENT_ILLUSTRATIONS } from 'src/views/student-ui/illustrations'
+import { accentButtonSx, accentInk } from 'src/views/student-ui/readableAccent'
+import { countLabel } from 'src/views/student-ui/countLabel'
+import useAssignedCount from 'src/views/student-ui/useAssignedCount'
+
+// ** Store Imports
+import { selectUser } from 'src/store/apps/user'
+import { selectDashboardData } from 'src/store/apps/dashboard'
 
 // ** Services
 import apiClient from 'src/@core/axios/axiosEmentor'
@@ -37,9 +52,21 @@ const mapFieldToAPI = field => {
   return fieldMap[field] || field
 }
 
+const outlinedAccentSx = {
+  minHeight: 44,
+  px: 5,
+  fontWeight: 600,
+  color: accentInk,
+  borderColor: 'divider',
+  '&:hover': { borderColor: accentInk }
+}
+
 const QuizzesPage = () => {
   const router = useRouter()
   const theme = useTheme()
+  const user = useSelector(selectUser)
+  const { quizService } = useSelector(selectDashboardData)
+  const { professors, status: professorsStatus } = useMyProfessors(user?.role === 'STUDENT')
 
   // ** Responsive breakpoint - switch to mobile view on tablets and phones
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
@@ -225,9 +252,9 @@ const QuizzesPage = () => {
     }
   }
 
-  // ** Handle refresh
+  // ** Handle refresh (keeps the current page and search)
   const handleRefresh = () => {
-    loadQuizzes()
+    loadQuizzes(currentParams)
   }
 
   // ** Handle search change
@@ -250,36 +277,148 @@ const QuizzesPage = () => {
   )
 
   // ** Handle params change (pagination, sorting, filtering)
+  // The search box lives outside the grid and the card list, so their params
+  // never carry it: it is added here, or paging would drop the search.
   const handleParamsChange = useCallback(
     params => {
-      setCurrentParams(params)
-      loadQuizzes(params)
+      const withSearch = {
+        ...params,
+        filterModel: { ...params.filterModel, quickFilterValues: searchValue ? [searchValue] : [] }
+      }
+      setCurrentParams(withSearch)
+      loadQuizzes(withSearch)
     },
-    [loadQuizzes]
+    [loadQuizzes, searchValue]
   )
+
+  const isEmpty = !loading && !error && quizzes.length === 0
+  const lessonsCount = useAssignedCount('lessons', isEmpty && !searchValue)
+
+  // The dashboard's stats count every test, not just this page; the page itself
+  // is the fallback when the student has not opened the dashboard yet.
+  const completedAnyQuiz =
+    (quizService?.quizzes?.completedQuizzes ?? 0) > 0 || quizzes.some(quiz => quiz.status === 'completed')
+
+  const firstQuiz =
+    !loading && !searchValue && currentParams.page === 0 && !completedAnyQuiz
+      ? quizzes.find(quiz => quiz.status === 'in_progress') || quizzes.find(quiz => quiz.status === 'not_started')
+      : null
+
+  const renderEmpty = () => {
+    if (searchValue) {
+      return (
+        <IllustratedState
+          icon='tabler:search'
+          title={`Niciun test pentru „${searchValue}”`}
+          description='Verifică scrierea sau caută după alt cuvânt din titlu.'
+          actions={
+            <Button variant='outlined' onClick={() => handleSearchChange('')} sx={outlinedAccentSx}>
+              Șterge căutarea
+            </Button>
+          }
+        />
+      )
+    }
+
+    if (professorsStatus === 'ready' && professors.length === 0) {
+      return (
+        <IllustratedState
+          illustration={STUDENT_ILLUSTRATIONS.professor}
+          title='Conectează-te cu profesorul'
+          description='Testele vin de la profesor. Scrie în panou codul de invitație primit, iar testele apar aici.'
+          actions={
+            <Button variant='contained' component={Link} href='/dashboards/analytics' sx={accentButtonSx}>
+              Mergi la panou
+            </Button>
+          }
+        />
+      )
+    }
+
+    const sender = professors.length === 1 ? professors[0].professor.fullName : 'profesorul'
+    const hasLessons = (lessonsCount ?? 0) > 0
+
+    return (
+      <IllustratedState
+        illustration={STUDENT_ILLUSTRATIONS.tests}
+        title='Niciun test încă'
+        description={
+          hasLessons
+            ? `Când ${sender} îți trimite un test, îl găsești aici. Până atunci, ai ${countLabel(
+                lessonsCount,
+                'o lecție',
+                'lecții'
+              )} de citit.`
+            : `Când ${sender} îți trimite un test, îl găsești aici.`
+        }
+        actions={
+          <Button
+            variant='outlined'
+            component={Link}
+            href={hasLessons ? '/lessons' : '/dashboards/analytics'}
+            sx={outlinedAccentSx}
+          >
+            {hasLessons ? 'Deschide cursurile' : 'Înapoi la panou'}
+          </Button>
+        }
+      />
+    )
+  }
 
   return (
     <>
       {preview ? (
         <QuizPreview preview={preview} setPreview={setPreview} userRole={'STUDENT'} />
       ) : (
-        <Card
-          sx={{
-            height: 'auto',
-            width: '100%',
-            backgroundColor: alpha(theme.palette.background.paper, 0.6),
-            backdropFilter: 'blur(20px)',
-            border: `1px solid ${alpha(theme.palette.divider, 0.12)}`,
-            borderRadius: 2,
-            overflow: 'hidden',
-            boxShadow: `0 8px 32px ${alpha(theme.palette.common.black, 0.08)}`
-          }}
-        >
-          {/* Search toolbar - always visible and outside of loading states */}
-          <AppleToolbar onSearchChange={handleSearchChange} searchValue={searchValue} />
+        <Card>
+          <AppleToolbar
+            subtitle='Testele primite de la profesor, cele mai noi primele.'
+            onSearchChange={handleSearchChange}
+            searchValue={searchValue}
+            showSearch={loading || totalCount > 0 || Boolean(searchValue)}
+          />
 
-          {/* Responsive content - DataGrid for desktop, Card list for mobile */}
-          {isMobile ? (
+          {firstQuiz && (
+            <Box sx={{ px: { xs: 4, md: 6 }, pb: { xs: 4, md: 5 } }}>
+              <FirstStepCallout
+                illustration={STUDENT_ILLUSTRATIONS.tests}
+                eyebrow='Primul tău test'
+                title={firstQuiz.title}
+                description={
+                  <>
+                    <Box component='span' sx={{ display: 'block', mb: 0.5, fontWeight: 600, color: 'text.primary' }}>
+                      {firstQuiz.questionsCount} întrebări · {firstQuiz.duration} min
+                    </Box>
+                    {firstQuiz.status === 'in_progress'
+                      ? 'L-ai început deja. Continuă de unde ai rămas; rezultatul îl vezi imediat ce termini.'
+                      : 'Un test scurt îți arată ce știi deja. Rezultatul îl vezi imediat ce termini, iar panoul începe să-ți arate progresul.'}
+                  </>
+                }
+                action={
+                  <Button variant='contained' onClick={() => handleQuizSelect(firstQuiz.id)} sx={accentButtonSx}>
+                    {firstQuiz.status === 'in_progress' ? 'Continuă testul' : 'Deschide testul'}
+                  </Button>
+                }
+              />
+            </Box>
+          )}
+
+          {/* DataGrid for desktop, card list for phones and tablets */}
+          {error ? (
+            <IllustratedState
+              icon='tabler:cloud-off'
+              tone='error'
+              title='Testele nu s-au încărcat'
+              description='Verifică conexiunea la internet și încearcă din nou.'
+              actions={
+                <Button variant='contained' onClick={handleRefresh} sx={accentButtonSx}>
+                  Reîncearcă
+                </Button>
+              }
+            />
+          ) : isEmpty ? (
+            renderEmpty()
+          ) : isMobile ? (
             <QuizMobileList
               quizzes={quizzes}
               loading={loading}

@@ -18,94 +18,32 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime'
 import { EmptyState } from '.'
 import RetryButton from './RetryButton'
 import QuizDataGridSkeleton from './QuizDataGridSkeleton'
+import StatusPill from 'src/views/student-ui/StatusPill'
+import { toneInk } from 'src/views/student-ui/readableAccent'
 
 import { getDifficultyColor } from '../utils/transformers'
+import { getQuizStatusDisplay } from '../utils/quizStatus'
 import { QuizDataGridProps, QuizGridRow } from '../types'
 
-// Apple-inspired Status Chip
-const AppleStatusChip = ({ status, score }: { status: string; score?: number }) => {
-  const theme = useTheme()
-
-  const getStatusConfig = () => {
-    if (status === 'completed' && typeof score === 'number') {
-      if (score >= 80) {
-        return {
-          label: `${score}%`,
-          color: theme.palette.success.main,
-          bgColor: alpha(theme.palette.success.main, 0.12),
-          icon: '✓'
-        }
-      } else if (score >= 60) {
-        return {
-          label: `${score}%`,
-          color: theme.palette.warning.main,
-          bgColor: alpha(theme.palette.warning.main, 0.12),
-          icon: '⚠'
-        }
-      } else {
-        return {
-          label: `${score}%`,
-          color: theme.palette.error.main,
-          bgColor: alpha(theme.palette.error.main, 0.12),
-          icon: '✗'
-        }
-      }
-    }
-
-    switch (status) {
-      case 'in_progress':
-        return {
-          label: 'În curs',
-          color: theme.palette.info.main,
-          bgColor: alpha(theme.palette.info.main, 0.12),
-          icon: '●'
-        }
-      case 'overdue':
-        return {
-          label: 'Expirat',
-          color: theme.palette.error.main,
-          bgColor: alpha(theme.palette.error.main, 0.12),
-          icon: '!'
-        }
-      default:
-        return {
-          label: 'Disponibil',
-          color: alpha(theme.palette.text.secondary, 0.8),
-          bgColor: alpha(theme.palette.text.secondary, 0.08),
-          icon: '○'
-        }
-    }
+// The grid's own wording, in Romanian like the rest of the page.
+const LOCALE_TEXT = {
+  noRowsLabel: 'Niciun test',
+  noResultsOverlayLabel: 'Niciun rezultat',
+  MuiTablePagination: {
+    labelRowsPerPage: 'Pe pagină:',
+    labelDisplayedRows: ({ from, to, count }: { from: number; to: number; count: number }) =>
+      `${from}–${to} din ${count}`
   }
+}
 
-  const config = getStatusConfig()
+// Status for the table, worded and coloured the same as on the phone cards
+const AppleStatusChip = ({ status, score }: { status: string; score?: number }) => {
+  const display = getQuizStatusDisplay(status, score)
 
   return (
-    <Box
-      sx={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 1,
-        px: 2,
-        py: 0.75,
-        borderRadius: 2.5,
-        backgroundColor: config.bgColor,
-        border: `1px solid ${alpha(config.color, 0.2)}`,
-        minWidth: 90,
-        justifyContent: 'center'
-      }}
-    >
-      <Typography
-        variant='caption'
-        sx={{
-          color: config.color,
-          fontWeight: 600,
-          fontSize: '0.8rem',
-          letterSpacing: '0.025em'
-        }}
-      >
-        {config.icon} {config.label}
-      </Typography>
-    </Box>
+    <StatusPill tone={display.tone} icon={display.icon}>
+      {display.label}
+    </StatusPill>
   )
 }
 
@@ -113,23 +51,12 @@ const AppleStatusChip = ({ status, score }: { status: string; score?: number }) 
 const AppleActionButton = ({ quiz, onStartQuiz }: { quiz: QuizGridRow; onStartQuiz: (id: string) => void }) => {
   const theme = useTheme()
 
-  const getActionConfig = () => {
-    if (quiz.status === 'completed') {
-      return {
-        title: 'Revizuiește rezultatele',
-        color: theme.palette.success.main,
-        bgColor: alpha(theme.palette.success.main, 0.08)
-      }
-    } else {
-      return {
-        title: 'Începe testul',
-        color: theme.palette.primary.main,
-        bgColor: alpha(theme.palette.primary.main, 0.08)
-      }
-    }
+  // The bright theme green fails 3:1 as an icon on its own tint, so the icon takes the readable shade.
+  const config = {
+    title: getQuizStatusDisplay(quiz.status, quiz.score).action,
+    color: toneInk(theme, theme.palette.primary.main),
+    bgColor: alpha(theme.palette.primary.main, 0.08)
   }
-
-  const config = getActionConfig()
 
   return (
     <Tooltip title={config.title} placement='top'>
@@ -402,7 +329,7 @@ const QuizDataGrid: React.FC<QuizDataGridProps> = ({
       {
         field: 'status',
         headerName: 'Status',
-        width: 140,
+        width: 170,
         sortable: false,
         filterable: false,
         align: 'center',
@@ -465,6 +392,7 @@ const QuizDataGrid: React.FC<QuizDataGridProps> = ({
         rows={quizzes}
         columns={columns}
         loading={false}
+        localeText={LOCALE_TEXT}
         // Pagination
         paginationModel={paginationModel}
         onPaginationModelChange={handlePaginationChange}
@@ -590,25 +518,7 @@ const QuizDataGrid: React.FC<QuizDataGridProps> = ({
           }
         }}
       />
-
-      {!loading && quizzes.length === 0 && (
-        <Box
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            textAlign: 'center'
-          }}
-        >
-          <EmptyState
-            title='Nu există teste disponibile'
-            description='Nu există teste alocate în acest moment.'
-            actionLabel='Reîmprospătează'
-            onAction={onRefresh}
-          />
-        </Box>
-      )}
+      {/* An empty list never reaches the grid: the page shows its own empty state instead. */}
     </>
   )
 }

@@ -1,16 +1,20 @@
 import React, { useCallback } from 'react'
-import { Box, Typography, InputBase, alpha, useMediaQuery } from '@mui/material'
+import { Box, InputBase, alpha } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import SearchIcon from '@mui/icons-material/Search'
+import StudentPageHeader from 'src/views/student-ui/StudentPageHeader'
 
 interface AppleToolbarProps {
   onSearchChange?: (searchValue: string) => void
   searchValue?: string
+  subtitle?: string
+
+  /** Searching an empty list finds nothing, so the page hides the field until there are tests. */
+  showSearch?: boolean
 }
 
-const AppleToolbar: React.FC<AppleToolbarProps> = ({ onSearchChange, searchValue = '' }) => {
+const AppleToolbar: React.FC<AppleToolbarProps> = ({ onSearchChange, searchValue = '', subtitle, showSearch = true }) => {
   const theme = useTheme()
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'))
 
   const handleSearchChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -23,77 +27,48 @@ const AppleToolbar: React.FC<AppleToolbarProps> = ({ onSearchChange, searchValue
   )
 
   return (
-    <Box
-      sx={{
-        width: '100%',
-        minHeight: isMobile ? 'auto' : 72,
-        borderBottom: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
-        px: isMobile ? 2 : 4,
-        py: isMobile ? 2 : 2,
-        display: 'flex',
-        flexDirection: isMobile ? 'column' : 'row',
-        justifyContent: 'space-between',
-        alignItems: isMobile ? 'stretch' : 'center',
-        gap: isMobile ? 2 : 0
-      }}
-    >
-      <Typography
-        variant='h5'
-        sx={{
-          fontWeight: 600,
-          fontSize: isMobile ? '1.5rem' : '1.75rem',
-          color: 'text.primary',
-          letterSpacing: '-0.025em'
-        }}
-      >
-        Teste
-      </Typography>
-      <Box
-        sx={{
-          borderRadius: 3,
-          backgroundColor: alpha(theme.palette.background.paper, 0.6),
-          border: `1px solid ${alpha(theme.palette.divider, 0.12)}`,
-          minWidth: isMobile ? 'auto' : 280,
-          width: isMobile ? '100%' : 'auto',
-          height: 44,
-          display: 'flex',
-          alignItems: 'center',
-          px: 2,
-          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-          '&:hover': {
-            backgroundColor: alpha(theme.palette.background.paper, 0.8),
-            borderColor: alpha(theme.palette.divider, 0.2)
-          },
-          '&:focus-within': {
-            backgroundColor: alpha(theme.palette.background.paper, 0.9),
-            borderColor: theme.palette.primary.main,
-            boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}`
-          }
-        }}
-      >
-        <SearchIcon
+    <StudentPageHeader title='Teste' subtitle={subtitle}>
+      {showSearch && (
+        <Box
           sx={{
-            color: alpha(theme.palette.text.secondary, 0.6),
-            fontSize: '1.25rem',
-            mr: 1
-          }}
-        />
-        <InputBase
-          placeholder='Caută teste...'
-          value={searchValue}
-          onChange={handleSearchChange}
-          sx={{
-            flex: 1,
-            color: 'text.primary',
-            fontSize: '0.9rem',
-            '& input::placeholder': {
-              color: alpha(theme.palette.text.secondary, 0.6),
-              opacity: 1
+            borderRadius: 3,
+            backgroundColor: 'background.paper',
+            border: `1px solid ${theme.palette.divider}`,
+            minWidth: { md: 280 },
+            width: { xs: '100%', md: 'auto' },
+            height: 44,
+            display: 'flex',
+            alignItems: 'center',
+            px: 2,
+            transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
+            '&:hover': {
+              borderColor: alpha(theme.palette.text.primary, 0.3)
+            },
+            '&:focus-within': {
+              borderColor: theme.palette.primary.main,
+              boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.16)}`
             }
           }}
-        />
-      </Box>
-    </Box>
+        >
+          <SearchIcon aria-hidden sx={{ color: 'text.secondary', fontSize: '1.25rem', mr: 1 }} />
+          <InputBase
+            placeholder='Caută după titlu'
+            value={searchValue}
+            onChange={handleSearchChange}
+            inputProps={{ 'aria-label': 'Caută teste după titlu', type: 'search', enterKeyHint: 'search' }}
+            sx={{
+              flex: 1,
+              color: 'text.primary',
+              fontSize: '0.9375rem',
+              '& input::placeholder': {
+                color: 'text.secondary',
+                opacity: 1
+              }
+            }}
+          />
+        </Box>
+      )}
+    </StudentPageHeader>
   )
 }
 

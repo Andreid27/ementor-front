@@ -17,7 +17,10 @@ const QuizMobileList: React.FC<QuizDataGridProps> = ({
 }) => {
   const theme = useTheme()
   const [page, setPage] = useState(1)
-  const [pageSize] = useState(10) // Mobile-friendly page size
+
+  // Must match the page size the page loads with, or the page count is wrong
+  // and the last tests can't be reached.
+  const [pageSize] = useState(5)
   const [showSkeleton, setShowSkeleton] = useState(false)
   const [isInitialLoad, setIsInitialLoad] = useState(true)
 
@@ -135,22 +138,9 @@ const QuizMobileList: React.FC<QuizDataGridProps> = ({
     )
   }
 
-  // Empty state
-  if (!loading && quizzes.length === 0) {
-    return (
-      <Box sx={{ p: 4, textAlign: 'center' }}>
-        <EmptyState
-          title='Nu există teste disponibile'
-          description='Nu există teste alocate în acest moment.'
-          actionLabel='Reîmprospătează'
-          onAction={onRefresh}
-        />
-      </Box>
-    )
-  }
-
+  // An empty list never reaches here: the page shows its own empty state instead.
   return (
-    <Box sx={{ p: 2 }}>
+    <Box sx={{ px: 4, pb: 4 }}>
       {/* Quiz Cards */}
       {quizzes.map(quiz => (
         <QuizMobileCard key={quiz.id} quiz={quiz} onSelect={onQuizSelect} />
@@ -204,11 +194,11 @@ const QuizMobileList: React.FC<QuizDataGridProps> = ({
         <Typography
           variant='caption'
           sx={{
-            color: alpha(theme.palette.text.secondary, 0.7),
-            fontSize: '0.75rem'
+            color: 'text.secondary',
+            fontSize: '0.8125rem'
           }}
         >
-          Afișare {(page - 1) * pageSize + 1} - {Math.min(page * pageSize, totalCount)} din {totalCount} teste
+          Afișare {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, totalCount)} din {totalCount} teste
         </Typography>
       </Box>
     </Box>
