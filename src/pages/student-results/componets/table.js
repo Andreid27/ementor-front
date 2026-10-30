@@ -269,9 +269,10 @@ const StudentsResultsTable = () => {
     setSearchText(searchValue)
     const searchRegex = new RegExp(escapeRegExp(searchValue), 'i')
 
+    // Fields the attempt does not have yet (start, end, score, integrity) come back as null
     const filteredRows = data.filter(row => {
       return Object.keys(row).some(field => {
-        return searchRegex.test(row[field].toString())
+        return searchRegex.test(String(row[field] ?? ''))
       })
     })
     if (searchValue.length) {

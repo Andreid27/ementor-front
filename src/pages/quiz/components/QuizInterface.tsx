@@ -201,9 +201,10 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId, isProf
             correctAnswers: attemptData.correctAnswers || [],
             correctAnswersMap
           })
-          if (isProfessor) {
-            let selectedUser = students.find(student => student.id === attemptData.studentId)
-
+          // The student may not be loaded yet, for example when the attempt is opened from a link; the review
+          // then shows without the student's card instead of failing
+          let selectedUser = isProfessor && students.find(student => student.id === attemptData.studentId)
+          if (selectedUser) {
             const processedUser = extractProfilePicture(selectedUser)
 
             const avatar =
