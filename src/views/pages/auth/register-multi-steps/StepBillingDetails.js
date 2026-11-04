@@ -39,9 +39,9 @@ const StepBillingDetails = ({ address, setAddress, counties, handlePrev, handleS
   } = useForm({ defaultValues: address })
 
   const onSubmit = async data => {
-    // The submit button calls this directly, bypassing handleSubmit. Check Scara here:
-    // the column is varchar(5), so a longer value fails the insert with a 500.
-    if (!(await trigger('staircase'))) return
+    // The submit button calls this directly, bypassing handleSubmit, so the rules are checked here: a missing
+    // county fails the save with a 500, and Scara is varchar(5), so a longer value does too.
+    if (!(await trigger())) return
 
     let newValues = getValues()
     setAddress(newValues)

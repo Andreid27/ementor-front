@@ -59,11 +59,16 @@ const StepPersonalDetails = ({ handleNext, initPrerequire, setInitPrerequire, se
   } = useForm({ defaultValues: profile })
 
   const onSubmit = async data => {
-    if (validateProfilePicture(profile)) {
+    // A photo is required: an uploaded one, or the Google photo of an account signed in with Google
+    const hasUploadedPicture = profile.profilePicture && !validateProfilePicture(profile)
+    const hasGooglePicture = typeof user?.profilePicture === 'string' && user.profilePicture.trim().length > 0
+
+    if (!hasUploadedPicture && !hasGooglePicture) {
       setImageValidationError(true)
 
       return
     }
+    setImageValidationError(false)
     setLoading(true)
     data.profilePicture = profile.profilePicture
     setLoading(false)
@@ -148,7 +153,7 @@ const StepPersonalDetails = ({ handleNext, initPrerequire, setInitPrerequire, se
         <Grid container spacing={5}>
           <Grid item xs={12} sm={6}>
             <Card className={'bro'} sx={{ width: 300, height: 300, '& .MuiCardHeader-action': { lineHeight: 0.8 } }}>
-              {user && !user.profilePicture ? (
+              {!user?.profilePicture ? (
                 <>
                   <CardHeader title={'Încarcă fotografia ta aici'} />
                   <CardContent sx={{ position: 'relative', '& pre': { m: '0 !important', maxHeight: 300 } }}>
@@ -214,7 +219,7 @@ const StepPersonalDetails = ({ handleNext, initPrerequire, setInitPrerequire, se
                     required: true,
                     pattern: {
                       value: /^[0-9]{9}$/, // You can adjust the regex pattern for your specific phone number format
-                      message: 'Acest număr de telefonu este valid.'
+                      message: 'Acest număr de telefon nu este valid.'
                     }
                   }}
                   render={({ field: { value, onChange } }) => (

@@ -53,7 +53,7 @@ const StepProfessorInfo = ({ handleNext, handlePrev, initPrerequire, setInitPrer
   const onSubmit = async data => {
     // Allow either uploaded profile picture OR existing Google profile picture
     const hasUploadedPicture = profile.profilePicture && !validateProfilePicture(profile)
-    const hasGooglePicture = user.profilePicture && user.profilePicture.trim().length > 0
+    const hasGooglePicture = typeof user?.profilePicture === 'string' && user.profilePicture.trim().length > 0
 
     if (!hasUploadedPicture && !hasGooglePicture) {
       setImageValidationError(true)
@@ -143,7 +143,7 @@ const StepProfessorInfo = ({ handleNext, handlePrev, initPrerequire, setInitPrer
         <Grid container spacing={5}>
           <Grid item xs={12} sm={6}>
             <Card className={'bro'} sx={{ width: 300, height: 300, '& .MuiCardHeader-action': { lineHeight: 0.8 } }}>
-              {user && !user.profilePicture ? (
+              {!user?.profilePicture ? (
                 <>
                   <CardHeader title={'Încarcă fotografia ta aici'} />
                   <CardContent sx={{ position: 'relative', '& pre': { m: '0 !important', maxHeight: 300 } }}>

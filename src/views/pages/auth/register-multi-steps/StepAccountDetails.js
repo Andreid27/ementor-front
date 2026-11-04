@@ -201,7 +201,7 @@ const StepAccountDetails = ({ handleNext }) => {
               required: true,
               pattern: {
                 value: /^[0-9]{9}$/, // You can adjust the regex pattern for your specific phone number format
-                message: 'Acest număr de telefonu este valid.'
+                message: 'Acest număr de telefon nu este valid.'
               }
             }}
             render={({ field: { value, onChange } }) => (

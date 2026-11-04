@@ -48,7 +48,12 @@ const StepInvitationCode = ({ handleNext, invitationData, setInvitationData }) =
       })
       setError('')
     } catch (err) {
-      if (err.response?.status === 404) {
+      // profile-service answers an unknown code with 500 "Professor not found with invitation code ..."
+      const data = err.response?.data
+      const message = typeof data === 'string' ? data : String(data?.message || '')
+      const notFound = err.response?.status === 404 || /not found/i.test(message)
+
+      if (notFound) {
         setError('Cod invalid. Verificați codul și încercați din nou.')
       } else {
         setError('Eroare de conexiune. Încercați din nou.')

@@ -52,7 +52,7 @@ const steps = [
   {
     title: 'Adresa',
     icon: 'tabler:smart-home',
-    subtitle: 'Adresa (opțional)'
+    subtitle: 'Adresa de domiciliu'
   }
 ]
 

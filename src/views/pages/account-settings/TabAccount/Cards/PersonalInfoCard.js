@@ -249,9 +249,18 @@ const PersonalInfoCard = ({ fullProfile, initPrerequire }, ref) => {
               control={control}
               rules={{
                 required: true,
-                pattern: {
-                  value: /^\d([.,]\d{1,2})?$/,
-                  message: 'Acest număr de telefonu este valid.'
+
+                // The same rule as the registration step: a grade from 1 to 10, with a dot or a comma
+                validate: value => {
+                  if (value === undefined || value === null || value === '') return 'Acest câmp este obligatoriu.'
+                  const normalizedValue = value.toString().replace(/[,\s]/g, '.')
+                  if (!/^\d+(\.\d{1,2})?$/.test(normalizedValue)) {
+                    return 'Introduceți o notă validă (ex: 8.91, 8,91, sau 8).'
+                  }
+                  const numValue = parseFloat(normalizedValue)
+                  if (numValue < 1 || numValue > 10) return 'Nota trebuie să fie între 1 și 10.'
+
+                  return true
                 }
               }}
               render={({ field: { value, onChange } }) => (
@@ -263,7 +272,9 @@ const PersonalInfoCard = ({ fullProfile, initPrerequire }, ref) => {
                   placeholder='9.99'
                   error={Boolean(errors.schoolGrade)}
                   aria-describedby='validation-async-last-name'
-                  {...(errors.schoolGrade && { helperText: 'Acest câmp este obligatoriu.' })}
+                  {...(errors.schoolGrade && {
+                    helperText: errors.schoolGrade.message || 'Acest câmp este obligatoriu.'
+                  })}
                 />
               )}
             />

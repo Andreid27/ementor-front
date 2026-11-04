@@ -32,10 +32,15 @@ const StepProfessorAddress = ({ address, setAddress, counties, handlePrev, handl
     control,
     handleSubmit,
     formState: { errors },
-    getValues
+    getValues,
+    trigger
   } = useForm({ defaultValues: address })
 
-  const onSubmit = async data => {
+  // The backend stores every professor with an address (address_id is NOT NULL), so the step is required.
+  // The button calls this directly, so the rules are checked here.
+  const onSubmit = async () => {
+    if (!(await trigger())) return
+
     let newValues = getValues()
     setAddress(newValues)
     handleSubmitProfile(newValues)
@@ -54,20 +59,13 @@ const StepProfessorAddress = ({ address, setAddress, counties, handlePrev, handl
     handlePrev()
   }
 
-  const handleSkip = () => {
-    setAddress(null)
-    handleSubmitProfile(null)
-  }
-
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <Box sx={{ mb: 6 }}>
         <Typography variant='h3' sx={{ mb: 1.5 }}>
-          Adresa (opțional)
+          Adresa
         </Typography>
-        <Typography sx={{ color: 'text.secondary' }}>
-          Puteți completa aceste informații mai târziu din profilul dvs.
-        </Typography>
+        <Typography sx={{ color: 'text.secondary' }}>Introduceți adresa de domiciliu.</Typography>
       </Box>
 
       <Grid container spacing={5}>
@@ -75,6 +73,7 @@ const StepProfessorAddress = ({ address, setAddress, counties, handlePrev, handl
           <Controller
             name='countyId'
             control={control}
+            rules={{ required: true, minLength: 32, maxLength: 40 }}
             defaultValue={'choose'}
             render={({ field: { value, onChange } }) => (
               <CustomTextField
@@ -86,6 +85,7 @@ const StepProfessorAddress = ({ address, setAddress, counties, handlePrev, handl
                 label='Județ'
                 error={Boolean(errors.countyId)}
                 aria-describedby='validation-async-last-name'
+                {...(errors.countyId && { helperText: 'Acest câmp este obligatoriu.' })}
               >
                 <MenuItem key={'choose'} value={'choose'}>
                   {'Alege'}
@@ -105,7 +105,7 @@ const StepProfessorAddress = ({ address, setAddress, counties, handlePrev, handl
           <Controller
             name='city'
             control={control}
-            rules={{ minLength: 3, maxLength: 100 }}
+            rules={{ required: true, minLength: 3, maxLength: 100 }}
             render={({ field: { value, onChange } }) => (
               <CustomTextField
                 fullWidth
@@ -115,6 +115,7 @@ const StepProfessorAddress = ({ address, setAddress, counties, handlePrev, handl
                 placeholder='București'
                 error={Boolean(errors.city)}
                 aria-describedby='validation-async-first-name'
+                {...(errors.city && { helperText: 'Acest câmp este obligatoriu.' })}
               />
             )}
           />
@@ -124,7 +125,7 @@ const StepProfessorAddress = ({ address, setAddress, counties, handlePrev, handl
           <Controller
             name='street'
             control={control}
-            rules={{ minLength: 3, maxLength: 200 }}
+            rules={{ required: true, minLength: 3, maxLength: 200 }}
             render={({ field: { value, onChange } }) => (
               <CustomTextField
                 fullWidth
@@ -134,6 +135,7 @@ const StepProfessorAddress = ({ address, setAddress, counties, handlePrev, handl
                 error={Boolean(errors.street)}
                 placeholder='Bulevardul Unirii'
                 aria-describedby='validation-async-email'
+                {...(errors.street && { helperText: 'Acest câmp este obligatoriu.' })}
               />
             )}
           />
@@ -143,7 +145,7 @@ const StepProfessorAddress = ({ address, setAddress, counties, handlePrev, handl
           <Controller
             name='number'
             control={control}
-            rules={{ maxLength: 10 }}
+            rules={{ required: true, maxLength: 10 }}
             render={({ field: { value, onChange } }) => (
               <CustomTextField
                 fullWidth
@@ -153,6 +155,7 @@ const StepProfessorAddress = ({ address, setAddress, counties, handlePrev, handl
                 error={Boolean(errors.number)}
                 placeholder='124'
                 aria-describedby='validation-async-email'
+                {...(errors.number && { helperText: 'Acest câmp este obligatoriu.' })}
               />
             )}
           />
@@ -181,7 +184,7 @@ const StepProfessorAddress = ({ address, setAddress, counties, handlePrev, handl
           <Controller
             name='staircase'
             control={control}
-            rules={{ maxLength: 5 }}
+            rules={{ maxLength: { value: 5, message: 'Scara poate avea cel mult 5 caractere.' } }}
             render={({ field: { value, onChange } }) => (
               <CustomTextField
                 fullWidth
@@ -191,6 +194,7 @@ const StepProfessorAddress = ({ address, setAddress, counties, handlePrev, handl
                 error={Boolean(errors.staircase)}
                 placeholder=''
                 aria-describedby='validation-async-email'
+                {...(errors.staircase && { helperText: errors.staircase.message })}
               />
             )}
           />
@@ -233,9 +237,6 @@ const StepProfessorAddress = ({ address, setAddress, counties, handlePrev, handl
               Înapoi
             </Button>
             <Box sx={{ display: 'flex', gap: 2 }}>
-              <Button variant='outlined' onClick={handleSkip} disabled={submitLoading}>
-                Săriți acest pas
-              </Button>
               <Button variant='contained' onClick={onSubmit} disabled={submitLoading}>
                 {submitLoading ? (
                   <CircularProgress
