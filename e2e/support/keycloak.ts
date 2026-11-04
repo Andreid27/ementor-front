@@ -65,6 +65,12 @@ export const createVerifiedUser = async (user: {
   return (await findUserByEmail(user.email)) as KeycloakUser
 }
 
+/** Take realm roles away from a user (e.g. the default ones every account gets). */
+export const removeRealmRoles = async (userId: string, roleNames: string[]) => {
+  const roles = await Promise.all(roleNames.map(name => admin(`/roles/${encodeURIComponent(name)}`)))
+  await admin(`/users/${userId}/role-mappings/realm`, { method: 'DELETE', body: JSON.stringify(roles) })
+}
+
 /** An access token for a user, as the app gets it (the e-mentor client allows the password grant). */
 export const userToken = async (email: string): Promise<string> => {
   const response = await fetch(tokenUrl, {

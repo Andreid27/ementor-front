@@ -75,6 +75,24 @@ flooded by its own pages:
 - logging out drops the queued photo requests unsent
 - a photo that does not display is not downloaded again within the minute
 
+Calendar (`tests/calendar-attendees.spec.ts`), the students on an event. Prices follow the backend's rule: the
+price set for the student on the event, else their own price while they are in the class, else the event's.
+The professor, their students and events are set up through profile-service; the professor gets a subscription
+row in the e2e database and loses Keycloak's default roles (profile-service acts on the first role in the
+token, and the default STUDENT role can come first).
+
+- a student taken out of the class is shown as "Inactiv" and not present when the event is finished, and is not
+  charged; the others are present and pay their own price
+- a student who left but did come can be marked present, and pays the price shown (the event's)
+- a student added while finishing starts present, at their own price or the event's if they have none, and pays it
+- the price set for a student on the event is shown and charged
+- editing a recurring event: a new student starts at their own price, one taken off and put back keeps the price
+  set for them
+- a student added in the event form is saved (for that session) at their usual price, and pays it when the event
+  is finished
+- a price set for a student on one event does not follow them to the next event the professor makes
+- prices adjusted to the real duration are worked out once, however often attendance is changed
+
 \* These two need the `InvitationCodeGenerator` fix in profile-service (lowercase suffix, code cut to the
 30-character column). Without it the backend answers 500 and the scenarios fail.
 
