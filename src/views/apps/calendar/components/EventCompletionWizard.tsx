@@ -1,6 +1,7 @@
 // ** React Imports
-import React, { useState, useMemo, useEffect } from 'react'
+import React, { useState, useMemo, useEffect, useRef } from 'react'
 import { Controller } from 'react-hook-form'
+import { useDispatch, useSelector } from 'react-redux'
 
 // ** MUI Imports
 import Box from '@mui/material/Box'
@@ -41,9 +42,17 @@ import { EventAttendeeDTO } from 'src/generated/profile-service'
 import { resolveCalendarError } from '../utils/calendarErrors'
 import { StudentData } from './AttendeeManager'
 
+// ** Store
+import {
+  fetchData as fetchActiveStudents,
+  selectActiveStudents,
+  selectActiveStudentsFetchedAt
+} from 'src/store/apps/user'
+
 // ** Utils
 import { format, addMinutes, isValid } from 'date-fns'
 import dayjs from 'dayjs'
+import { attendeePrice } from '../utils/eventAttendeeUtils'
 
 // Utility function to parse ISO 8601 duration (e.g., "PT1H30M") to minutes
 const parseDurationToMinutes = (duration: string): number => {
@@ -91,6 +100,17 @@ interface EventCompletionWizardProps {
   isLoading?: boolean
 }
 
+const studentsById = (list: StudentData[]) =>
+  new Map<string, StudentData>((list || []).filter(student => student?.id).map(student => [student.id!, student]))
+
+// Who is still in the professor's class, by student id. `active` is null when that could not be learned.
+// `fresh` is false when the class could not be asked for and an older list (or none) stands in.
+interface ClassCheck {
+  done: boolean
+  fresh: boolean
+  active: Map<string, StudentData> | null
+}
+
 interface EventCompletionData {
   actualStartTime: string
   actualEndTime: string
@@ -107,7 +127,47 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
   isLoading = false
 }) => {
   const theme = useTheme()
+  const dispatch = useDispatch()
   const [activeStep, setActiveStep] = useState(0)
+
+  // A student taken out of the class stays on the events made before (a recurring one keeps them for good),
+  // so the class is asked for again when the wizard opens: the stored list can be older than the change.
+  // If that fails, the stored list stands in, when there is one.
+  const storedActiveStudents = useSelector(selectActiveStudents)
+  const storedActiveStudentsFetchedAt = useSelector(selectActiveStudentsFetchedAt)
+  const storedClassRef = useRef({ students: storedActiveStudents, fetchedAt: storedActiveStudentsFetchedAt })
+  storedClassRef.current = { students: storedActiveStudents, fetchedAt: storedActiveStudentsFetchedAt }
+  const [classCheck, setClassCheck] = useState<ClassCheck>({ done: false, fresh: false, active: null })
+
+  useEffect(() => {
+    let open = true
+
+    Promise.resolve((dispatch as any)(fetchActiveStudents())).then((action: any) => {
+      if (!open) return
+      if (fetchActiveStudents.fulfilled.match(action)) {
+        setClassCheck({ done: true, fresh: true, active: studentsById(action.payload.students) })
+      } else {
+        const stored = storedClassRef.current
+        setClassCheck({ done: true, fresh: false, active: stored.fetchedAt ? studentsById(stored.students) : null })
+      }
+    })
+
+    return () => {
+      open = false
+    }
+  }, [dispatch])
+
+  // The class the prices are worked out from, given to the attendee list too, so the price shown is the price
+  // sent. Without it, the class list the page has stands in, for both.
+  const studentsRef = useRef(students)
+  studentsRef.current = students
+  const classStudents = useMemo(
+    () => (classCheck.active ? Array.from(classCheck.active.values()) : students),
+    [classCheck.active, students]
+  )
+
+  const isInactive = (attendeeId?: string) =>
+    Boolean(attendeeId && classCheck.active && !classCheck.active.has(attendeeId))
 
   // Completion result state
   const [completionStatus, setCompletionStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
@@ -119,6 +179,7 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
   const [description, setDescription] = useState('')
   const [adjustPricesWithDuration, setAdjustPricesWithDuration] = useState(false)
   const [eventAttendees, setEventAttendees] = useState<EventAttendeeDTO[]>([])
+  const [startingAttendees, setStartingAttendees] = useState<EventAttendeeDTO[]>([])
 
   // Initialize form data from selected event
   useEffect(() => {
@@ -133,24 +194,48 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
 
       const calculatedEndTime = eventStart.add(durationMinutes, 'minutes')
       setActualEndTime(calculatedEndTime)
-
-      // Get default price from series or event
-      const defaultPrice = selectedEvent.seriesPrice || selectedEvent.price || 0
-
-      // Initialize attendees from the event
-      const existingAttendees = selectedEvent.eventAttendees || []
-      const initialAttendees = existingAttendees.map((attendee: any) => ({
-        id: attendee.id,
-        attendeeId: attendee.attendeeId,
-        hasCustomPricing: attendee.hasCustomPricing || false,
-        customPrice: attendee.customPrice || defaultPrice,
-        originalPrice: attendee.customPrice || defaultPrice, // Store original price for duration adjustments
-        expected: true, // All attendees are expected by default
-        attended: true // All expected attendees are attended by default
-      }))
-      setEventAttendees(initialAttendees)
     }
   }, [selectedEvent])
+
+  // Initialize attendees from the event once it is known who is still in the class
+  useEffect(() => {
+    if (!selectedEvent || !classCheck.done) return
+
+    // Get default price from series or event
+    const defaultPrice = selectedEvent.seriesPrice || selectedEvent.price || 0
+
+    const existingAttendees = selectedEvent.eventAttendees || []
+
+    const initialAttendees = existingAttendees.map((attendee: any) => {
+      const hasCustomPricing = attendee.hasCustomPricing || false
+
+      const leftTheClass =
+        Boolean(attendee.attendeeId) && classCheck.active !== null && !classCheck.active.has(attendee.attendeeId)
+
+      // The price this finish charges, worked out as the attendee list shows it
+      const classById = classCheck.active ?? studentsById(studentsRef.current)
+      const price = attendeePrice(attendee, classById.get(attendee.attendeeId) ?? null, defaultPrice)
+
+      return {
+        id: attendee.id,
+        attendeeId: attendee.attendeeId,
+        hasCustomPricing,
+        customPrice: price,
+        originalPrice: price, // Store original price for duration adjustments
+        // Everyone in the class is expected and present by default. A student who left the class is
+        // neither (so not charged) unless the professor marks them present; one with a custom price stays
+        // expected, as the backend has required in the past.
+        expected: leftTheClass ? hasCustomPricing : true,
+        attended: !leftTheClass
+      }
+    })
+    setEventAttendees(initialAttendees)
+    setStartingAttendees(initialAttendees)
+  }, [selectedEvent, classCheck])
+
+  const inactiveAttendeeIds = eventAttendees
+    .map(attendee => attendee.attendeeId)
+    .filter((id): id is string => isInactive(id))
 
   // Get default price for the event
   const defaultPrice = useMemo(() => {
@@ -206,13 +291,16 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
       // Use original price for adjustment calculation, not the current customPrice
       // This prevents compounding adjustments when toggling attended status
       const originalPrice =
-        (attendee as any).originalPrice || (attendee.hasCustomPricing ? attendee.customPrice || 0 : defaultPrice)
+        // customPrice holds every attendee's price here, a student added during the finish included
+        (attendee as any).originalPrice ?? attendee.customPrice ?? defaultPrice
       const adjustedPrice = originalPrice * (durationInfo.durationPercentage / 100)
 
       return {
         ...attendee,
         customPrice: Math.round(adjustedPrice * 100) / 100, // Round to 2 decimal places
-        hasCustomPricing: adjustPricesWithDuration || attendee.hasCustomPricing
+        hasCustomPricing: adjustPricesWithDuration || attendee.hasCustomPricing,
+        // A custom price goes with being expected (the rule the attendee list keeps too)
+        expected: true
       }
     })
   }, [eventAttendees, adjustPricesWithDuration, durationInfo, defaultPrice]) // Validation
@@ -224,8 +312,8 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
         return true
       case 2: // Price Adjustment (always can proceed)
         return true
-      case 3: // Attendees
-        return adjustedAttendees.length > 0
+      case 3: // Attendees, once the event's own are loaded (they are, after the class check)
+        return classCheck.done && adjustedAttendees.length > 0
       default:
         return false
     }
@@ -277,46 +365,41 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
     }
   }
 
-  // Custom handler to preserve original prices when attendees change
+  // Changes from the attendee list. The list shows the prices after the duration adjustment, so a price is
+  // compared with the one shown: a different one was typed by the professor and stands as it is. Any other
+  // change (present, expected) keeps the stored price, from which the adjustment is worked out again, once.
   const handleAttendeesChange = (updatedAttendees: EventAttendeeDTO[]) => {
-    const attendeesWithPreservedPrices = updatedAttendees.map(updatedAttendee => {
-      const existingAttendee = eventAttendees.find(existing => existing.attendeeId === updatedAttendee.attendeeId)
+    const next = updatedAttendees.map(updatedAttendee => {
+      const stored: any = eventAttendees.find(existing => existing.attendeeId === updatedAttendee.attendeeId)
 
-      if (existingAttendee && (existingAttendee as any).originalPrice !== undefined) {
-        // If only attendance status changed, preserve original price to prevent compounding
-        const onlyAttendanceChanged =
-          existingAttendee.customPrice === updatedAttendee.customPrice &&
-          existingAttendee.attended !== updatedAttendee.attended
-
-        if (onlyAttendanceChanged) {
-          return {
-            ...updatedAttendee,
-            originalPrice: (existingAttendee as any).originalPrice,
-            userSetCustomPrice: (existingAttendee as any).userSetCustomPrice
-          }
-        }
-
-        // If price was manually changed, mark it as user-set and update original price
-        if (existingAttendee.customPrice !== updatedAttendee.customPrice) {
-          return {
-            ...updatedAttendee,
-            originalPrice: updatedAttendee.customPrice,
-            userSetCustomPrice: true // Mark as manually set by user
-          }
-        }
-
-        // Default: preserve original price and user-set flag
+      // Added just now, at their usual price (or put back with the entry they had): the adjustment starts there
+      if (!stored) {
         return {
           ...updatedAttendee,
-          originalPrice: (existingAttendee as any).originalPrice,
-          userSetCustomPrice: (existingAttendee as any).userSetCustomPrice
+          originalPrice: (updatedAttendee as any).originalPrice ?? updatedAttendee.customPrice
         }
       }
 
-      return updatedAttendee
+      const shown = adjustedAttendees.find(attendee => attendee.attendeeId === updatedAttendee.attendeeId)
+      if (shown && shown.customPrice !== updatedAttendee.customPrice) {
+        // Back to the usual price (the Custom switch turned off): it is adjusted to the duration like anyone's
+        if (!updatedAttendee.hasCustomPricing) {
+          return { ...updatedAttendee, originalPrice: updatedAttendee.customPrice, userSetCustomPrice: false }
+        }
+
+        return { ...updatedAttendee, originalPrice: updatedAttendee.customPrice, userSetCustomPrice: true }
+      }
+
+      return {
+        ...updatedAttendee,
+        customPrice: stored.customPrice,
+        hasCustomPricing: stored.hasCustomPricing,
+        originalPrice: stored.originalPrice,
+        userSetCustomPrice: stored.userSetCustomPrice
+      }
     })
 
-    setEventAttendees(attendeesWithPreservedPrices)
+    setEventAttendees(next)
   } // Steps configuration
   const steps = [
     {
@@ -568,22 +651,41 @@ const EventCompletionWizard: React.FC<EventCompletionWizardProps> = ({
               personaliza prețurile pentru individual studenții dacă este necesar.
             </Typography>
 
-            <AttendeeManager
-              students={students}
-              attendees={adjustedAttendees}
-              onAttendeesChange={handleAttendeesChange}
-              defaultPrice={defaultPrice}
-              eventType='occurrence'
-              showPricing={true}
-              showAttendanceTracking={true}
-              showStatistics={false}
-              maxHeight={400}
-              isReadOnly={false}
-              isLoading={false}
-              isNewEvent={false}
-            />
+            {!classCheck.done && (
+              <Alert severity='info' sx={{ mb: 2 }}>
+                Se verifică elevii din clasă…
+              </Alert>
+            )}
 
-            {adjustedAttendees.length === 0 && (
+            {classCheck.done && !classCheck.fresh && (
+              <Alert severity='warning' sx={{ mb: 2 }}>
+                Lista elevilor din clasă nu s-a putut actualiza. Verifică prezența: un elev scos recent din clasă poate
+                apărea ca prezent.
+              </Alert>
+            )}
+
+            {/* Not before the event's attendees are loaded: a student added earlier would be lost, and a finish
+                sent then would leave the event's own attendees out */}
+            {classCheck.done && (
+              <AttendeeManager
+                students={classStudents}
+                attendees={adjustedAttendees}
+                onAttendeesChange={handleAttendeesChange}
+                defaultPrice={defaultPrice}
+                inactiveAttendeeIds={inactiveAttendeeIds}
+                previousAttendees={startingAttendees}
+                eventType='occurrence'
+                showPricing={true}
+                showAttendanceTracking={true}
+                showStatistics={false}
+                maxHeight={400}
+                isReadOnly={false}
+                isLoading={false}
+                isNewEvent={false}
+              />
+            )}
+
+            {classCheck.done && adjustedAttendees.length === 0 && (
               <Alert severity='warning' sx={{ mt: 2 }}>
                 <Typography variant='body2'>
                   <strong>Niciun participant selectat:</strong> Trebuie să ai cel puțin un participant pentru a finaliza

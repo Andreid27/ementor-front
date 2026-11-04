@@ -48,6 +48,8 @@ import {
   removeAttendee,
   updateAttendeePrice,
   updateAttendanceStatus,
+  attendeePrice,
+  hasLeftTheClass,
   calculateTotalRevenue,
   getExpectedCount,
   getAttendedCount,
@@ -55,6 +57,7 @@ import {
   getAttendedAttendees
 } from '../utils/eventAttendeeUtils'
 import EmentorAvatar from 'src/@core/components/ementor-avatar'
+import { useKnownStudents } from 'src/@core/hooks/useKnownStudents'
 
 export interface StudentData {
   id?: string
@@ -84,6 +87,12 @@ interface AttendeeManagerProps {
   showStatistics?: boolean
   maxHeight?: number
 
+  // Attendees who are no longer in the professor's class; they are marked "Inactiv"
+  inactiveAttendeeIds?: string[]
+
+  // The event's attendees as it was opened: a student taken off and put back gets their entry back
+  previousAttendees?: EventAttendeeDTO[]
+
   // States
   isReadOnly?: boolean
   isLoading?: boolean
@@ -102,7 +111,9 @@ const AttendeeManager: React.FC<AttendeeManagerProps> = ({
   maxHeight = 400,
   isReadOnly = false,
   isLoading = false,
-  isNewEvent = true
+  isNewEvent = true,
+  inactiveAttendeeIds = [],
+  previousAttendees = []
 }) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [expandedSections, setExpandedSections] = useState({
@@ -114,6 +125,23 @@ const AttendeeManager: React.FC<AttendeeManagerProps> = ({
   const enrichedAttendees = useMemo(() => {
     return enrichAttendeesWithStudentData(attendees || [], students || [])
   }, [attendees, students])
+
+  // `students` is the class (active students); a student who left it is still on events made before, and
+  // is looked up by id so they are shown, never hidden
+  const findKnownStudent = useKnownStudents((attendees || []).map(attendee => attendee.attendeeId))
+
+  const findClassStudent = (attendeeId?: string): StudentData | null => {
+    if (!attendeeId || inactiveAttendeeIds.includes(attendeeId)) return null
+    const student = (students || []).find(s => s.userId === attendeeId || s.id === attendeeId)
+
+    return student && !hasLeftTheClass(student) ? student : null
+  }
+
+  const findStudent = (attendeeId?: string): StudentData | null =>
+    (students || []).find(s => s.userId === attendeeId || s.id === attendeeId) || findKnownStudent(attendeeId)
+
+  // What the student pays without a price of their own on this event: their price in the class, or the event's
+  const usualPriceFor = (attendeeId?: string) => attendeePrice({}, findClassStudent(attendeeId), defaultPrice)
 
   // Filter available students (not already added)
   const availableStudents = useMemo(() => {
@@ -155,10 +183,32 @@ const AttendeeManager: React.FC<AttendeeManagerProps> = ({
 
   // Event handlers
   const handleAddAttendee = (student: StudentData) => {
+    const studentId = student.userId || student.id
+    if (!studentId || (attendees || []).some(a => a.attendeeId === studentId)) return
+
+    // While attendance is taken (finishing an event), a student the professor adds was there
+    const addedPresent = showAttendanceTracking
+
+    // Put back on an event they were already on (e.g. a recurring one): keep the price they had there
+    const previous = previousAttendees.find(attendee => attendee.attendeeId === studentId)
+    if (previous) {
+      onAttendeesChange([
+        ...(attendees || []),
+        addedPresent ? { ...previous, expected: true, attended: true } : previous
+      ])
+
+      return
+    }
+
+    // New to this event: at the student's own price (the event's when they have none), not a custom one,
+    // so the event follows the student's price as the backend does
+    const usualPrice = usualPriceFor(studentId)
+
     const updatedAttendees = addAttendee(attendees || [], student, {
       expected: true,
-      customPrice: defaultPrice,
-      defaultPrice: defaultPrice
+      attended: addedPresent,
+      customPrice: usualPrice,
+      defaultPrice: usualPrice
     })
     onAttendeesChange(updatedAttendees)
   }
@@ -169,7 +219,7 @@ const AttendeeManager: React.FC<AttendeeManagerProps> = ({
   }
 
   const handleUpdatePrice = (attendeeId: string, price: number) => {
-    const updatedAttendees = updateAttendeePrice(attendees || [], attendeeId, price, defaultPrice)
+    const updatedAttendees = updateAttendeePrice(attendees || [], attendeeId, price, usualPriceFor(attendeeId))
     onAttendeesChange(updatedAttendees)
   }
 
@@ -206,21 +256,25 @@ const AttendeeManager: React.FC<AttendeeManagerProps> = ({
 
   // Render functions
   const renderAttendeeItem = (attendee: EventAttendeeDTO, index: number) => {
-    const student = (students || []).find(s => s.userId === attendee.attendeeId || s.id === attendee.attendeeId)
-    if (!student) return null
-
-    const displayName = getStudentDisplayName(student)
-    const attendeePrice = attendee.hasCustomPricing ? attendee.customPrice || 0 : defaultPrice
+    const student = findStudent(attendee.attendeeId)
+    const displayName = student ? getStudentDisplayName(student) : 'Elev necunoscut'
+    const isInactive = Boolean(attendee.attendeeId && inactiveAttendeeIds.includes(attendee.attendeeId))
+    const price = attendeePrice(attendee, findClassStudent(attendee.attendeeId), defaultPrice)
 
     return (
       <ListItem key={attendee.attendeeId || index} divider>
         <ListItemAvatar>
-          <EmentorAvatar userId={attendee.attendeeId} user={student} name={displayName} />
+          <EmentorAvatar userId={attendee.attendeeId} user={student || undefined} name={displayName} />
         </ListItemAvatar>
         <ListItemText
           primary={
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Typography variant='body1'>{displayName}</Typography>
+              {isInactive && (
+                <Tooltip title='Elevul a fost dezactivat din clasa ta'>
+                  <Chip label='Inactiv' size='small' color='warning' variant='outlined' />
+                </Tooltip>
+              )}
               {attendee.expected && (
                 <Tooltip title='Se așteaptă să participe'>
                   <EventAvailableIcon fontSize='small' color='primary' />
@@ -237,7 +291,7 @@ const AttendeeManager: React.FC<AttendeeManagerProps> = ({
             <Box sx={{ mt: 1 }}>
               {/* Student email */}
               <Typography variant='caption' display='block' color='textSecondary'>
-                {student.email}
+                {student?.email}
               </Typography>
 
               {/* Attendance controls */}
@@ -284,7 +338,7 @@ const AttendeeManager: React.FC<AttendeeManagerProps> = ({
                 <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
                   <TextField
                     type='number'
-                    value={attendeePrice}
+                    value={price}
                     onChange={e => handleUpdatePrice(attendee.attendeeId!, parseFloat(e.target.value) || 0)}
                     size='small'
                     sx={{ width: 100 }}
@@ -298,7 +352,7 @@ const AttendeeManager: React.FC<AttendeeManagerProps> = ({
                         checked={attendee.hasCustomPricing || false}
                         onChange={e => {
                           if (!e.target.checked) {
-                            handleUpdatePrice(attendee.attendeeId!, defaultPrice)
+                            handleUpdatePrice(attendee.attendeeId!, usualPriceFor(attendee.attendeeId))
                           }
                         }}
                         size='small'
@@ -313,7 +367,7 @@ const AttendeeManager: React.FC<AttendeeManagerProps> = ({
               {/* Display pricing if read-only */}
               {showPricing && isReadOnly && (
                 <Typography variant='caption' color='primary'>
-                  Price: {formatCurrency(attendeePrice)}
+                  Price: {formatCurrency(price)}
                   {attendee.hasCustomPricing && ' (Custom)'}
                 </Typography>
               )}

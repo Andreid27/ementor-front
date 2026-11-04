@@ -539,6 +539,11 @@ export const selectAllStudents = state => {
   return state.user?.allStudents || []
 }
 
+// The class as the server last listed it (active students only); the time is null until it has been fetched
+export const selectActiveStudents = state => state.user?.activeStudents || []
+
+export const selectActiveStudentsFetchedAt = state => state.user?.activeStudentsFetchedAt || null
+
 // Any student the professor has seen: active, inactive or looked up by id. Names and photos are read from here.
 export const selectKnownStudents = state => state.user?.knownStudents || EMPTY_STUDENTS
 

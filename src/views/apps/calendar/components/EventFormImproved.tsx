@@ -23,7 +23,7 @@ import EventTypeSelector from './EventTypeSelector'
 
 // ** Utils
 import { shouldShowScopeToggle } from '../utils/eventTypeUtils'
-import { calculateTotalRevenue, getExpectedCount } from '../utils/eventAttendeeUtils'
+import { eventAttendeesToEventAttendeeDTOs, getExpectedCount, totalAttendeePrice } from '../utils/eventAttendeeUtils'
 
 // ** Types
 import { EventFormProps } from '../types'
@@ -66,6 +66,12 @@ const EventForm: React.FC<EventFormProps> = ({
     }))
   }
 
+  // The event's attendees as saved, for a student the professor takes off and puts back
+  const savedAttendees = useMemo(
+    () => eventAttendeesToEventAttendeeDTOs((store.selectedEvent as any)?.eventAttendees || []),
+    [store.selectedEvent]
+  )
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -101,6 +107,7 @@ const EventForm: React.FC<EventFormProps> = ({
       title: 'Participanți și Prețuri',
       component: (
         <AttendeeManager
+          previousAttendees={savedAttendees}
           eventType={values?.isRecurring ? 'recurring' : 'singular'}
           students={students}
           isReadOnly={isReadOnly}
@@ -124,7 +131,14 @@ const EventForm: React.FC<EventFormProps> = ({
           icon: <EventAvailableIcon fontSize='small' />
         },
         {
-          label: formatCurrency(calculateTotalRevenue(attendees, values.price)),
+          // Each at the price shown in the list: the one set for them, their own in the class, or the event's
+          label: formatCurrency(
+            totalAttendeePrice(
+              attendees,
+              attendeeId => (students || []).find((s: any) => s.userId === attendeeId || s.id === attendeeId),
+              values.price || 0
+            )
+          ),
           color: 'secondary' as const,
           icon: <AttachMoneyIcon fontSize='small' />
         }
@@ -179,7 +193,8 @@ const EventForm: React.FC<EventFormProps> = ({
     editingScope,
     onEditingScopeChange,
     formatCurrency,
-    store.selectedEvent
+    store.selectedEvent,
+    savedAttendees
   ])
 
   return (

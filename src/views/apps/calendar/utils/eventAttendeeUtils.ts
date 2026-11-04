@@ -28,6 +28,51 @@ export interface AttendeeWithPricing extends EventAttendeeDTO {
 }
 
 /**
+ * The student's own price per session with this professor, or undefined when there is none to use. As on the
+ * backend, a price of 0 or none at all (a student who joined by invitation code has none) does not count.
+ */
+export const studentPricePerSession = (student?: StudentData | null): number | undefined => {
+  const raw = student?.defaultPricePerSession
+  if (raw === null || raw === undefined || raw === '') return undefined
+  const price = Number(raw)
+
+  return Number.isFinite(price) && price > 0 ? price : undefined
+}
+
+/** Whether a student of the class list has been taken out of the class. */
+export const hasLeftTheClass = (student?: StudentData | null): boolean =>
+  ['INACTIVE', 'SUSPENDED'].includes(String(student?.status || '').toUpperCase())
+
+/**
+ * What a student pays on an event, by the backend's rule (EventAttendeeService.getEffectivePrice...): the price
+ * set for them on this event, else their own price while they are in the class, else the event's price.
+ *
+ * @param classStudent the student as the professor's class lists them; null when they are not in the class
+ */
+export const attendeePrice = (
+  attendee: Pick<EventAttendeeDTO, 'hasCustomPricing' | 'customPrice'>,
+  classStudent: StudentData | null | undefined,
+  eventPrice: number
+): number => {
+  if (attendee.hasCustomPricing && attendee.customPrice !== undefined && attendee.customPrice !== null) {
+    return attendee.customPrice
+  }
+
+  return (classStudent && !hasLeftTheClass(classStudent) && studentPricePerSession(classStudent)) || eventPrice
+}
+
+/** What the attendees pay in all, each by attendeePrice. */
+export const totalAttendeePrice = (
+  attendees: EventAttendeeDTO[],
+  classStudentFor: (attendeeId?: string) => StudentData | null | undefined,
+  eventPrice: number
+): number =>
+  (attendees || []).reduce(
+    (total, attendee) => total + attendeePrice(attendee, classStudentFor(attendee.attendeeId), eventPrice),
+    0
+  )
+
+/**
  * Converts a student to EventAttendeeDTO with default values
  */
 export const studentToEventAttendeeDTO = (
@@ -158,9 +203,12 @@ export const updateAttendeePrice = (
   return attendees.map(attendee => {
     if (attendee.attendeeId === attendeeId) {
       const hasCustomPricing = newPrice !== defaultPrice
+
+      // The price is kept even when it is the usual one: finishing an event charges exactly this price
+      // (saving an event leaves it out unless it is custom)
       return {
         ...attendee,
-        customPrice: hasCustomPricing ? newPrice : undefined,
+        customPrice: newPrice,
         hasCustomPricing,
         // Database constraint requires expected=true when hasCustomPricing=true
         expected: hasCustomPricing ? true : attendee.expected
@@ -193,6 +241,7 @@ export const addAttendee = (
   student: StudentData,
   options: {
     expected?: boolean
+    attended?: boolean
     customPrice?: number
     defaultPrice?: number
   } = {}
@@ -213,6 +262,7 @@ export const addAttendee = (
 
   const newAttendee = studentToEventAttendeeDTO(student, {
     expected: options.expected ?? true,
+    attended: options.attended,
     customPrice: options.customPrice,
     hasCustomPricing: options.customPrice !== undefined && options.customPrice !== options.defaultPrice
   })
