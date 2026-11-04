@@ -31,3 +31,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 .env
+
+# e2e
+e2e/.stack/
+test-results/
+playwright-report/

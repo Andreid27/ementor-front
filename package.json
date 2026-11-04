@@ -11,7 +11,10 @@
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\"",
     "build:icons": "node src/iconify-bundle/bundle-icons-react.js",
     "generate:apis": "node scripts/generate-apis.js",
-    "generate:api": "node scripts/generate-single-api.js"
+    "generate:api": "node scripts/generate-single-api.js",
+    "e2e:up": "e2e/stack/up.sh",
+    "e2e:down": "e2e/stack/down.sh",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@babel/core": "7.21.5",
@@ -110,6 +113,7 @@
     "@iconify/types": "2.0.0",
     "@iconify/utils": "2.1.5",
     "@openapitools/openapi-generator-cli": "^2.20.2",
+    "@playwright/test": "1.49.1",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.62.0",
     "eslint": "8.36.0",
