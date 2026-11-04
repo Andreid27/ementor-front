@@ -7,8 +7,8 @@ import UserViewRight from './UserViewRight'
 import { useEffect, useState } from 'react'
 import apiClient from 'src/@core/axios/axiosEmentor'
 import * as apiSpec from '../../../apiSpec'
-import extractProfilePicture from 'src/@core/axios/profile-picture-extractor'
-import profilePictureDownloader from 'src/@core/axios/profile-picture-downloader'
+import { getPhotoSources } from 'src/@core/services/photo-sources'
+import { photoCache } from 'src/@core/services/photo-cache'
 import { CircularProgress } from '@mui/material'
 
 const UserView = ({ tab, userId, invoiceData }) => {
@@ -50,6 +50,9 @@ const UserView = ({ tab, userId, invoiceData }) => {
     setQuizStats({})
     setLessonStats({})
 
+    // Ignore a photo that arrives after the page moved on to another student
+    let active = true
+
     const fetchData = async () => {
       try {
         const [profileServiceResponse, quizzesResponse, quizStatsResponse, lessonStatsResponse] = await Promise.all([
@@ -65,18 +68,13 @@ const UserView = ({ tab, userId, invoiceData }) => {
         ])
 
         if (profileServiceResponse.status === 200) {
-          const profilePicture = extractProfilePicture(profileServiceResponse.data, true)
-          let finalUrl
+          // The photo shows when it arrives; the profile does not wait for it
+          const photoSources = getPhotoSources(profileServiceResponse.data, 'full')
+          setProfilePictureUrl(photoCache.peek(photoSources))
+          photoCache.load(photoSources).then(url => {
+            if (active) setProfilePictureUrl(url)
+          })
 
-          if (profilePicture.type === 'API') {
-            finalUrl = await profilePictureDownloader(profilePicture.url, profilePicture.userId)
-          } else if (profilePicture.type === 'EXTERNAL') {
-            finalUrl = profilePicture.url
-          } else {
-            finalUrl = null
-          }
-
-          setProfilePictureUrl(finalUrl)
           setProfileData(profileServiceResponse.data)
           setQuizzesData(quizzesResponse.data.data)
           setQuizStats(quizStatsResponse.data)
@@ -90,6 +88,10 @@ const UserView = ({ tab, userId, invoiceData }) => {
     }
 
     fetchData()
+
+    return () => {
+      active = false
+    }
   }, [userId])
 
   return loading ? (

@@ -41,31 +41,17 @@ import type { BankTransferPaymentDTO } from 'src/generated/profile-service'
 // API Imports
 import { profileServiceClient } from 'src/services'
 
-// Utils
-import extractProfilePicture from 'src/@core/axios/profile-picture-extractor'
-import profilePictureDownloader from 'src/@core/axios/profile-picture-downloader'
+// Components
 import EmentorAvatar, { UserType } from 'src/@core/components/ementor-avatar'
 
-interface EnhancedPaymentData extends BankTransferPaymentDTO {
-  avatar?: string | null
-  payerName?: string
-}
-
 interface PaymentDetailCardProps {
-  payment: EnhancedPaymentData
+  payment: BankTransferPaymentDTO
   onClose: () => void
   getUserName: (userId: string) => string
-  getUserAvatar: (userId: string) => string | null
   userRole?: 'student' | 'professor'
 }
 
-const PaymentDetailCard = ({
-  payment,
-  onClose,
-  getUserName,
-  getUserAvatar,
-  userRole = 'professor'
-}: PaymentDetailCardProps) => {
+const PaymentDetailCard = ({ payment, onClose, getUserName, userRole = 'professor' }: PaymentDetailCardProps) => {
   const dispatch = useDispatch()
 
   // States
@@ -303,10 +289,9 @@ const PaymentDetailCard = ({
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, position: 'relative', zIndex: 1 }}>
                   <Zoom in={open} timeout={700}>
                     <EmentorAvatar
-                      userId={userRole === 'student' ? professorUserId : null}
+                      userId={userRole === 'student' ? professorUserId : payment.payerId}
                       userType={userRole === 'student' ? UserType.PROFESSOR : UserType.STUDENT}
-                      avatarSrc={userRole === 'student' ? undefined : getUserAvatar(payment.payerId || '')}
-                      alt={getDisplayName()}
+                      name={getDisplayName()}
                       sx={{
                         width: 48,
                         height: 48,

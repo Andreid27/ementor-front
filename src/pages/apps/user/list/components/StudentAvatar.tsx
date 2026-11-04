@@ -1,11 +1,5 @@
-// ** MUI Imports
-import Avatar from '@mui/material/Avatar'
-
 // ** Custom Components
-import CustomAvatar from 'src/@core/components/mui/avatar'
-
-// ** Utils
-import { getInitials } from 'src/@core/utils/get-initials'
+import EmentorAvatar from 'src/@core/components/ementor-avatar'
 
 // ** Local Types
 import { StudentAvatarProps } from '../types'
@@ -14,42 +8,14 @@ import { StudentAvatarProps } from '../types'
 import { AVATAR_SETTINGS } from '../constants'
 
 const StudentAvatar: React.FC<StudentAvatarProps> = ({ student, onClick }) => {
-  // ** Handle avatar click
-  const handleAvatarClick = () => {
-    if (onClick) {
-      // Use id field which contains the actual student user ID
-      const userId = student.id || student.studentUserId
-      if (userId) {
-        onClick(userId)
-      }
-    }
-  }
+  // Use id field which contains the actual student user ID
+  const userId = student.id || student.studentUserId
 
-  // ** Render with photo if available (pre-loaded by processStudentPhotos)
-  if (student.avatar) {
-    return (
-      <Avatar
-        src={student.avatar}
-        imgProps={{
-          loading: 'lazy',
-          referrerPolicy: 'no-referrer' // Prevent Google from tracking referrer for rate limiting
-        }}
-        sx={{
-          mr: AVATAR_SETTINGS.MARGIN_RIGHT,
-          width: AVATAR_SETTINGS.SIZE,
-          height: AVATAR_SETTINGS.SIZE,
-          cursor: onClick ? 'pointer' : 'default'
-        }}
-        onClick={handleAvatarClick}
-      />
-    )
-  }
-
-  // ** Render fallback with initials
   return (
-    <CustomAvatar
-      skin='light'
-      color={student.avatarColor as any}
+    <EmentorAvatar
+      userId={userId}
+      user={student}
+      name={student.studentName || student.fullName}
       sx={{
         mr: AVATAR_SETTINGS.MARGIN_RIGHT,
         width: AVATAR_SETTINGS.SIZE,
@@ -58,10 +24,8 @@ const StudentAvatar: React.FC<StudentAvatarProps> = ({ student, onClick }) => {
         fontSize: (theme: any) => theme.typography.body1.fontSize,
         cursor: onClick ? 'pointer' : 'default'
       }}
-      onClick={handleAvatarClick}
-    >
-      {getInitials(student.studentName || student.fullName || 'Student')}
-    </CustomAvatar>
+      onClick={() => onClick && userId && onClick(userId)}
+    />
   )
 }
 

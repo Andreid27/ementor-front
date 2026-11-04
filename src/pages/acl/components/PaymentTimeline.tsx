@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import Box from '@mui/material/Box'
 import Card from '@mui/material/Card'
-import Avatar from '@mui/material/Avatar'
 import { Button } from '@mui/material'
 import Chip from '@mui/material/Chip'
 import Tooltip from '@mui/material/Tooltip'
@@ -25,19 +24,8 @@ import PaymentConfirmationDialog from './PaymentConfirmationDialog'
 import PaymentRejectionDialog from './PaymentRejectionDialog'
 import { BankTransferPaymentDTO, BankTransferPaymentDTOStatusEnum } from 'src/generated/profile-service'
 import { profileServiceClient } from 'src/services'
-import profilePictureDownloader from 'src/@core/axios/profile-picture-downloader'
-import extractProfilePicture from 'src/@core/axios/profile-picture-extractor'
-import { photoCacheService } from 'src/@core/services/photo-cache-service-instance'
-import EmentorAvatar, { UserType } from 'src/@core/components/ementor-avatar'
-
-// Define a user interface that matches the actual user data structure
-interface User {
-  id: string
-  firstName: string
-  lastName: string
-  email?: string
-  avatar?: string
-}
+import EmentorAvatar from 'src/@core/components/ementor-avatar'
+import { studentDisplayName, useKnownStudents } from 'src/@core/hooks/useKnownStudents'
 
 const Timeline = styled(MuiTimeline)({
   '& .MuiTimelineItem-root': {
@@ -202,23 +190,17 @@ const EmptyTickContainer = styled(Box)(({ theme }) => ({
 }))
 
 interface PaymentTimelineProps {
-  users: User[]
   loading: boolean
   onPaymentConfirmed?: () => void
 }
 
-interface EnhancedPaymentData extends BankTransferPaymentDTO {
-  avatar?: string | null
-  payerName?: string
-}
-
-const PaymentTimeline: React.FC<PaymentTimelineProps> = ({ users, loading, onPaymentConfirmed }) => {
+const PaymentTimeline: React.FC<PaymentTimelineProps> = ({ loading, onPaymentConfirmed }) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false)
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
   const [confirmDialogOpen, setConfirmDialogOpen] = useState<boolean>(false)
   const [rejectDialogOpen, setRejectDialogOpen] = useState<boolean>(false)
   const [selectedPayment, setSelectedPayment] = useState<BankTransferPaymentDTO | null>(null)
-  const [paymentsData, setPaymentsData] = useState<EnhancedPaymentData[]>([])
+  const [paymentsData, setPaymentsData] = useState<BankTransferPaymentDTO[]>([])
 
   const handleAvatarClick = (userId: string) => {
     setSelectedUserId(userId)
@@ -228,59 +210,20 @@ const PaymentTimeline: React.FC<PaymentTimelineProps> = ({ users, loading, onPay
     const fetchAndProcessPayments = async () => {
       try {
         const response = await profileServiceClient.payment.getPendingPayments()
-        const paymentsData = response.data || []
-
-        // Process payments data with user information
-        const processedData = await processPaymentData(paymentsData, users)
-        setPaymentsData(processedData)
+        setPaymentsData(response.data || [])
       } catch (error) {
         console.error('Failed to fetch payments:', error)
       }
     }
 
-    // Only fetch when parent has finished loading and users are available
-    if (!loading && users.length > 0) {
+    // Only fetch when parent has finished loading
+    if (!loading) {
       fetchAndProcessPayments()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading])
 
-  const processPaymentData = async (data: BankTransferPaymentDTO[], users: User[]) => {
-    const usersOnPage = data.map(row => row.payerId)
-    let uniqueUsers = Array.from(new Set(usersOnPage)).filter(Boolean) as string[]
-    let processedUsersList = []
-
-    for (const userId of uniqueUsers) {
-      const user = users.find(user => user.id === userId)
-      if (user) {
-        const processedUser = extractProfilePicture(user)
-        processedUsersList.push(processedUser)
-      }
-    }
-
-    const result = await Promise.all(
-      processedUsersList.map(async profilePicture => {
-        if (profilePicture.type === 'API') {
-          // Use PhotoCacheService for API-based profile pictures
-          const avatar = await photoCacheService.getPhoto('API', profilePicture.url, profilePicture.userId)
-          return { ...profilePicture, avatar: avatar || null }
-        } else if (profilePicture.type === 'EXTERNAL') {
-          // Use PhotoCacheService for EXTERNAL photos (Google photos)
-          // Rate limiting prevents 429 errors, blob caching improves subsequent loads
-          const avatar = await photoCacheService.getPhoto('EXTERNAL', profilePicture.url, profilePicture.userId)
-          return { ...profilePicture, avatar }
-        } else {
-          return { ...profilePicture, avatar: null }
-        }
-      })
-    )
-
-    return data.map(row => {
-      const user = result.find(user => user.userId === row.payerId)
-
-      return { ...row, avatar: user?.avatar }
-    }) as EnhancedPaymentData[]
-  }
+  // Covers payers who have left the class too
+  const studentById = useKnownStudents(paymentsData.map(payment => payment.payerId))
 
   useEffect(() => {
     if (selectedUserId) {
@@ -317,9 +260,7 @@ const PaymentTimeline: React.FC<PaymentTimelineProps> = ({ users, loading, onPay
     // Refresh the payments data after successful confirmation
     try {
       const response = await profileServiceClient.payment.getPendingPayments()
-      const paymentsData = response.data || []
-      const processedData = await processPaymentData(paymentsData, users)
-      setPaymentsData(processedData)
+      setPaymentsData(response.data || [])
 
       // Notify parent component if callback is provided
       onPaymentConfirmed?.()
@@ -376,9 +317,7 @@ const PaymentTimeline: React.FC<PaymentTimelineProps> = ({ users, loading, onPay
   }
 
   const getUserName = (userId: string | undefined): string => {
-    if (!userId) return 'Utilizator necunoscut'
-    const user = users.find(u => u.id === userId)
-    return user ? `${user.firstName} ${user.lastName}` : 'Utilizator necunoscut'
+    return studentDisplayName(studentById(userId)) || 'Utilizator necunoscut'
   }
 
   const formatCurrency = (amount: number | undefined, currency: string | undefined = 'RON'): string => {
@@ -491,8 +430,7 @@ const PaymentTimeline: React.FC<PaymentTimelineProps> = ({ users, loading, onPay
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <EmentorAvatar
-                          userType={UserType.STUDENT}
-                          avatarSrc={payment.avatar || undefined}
+                          userId={payment.payerId}
                           sx={{
                             mr: 3,
                             width: 40,

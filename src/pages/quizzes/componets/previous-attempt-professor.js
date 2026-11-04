@@ -7,15 +7,16 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import PersonIcon from '@mui/icons-material/Person'
-import CustomAvatar from 'src/@core/components/mui/avatar'
-
-// ** Utils Import
-import { getInitials } from 'src/@core/utils/get-initials'
+import EmentorAvatar from 'src/@core/components/ementor-avatar'
+import { useKnownStudents } from 'src/@core/hooks/useKnownStudents'
 
 const PreviousAttemptProfessor = props => {
   const router = useRouter()
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
+
+  // Students who left the class are not in props.users; the lookup still knows them
+  const findStudent = useKnownStudents([props.attempt?.userId])
 
   const getScoreConfig = () => {
     const questions = props.questionsCount
@@ -46,43 +47,22 @@ const PreviousAttemptProfessor = props => {
     }
   }
 
-  const renderClient = (attempt, user) => {
-    const stateNum = Math.floor(Math.random() * 6)
-    const states = ['success', 'error', 'warning', 'info', 'primary', 'secondary']
-    const color = states[stateNum]
-
-    if (attempt.avatar && attempt.avatar.length) {
-      return (
-        <CustomAvatar
-          src={`/images/avatars/${attempt.avatar}`}
-          sx={{
-            width: 48,
-            height: 48,
-            border: `2px solid ${alpha(theme.palette.divider, 0.12)}`
-          }}
-        />
-      )
-    } else {
-      return (
-        <CustomAvatar
-          skin='light'
-          color={color}
-          sx={{
-            width: 48,
-            height: 48,
-            fontSize: '1rem',
-            fontWeight: 600,
-            border: `2px solid ${alpha(theme.palette.divider, 0.12)}`
-          }}
-        >
-          {getInitials(user?.lastName ? `${user.firstName} ${user.lastName}` : 'John Doe')}
-        </CustomAvatar>
-      )
-    }
-  }
+  const renderClient = (attempt, user) => (
+    <EmentorAvatar
+      userId={user?.id || attempt.userId}
+      user={user}
+      sx={{
+        width: 48,
+        height: 48,
+        fontSize: '1rem',
+        fontWeight: 600,
+        border: `2px solid ${alpha(theme.palette.divider, 0.12)}`
+      }}
+    />
+  )
 
   const renderUser = attempt => {
-    const user = props.users.find(user => user.id === attempt.userId)
+    const user = props.users?.find(user => user.id === attempt.userId) || findStudent(attempt.userId)
 
     return (
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>

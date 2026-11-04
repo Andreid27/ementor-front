@@ -26,10 +26,11 @@ import {
 import Icon from 'src/@core/components/icon'
 import { EventOccurrenceDTO } from 'src/generated/profile-service'
 import { profileServiceClient } from 'src/services'
-import { useDispatch, useSelector } from 'react-redux'
+import { useDispatch } from 'react-redux'
 import { handleSelectEvent } from 'src/store/apps/calendar'
 import { format, parseISO } from 'date-fns'
-import EmentorAvatar, { UserType } from 'src/@core/components/ementor-avatar'
+import EmentorAvatar from 'src/@core/components/ementor-avatar'
+import { studentDisplayName, useKnownStudents } from 'src/@core/hooks/useKnownStudents'
 
 const CardHeader = styled(MuiCardHeader)(({ theme }) => ({
   '& .MuiTypography-root': {
@@ -78,7 +79,6 @@ const EventsWidget = forwardRef<EventsWidgetRef, EventsWidgetProps>(({ onComplet
   const [startDate, setStartDate] = useState<string>(defaultDates.start)
   const [endDate, setEndDate] = useState<string>(defaultDates.end)
   const dispatch = useDispatch()
-  const activeStudents = useSelector((state: any) => state.user.activeStudents || [])
 
   // Expose refresh method to parent components
   useImperativeHandle(ref, () => ({
@@ -92,6 +92,11 @@ const EventsWidget = forwardRef<EventsWidgetRef, EventsWidgetProps>(({ onComplet
     fetchEvents()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Covers attendees who have left the class too
+  const studentById = useKnownStudents(
+    eventsData.flatMap(event => (event.eventAttendees || []).map(attendee => attendee.attendeeId))
+  )
 
   const fetchEvents = async () => {
     if (!startDate || !endDate) return
@@ -465,17 +470,13 @@ const EventsWidget = forwardRef<EventsWidgetRef, EventsWidgetProps>(({ onComplet
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                               <Box sx={{ display: 'flex', alignItems: 'center', ml: -0.5 }}>
                                 {event.eventAttendees.slice(0, 3).map((attendee, idx) => {
-                                  const student = activeStudents.find((s: any) => s.id === attendee.attendeeId)
-                                  const attendeeName = student
-                                    ? `${student.firstName || ''} ${student.lastName || ''}`.trim()
-                                    : 'Unknown'
+                                  const attendeeName = studentDisplayName(studentById(attendee.attendeeId)) || 'Unknown'
 
                                   return (
                                     <Tooltip key={idx} title={attendeeName}>
                                       <Box>
                                         <EmentorAvatar
                                           userId={attendee.attendeeId}
-                                          userType={UserType.STUDENT}
                                           sx={{
                                             width: 24,
                                             height: 24,
@@ -485,7 +486,6 @@ const EventsWidget = forwardRef<EventsWidgetRef, EventsWidgetProps>(({ onComplet
                                             borderColor: 'background.paper',
                                             ml: idx > 0 ? -1 : 0
                                           }}
-                                          alt={attendeeName}
                                         />
                                       </Box>
                                     </Tooltip>
@@ -497,10 +497,7 @@ const EventsWidget = forwardRef<EventsWidgetRef, EventsWidgetProps>(({ onComplet
                                   title={
                                     <Box sx={{ py: 0.5 }}>
                                       {event.eventAttendees.slice(3).map((attendee, idx) => {
-                                        const student = activeStudents.find((s: any) => s.id === attendee.attendeeId)
-                                        const attendeeName = student
-                                          ? `${student.firstName || ''} ${student.lastName || ''}`.trim()
-                                          : 'Unknown'
+                                        const attendeeName = studentDisplayName(studentById(attendee.attendeeId)) || 'Unknown'
 
                                         return (
                                           <Box
@@ -514,14 +511,12 @@ const EventsWidget = forwardRef<EventsWidgetRef, EventsWidgetProps>(({ onComplet
                                           >
                                             <EmentorAvatar
                                               userId={attendee.attendeeId}
-                                              userType={UserType.STUDENT}
                                               sx={{
                                                 width: 28,
                                                 height: 28,
                                                 fontSize: '0.688rem',
                                                 fontWeight: 600
                                               }}
-                                              alt={attendeeName}
                                             />
                                             <Typography
                                               variant='body2'

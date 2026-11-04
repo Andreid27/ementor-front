@@ -4,7 +4,6 @@ import {
   Typography,
   TextField,
   Chip,
-  Avatar,
   Button,
   List,
   ListItem,
@@ -55,6 +54,7 @@ import {
   getExpectedAttendees,
   getAttendedAttendees
 } from '../utils/eventAttendeeUtils'
+import EmentorAvatar from 'src/@core/components/ementor-avatar'
 
 export interface StudentData {
   id?: string
@@ -146,15 +146,6 @@ const AttendeeManager: React.FC<AttendeeManagerProps> = ({
       : student.firstName || student.lastName || student.email || 'Unknown'
   }
 
-  const getStudentInitials = (student: StudentData) => {
-    if (student.firstName && student.lastName) {
-      return `${student.firstName.charAt(0)}${student.lastName.charAt(0)}`.toUpperCase()
-    }
-    if (student.firstName) return student.firstName.charAt(0).toUpperCase()
-    if (student.email) return student.email.charAt(0).toUpperCase()
-    return '?'
-  }
-
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -219,13 +210,12 @@ const AttendeeManager: React.FC<AttendeeManagerProps> = ({
     if (!student) return null
 
     const displayName = getStudentDisplayName(student)
-    const initials = getStudentInitials(student)
     const attendeePrice = attendee.hasCustomPricing ? attendee.customPrice || 0 : defaultPrice
 
     return (
       <ListItem key={attendee.attendeeId || index} divider>
         <ListItemAvatar>
-          <Avatar src={student.profilePicture || student.picture}>{initials}</Avatar>
+          <EmentorAvatar userId={attendee.attendeeId} user={student} name={displayName} />
         </ListItemAvatar>
         <ListItemText
           primary={
@@ -348,12 +338,11 @@ const AttendeeManager: React.FC<AttendeeManagerProps> = ({
     if (!studentId) return null
 
     const displayName = getStudentDisplayName(student)
-    const initials = getStudentInitials(student)
 
     return (
       <ListItem key={studentId} button onClick={() => handleAddAttendee(student)} disabled={isReadOnly}>
         <ListItemAvatar>
-          <Avatar src={student.profilePicture || student.picture}>{initials}</Avatar>
+          <EmentorAvatar userId={studentId} user={student} name={displayName} />
         </ListItemAvatar>
         <ListItemText
           primary={displayName}

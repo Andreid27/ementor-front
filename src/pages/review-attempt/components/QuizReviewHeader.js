@@ -4,11 +4,8 @@ import { Box, Button, Grid, Typography } from '@mui/material'
 import { InView } from 'react-intersection-observer'
 
 // ** Custom Components
-import CustomAvatar from 'src/@core/components/mui/avatar'
+import EmentorAvatar from 'src/@core/components/ementor-avatar'
 import CountdownTimer from '../../quiz/components/CountDown/CountdownTimer'
-
-// ** Utils
-import { getInitials } from 'src/@core/utils/get-initials'
 
 // ** Hooks
 import { useAppBar } from 'src/context/AppBarContext'
@@ -17,21 +14,9 @@ const QuizReviewHeader = ({ quiz, user, onUserClick, themeColor }) => {
   const { addComponent, removeComponent } = useAppBar()
   const [isComponentAdded, setIsComponentAdded] = useState(false)
 
-  const renderClient = user => {
-    const stateNum = Math.floor(Math.random() * 6)
-    const states = ['success', 'error', 'warning', 'info', 'primary', 'secondary']
-    const color = states[stateNum]
-
-    if (user.avatar && user.avatar.length) {
-      return <CustomAvatar src={user.avatar} sx={{ mr: 3, width: '2.5rem', height: '2.5rem' }} />
-    } else {
-      return (
-        <CustomAvatar skin='light' color={color} sx={{ mr: 3, fontSize: '1rem', width: '2.5rem', height: '2.5rem' }}>
-          {getInitials(user.lastName ? `${user.firstName} ${user.lastName}` : 'John Doe')}
-        </CustomAvatar>
-      )
-    }
-  }
+  const renderClient = user => (
+    <EmentorAvatar userId={user.id} user={user} sx={{ mr: 3, fontSize: '1rem', width: '2.5rem', height: '2.5rem' }} />
+  )
 
   const renderUser = () => {
     return (

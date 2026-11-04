@@ -60,12 +60,18 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   response => response,
   async error => {
-    // Finance reports and quiz integrity reports are read-only sections that show their own error; a 403 there must
-    // not end the session
+    // Finance reports, quiz integrity reports and profile photos are read-only and show their own fallback; a 403
+    // there must not end the session
     const url = error.config?.url || '';
-    const isReadOnlyReport = url.includes('/finance/professor/') || /\/quiz\/attempt\/[^/]+\/integrity$/.test(url);
+
+    const isReadOnlyReport =
+      url.includes('/finance/professor/') ||
+      /\/quiz\/attempt\/[^/]+\/integrity$/.test(url) ||
+      /\/(thumbnail|profile-image)\/download(\/|$)/.test(url);
 
     if (error.response && error.response.status === 403 && !isReadOnlyReport) {
+      // SESSION_ENDED_EVENT of src/@core/services/photo-cache (not imported: it imports this client)
+      window.dispatchEvent(new Event('ementor:session-ended'));
       store.dispatch(deleteUser());
       store.dispatch(deleteTokens());
       window.localStorage.removeItem('userData');

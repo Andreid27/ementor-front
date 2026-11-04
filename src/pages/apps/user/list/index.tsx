@@ -87,11 +87,8 @@ import { userRoleObj, userStatusObj, filterStudents, transformStudentData } from
 
 import { DEFAULT_FILTERS, DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS, COLUMN_WIDTHS } from './constants'
 
-// ** Photo Service
-import { processStudentPhotos } from './services/photoService'
-import EmentorAvatar from 'src/@core/components/ementor-avatar'
 
-// ** renders client column with photo loading
+// ** renders the student avatar column
 const renderClient = (row: StudentListItem, onAvatarClick?: (studentId: string) => void): JSX.Element => {
   return <StudentAvatar student={row} onClick={onAvatarClick || (() => {})} />
 }
@@ -274,42 +271,6 @@ const UserList: React.FC<UserListProps> = ({ apiData }) => {
       setFilteredStudents([])
     }
   }, [currentStudents, filters, currentLoading])
-
-  // ** Load photos for current page only (when pagination changes)
-  // Note: We intentionally omit filteredStudents from dependencies to avoid infinite loops
-  // The effect runs when page/pageSize changes or when currentStudents change (via currentLoading)
-  useEffect(() => {
-    const loadPhotosForCurrentPage = async () => {
-      if (filteredStudents.length === 0 || currentLoading) return
-
-      // Calculate which students are on the current page
-      const startIndex = paginationModel.page * paginationModel.pageSize
-      const endIndex = startIndex + paginationModel.pageSize
-      const studentsOnPage = filteredStudents.slice(startIndex, endIndex)
-
-      // Load photos only for students on current page (like ACLPage does)
-      if (studentsOnPage.length > 0) {
-        try {
-          // studentsOnPage already has 'attributes' field preserved from transformation
-          // Pass studentsOnPage as both parameters - they already contain the needed data
-          const studentsWithPhotos = await processStudentPhotos(studentsOnPage, studentsOnPage as any)
-
-          // Update the filtered students with the loaded photos
-          setFilteredStudents(prev => {
-            return prev.map(student => {
-              const studentWithPhoto = studentsWithPhotos.find(s => s.id === student.id)
-              return studentWithPhoto || student
-            })
-          })
-        } catch (error) {
-          console.warn('Failed to load photos for current page:', error)
-        }
-      }
-    }
-
-    loadPhotosForCurrentPage()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paginationModel.page, paginationModel.pageSize, currentLoading])
 
   // ** Handle tab change
   const handleTabChange = (event: React.SyntheticEvent, newValue: StudentTabValue): void => {

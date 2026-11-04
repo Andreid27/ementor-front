@@ -27,9 +27,8 @@ import { getInitials } from 'src/@core/utils/get-initials'
 import { useDispatch, useSelector } from 'react-redux'
 import { selectNotifications, updateNotification } from 'src/store/apps/notifications'
 import timeAgo from 'src/@core/utils/time-ago'
-import { selectAllStudents } from 'src/store/apps/user'
-import extractProfilePicture from 'src/@core/axios/profile-picture-extractor'
-import { photoCacheService } from 'src/@core/services/photo-cache-service-instance'
+import EmentorAvatar from 'src/@core/components/ementor-avatar'
+import { useKnownStudents } from 'src/@core/hooks/useKnownStudents'
 import TimelineDot from 'src/@core/components/mui/timeline-dot'
 import notificationMapping from 'src/@core/layouts/components/shared-components/notificationMapping'
 import { useRouter } from 'next/router'
@@ -119,7 +118,6 @@ const NotificationDropdown = props => {
   const notificationsStoreContent = useSelector(selectNotifications)
   const [notificationsData, setNotificationsData] = useState(notificationsStoreContent.notifications)
   const [newNotifications, setNewNotifications] = useState(notificationsData.filter(notification => notification.readDate === null))
-  const users = useSelector(selectAllStudents)
 
 
   // ** States
@@ -140,34 +138,16 @@ const NotificationDropdown = props => {
   }
 
   useEffect(() => {
-    const fetchAvatars = async () => {
-      const updatedNotifications = await Promise.all(notificationsStoreContent.notifications.map(async (notification) => {
-
-        if (notification && notification.content && notification.content.avatarType === 'USER' && users && users.length > 0) {
-          const user = users.find(user => user.id === notification.createdBy)
-          if (user) {
-            const profilePicture = extractProfilePicture(user)
-            if (profilePicture.type === 'API') {
-              // Use PhotoCacheService for unified caching (prevents duplicate fetches)
-              const avatar = await photoCacheService.getPhoto('API', profilePicture.url, profilePicture.userId)
-
-              return { ...notification, avatarImg: avatar }
-            } else if (profilePicture.type === 'EXTERNAL') {
-              // Use PhotoCacheService for EXTERNAL photos to prevent 429 errors
-              const avatar = await photoCacheService.getPhoto('EXTERNAL', profilePicture.url, profilePicture.userId)
-              return { ...notification, avatarImg: avatar }
-            }
-          }
-        }
-
-        return notification
-      }))
-      setNotificationsData(updatedNotifications)
-      setNewNotifications(updatedNotifications.filter(notification => notification.readDate === null))
-    }
-
-    fetchAvatars()
+    setNotificationsData(notificationsStoreContent.notifications)
+    setNewNotifications(notificationsStoreContent.notifications.filter(notification => notification.readDate === null))
   }, [notificationsStoreContent.notifications])
+
+  // Names and photos for students who sent notifications but have left the class
+  useKnownStudents(
+    notificationsStoreContent.notifications
+      .filter(notification => notification?.content?.avatarType === 'USER')
+      .map(notification => notification.createdBy)
+  )
 
   const handleViewNotification = (notification) => () => {
     sendViewedNotification([notification.id]);
@@ -240,7 +220,7 @@ const NotificationDropdown = props => {
   const getIcon = notification => {
     if (notification && notification.content && notification.content.avatarType) {
       if (notification.content.avatarType === 'USER') {
-        return <CustomAvatar src={notification.avatarImg} sx={{ mr: 2, width: '2rem', height: '2rem' }} />
+        return <EmentorAvatar userId={notification.createdBy} sx={{ mr: 2, width: '2rem', height: '2rem', fontSize: '0.75rem' }} />
       } else {
         const subject = notification.subjectKey;
 

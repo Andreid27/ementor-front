@@ -18,6 +18,17 @@ const isCacheExpired = timestamp => {
   return Date.now() - timestamp > oneMonthInMs
 }
 
+const EMPTY_STUDENTS = {}
+
+// Adds students (already in StudentListItem form) to the lookup of known students, by student user id
+const rememberStudents = (state, students) => {
+  if (!students?.length) return
+  if (!state.knownStudents) state.knownStudents = {}
+  students.forEach(student => {
+    if (student?.id) state.knownStudents[student.id] = student
+  })
+}
+
 // Helper to check if subscription cache is expired (older than 2 hours)
 const isSubscriptionCacheExpired = timestamp => {
   if (!timestamp) return true
@@ -27,7 +38,9 @@ const isSubscriptionCacheExpired = timestamp => {
 }
 
 // ** Fetch Active Students
-export const fetchData = createAsyncThunk('appUsers/fetchData', async (_, { rejectWithValue }) => {
+export const fetchData = createAsyncThunk('appUsers/fetchData', async (_, { getState, rejectWithValue }) => {
+  // Whose students these are, so a response that arrives after a logout is dropped (see belongsToSession)
+  const professorId = getState().user.data?.id
   try {
     // Dynamic import to avoid circular dependency
     const { profileServiceClient } = await import('src/services')
@@ -37,6 +50,7 @@ export const fetchData = createAsyncThunk('appUsers/fetchData', async (_, { reje
     const transformedStudents = transformStudentData(response.data || [])
 
     return {
+      professorId,
       students: transformedStudents,
       fetchedAt: Date.now()
     }
@@ -51,7 +65,8 @@ export const fetchData = createAsyncThunk('appUsers/fetchData', async (_, { reje
 // ** Fetch Inactive Students with Server-Side Pagination
 export const fetchInactiveStudents = createAsyncThunk(
   'appUsers/fetchInactiveStudents',
-  async ({ professorId, params = {} }, { rejectWithValue }) => {
+  async ({ professorId, params = {} }, { getState, rejectWithValue }) => {
+    const sessionProfessorId = getState().user.data?.id
     try {
       // Dynamic import to avoid circular dependency
       const { profileServiceClient } = await import('src/services')
@@ -69,6 +84,7 @@ export const fetchInactiveStudents = createAsyncThunk(
       })
 
       return {
+        professorId: sessionProfessorId,
         students: response.data?.content || [],
         totalElements: response.data?.totalElements || 0,
         totalPages: response.data?.totalPages || 0,
@@ -161,6 +177,7 @@ export const fetchStudentsByIds = createAsyncThunk(
       const source = missingIds.length > 0 ? 'batch' : foundStudents.length === uniqueIds.length ? 'cache' : 'refresh'
 
       return {
+        professorId,
         students: foundStudents,
         source: source
       }
@@ -170,6 +187,56 @@ export const fetchStudentsByIds = createAsyncThunk(
 
       return rejectWithValue(error.message)
     }
+  }
+)
+
+// ** Fetch Missing Students
+// Looks up, quietly and in one batch, the students a page shows but the store does not know yet (usually
+// students who left the class), so their name and photo can be shown. Each id is asked for once per session
+// (the set is emptied on logout, in deleteTokens).
+const requestedStudentIds = new Set()
+
+// A lookup that finishes after a logout (tokens gone) or for another professor must not land in the store
+const belongsToSession = (state, professorId) =>
+  Boolean(state.tokens) && Boolean(professorId) && professorId === state.data?.id
+
+export const fetchMissingStudents = createAsyncThunk(
+  'appUsers/fetchMissingStudents',
+  async (studentIds, { getState }) => {
+    const state = getState()
+    const professorId = state.user.data?.id
+    const known = state.user.knownStudents || {}
+
+    const requestKey = id => `${professorId}:${id}`
+
+    // The endpoint takes at most 500 ids
+    const missing = [...new Set(studentIds)]
+      .filter(id => id && !known[id] && !requestedStudentIds.has(requestKey(id)))
+      .slice(0, 500)
+
+    if (!professorId || missing.length === 0) return { professorId, students: [] }
+
+    missing.forEach(id => requestedStudentIds.add(requestKey(id)))
+
+    try {
+      const { profileServiceClient } = await import('src/services')
+
+      const response = await profileServiceClient.studentProfessorRelationship.getRelationshipsByStudentIds({
+        getRelationshipsByStudentIdsRequest: { studentIds: missing, professorId, includeInactive: true }
+      })
+
+      return { professorId, students: transformStudentData(response.data || []) }
+    } catch (error) {
+      // Let a later page ask again; the names stay unknown until then
+      missing.forEach(id => requestedStudentIds.delete(requestKey(id)))
+      console.warn('[fetchMissingStudents] Failed:', error)
+
+      return { professorId, students: [] }
+    }
+  },
+  {
+    // Only professors look up their students
+    condition: (studentIds, { getState }) => Boolean(studentIds?.length) && getState().user.data?.role !== 'STUDENT'
   }
 )
 
@@ -344,6 +411,9 @@ export const deleteUser = createAsyncThunk('appUsers/deleteUser', async (id, { g
 
 // ** Delete Tokens
 export const deleteTokens = createAsyncThunk('appUsers/deleteTokens', () => {
+  // A new session looks its students up again
+  requestedStudentIds.clear()
+
   return null
 })
 
@@ -469,6 +539,15 @@ export const selectAllStudents = state => {
   return state.user?.allStudents || []
 }
 
+// Any student the professor has seen: active, inactive or looked up by id. Names and photos are read from here.
+export const selectKnownStudents = state => state.user?.knownStudents || EMPTY_STUDENTS
+
+export const selectStudentById = studentId => state => {
+  if (!studentId) return null
+
+  return state.user?.knownStudents?.[studentId] || state.user?.allStudents?.find(s => s.id === studentId) || null
+}
+
 export const selectProfessorProfile = userId => state => {
   if (!userId) return null
   const cachedProfile = state.user.professorProfiles?.[userId]
@@ -522,6 +601,7 @@ export const appUsersSlice = createSlice({
     inactiveCurrentPage: 0, // Current page for inactive students
     inactivePageSize: 10, // Page size for inactive students
     activeStudentsFetchedAt: null, // Timestamp of last fetch
+    knownStudents: {}, // { studentId: StudentListItem } - every student seen, active or not; for names and photos
     loading: false, // Global loading state
     inactiveLoading: false, // Loading state for inactive students
     error: null, // Error state
@@ -546,8 +626,10 @@ export const appUsersSlice = createSlice({
       })
       .addCase(fetchData.fulfilled, (state, action) => {
         state.loading = false
+        if (!belongsToSession(state, action.payload.professorId)) return
         state.activeStudents = action.payload.students
         state.activeStudentsFetchedAt = action.payload.fetchedAt
+        rememberStudents(state, action.payload.students)
 
         // For backward compatibility
         state.allStudents = action.payload.students
@@ -562,9 +644,11 @@ export const appUsersSlice = createSlice({
       })
       .addCase(fetchInactiveStudents.fulfilled, (state, action) => {
         state.inactiveLoading = false
+        if (!belongsToSession(state, action.payload.professorId)) return
 
         // Set paginated data
         state.inactiveStudents = action.payload.students
+        rememberStudents(state, transformStudentData(action.payload.students))
         state.inactiveTotalElements = action.payload.totalElements
         state.inactiveTotalPages = action.payload.totalPages
         state.inactiveCurrentPage = action.payload.currentPage
@@ -572,6 +656,9 @@ export const appUsersSlice = createSlice({
       })
       .addCase(fetchInactiveStudents.rejected, (state, action) => {
         state.inactiveLoading = false
+
+        // A late failure from an earlier session must not wipe the current professor's list
+        if (!belongsToSession(state, action.meta.arg?.professorId)) return
         state.error = action.payload || 'Failed to fetch inactive students'
         state.inactiveStudents = [] // Clear on error
         state.inactiveTotalElements = 0
@@ -584,11 +671,16 @@ export const appUsersSlice = createSlice({
       })
       .addCase(fetchStudentsByIds.fulfilled, (state, action) => {
         state.loading = false
+        if (!belongsToSession(state, action.payload.professorId)) return
 
         // Merge batch results into allStudents for backward compatibility (use id field)
         const existingIds = new Set(state.allStudents.map(s => s.id))
         const newStudents = action.payload.students.filter(s => !existingIds.has(s.id))
         state.allStudents = [...state.allStudents, ...newStudents]
+        rememberStudents(state, action.payload.students)
+      })
+      .addCase(fetchMissingStudents.fulfilled, (state, action) => {
+        if (belongsToSession(state, action.payload.professorId)) rememberStudents(state, action.payload.students)
       })
       .addCase(fetchStudentsByIds.rejected, (state, action) => {
         state.loading = false
@@ -606,6 +698,16 @@ export const appUsersSlice = createSlice({
       .addCase(deleteTokens.fulfilled, (state, action) => {
         state.tokens = action.payload
         state.thumbnailUrl = ''
+
+        // The student lists are persisted; none of them may outlive the session
+        state.knownStudents = {}
+        state.allStudents = []
+        state.activeStudents = []
+        state.activeStudentsFetchedAt = null
+        state.inactiveStudents = []
+        state.inactiveTotalElements = 0
+        state.inactiveTotalPages = 0
+        state.inactiveCurrentPage = 0
       })
       .addCase(updateUserHasProfile.fulfilled, (state, action) => {
         state.data.hasProfile = action.payload

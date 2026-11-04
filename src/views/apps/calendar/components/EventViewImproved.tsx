@@ -10,12 +10,13 @@ import Typography from '@mui/material/Typography'
 import Chip from '@mui/material/Chip'
 import Divider from '@mui/material/Divider'
 import Stack from '@mui/material/Stack'
-import Avatar from '@mui/material/Avatar'
 import { useTheme } from '@mui/material/styles'
 
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
 import EventStatusChip from './EventStatusChip'
+import EmentorAvatar from 'src/@core/components/ementor-avatar'
+import { studentDisplayName, useKnownStudents } from 'src/@core/hooks/useKnownStudents'
 
 // ** Components
 import EventHeroSection from './EventHeroSection'
@@ -76,20 +77,14 @@ const EventViewImproved: React.FC<EventViewImprovedProps> = ({
       : student.firstName || student.lastName || student.email || 'Unknown'
   }
 
-  const getStudentInitials = (student: StudentData) => {
-    if (student.firstName && student.lastName) {
-      return `${student.firstName.charAt(0)}${student.lastName.charAt(0)}`.toUpperCase()
-    }
-    if (student.firstName) return student.firstName.charAt(0).toUpperCase()
-    if (student.email) return student.email.charAt(0).toUpperCase()
-    return '?'
-  }
-
   // Enrich attendees with student data
   const enrichedAttendees = useMemo(() => {
     if (!selectedEvent?.eventAttendees || !students) return []
     return enrichAttendeesWithStudentData(selectedEvent.eventAttendees, students)
   }, [selectedEvent?.eventAttendees, students])
+
+  // `students` holds only active students; the lookup also knows the ones who left the class
+  const findStudent = useKnownStudents((selectedEvent?.eventAttendees || []).map((attendee: any) => attendee.attendeeId))
 
   // Helper functions for date formatting
   const formatDateTime = (dateString: string) => {
@@ -306,9 +301,9 @@ const EventViewImproved: React.FC<EventViewImprovedProps> = ({
                 const student = enrichedAttendee.student
                 const displayName = student
                   ? getStudentDisplayName(student)
-                  : enrichedAttendee.displayName || `Attendee ${index + 1}`
-                const initials = student ? getStudentInitials(student) : (displayName[0] || 'A').toUpperCase()
-                const profilePicture = student?.profilePicture || student?.picture
+                  : studentDisplayName(findStudent(enrichedAttendee.attendeeId)) ||
+                    enrichedAttendee.displayName ||
+                    `Attendee ${index + 1}`
                 const isAttended = enrichedAttendee.attended === true
                 const isCompleted = selectedEvent?.completed
 
@@ -333,16 +328,14 @@ const EventViewImproved: React.FC<EventViewImprovedProps> = ({
                   }
                 }
 
-                // Choose between avatar and icon (prefer avatar if available)
-                if (profilePicture || initials) {
-                  chipProps.avatar = (
-                    <Avatar sx={{ width: 24, height: 24 }} src={profilePicture}>
-                      {initials}
-                    </Avatar>
-                  )
-                } else if (isCompleted && isAttended) {
-                  chipProps.icon = <Icon icon='tabler:check' fontSize='0.875rem' />
-                }
+                chipProps.avatar = (
+                  <EmentorAvatar
+                    userId={enrichedAttendee.attendeeId}
+                    user={student}
+                    name={displayName}
+                    sx={{ width: 24, height: 24 }}
+                  />
+                )
 
                 return <Chip {...chipProps} />
               })}

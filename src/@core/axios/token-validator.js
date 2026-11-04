@@ -16,6 +16,8 @@ export const verifyToken = async token => {
   let currentDate = new Date();
 
   const handleLogoutHere = () => {
+    // SESSION_ENDED_EVENT of src/@core/services/photo-cache (not imported: it imports the API client)
+    window.dispatchEvent(new Event('ementor:session-ended'));
     store.dispatch(deleteUser());
     store.dispatch(deleteTokens());
     window.localStorage.removeItem('userData');

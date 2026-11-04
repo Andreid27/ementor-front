@@ -19,6 +19,7 @@ import Cookies from 'universal-cookie'
 import session from 'redux-persist/lib/storage/session'
 import axios from 'axios'
 import store from '../store/index'
+import { photoCache } from 'src/@core/services/photo-cache'
 
 // ** Defaults
 const defaultProvider = {
@@ -128,6 +129,7 @@ const AuthProvider = ({ children }) => {
     dispatch(deleteUser()) // dispatch deleteUser action with no payload
     dispatch(deleteTokens()) // dispatch deleteTokens action with no payload
     dispatch(clearSubscriptionCache()) // clear subscription cache on logout
+    photoCache.clear() // free the downloaded profile photos
     setUser(null)
     window.localStorage.removeItem('userData')
     window.localStorage.removeItem(authConfig.storageTokenKeyName)

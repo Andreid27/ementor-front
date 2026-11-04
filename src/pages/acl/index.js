@@ -14,7 +14,6 @@ import apiClient from 'src/@core/axios/axiosEmentor'
 import { fetchNotifications } from 'src/store/apps/notifications'
 import * as apiSpec from '../../apiSpec'
 import toast from 'react-hot-toast'
-import { loadPhotosForUsers } from 'src/@core/services/photo-loader'
 import PaymentTimeline from './components/PaymentTimeline'
 import PaymentConfirmationHistory from './components/PaymentConfirmationHistory'
 import EventsWidget from 'src/pages/acl/components/EventsWidget'
@@ -67,25 +66,9 @@ const ACLPage = () => {
 
         dispatch(fetchNotifications())
 
-        // Show quiz data immediately (without avatars) so the timeline is not empty
-        const rawQuizData = quizServiceResponse.data.data || []
-        setQuizzesData(rawQuizData)
+        // The timeline's avatars load their own photos
+        setQuizzesData(quizServiceResponse.data.data || [])
         setLoading(false)
-
-        // Then load photos in the background and update quizzesData with avatars
-        const activeStudents = userStore.activeStudents || []
-        if (activeStudents.length > 0 && rawQuizData.length > 0) {
-          loadPhotosForUsers(activeStudents)
-            .then(usersWithPhotos => {
-              setQuizzesData(prevData =>
-                prevData.map(row => {
-                  const user = usersWithPhotos.find(u => u.id === row.studentId)
-                  return user?.avatar ? { ...row, avatar: user.avatar } : row
-                })
-              )
-            })
-            .catch(err => console.error('[ACL] Background photo load failed:', err))
-        }
       } catch (error) {
         console.error(error)
         toast.error('Failed to load dashboard data')
@@ -232,14 +215,14 @@ const ACLPage = () => {
     <>
       <Grid container spacing={6}>
         <Grid item md={6} xs={12}>
-          <CardActivityTimeline quizzesData={quizzesData} users={users} loading={loading} />
+          <CardActivityTimeline quizzesData={quizzesData} loading={loading} />
           <Box sx={{ mt: 6 }}>
             <EventsWidget ref={eventsWidgetRef} onCompleteEvent={handleCompleteEventFromWidget} />
           </Box>
         </Grid>
         <Grid item md={6} xs={12}>
-          <PaymentTimeline users={users} loading={loading} onPaymentConfirmed={handlePaymentConfirmed} />
-          <PaymentConfirmationHistory ref={paymentHistoryRef} users={users} />
+          <PaymentTimeline loading={loading} onPaymentConfirmed={handlePaymentConfirmed} />
+          <PaymentConfirmationHistory ref={paymentHistoryRef} />
         </Grid>
       </Grid>
 

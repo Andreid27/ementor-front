@@ -27,7 +27,7 @@ import Icon from 'src/@core/components/icon'
 // ** Type Imports
 import type { GroupedUserSelectorProps, SelectedUser } from '../GenericAssignmentModal.types'
 import type { UserDTO } from 'src/generated/profile-service/api'
-import EmentorAvatar, { UserType } from '../../ementor-avatar'
+import EmentorAvatar from '../../ementor-avatar'
 
 /**
  * GroupedUserSelector - List #2: Hierarchical user selector with series grouping
@@ -475,13 +475,9 @@ const GroupedUserSelector = ({
                                 <ListItemAvatar>
                                   <EmentorAvatar
                                     userId={userId}
-                                    userType={UserType.STUDENT}
-                                    alt={user.firstName}
-                                    sx={{ width: 32, height: 32 }}
-                                  >
-                                    {user.firstName?.[0]}
-                                    {user.lastName?.[0]}
-                                  </EmentorAvatar>
+                                    user={user}
+                                    sx={{ width: 32, height: 32, fontSize: '0.8rem' }}
+                                  />
                                 </ListItemAvatar>
                               )}
                               <ListItemText
@@ -576,13 +572,9 @@ const GroupedUserSelector = ({
                               <ListItemAvatar>
                                 <EmentorAvatar
                                   userId={userId}
-                                  userType={UserType.STUDENT}
-                                  alt={user.firstName}
-                                  sx={{ width: 32, height: 32 }}
-                                >
-                                  {user.firstName?.[0]}
-                                  {user.lastName?.[0]}
-                                </EmentorAvatar>
+                                  user={user}
+                                  sx={{ width: 32, height: 32, fontSize: '0.8rem' }}
+                                />
                               </ListItemAvatar>
                             )}
                             <ListItemText

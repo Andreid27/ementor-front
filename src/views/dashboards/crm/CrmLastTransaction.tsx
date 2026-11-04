@@ -85,11 +85,6 @@ interface CrmLastTransactionProps {
    */
   userName?: string
   /**
-   * Optional user avatar URL for PaymentDetailCard
-   * Used when viewing another user's transactions
-   */
-  userAvatarUrl?: string
-  /**
    * The current user's wallet summary, when the parent already loaded it.
    * The component then shows it instead of requesting it again.
    */
@@ -103,7 +98,6 @@ const CrmLastTransaction: React.FC<CrmLastTransactionProps> = ({
   userRole = 'student',
   userId,
   userName,
-  userAvatarUrl,
   summary
 }) => {
   const router = useRouter()
@@ -228,17 +222,6 @@ const CrmLastTransaction: React.FC<CrmLastTransactionProps> = ({
       return userName
     }
     return 'Student'
-  }
-
-  // Helper function to get user avatar
-  const getUserAvatar = (userIdParam: string | undefined): string | undefined => {
-    if (!userIdParam) return undefined
-    // If userAvatarUrl prop is provided (from parent component) and we're viewing a specific user, use it
-    // The userIdParam should match the userId we're viewing (the student in the drawer)
-    if (userAvatarUrl && userId && userIdParam === userId) {
-      return userAvatarUrl
-    }
-    return undefined
   }
 
   const getChartOptions = (balance: number | undefined) => ({
@@ -618,7 +601,6 @@ const CrmLastTransaction: React.FC<CrmLastTransactionProps> = ({
             payment={selectedPayment}
             onClose={handleClosePaymentDetail}
             getUserName={getUserName}
-            getUserAvatar={getUserAvatar}
             userRole={userRole}
           />
         )}
@@ -635,7 +617,6 @@ const CrmLastTransaction: React.FC<CrmLastTransactionProps> = ({
           payment={selectedPayment}
           onClose={handleClosePaymentDetail}
           getUserName={getUserName}
-          getUserAvatar={getUserAvatar}
           userRole={userRole}
         />
       )}

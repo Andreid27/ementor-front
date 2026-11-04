@@ -56,8 +56,6 @@ import { ANIMATION_DURATIONS, EASING_FUNCTIONS } from '../../quizzes/constants/a
 import { SPACING } from '../../quizzes/constants/theme'
 import { useSelector } from 'react-redux'
 import { selectAllStudents } from 'src/store/apps/user'
-import extractProfilePicture from 'src/@core/axios/profile-picture-extractor'
-import profilePictureDownloader from 'src/@core/axios/profile-picture-downloader'
 
 interface QuizInterfaceProps {
   quizId?: string
@@ -206,19 +204,8 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ quizId, attemptId, isProf
           })
           // The student may not be loaded yet, for example when the attempt is opened from a link; the review
           // then shows without the student's card instead of failing
-          let selectedUser = isProfessor && students.find(student => student.id === attemptData.studentId)
+          const selectedUser = isProfessor && students.find(student => student.id === attemptData.studentId)
           if (selectedUser) {
-            const processedUser = extractProfilePicture(selectedUser)
-
-            const avatar =
-              processedUser?.type === 'API'
-                ? await profilePictureDownloader(processedUser.url, processedUser.userId)
-                : processedUser?.type === 'EXTERNAL'
-                ? processedUser.url
-                : null
-
-            selectedUser = { ...selectedUser, avatar: avatar }
-
             setUser(selectedUser)
           }
 

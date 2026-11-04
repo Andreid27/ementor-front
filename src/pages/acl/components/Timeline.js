@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import Box from '@mui/material/Box'
 import Card from '@mui/material/Card'
-import Avatar from '@mui/material/Avatar'
 import { styled } from '@mui/material/styles'
 import TimelineDot from '@mui/lab/TimelineDot'
 import TimelineItem from '@mui/lab/TimelineItem'
@@ -18,6 +17,8 @@ import timeAgo from 'src/@core/utils/time-ago'
 import timeBetween from 'src/@core/utils/time-between'
 import { Skeleton } from '@mui/material'
 import UserViewDrawer from 'src/pages/student-profile/components/UserViewDrawer'
+import EmentorAvatar from 'src/@core/components/ementor-avatar'
+import { studentDisplayName, useKnownStudents } from 'src/@core/hooks/useKnownStudents'
 
 const Timeline = styled(MuiTimeline)({
   '& .MuiTimelineItem-root': {
@@ -68,15 +69,10 @@ const CardActivityTimeline = props => {
     return color
   }
 
-  const getStudentName = quizStudent => {
-    const student = props.users.find(user => user.id === quizStudent.studentId)
+  // Covers students who have left the class too
+  const studentById = useKnownStudents(props.quizzesData.map(quizStudent => quizStudent.studentId))
 
-    if (!student) {
-      return 'Unknown Student'
-    }
-
-    return `${student.firstName} ${student.lastName}`
-  }
+  const getStudentName = quizStudent => studentDisplayName(studentById(quizStudent.studentId)) || 'Unknown Student'
 
   return (
     <>
@@ -170,9 +166,9 @@ const CardActivityTimeline = props => {
                       {quizStudent.correctAnswers} / {quizStudent.questionsCount} întrebări corecte
                     </Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Avatar
-                        src={quizStudent.avatar}
-                        sx={{ mr: 3, width: 38, height: 38, cursor: 'pointer' }}
+                      <EmentorAvatar
+                        userId={quizStudent.studentId}
+                        sx={{ mr: 3, width: 38, height: 38, fontSize: '0.875rem', cursor: 'pointer' }}
                         onClick={() => handleAvatarClick(quizStudent.studentId)}
                       />
                       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>

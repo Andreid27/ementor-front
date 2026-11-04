@@ -1,7 +1,6 @@
 import { useState, useEffect, forwardRef, useImperativeHandle } from 'react'
 import Box from '@mui/material/Box'
 import Card from '@mui/material/Card'
-import Avatar from '@mui/material/Avatar'
 import { Button } from '@mui/material'
 import Chip from '@mui/material/Chip'
 import { styled } from '@mui/material/styles'
@@ -23,19 +22,9 @@ import Icon from 'src/@core/components/icon'
 import OptionsMenu from 'src/@core/components/option-menu'
 import { BankTransferPaymentDTO, BankTransferPaymentDTOStatusEnum } from 'src/generated/profile-service'
 import { profileServiceClient } from 'src/services'
-import profilePictureDownloader from 'src/@core/axios/profile-picture-downloader'
-import extractProfilePicture from 'src/@core/axios/profile-picture-extractor'
-import { photoCacheService } from 'src/@core/services/photo-cache-service-instance'
+import EmentorAvatar from 'src/@core/components/ementor-avatar'
+import { studentDisplayName, useKnownStudents } from 'src/@core/hooks/useKnownStudents'
 import PaymentDetailCard from './PaymentDetailCard'
-
-// Define a user interface that matches the actual user data structure
-interface User {
-  id: string
-  firstName: string
-  lastName: string
-  email?: string
-  avatar?: string
-}
 
 const CardHeader = styled(MuiCardHeader)(({ theme }) => ({
   '& .MuiTypography-root': {
@@ -48,15 +37,6 @@ const CardHeader = styled(MuiCardHeader)(({ theme }) => ({
     }
   }
 }))
-
-interface PaymentConfirmationHistoryProps {
-  users: User[]
-}
-
-interface EnhancedPaymentData extends BankTransferPaymentDTO {
-  avatar?: string | null
-  payerName?: string
-}
 
 export interface PaymentConfirmationHistoryRef {
   refresh: () => void
@@ -82,14 +62,14 @@ const getDefaultDateRange = () => {
   }
 }
 
-const PaymentConfirmationHistory = forwardRef<PaymentConfirmationHistoryRef, PaymentConfirmationHistoryProps>(
-  ({ users }, ref) => {
+const PaymentConfirmationHistory = forwardRef<PaymentConfirmationHistoryRef>(
+  (_props, ref) => {
     const defaultDates = getDefaultDateRange()
     const [loading, setLoading] = useState<boolean>(true) // Start with true for initial load
-    const [paymentsData, setPaymentsData] = useState<EnhancedPaymentData[]>([])
+    const [paymentsData, setPaymentsData] = useState<BankTransferPaymentDTO[]>([])
     const [startDate, setStartDate] = useState<string>(defaultDates.start)
     const [endDate, setEndDate] = useState<string>(defaultDates.end)
-    const [selectedPayment, setSelectedPayment] = useState<EnhancedPaymentData | null>(null)
+    const [selectedPayment, setSelectedPayment] = useState<BankTransferPaymentDTO | null>(null)
 
     // Expose refresh method to parent components
     useImperativeHandle(ref, () => ({
@@ -100,12 +80,12 @@ const PaymentConfirmationHistory = forwardRef<PaymentConfirmationHistoryRef, Pay
 
     // Fetch data on mount
     useEffect(() => {
-      // Wait for users to be available before fetching
-      if (users.length > 0) {
-        fetchConfirmationHistory()
-      }
+      fetchConfirmationHistory()
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [users.length])
+    }, [])
+
+    // Covers payers who have left the class too
+    const studentById = useKnownStudents(paymentsData.map(payment => payment.payerId))
 
     const fetchConfirmationHistory = async () => {
       if (!startDate || !endDate) return
@@ -121,54 +101,13 @@ const PaymentConfirmationHistory = forwardRef<PaymentConfirmationHistoryRef, Pay
           endDate: endISO
         })
 
-        const paymentsData = response.data || []
-
-        // Process payments data with user information
-        const processedData = await processPaymentData(paymentsData, users)
-        setPaymentsData(processedData)
+        setPaymentsData(response.data || [])
       } catch (error) {
         console.error('Failed to fetch confirmation history:', error)
         setPaymentsData([])
       } finally {
         setLoading(false)
       }
-    }
-
-    const processPaymentData = async (data: BankTransferPaymentDTO[], users: User[]) => {
-      const usersOnPage = data.map(row => row.payerId)
-      let uniqueUsers = Array.from(new Set(usersOnPage)).filter(Boolean) as string[]
-      let processedUsersList = []
-
-      for (const userId of uniqueUsers) {
-        const user = users.find(user => user.id === userId)
-        if (user) {
-          const processedUser = extractProfilePicture(user)
-          processedUsersList.push(processedUser)
-        }
-      }
-
-      const result = await Promise.all(
-        processedUsersList.map(async profilePicture => {
-          if (profilePicture.type === 'API') {
-            // Use PhotoCacheService for API-based profile pictures
-            const avatar = await photoCacheService.getPhoto('API', profilePicture.url, profilePicture.userId)
-            return { ...profilePicture, avatar: avatar || null }
-          } else if (profilePicture.type === 'EXTERNAL') {
-            // Use PhotoCacheService for EXTERNAL photos (Google photos)
-            // Rate limiting prevents 429 errors, blob caching improves subsequent loads
-            const avatar = await photoCacheService.getPhoto('EXTERNAL', profilePicture.url, profilePicture.userId)
-            return { ...profilePicture, avatar }
-          } else {
-            return { ...profilePicture, avatar: null }
-          }
-        })
-      )
-
-      return data.map(row => {
-        const user = result.find(user => user.userId === row.payerId)
-
-        return { ...row, avatar: user?.avatar }
-      }) as EnhancedPaymentData[]
     }
 
     const handleApplyDateRange = () => {
@@ -230,15 +169,7 @@ const PaymentConfirmationHistory = forwardRef<PaymentConfirmationHistoryRef, Pay
     }
 
     const getUserName = (userId: string | undefined): string => {
-      if (!userId) return 'Utilizator necunoscut'
-      const user = users.find(u => u.id === userId)
-      return user ? `${user.firstName} ${user.lastName}` : 'Utilizator necunoscut'
-    }
-
-    const getUserAvatar = (userId: string | undefined): string | undefined => {
-      if (!userId) return undefined
-      const payment = paymentsData.find(p => p.payerId === userId)
-      return payment?.avatar || undefined
+      return studentDisplayName(studentById(userId)) || 'Utilizator necunoscut'
     }
 
     const formatCurrency = (amount: number | undefined, currency: string | undefined = 'RON'): string => {
@@ -262,7 +193,7 @@ const PaymentConfirmationHistory = forwardRef<PaymentConfirmationHistoryRef, Pay
       }
     }
 
-    const handleRowClick = async (payment: EnhancedPaymentData) => {
+    const handleRowClick = async (payment: BankTransferPaymentDTO) => {
       setSelectedPayment(payment)
     }
 
@@ -467,11 +398,12 @@ const PaymentConfirmationHistory = forwardRef<PaymentConfirmationHistoryRef, Pay
                         >
                           <TableCell sx={{ width: { xs: '40%', sm: '35%', md: '30%' } }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 } }}>
-                              <Avatar
-                                src={getUserAvatar(payment.payerId)}
+                              <EmentorAvatar
+                                userId={payment.payerId}
                                 sx={{
                                   width: { xs: 28, sm: 32 },
                                   height: { xs: 28, sm: 32 },
+                                  fontSize: '0.75rem',
                                   flexShrink: 0
                                 }}
                               />
@@ -562,7 +494,6 @@ const PaymentConfirmationHistory = forwardRef<PaymentConfirmationHistoryRef, Pay
               payment={selectedPayment}
               onClose={handleCloseDetail}
               getUserName={getUserName}
-              getUserAvatar={getUserAvatar}
             />
           )}
 

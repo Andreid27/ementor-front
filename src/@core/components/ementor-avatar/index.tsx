@@ -1,21 +1,17 @@
-// ** React Imports
-import { useState, useEffect, forwardRef } from 'react'
-
-// ** Redux Imports
+/**
+ * The avatar for a student or a professor, used everywhere a person's photo appears.
+ *
+ * Shows the person's photo once it is downloaded, and their initials until then or when there is no photo.
+ * Photos come from the shared photo cache, so each one is downloaded once per session.
+ */
+import { forwardRef, useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import {
-  fetchProfessorProfile as fetchProfessorProfileAction,
-  selectProfessorProfile,
-  selectAllStudents
-} from 'src/store/apps/user'
 
-// ** MUI Imports
-import Avatar from 'src/@core/components/mui/avatar'
-
-// ** Utils
-import extractProfilePicture from 'src/@core/axios/profile-picture-extractor'
-import profilePictureDownloader from 'src/@core/axios/profile-picture-downloader'
-import { photoCacheService } from 'src/@core/services/photo-cache-service-instance'
+import CustomAvatar from 'src/@core/components/mui/avatar'
+import Icon from 'src/@core/components/icon'
+import { getPhotoSources } from 'src/@core/services/photo-sources'
+import { photoCache } from 'src/@core/services/photo-cache'
+import { fetchProfessorProfile, selectProfessorProfile, selectStudentById } from 'src/store/apps/user'
 
 export enum UserType {
   STUDENT = 'student',
@@ -23,231 +19,123 @@ export enum UserType {
 }
 
 interface EmentorAvatarProps {
-  userId?: string | null | undefined
-  userType: UserType
-  fullSize?: boolean
-  // For pre-downloaded avatars (case 2)
-  avatarSrc?: string | null
-  sx?: any
+  // The person's user id; the student or professor is looked up in the store
+  userId?: string | null
+  userType?: UserType
+  // The person, when the caller already has them (any shape: student list item, profile DTO, Keycloak user)
+  user?: any
+  // Display name for the initials, when the person is not in the store
+  name?: string | null
   alt?: string
-  className?: string
-  [key: string]: any // Allow any other Avatar props
+  // The full-size photo instead of the thumbnail
+  fullSize?: boolean
+  sx?: any
+  [key: string]: any
 }
 
-// ** Helper Functions (Single Responsibility Principle)
-
-/**
- * Available avatar colors for MUI Avatar component
- */
 const AVATAR_COLORS = ['primary', 'secondary', 'error', 'warning', 'info', 'success'] as const
 
-/**
- * Generate a consistent color based on user ID
- * Uses a simple hash function to convert ID to a color index
- */
-const getAvatarColor = (userId: string | null | undefined): typeof AVATAR_COLORS[number] => {
-  if (!userId) return 'primary'
-
-  // Simple hash function to convert string to number
+// The same person always gets the same color
+const colorFor = (seed: string | null | undefined): (typeof AVATAR_COLORS)[number] => {
+  if (!seed) return 'primary'
   let hash = 0
-  for (let i = 0; i < userId.length; i++) {
-    const char = userId.charCodeAt(i)
-    hash = ((hash << 5) - hash) + char
-    hash = hash & hash // Convert to 32-bit integer
+  for (let i = 0; i < seed.length; i++) {
+    hash = (hash << 5) - hash + seed.charCodeAt(i)
+    hash |= 0
   }
 
-  // Get absolute value and map to color index
-  const index = Math.abs(hash) % AVATAR_COLORS.length
-  return AVATAR_COLORS[index]
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
 }
 
-/**
- * Processes picture info and returns the appropriate avatar URL
- * Now uses PhotoCacheService for unified caching of both API and EXTERNAL photos
- */
-const processAvatarUrl = async (pictureInfo: any, fullSize: boolean): Promise<string | null> => {
-  if (pictureInfo.type === 'API') {
-    // Use PhotoCacheService for API photos (replaces profilePictureDownloader)
-    return await photoCacheService.getPhoto('API', pictureInfo.url, pictureInfo.userId, fullSize)
-  }
+// First letter of the first and of the last name: "Ana Maria Pop" -> "AP"
+export const initialsOf = (fullName: string | null | undefined): string => {
+  const parts = (fullName || '').trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return ''
 
-  if (pictureInfo.type === 'EXTERNAL') {
-    // Use PhotoCacheService for EXTERNAL photos (Google photos)
-    // This prevents 429 errors by rate limiting and caching as blob URLs
-    return await photoCacheService.getPhoto('EXTERNAL', pictureInfo.url, pictureInfo.userId, fullSize)
-  }
-
-  return null
+  return `${parts[0][0]}${parts.length > 1 ? parts[parts.length - 1][0] : ''}`.toUpperCase()
 }
 
-/**
- * Custom hook to fetch and manage user profile based on type (Single Responsibility)
- */
-const useUserProfile = (userId: string | null | undefined, userType: UserType, shouldFetch: boolean) => {
-  const dispatch = useDispatch()
+const personName = (person: any): string => {
+  if (!person) return ''
+  const first = person.firstName ?? person.user?.firstName
+  const last = person.lastName ?? person.user?.lastName
 
-  // Conditionally select only the needed profile based on userType
-  const professorProfile = useSelector(state =>
-    userType === UserType.PROFESSOR && userId ? selectProfessorProfile(userId)(state) : null
-  )
-
-  const allStudents = useSelector(state => (userType === UserType.STUDENT ? selectAllStudents(state) : []))
-
-  // Fetch professor profile if needed
-  useEffect(() => {
-    if (shouldFetch && userId && userType === UserType.PROFESSOR) {
-      // @ts-ignore - Dispatch typing issue with thunk
-      dispatch(fetchProfessorProfileAction(userId))
-    }
-  }, [shouldFetch, userId, userType, dispatch])
-
-  // Return the appropriate profile
-  if (userType === UserType.PROFESSOR) {
-    return professorProfile
-  }
-
-  if (userType === UserType.STUDENT && userId) {
-    return allStudents.find(student => student.id === userId) || null
-  }
-
-  return null
-}
-
-/**
- * Custom hook to handle avatar URL management (Single Responsibility)
- */
-const useAvatarUrl = (
-  userId: string | null | undefined,
-  userType: UserType,
-  fullSize: boolean,
-  avatarSrc: string | null | undefined,
-  profile: any
-) => {
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-
-  // Case 2: Pre-downloaded avatar
-  useEffect(() => {
-    if (avatarSrc !== undefined) {
-      setAvatarUrl(avatarSrc)
-    }
-  }, [avatarSrc])
-
-  // Case 1: Fetch and download avatar
-  useEffect(() => {
-    const downloadAvatar = async () => {
-      // Skip if pre-downloaded avatar is provided
-      if (avatarSrc !== undefined || !userId) {
-        if (!userId && avatarSrc === undefined) {
-          setAvatarUrl(null)
-        }
-        return
-      }
-
-      setIsLoading(true)
-      try {
-        if (!profile) {
-          setAvatarUrl(null)
-          return
-        }
-
-        const pictureInfo = extractProfilePicture(profile, fullSize)
-        const url = await processAvatarUrl(pictureInfo, fullSize)
-        setAvatarUrl(url)
-      } catch (error) {
-        console.error('Error downloading avatar:', error)
-        setAvatarUrl(null)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    downloadAvatar()
-  }, [userId, profile, fullSize, avatarSrc])
-
-  return { avatarUrl, isLoading }
+  return [first, last].filter(Boolean).join(' ') || person.fullName || person.studentName || ''
 }
 
 const EmentorAvatar = forwardRef<any, EmentorAvatarProps>(
-  ({ userId, userType, fullSize = false, avatarSrc, alt, ...avatarProps }, ref) => {
-    // Determine if we should fetch profile from API
-    const shouldFetchProfile = userType === UserType.PROFESSOR && !!userId && avatarSrc === undefined
+  ({ userId, userType = UserType.STUDENT, user, name, alt, fullSize = false, sx, imgProps, ...avatarProps }, ref) => {
+    const dispatch = useDispatch()
+    const isProfessor = userType === UserType.PROFESSOR
 
-    // Get user profile (conditionally fetches only what's needed based on userType)
-    const profile = useUserProfile(userId, userType, shouldFetchProfile)
+    const professorProfile = useSelector((state: any) =>
+      isProfessor && userId ? selectProfessorProfile(userId)(state) : null
+    )
 
-    // Get avatar URL and loading state
-    const { avatarUrl, isLoading } = useAvatarUrl(userId, userType, fullSize, avatarSrc, profile)
+    const storedStudent = useSelector((state: any) =>
+      !isProfessor && userId ? selectStudentById(userId)(state) : null
+    )
 
-    // Generate initials from profile or alt text
-    const getInitials = () => {
-      if (profile?.firstName || profile?.lastName) {
-        const firstName = profile.firstName || ''
-        const lastName = profile.lastName || ''
-        return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
+    useEffect(() => {
+      if (isProfessor && userId) {
+        // @ts-ignore - thunk dispatch typing; the thunk returns the cached profile when it has one
+        dispatch(fetchProfessorProfile(userId))
       }
+    }, [dispatch, isProfessor, userId])
 
-      // Fallback to alt text if provided
-      if (alt) {
-        const parts = alt.trim().split(' ')
-        if (parts.length >= 2) {
-          return `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(0)}`.toUpperCase()
-        }
-        return alt.substring(0, 2).toUpperCase()
+    // The person passed in wins; the stored copy fills in what it lacks (often the photo fields)
+    const stored = isProfessor ? professorProfile : storedStudent
+    const size = fullSize ? 'full' : 'thumb'
+    const ownSources = getPhotoSources(user, size)
+    const sources = ownSources.length > 0 ? ownSources : getPhotoSources(stored, size)
+    const sourcesKey = sources.map(source => source.url).join('|')
+
+    // The photo belongs to the sources it was loaded for, so a reused avatar never shows the previous person
+    const [photo, setPhoto] = useState<{ key: string; url: string | null }>(() => ({
+      key: sourcesKey,
+      url: photoCache.peek(sources)
+    }))
+
+    useEffect(() => {
+      // Show what is already downloaded at once, then fetch the preferred photo if that was not it
+      setPhoto({ key: sourcesKey, url: photoCache.peek(sources) })
+      if (sources.length === 0 || photoCache.hasBest(sources)) return
+
+      let active = true
+      photoCache.load(sources).then(url => {
+        if (active) setPhoto({ key: sourcesKey, url })
+      })
+
+      return () => {
+        active = false
       }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [sourcesKey])
 
-      return '??'
+    const photoUrl = photo.key === sourcesKey ? photo.url : photoCache.peek(sources)
+    const displayName = personName(user) || personName(stored) || name || alt || ''
+    const initials = initialsOf(displayName)
+
+    const handleImageError = () => {
+      if (photoUrl) photoCache.forget(photoUrl)
+      setPhoto({ key: sourcesKey, url: null })
     }
 
-    // Type assertion needed because custom Avatar component doesn't export proper TypeScript types
-    const AvatarComponent = Avatar as any
-
-    // Generate consistent color based on user ID
-    const avatarColor = getAvatarColor(userId)
-
-    // Add lazy loading and no-referrer policy to prevent 429 errors from Google
-    const imgProps = avatarProps.imgProps || {}
-    const enhancedImgProps = {
-      ...imgProps,
-      loading: 'lazy' as const,
-      referrerPolicy: 'no-referrer' as const // Prevent Google from tracking referrer for rate limiting
-    }
-
-    // Merge color into sx prop only if no avatar image is available
-    const sxWithColor = !avatarUrl ? {
-      ...avatarProps.sx,
-      bgcolor: `${avatarColor}.main`,
-      color: `${avatarColor}.contrastText`
-    } : avatarProps.sx
+    // Type assertion needed because the custom Avatar component has no TypeScript types
+    const AvatarComponent = CustomAvatar as any
 
     return (
       <AvatarComponent
         ref={ref}
+        skin='light'
+        color={colorFor(userId || displayName)}
         {...avatarProps}
-        sx={sxWithColor}
-        src={avatarUrl || undefined}
-        imgProps={enhancedImgProps}
-        alt={alt}
+        sx={sx}
+        src={photoUrl || undefined}
+        alt={displayName}
+        imgProps={{ ...imgProps, onError: handleImageError }}
       >
-        {isLoading ? (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10" opacity="0.25" />
-              <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round">
-                <animateTransform
-                  attributeName="transform"
-                  type="rotate"
-                  from="0 12 12"
-                  to="360 12 12"
-                  dur="1s"
-                  repeatCount="indefinite"
-                />
-              </path>
-            </svg>
-          </div>
-        ) : !avatarUrl ? (
-          getInitials()
-        ) : null}
+        {photoUrl ? null : initials || <Icon icon='tabler:user' fontSize='60%' />}
       </AvatarComponent>
     )
   }

@@ -11,8 +11,8 @@ import CrmLastTransaction from '../../../views/dashboards/crm/CrmLastTransaction
 // ** API and Utility Imports
 import apiClient from 'src/@core/axios/axiosEmentor'
 import * as apiSpec from '../../../apiSpec'
-import extractProfilePicture from 'src/@core/axios/profile-picture-extractor'
-import profilePictureDownloader from 'src/@core/axios/profile-picture-downloader'
+import { getPhotoSources } from 'src/@core/services/photo-sources'
+import { photoCache } from 'src/@core/services/photo-cache'
 import { IconButton, Typography } from '@mui/material'
 import { styled } from '@mui/material/styles'
 import Box from '@mui/material/Box'
@@ -53,6 +53,9 @@ const UserViewDrawer = ({ tab, userId, open, onClose }) => {
     setQuizStats({})
     setLessonStats({})
 
+    // Ignore a photo that arrives after the drawer moved on to another student
+    let active = true
+
     const fetchData = async () => {
       try {
         const [profileServiceResponse, quizzesResponse, quizStatsResponse, lessonStatsResponse] = await Promise.all([
@@ -68,18 +71,13 @@ const UserViewDrawer = ({ tab, userId, open, onClose }) => {
         ])
 
         if (profileServiceResponse.status === 200) {
-          const profilePicture = extractProfilePicture(profileServiceResponse.data, true)
-          let finalUrl
+          // The photo shows when it arrives; the profile does not wait for it
+          const photoSources = getPhotoSources(profileServiceResponse.data, 'full')
+          setProfilePictureUrl(photoCache.peek(photoSources))
+          photoCache.load(photoSources).then(url => {
+            if (active) setProfilePictureUrl(url)
+          })
 
-          if (profilePicture.type === 'API') {
-            finalUrl = await profilePictureDownloader(profilePicture.url, profilePicture.userId, true)
-          } else if (profilePicture.type === 'EXTERNAL') {
-            finalUrl = profilePicture.url
-          } else {
-            finalUrl = null
-          }
-
-          setProfilePictureUrl(finalUrl)
           setProfileData(profileServiceResponse.data)
           setQuizzesData(quizzesResponse.data.data)
           setQuizStats(quizStatsResponse.data)
@@ -93,6 +91,10 @@ const UserViewDrawer = ({ tab, userId, open, onClose }) => {
     }
 
     fetchData()
+
+    return () => {
+      active = false
+    }
   }, [userId])
 
   return userId && open ? (
@@ -150,7 +152,6 @@ const UserViewDrawer = ({ tab, userId, open, onClose }) => {
                 userName={profileData?.firstName && profileData?.lastName
                   ? `${profileData.firstName} ${profileData.lastName}`
                   : profileData?.email || 'Student'}
-                userAvatarUrl={profilePictureUrl}
               />
             </Grid>
           </Grid>

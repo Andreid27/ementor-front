@@ -41,8 +41,6 @@ import { createAsyncThunk } from '@reduxjs/toolkit'
 import { EventAttendeeDTO } from 'src/generated/profile-service'
 
 // ** Profile Picture Processing
-import extractProfilePicture from 'src/@core/axios/profile-picture-extractor'
-import profilePictureDownloader from 'src/@core/axios/profile-picture-downloader'
 
 // ** Types
 import { CalendarApi } from '@fullcalendar/core'
@@ -88,7 +86,6 @@ const AppCalendar = () => {
   const [calendarApi, setCalendarApi] = useState<CalendarApi | null>(null)
   const [leftSidebarOpen, setLeftSidebarOpen] = useState<boolean>(false)
   const [addEventSidebarOpen, setAddEventSidebarOpen] = useState<boolean>(false)
-  const [studentAvatars, setStudentAvatars] = useState<any[]>([])
   const [dynamicCalendarsColor, setDynamicCalendarsColor] = useState<CalendarColors>(calendarsColor)
 
   // ** Hooks
@@ -211,50 +208,6 @@ const AppCalendar = () => {
   const { skin, direction } = settings
   const mdAbove = useMediaQuery((theme: Theme) => theme.breakpoints.up('md'))
 
-  // ** Profile Picture Processing Function
-  const processStudentAvatars = useCallback(async (events: EventOccurrenceDTO[], users: any[]) => {
-    let uniqueStudents = Array.from(new Set(students))
-    let processedUsersList: any[] = []
-
-    // First, process all users to extract profile picture information
-    for (const studentUser of uniqueStudents) {
-      const user = users.find((user: any) => user.id === (studentUser as any).id)
-      if (user) {
-        const processedUser = extractProfilePicture(user)
-        processedUsersList.push(processedUser)
-      }
-    }
-
-    // Download/process the profile pictures from processedUsersList
-    const usersWithProfilePictures = await Promise.all(
-      processedUsersList.map(async (profilePicture: any) => {
-        if (profilePicture.type === 'API') {
-          const avatar = await profilePictureDownloader(profilePicture.url, profilePicture.userId)
-          return { ...profilePicture, avatar: avatar || null }
-        } else if (profilePicture.type === 'EXTERNAL') {
-          return { ...profilePicture, avatar: profilePicture.url }
-        } else {
-          return { ...profilePicture, avatar: null }
-        }
-      })
-    )
-
-    // Map the processed users with profile pictures back to the student data
-    // This ensures compatibility with all profile picture field formats
-    const studentsWithAvatars = uniqueStudents.map((student: any) => {
-      const userWithPicture = usersWithProfilePictures.find((u: any) => u.userId === student.id)
-
-      return {
-        ...student,
-        avatar: userWithPicture?.avatar,
-        picture: userWithPicture?.avatar, // Add UserDTO compatible field
-        profilePicture: userWithPicture?.avatar // Add legacy compatible field
-      }
-    })
-
-    return studentsWithAvatars
-  }, [])
-
   // ** Function to dynamically generate calendar colors based on series UUID
   const generateDynamicCalendarColors = useCallback((events: EventOccurrenceDTO[]) => {
     const dynamicColors: CalendarColors = {
@@ -320,15 +273,11 @@ const AppCalendar = () => {
           return
         }
 
-        // Step 3: Process student avatars and wait for completion
-        const studentsWithAvatars = await processStudentAvatars(response, students)
-        setStudentAvatars(studentsWithAvatars)
-
-        // Step 4: Generate dynamic calendar colors (synchronous)
+        // Step 3: Generate dynamic calendar colors (synchronous)
         const newDynamicColors = generateDynamicCalendarColors(response)
         setDynamicCalendarsColor(newDynamicColors)
 
-        // Step 5: Initialize selected calendars with all available calendars (show all by default)
+        // Step 4: Initialize selected calendars with all available calendars (show all by default)
         const allCalendarNames = Object.keys(newDynamicColors)
         if (allCalendarNames.length > 0) {
           dispatch(handleAllCalendars({ calendarsColor: newDynamicColors, value: true }))
@@ -336,7 +285,7 @@ const AppCalendar = () => {
       }
     }
     fetchAndProcessEvents()
-  }, [calendarInfo, processStudentAvatars, students, generateDynamicCalendarColors])
+  }, [calendarInfo, generateDynamicCalendarColors])
 
   const handleLeftSidebarToggle = () => setLeftSidebarOpen(!leftSidebarOpen)
   const handleAddEventSidebarToggle = () => setAddEventSidebarOpen(!addEventSidebarOpen)
@@ -397,8 +346,6 @@ const AppCalendar = () => {
           handleLeftSidebarToggle={handleLeftSidebarToggle}
           handleAddEventSidebarToggle={handleAddEventSidebarToggle}
           // @ts-ignore
-          studentAvatars={studentAvatars}
-          // @ts-ignore
           onDatesSet={info => setCalendarInfo(info)}
         />
       </Box>
@@ -416,7 +363,7 @@ const AppCalendar = () => {
         handleSelectEvent={handleSelectEvent}
         addEventSidebarOpen={addEventSidebarOpen}
         handleAddEventSidebarToggle={handleAddEventSidebarToggle}
-        students={studentAvatars}
+        students={students}
       />
     </CalendarWrapper>
   )

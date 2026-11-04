@@ -42,7 +42,8 @@ const Avatar = forwardRef((props, ref) => {
   }
 
   return <MuiAvatar ref={ref} {...props} sx={!src && skin && color ? Object.assign(colors[color], sx) : sx}
-    imgProps={{ referrerPolicy: 'no-referrer' }} />
+    imgProps={{ referrerPolicy: 'no-referrer', ...props.imgProps }} />
+
 })
 Avatar.defaultProps = {
   skin: 'filled',
